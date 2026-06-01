@@ -1,0 +1,27 @@
+CS-444 validation evidence, 2026-06-01.
+
+Preflight:
+- Initial git status showed pre-existing dirty `_condamad/run-state.json`.
+- Capsule repair required because generated files were missing.
+- First prepare attempt created `_condamad/stories/cs-444`; it was removed after resolving the path inside `_condamad/stories`.
+
+Commands:
+- `. .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-dev-story\scripts\condamad_prepare.py --repair-generated-only _condamad\stories\CS-444-clore-cs-440-zero-hit-apres-corrections-legacy-natal --root . --with-optional` -> PASS.
+- `. .\.venv\Scripts\Activate.ps1; python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-444-clore-cs-440-zero-hit-apres-corrections-legacy-natal` -> PASS before implementation.
+- `Push-Location backend; ruff check .; Pop-Location` -> PASS, `All checks passed!`.
+- Backend architecture/LLM guard pytest suite -> PASS, `54 passed`.
+- Backend theme natal product/read pytest suite -> PASS, `24 passed, 22 deselected`.
+- Runtime `app.routes` assertion for `/v1/natal/interpretation` absence -> PASS.
+- Runtime `app.openapi()` assertion for `/v1/natal/interpretations` absence -> PASS.
+- `pnpm --dir frontend test -- natalChartApi.test.tsx natalPublicDomGuard.test.tsx natalInterpretation.test.tsx NatalChartPage.test.tsx` -> PASS, `136 passed`.
+- `pnpm --dir frontend lint` -> PASS.
+- `rg -n "generate_natal_interpretation" backend/app` -> PASS: no matches.
+- `rg -n "/v1/natal/interpretation|/v1/natal/interpretations" backend/app/api/v1/routers/public frontend/src` -> PASS: no matches.
+- `rg -n "AIEngineAdapter\.generate_natal_interpretation|fake_generate_natal_interpretation" backend/tests backend/app/tests` -> PASS: no matches.
+- `rg -n 'patch\.object\(AIEngineAdapter, "generate_natal_interpretation"' backend/tests backend/app/tests` -> PASS: no matches.
+- `rg -n "RG-174.*zero public/runtime hit|Legacy natal deleted: zero public/runtime hit" _condamad/stories/regression-guardrails.md` -> PASS: line found.
+- `python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-444-clore-cs-440-zero-hit-apres-corrections-legacy-natal --final` -> PASS.
+- `python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-440-zero-hit-legacy-natal-tests-guards --final` -> PASS.
+
+Classified limitation:
+- `rg -n "natal_interpretation_short|natal_long_free|shouldRefreshShortAfterBasicUpgrade|forceRefresh" backend/app frontend/src` returned backend readonly/admin/rejection/proof residuals already classified by CS-440 audit and RG-174. No frontend public control hit and no unauthorized public/runtime generator hit was found.

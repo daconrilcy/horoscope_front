@@ -4,10 +4,11 @@
 
 ## Statut
 
-- Classification: `ready-to-review`
+- Classification: `done`
 - Invariant durable: `RG-174`
 - Surface runtime publique generatrice: zero hit non autorise.
 - Residus autorises: readonly historique, admin-only, garde de rejet, tests d'extinction, preuves `_condamad`.
+- Cloture CS-444: les anciens blocages CR-3 et CR-4 sont resolus par les validations du 2026-06-01; aucun hit generateur public/runtime non autorise ne reste.
 
 ## Classification
 

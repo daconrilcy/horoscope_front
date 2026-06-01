@@ -1,5 +1,5 @@
 # Story CS-444 clore-cs-440-zero-hit-apres-corrections-legacy-natal: Clore CS-440 Zero Hit Apres Corrections Legacy Natal
-Status: ready-to-dev
+Status: ready-to-review
 
 ## Trigger / Source
 
@@ -54,8 +54,8 @@ refresh CS-440 evidence, and update the tracker only after a clean review.
 - Evidence 2: `_condamad/stories/story-status.md` - tracker consulted to assign `CS-444`.
 - Evidence 3: `_condamad/stories/regression-guardrails.md` - targeted IDs from the brief were resolved by ID lookup.
 - Evidence 4: `resolve_guardrails.py` - resolver run with legacy-natal, backend, frontend, zero-hit, and review-evidence scope.
-- Evidence 5: `_condamad/stories/CS-440-zero-hit-legacy-natal-tests-guards/generated/11-code-review.md` records verdict `BLOCKED`.
-- Evidence 6: `_condamad/stories/CS-440-zero-hit-legacy-natal-tests-guards/generated/10-final-evidence.md` records AC2, AC3, and AC4 blocked.
+- Evidence 5: `_condamad/stories/CS-440-zero-hit-legacy-natal-tests-guards/generated/11-code-review.md` records final verdict `CLEAN`.
+- Evidence 6: `_condamad/stories/CS-440-zero-hit-legacy-natal-tests-guards/generated/10-final-evidence.md` records AC2, AC3, and AC4 `PASS`.
 - Evidence 7: `_condamad/reports/cs-440-zero-hit-legacy-natal-tests-guards.md` still says CS-440 cannot be closed `done`.
 - Evidence 8: `_condamad/reports/cs-439-cs-440-delivery-report.md` records CS-440 as partially delivered.
 - Evidence 9: `_story_briefs/cs-441-corriger-suppression-runtime-generate-natal-legacy.md` read as closure prerequisite source.
@@ -132,17 +132,17 @@ refresh CS-440 evidence, and update the tracker only after a clean review.
 
 ## Implementation Tasks
 
-- [ ] Task 1: Verify CS-441, CS-442, and CS-443 are `done` with clean review outputs or accepted replacement proof. (AC: AC1)
-- [ ] Task 2: Reopen CS-440 review evidence and map CR-3 and CR-4 to completed prerequisite proof. (AC: AC1, AC6)
-- [ ] Task 3: Rerun backend old-runtime scans and architecture tests after prerequisite corrections. (AC: AC2, AC5, AC10)
-- [ ] Task 4: Rerun public route inventory, OpenAPI checks, and frontend URL scans for old natal APIs. (AC: AC3)
-- [ ] Task 5: Rerun old prompt-control scans over backend, frontend, and tests with proof-only allowances. (AC: AC4, AC5)
-- [ ] Task 6: Reduce CS-434, CS-435, and CS-440 allowlists to historical proof and extinction-test entries. (AC: AC5, AC7)
-- [ ] Task 7: Update `legacy-natal-zero-hit-audit.md` with final zero-hit classifications and no unresolved blocker. (AC: AC7)
-- [ ] Task 8: Update the CS-440 report to remove partial closure wording after validations pass. (AC: AC8)
-- [ ] Task 9: Update CS-440 final evidence so AC2, AC3, and AC4 are `PASS` with command evidence. (AC: AC9)
-- [ ] Task 10: Update CS-440 code review to `CLEAN` only after the executable evidence is complete. (AC: AC6, AC10)
-- [ ] Task 11: Mark CS-440 `done` in `story-status.md` only after clean review and validation evidence. (AC: AC11)
+- [x] Task 1: Verify CS-441, CS-442, and CS-443 are `done` with clean review outputs or accepted replacement proof. (AC: AC1)
+- [x] Task 2: Reopen CS-440 review evidence and map CR-3 and CR-4 to completed prerequisite proof. (AC: AC1, AC6)
+- [x] Task 3: Rerun backend old-runtime scans and architecture tests after prerequisite corrections. (AC: AC2, AC5, AC10)
+- [x] Task 4: Rerun public route inventory, OpenAPI checks, and frontend URL scans for old natal APIs. (AC: AC3)
+- [x] Task 5: Rerun old prompt-control scans over backend, frontend, and tests with proof-only allowances. (AC: AC4, AC5)
+- [x] Task 6: Reduce CS-434, CS-435, and CS-440 allowlists to historical proof and extinction-test entries. (AC: AC5, AC7)
+- [x] Task 7: Update `legacy-natal-zero-hit-audit.md` with final zero-hit classifications and no unresolved blocker. (AC: AC7)
+- [x] Task 8: Update the CS-440 report to remove partial closure wording after validations pass. (AC: AC8)
+- [x] Task 9: Update CS-440 final evidence so AC2, AC3, and AC4 are `PASS` with command evidence. (AC: AC9)
+- [x] Task 10: Update CS-440 code review to `CLEAN` only after the executable evidence is complete. (AC: AC6, AC10)
+- [x] Task 11: Mark CS-440 `done` in `story-status.md` only after clean review and validation evidence. (AC: AC11)
 
 ## Files to Inspect First
 
@@ -152,8 +152,8 @@ refresh CS-440 evidence, and update the tracker only after a clean review.
 - `_story_briefs/cs-441-corriger-suppression-runtime-generate-natal-legacy.md` - runtime prerequisite.
 - `_story_briefs/cs-442-corriger-suppression-sources-reintroduction-prompts-nataux-legacy.md` - prompt-source prerequisite.
 - `_story_briefs/cs-443-corriger-suppression-api-publique-natal-interpretations-legacy.md` - public API prerequisite.
-- `_condamad/stories/CS-440-zero-hit-legacy-natal-tests-guards/generated/10-final-evidence.md` - blocked AC evidence source.
-- `_condamad/stories/CS-440-zero-hit-legacy-natal-tests-guards/generated/11-code-review.md` - blocked review source.
+- `_condamad/stories/CS-440-zero-hit-legacy-natal-tests-guards/generated/10-final-evidence.md` - final AC evidence source.
+- `_condamad/stories/CS-440-zero-hit-legacy-natal-tests-guards/generated/11-code-review.md` - final clean review source.
 - `_condamad/stories/CS-440-zero-hit-legacy-natal-tests-guards/evidence/legacy-natal-zero-hit-audit.md` - audit to finalize.
 - `_condamad/reports/cs-440-zero-hit-legacy-natal-tests-guards.md` - report to finalize.
 - `_condamad/reports/cs-439-cs-440-delivery-report.md` - partial-delivery baseline.

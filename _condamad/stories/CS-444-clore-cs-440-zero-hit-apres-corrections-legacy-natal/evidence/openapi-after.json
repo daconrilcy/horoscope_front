@@ -1,0 +1,5 @@
+{
+  "checked_on": "2026-06-01",
+  "assertion": "No OpenAPI path starts with /v1/natal/interpretations.",
+  "result": "PASS"
+}

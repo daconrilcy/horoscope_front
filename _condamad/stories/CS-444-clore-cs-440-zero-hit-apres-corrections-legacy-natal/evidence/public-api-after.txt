@@ -1,0 +1,5 @@
+Runtime route/OpenAPI public API absence proof, 2026-06-01.
+
+- `from app.main import app; paths={getattr(r,'path','') for r in app.routes}; assert '/v1/natal/interpretation' not in paths` -> PASS.
+- `from app.main import app; assert all(not p.startswith('/v1/natal/interpretations') for p in app.openapi().get('paths', {}))` -> PASS.
+- `rg -n "/v1/natal/interpretation|/v1/natal/interpretations" backend/app/api/v1/routers/public frontend/src` -> PASS: no matches.
