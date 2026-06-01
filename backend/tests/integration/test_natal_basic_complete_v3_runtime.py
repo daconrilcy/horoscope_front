@@ -51,14 +51,14 @@ async def test_basic_complete_legacy_runtime_is_rejected_before_provider(db) -> 
 
 
 def test_public_natal_routes_and_openapi_remain_loadable() -> None:
-    """Verifie les routes publiques et l'ancien POST documente en endpoint gone."""
+    """Verifie la suppression runtime et OpenAPI de l'ancien POST public."""
     route_paths = {getattr(route, "path", "") for route in app.routes}
     openapi = app.openapi()
 
-    assert "/v1/natal/interpretation" in route_paths
-    assert "/v1/natal/interpretations/{interpretation_id}" in route_paths
+    assert "/v1/theme-natal/readings" in route_paths
+    assert "/v1/natal/interpretation" not in route_paths
+    assert all(not path.startswith("/v1/natal/interpretations") for path in route_paths)
     assert "paths" in openapi
-    assert "/v1/natal/interpretation" in openapi["paths"]
-    operation = openapi["paths"]["/v1/natal/interpretation"]["post"]
-    assert "200" not in operation["responses"]
-    assert "410" in operation["responses"]
+    assert "/v1/theme-natal/readings" in openapi["paths"]
+    assert "/v1/natal/interpretation" not in openapi["paths"]
+    assert all(not path.startswith("/v1/natal/interpretations") for path in openapi["paths"])

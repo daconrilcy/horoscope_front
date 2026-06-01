@@ -2,7 +2,7 @@
 
 - `condamad_validate.py`: PASS.
 - `ruff format` on modified backend Python files: PASS, 1 file reformatted.
-- `python -B -m pytest --long -q tests/integration/test_theme_natal_public_api_product_actions.py tests/integration/test_theme_natal_public_reads.py tests/integration/test_contract_bound_llm_gateway_rejections.py --tb=short`: PASS, 12 passed.
+- Backend targeted integration command with `--long`: PASS, 12 passed.
 - `python -B -m pytest -q tests/architecture/test_legacy_natal_generation_inventory_guard.py --tb=short`: PASS, 12 passed.
 - Runtime route/OpenAPI checks for removed paths and `/v1/theme-natal/readings`: PASS.
 - `ruff check .`: PASS.
@@ -11,3 +11,36 @@
 - Production forbidden URL and mapping scans: PASS, no matches; see `forbidden-scan-after.txt`.
 
 Note: the first integration command without `--long` exited 0 with 12 deselected because backend `conftest.py` excludes integration tests from fast local runs. It was rerun with `--long`.
+
+## Review/fix validation
+
+- Initial implementation review found stale tests that still treated removed public routes as `410 Gone` compatibility facades.
+- First review/fix backend run: FAIL, 1 failed / 37 passed because one corrected OpenAPI test still expected schemas formerly exposed by the removed endpoint.
+- Corrected the stale schema expectation to assert the modern `/v1/theme-natal/readings` operation.
+- Review/fix backend suite:
+
+```powershell
+python -B -m pytest --long -q `
+  app/tests/integration/test_natal_interpretation_endpoint.py `
+  app/tests/integration/test_natal_interpretations_history.py `
+  app/tests/integration/test_natal_chart_long_entitlement.py `
+  app/tests/integration/test_natal_free_short_variant.py `
+  tests/integration/test_theme_natal_public_api_product_actions.py `
+  tests/integration/test_theme_natal_public_reads.py `
+  tests/integration/test_natal_basic_complete_v3_runtime.py `
+  tests/integration/test_natal_interpretation_public_free_basic_contract.py `
+  tests/architecture/test_legacy_natal_generation_inventory_guard.py `
+  --tb=short
+```
+
+  Result: PASS, 38 passed.
+- `ruff format` on review-fix backend test files: PASS, 1 file reformatted.
+- `ruff check .`: PASS.
+- `pnpm --dir frontend test -- natalChartApi.test.tsx natalInterpretation.test.tsx natalPublicDomGuard.test.tsx NatalChartPage.test.tsx`: PASS, 4 files / 136 tests.
+- `pnpm --dir frontend lint`: PASS.
+- Runtime route/OpenAPI absence checks for removed public paths and `/v1/theme-natal/readings`: PASS.
+- Production forbidden URL scan excluding tests: PASS, no matches; `rg` exit 1 expected.
+- Production legacy symbol scan excluding tests: REVIEWED, remaining hits are RG-174 classified internal/admin-only or readonly persisted-row surfaces.
+- `condamad_story_validate.py`: PASS.
+- `condamad_story_lint.py --strict`: PASS.
+- `git diff --check`: PASS with CRLF warnings only.

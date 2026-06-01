@@ -5,7 +5,8 @@
 - Story key: `CS-443-retirer-api-publique-natal-interpretations-legacy`
 - Validation outcome: PASS
 - Ready for review: yes
-- Story status synchronized: `ready-to-review`
+- Implementation review outcome: CLEAN
+- Story status synchronized: `done`
 - Capsule path: `_condamad/stories/CS-443-retirer-api-publique-natal-interpretations-legacy`
 
 ## Preflight
@@ -54,8 +55,8 @@
 ## Files changed
 
 - Backend: `backend/app/api/v1/routers/registry.py`, deleted `backend/app/api/v1/routers/public/natal_interpretation.py`.
-- Backend tests/guards: `backend/tests/architecture/test_legacy_natal_generation_inventory_guard.py`, `backend/tests/evaluation/__init__.py`, `backend/tests/integration/test_theme_natal_public_api_product_actions.py`, `backend/tests/integration/test_theme_natal_public_reads.py`.
-- Frontend: `frontend/src/api/natal-chart/index.ts`, `frontend/src/components/natal-interpretation/NatalInterpretationMenus.tsx`, `frontend/src/features/natal-chart/NatalInterpretation.tsx`, `frontend/src/tests/natalInterpretation.test.tsx`.
+- Backend tests/guards: architecture guard, evaluation marker, product-action integration tests, and public-read integration tests.
+- Frontend: natal-chart API client, natal interpretation menus/section, and `natalInterpretation.test.tsx`.
 - Evidence: `route-consumption-audit.md`, `evidence/**`, generated traceability/final evidence.
 
 ## Files deleted
@@ -68,6 +69,7 @@
 - Rewrote `backend/tests/integration/test_theme_natal_public_reads.py`.
 - Updated `backend/tests/architecture/test_legacy_natal_generation_inventory_guard.py`.
 - Updated `frontend/src/tests/natalInterpretation.test.tsx`.
+- Review fix: updated stale backend tests so removed public routes are asserted absent, not preserved as a `410 Gone` facade.
 
 ## Commands run
 
@@ -83,6 +85,13 @@
 | `pnpm --dir frontend test -- ...` | repo root | PASS | 0 | 4 files / 136 tests. |
 | `pnpm --dir frontend lint` | repo root | PASS | 0 | TypeScript lint configs passed. |
 | Production forbidden scans | repo root | PASS | 1 | `rg` no-match exit 1 is expected. |
+| Review/fix backend pytest suite. Exact command in `evidence/validation.txt`. | `backend` | PASS | 0 | 38 passed after stale-test correction. |
+| Review/fix backend targeted `ruff format`. Exact command in `evidence/validation.txt`. | `backend` | PASS | 0 | One test file reformatted. |
+| `ruff check .` | `backend` | PASS | 0 | All checks passed after review fix. |
+| `pnpm --dir frontend test -- natalChartApi.test.tsx natalInterpretation.test.tsx natalPublicDomGuard.test.tsx NatalChartPage.test.tsx` | repo root | PASS | 0 | 4 files / 136 tests after review fix. |
+| `pnpm --dir frontend lint` | repo root | PASS | 0 | TypeScript lint remains clean after review fix. |
+| Runtime route/OpenAPI absence assertion | `backend` | PASS | 0 | Removed paths absent; modern path present. |
+| `condamad_story_validate.py` and `condamad_story_lint.py --strict` | repo root | PASS | 0 | Story contract still valid after review evidence update. |
 
 ## Commands skipped or blocked
 
@@ -104,6 +113,8 @@
 - Frontend targeted Vitest suites: PASS, 4 files / 136 tests.
 - `pnpm --dir frontend lint`: PASS.
 - Forbidden production URL and mapping scans: PASS, no matches.
+- Review/fix validation: PASS, 38 backend tests after converting stale 410 facade tests to absence guards.
+- Story validation and strict lint: PASS after final review evidence update.
 
 ## Skipped or limited checks
 
@@ -118,6 +129,7 @@
 - Public OpenAPI omits historical natal interpretation and PDF-template paths.
 - Bounded production scans have zero hits for historical public URLs and old public mapping symbols.
 - No 410 compatibility route, redirect, wrapper, or mounted fallback was kept for the removed public API.
+- Backend tests no longer preserve the removed public routes as nominal `410 Gone` compatibility facades.
 
 ## Final worktree status
 
@@ -137,3 +149,4 @@
 ## Feedback loop routing
 
 - `no-propagation`: no durable guardrail or skill update was needed. The Windows case-insensitive capsule-path incident was corrected locally and did not affect final code state.
+- Review/fix `no-propagation`: stale test correction is local to CS-443 and does not require a durable registry or skill update.

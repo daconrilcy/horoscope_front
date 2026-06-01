@@ -1,5 +1,5 @@
-# Commentaire global: garde quota natal long apres neutralisation de l'ancien endpoint.
-"""Verifie que POST /v1/natal/interpretation ne touche plus au quota legacy."""
+# Commentaire global: garde quota natal long apres suppression de l'ancien endpoint.
+"""Verifie que POST /v1/natal/interpretation n'expose plus de route publique."""
 
 from __future__ import annotations
 
@@ -43,7 +43,7 @@ def test_old_endpoint_returns_gone_before_quota_gate(
     client: TestClient,
     payload: dict[str, str],
 ) -> None:
-    """Short et complete sortent en 410 sans gate entitlement."""
+    """Short et complete sortent en 404 sans gate entitlement."""
     with (
         patch(
             "app.services.entitlement.natal_chart_long_entitlement_gate."
@@ -60,8 +60,7 @@ def test_old_endpoint_returns_gone_before_quota_gate(
     ):
         response = client.post("/v1/natal/interpretation", json=payload)
 
-    assert response.status_code == 410
-    assert response.json()["error"]["details"]["state"] == "readonly"
+    assert response.status_code == 404
     check_mock.assert_not_called()
     consume_mock.assert_not_called()
     release_mock.assert_not_called()
@@ -75,5 +74,5 @@ def test_old_endpoint_returns_gone_before_generation_service(client: TestClient)
     ) as interpret_mock:
         response = client.post("/v1/natal/interpretation", json=COMPLETE_PAYLOAD)
 
-    assert response.status_code == 410
+    assert response.status_code == 404
     interpret_mock.assert_not_called()

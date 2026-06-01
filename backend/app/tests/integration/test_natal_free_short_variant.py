@@ -1,5 +1,5 @@
-# Commentaire global: garde legacy free-short apres cutover product-action.
-"""Verifie que l'ancien POST natal ne declenche plus la variante free_short legacy."""
+# Commentaire global: garde legacy free-short apres suppression de l'ancien POST natal.
+"""Verifie que l'ancien POST natal n'est plus une surface publique active."""
 
 from __future__ import annotations
 
@@ -44,7 +44,6 @@ def test_old_public_endpoint_no_longer_resolves_free_short_variant(db_session) -
     finally:
         app.dependency_overrides.clear()
 
-    assert response.status_code == 410
-    assert response.json()["error"]["code"] == "natal_interpretation_endpoint_gone"
+    assert response.status_code == 404
     gateway_mock.assert_not_called()
     interpret_mock.assert_not_called()

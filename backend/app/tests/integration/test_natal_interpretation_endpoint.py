@@ -1,5 +1,5 @@
-# Commentaire global: garde de non-generation pour l'ancien endpoint natal public.
-"""Verifie que POST /v1/natal/interpretation est readonly et non generateur."""
+# Commentaire global: garde de suppression pour l'ancien endpoint natal public.
+"""Verifie que POST /v1/natal/interpretation n'est plus monte publiquement."""
 
 from __future__ import annotations
 
@@ -35,19 +35,14 @@ def test_client() -> TestClient:
         app.dependency_overrides.clear()
 
 
-def test_old_public_endpoint_returns_410_with_replacement(test_client: TestClient) -> None:
-    """L'ancien endpoint publie une erreur centralisee et le chemin de remplacement."""
+def test_old_public_endpoint_is_unmounted(test_client: TestClient) -> None:
+    """L'ancien endpoint ne conserve aucune facade publique 410."""
     response = test_client.post(
         "/v1/natal/interpretation",
         json={"use_case_level": "short", "locale": "fr-FR"},
     )
 
-    assert response.status_code == 410
-    payload = response.json()
-    assert payload["error"]["code"] == "natal_interpretation_endpoint_gone"
-    assert payload["error"]["details"]["state"] == "readonly"
-    assert payload["error"]["details"]["replacement"] == "/v1/theme-natal/readings"
-    assert payload["error"]["details"]["chart_request_locale"] == "fr-FR"
+    assert response.status_code == 404
 
 
 def test_old_public_endpoint_does_not_call_generation_owners(test_client: TestClient) -> None:
@@ -75,7 +70,7 @@ def test_old_public_endpoint_does_not_call_generation_owners(test_client: TestCl
             json={"use_case_level": "complete", "locale": "fr-FR"},
         )
 
-    assert response.status_code == 410
+    assert response.status_code == 404
     chart_mock.assert_not_called()
     profile_mock.assert_not_called()
     gate_mock.assert_not_called()
@@ -83,10 +78,8 @@ def test_old_public_endpoint_does_not_call_generation_owners(test_client: TestCl
     gateway_mock.assert_not_called()
 
 
-def test_old_public_endpoint_openapi_documents_only_gone_response() -> None:
-    """OpenAPI ne publie plus de schema de succes generateur sur l'ancien POST."""
-    operation = app.openapi()["paths"]["/v1/natal/interpretation"]["post"]
+def test_old_public_endpoint_is_absent_from_openapi() -> None:
+    """OpenAPI ne publie plus l'ancien POST natal."""
+    openapi_paths = set(app.openapi()["paths"])
 
-    assert "200" not in operation["responses"]
-    assert "410" in operation["responses"]
-    assert "requestBody" not in operation
+    assert "/v1/natal/interpretation" not in openapi_paths

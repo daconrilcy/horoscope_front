@@ -5,3 +5,18 @@ PASS: no matches
 Mapping scan production:
 COMMAND: rg -n "natal_long_free|natal_interpretation_short" backend\app\api\v1\routers\public backend\app\services\api_contracts\public frontend\src\api\natal-chart frontend\src\features\natal-chart
 PASS: no matches
+
+Review/fix bounded URL scan:
+COMMAND:
+rg -n "/v1/natal/interpretation|/v1/natal/interpretations|/v1/natal/pdf-templates" backend/app frontend/src
+  -g "!backend/app/tests/**" -g "!frontend/src/tests/**" -g "!**/__pycache__/**" -g "!**/node_modules/**"
+PASS: no matches; rg exit 1 expected.
+
+Review/fix bounded legacy symbol scan:
+COMMAND:
+rg -n "natal_long_free|natal_interpretation_short|use_case_level|forceRefresh|shouldRefreshShortAfterBasicUpgrade"
+  backend/app frontend/src -g "!backend/app/tests/**" -g "!frontend/src/tests/**" -g "!**/__pycache__/**" -g "!**/node_modules/**"
+REVIEWED: remaining production hits are RG-174 classified internal/admin-only or readonly persisted-row surfaces:
+- backend/app/api/v1/routers/internal/llm/qa.py - admin-only internal QA.
+- backend/app/services/api_contracts/internal/llm/qa.py - admin-only internal QA contract.
+- backend/app/services/llm_generation/natal/interpretation_service.py - readonly historical persisted-row projection and deleted-key rejection guard.
