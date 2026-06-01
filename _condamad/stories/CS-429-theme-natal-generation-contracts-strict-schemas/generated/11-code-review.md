@@ -26,6 +26,7 @@
 - Pre-existing unrelated dirty file remains: `_condamad/run-state.json`.
 - No untracked files were present.
 - No frontend, API route, infra adapter, migration, provider call, or dependency change was found for this story.
+- Current alignment pass changed only final evidence status wording from `ready-to-review` to `done`.
 
 ## Review layers
 
@@ -37,7 +38,12 @@
 
 ## Findings
 
-No actionable findings.
+No remaining actionable findings.
+
+Resolved in this pass:
+
+- Final evidence had a status wording mismatch: `generated/10-final-evidence.md` still said `00-story.md` was synchronized to `ready-to-review`.
+  The story and tracker are `done`, so the evidence was corrected to `done`.
 
 ## Acceptance audit
 
@@ -53,7 +59,8 @@ No actionable findings.
 
 ## Validation audit
 
-All reviewer commands below were run with `.\.venv\Scripts\Activate.ps1` active for Python/Ruff commands:
+All reviewer commands below were run with `.\.venv\Scripts\Activate.ps1` active for Python/Ruff commands.
+Current alignment pass reran the story and implementation-scope validations after the evidence correction:
 
 - `cd backend; ruff format --check .`: PASS, 1779 files already formatted.
 - `cd backend; ruff check .`: PASS.
