@@ -1,0 +1,4 @@
+backend\tests\integration\test_theme_natal_reading_slots.py:42:        contract_version="theme_natal.reading.basic_full_reading.v1",
+backend\app\domain\theme_natal\product_contract.py:15:    "free_preview": "theme_natal.reading.free_preview.v1",
+backend\app\domain\theme_natal\product_contract.py:16:    "basic_full_reading": "theme_natal.reading.basic_full_reading.v1",
+backend\app\domain\theme_natal\product_contract.py:17:    "premium_full_reading": "theme_natal.reading.premium_full_reading.v1",

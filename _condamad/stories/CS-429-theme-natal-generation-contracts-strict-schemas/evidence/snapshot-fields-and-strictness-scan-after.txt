@@ -1,0 +1,51 @@
+backend\app\domain\theme_natal\generation_contracts.py:27:    "generation_contract_snapshot_id",
+backend\app\domain\theme_natal\generation_contracts.py:28:    "generation_contract_hash",
+backend\app\domain\theme_natal\generation_contracts.py:120:    generation_contract_snapshot_id: str
+backend\app\domain\theme_natal\generation_contracts.py:121:    generation_contract_hash: str
+backend\app\domain\theme_natal\generation_contracts.py:129:def calculate_theme_natal_generation_contract_hash(
+backend\app\domain\theme_natal\generation_contracts.py:153:    contract_hash = calculate_theme_natal_generation_contract_hash(contract_copy)
+backend\app\domain\theme_natal\generation_contracts.py:157:        generation_contract_snapshot_id=f"{contract_copy.generation_contract_key}@{contract_hash[:16]}",
+backend\app\domain\theme_natal\generation_contracts.py:158:        generation_contract_hash=contract_hash,
+backend\app\domain\theme_natal\generation_contracts.py:231:            audit_only=("user_id", "chart_id", "request_id", "generation_contract_snapshot_id"),
+backend\app\domain\theme_natal\generation_contracts.py:270:                "generation_contract_snapshot_id",
+backend\app\domain\theme_natal\generation_contracts.py:311:                "generation_contract_snapshot_id",
+backend\app\domain\theme_natal\generation_contracts.py:342:    "calculate_theme_natal_generation_contract_hash",
+backend\tests\llm_orchestration\test_theme_natal_generation_contracts.py:37:    original_hash = snapshot.generation_contract_hash
+backend\tests\llm_orchestration\test_theme_natal_generation_contracts.py:48:    assert snapshot.generation_contract_hash == original_hash
+backend\tests\llm_orchestration\test_theme_natal_generation_contracts.py:56:    assert changed_snapshot.generation_contract_hash != original_hash
+backend\app\infra\providers\llm\openai_responses_client.py:127:                            schema["additionalProperties"] = False
+backend\tests\unit\domain\theme_natal\test_generation_contracts.py:18:    calculate_theme_natal_generation_contract_hash,
+backend\tests\unit\domain\theme_natal\test_generation_contracts.py:86:    assert snapshot.generation_contract_snapshot_id.startswith(
+backend\tests\unit\domain\theme_natal\test_generation_contracts.py:89:    assert snapshot.generation_contract_hash == calculate_theme_natal_generation_contract_hash(
+backend\tests\unit\domain\theme_natal\test_generation_contracts.py:104:        "generation_contract_snapshot_id",
+backend\tests\unit\domain\theme_natal\test_generation_contracts.py:105:        "generation_contract_hash",
+backend\tests\unit\domain\theme_natal\test_generation_contracts.py:163:    """Retourne les chemins objet qui n'ont pas additionalProperties=false."""
+backend\tests\unit\domain\theme_natal\test_generation_contracts.py:169:            if value.get("type") == "object" and value.get("additionalProperties") is not False:
+backend\app\domain\llm\prompting\narrator_contract.py:38:    "additionalProperties": False,
+backend\app\domain\llm\prompting\narrator_contract.py:45:            "additionalProperties": False,
+backend\app\domain\llm\prompting\narrator_contract.py:61:            "additionalProperties": False,
+backend\app\domain\llm\prompting\catalog.py:34:    "additionalProperties": False,
+backend\app\domain\llm\prompting\catalog.py:40:    "additionalProperties": False,
+backend\app\domain\llm\prompting\catalog.py:50:    "additionalProperties": False,
+backend\app\domain\llm\prompting\catalog.py:58:                "additionalProperties": False,
+backend\app\domain\llm\prompting\catalog.py:67:    "additionalProperties": False,
+backend\app\domain\llm\prompting\catalog.py:72:            "additionalProperties": False,
+backend\app\domain\llm\prompting\catalog.py:80:    "additionalProperties": False,
+backend\app\domain\llm\configuration\theme_astral_contracts.py:107:    "additionalProperties": False,
+backend\app\domain\llm\configuration\theme_astral_contracts.py:129:            "additionalProperties": False,
+backend\app\domain\llm\configuration\theme_astral_contracts.py:147:            "additionalProperties": False,
+backend\app\domain\llm\configuration\theme_astral_contracts.py:164:    "additionalProperties": False,
+backend\app\domain\llm\configuration\theme_astral_contracts.py:169:            "additionalProperties": False,
+backend\app\domain\llm\configuration\theme_astral_contracts.py:193:                            "additionalProperties": False,
+backend\app\domain\llm\configuration\theme_astral_contracts.py:211:                            "additionalProperties": False,
+backend\app\domain\llm\configuration\theme_astral_contracts.py:216:                                    "additionalProperties": False,
+backend\app\domain\llm\configuration\theme_astral_contracts.py:248:    "additionalProperties": False,
+backend\app\domain\llm\configuration\theme_astral_contracts.py:259:                "additionalProperties": False,
+backend\app\domain\llm\configuration\theme_astral_contracts.py:275:            "additionalProperties": False,
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:50:    "additionalProperties": False,
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:82:    "additionalProperties": False,
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:93:                "additionalProperties": False,
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:129:    "additionalProperties": False,
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:140:                "additionalProperties": False,
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:405:                "additionalProperties": False,
+backend\app\tests\unit\test_seed_horoscope_narrator_assembly.py:63:    assert time_windows["additionalProperties"] is False

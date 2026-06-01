@@ -1,0 +1,14 @@
+# Validation CS-429
+
+- Capsule prepare repair: PASS.
+- Capsule validation before implementation: PASS.
+- `ruff format` scoped backend touched files: PASS.
+- `ruff check .` from `backend`: PASS.
+- Targeted capsule pytest `tests/unit tests/llm_orchestration -k "theme_natal or generation_contract or schema"`: PASS, 48 passed.
+- Unit contract pytest: PASS, 7 passed.
+- LLM orchestration contract pytest: PASS, 5 passed.
+- Regression guardrail pytest set: PASS, 61 passed.
+- Required scans: PASS, persisted in sibling evidence files.
+- App import smoke: PASS, `app.main` loaded with 230 routes.
+- `git diff --check`: PASS with CRLF warnings only.
+- Final capsule validation: PASS.

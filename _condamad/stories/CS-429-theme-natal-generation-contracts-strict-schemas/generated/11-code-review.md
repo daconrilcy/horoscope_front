@@ -1,5 +1,8 @@
 # CS-429 Editorial Story Review
 
+> Classification 2026-06-01: obsolete / pre-implementation editorial review only.
+> This file is not final implementation review evidence for CS-429.
+
 Verdict: CLEAN
 
 ## Scope Reviewed

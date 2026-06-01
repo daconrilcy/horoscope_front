@@ -1,0 +1,10 @@
+{
+  "data_contract_version": "theme_natal.data.basic_full_reading.v1",
+  "engine_profile_version": "theme_natal.engine.basic_full_reading.v1",
+  "generation_contract_hash": "52ae88bbdc5b9683abc84de74b58cc664ee21c1d9944862d2b3c77ca2af37fd8",
+  "generation_contract_key": "theme_natal.reading.basic_full_reading.v1",
+  "generation_contract_snapshot_id": "theme_natal.reading.basic_full_reading.v1@52ae88bbdc5b9683",
+  "generation_contract_version": "1.0.0",
+  "output_schema_version": "theme_natal.output_contract.v1",
+  "prompt_contract_version": "theme_natal.prompt.basic_full_reading.v1"
+}

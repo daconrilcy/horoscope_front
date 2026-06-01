@@ -17,6 +17,8 @@ from app.domain.llm.configuration.theme_astral_contracts import (
 from app.domain.llm.prompting.narrator_contract import NARRATOR_OUTPUT_SCHEMA
 from app.domain.llm.prompting.schemas import _SECTION_KEY_VALUES
 from app.domain.llm.runtime.contracts import EVIDENCE_ID_REGEX
+from app.domain.theme_natal.generation_contracts import THEME_NATAL_GENERATION_CONTRACTS
+from app.domain.theme_natal.generation_schemas import THEME_NATAL_PUBLIC_SCHEMA_REGISTRY
 
 
 class CanonicalOutputSchemaDefinition(BaseModel):
@@ -189,6 +191,10 @@ CANONICAL_OUTPUT_SCHEMAS: tuple[CanonicalOutputSchemaDefinition, ...] = (
         name=THEME_ASTRAL_RESPONSE_CONTRACT_ID,
         json_schema=THEME_ASTRAL_RESPONSE_SCHEMA,
         version=1,
+    ),
+    *(
+        CanonicalOutputSchemaDefinition(name=name, version=version, json_schema=json_schema)
+        for name, version, json_schema in THEME_NATAL_PUBLIC_SCHEMA_REGISTRY
     ),
 )
 
@@ -384,6 +390,26 @@ CANONICAL_USE_CASE_CONTRACTS: tuple[CanonicalUseCaseContract, ...] = (
         persona_strategy="required",
         required_prompt_placeholders=[THEME_ASTRAL_INPUT_CONTRACT_ID, "persona_name"],
         input_schema=THEME_ASTRAL_INPUT_SCHEMA,
+    ),
+    *(
+        CanonicalUseCaseContract(
+            key=contract.generation_contract_key,
+            display_name=f"Theme Natal {contract.output_variant.value}",
+            description="Contrat versionne de generation theme natal.",
+            output_schema_name=contract.output_contract.public_schema_name,
+            persona_strategy="required",
+            required_prompt_placeholders=["theme_natal_generation_input_v1"],
+            input_schema={
+                "type": "object",
+                "required": ["theme_natal_generation_input_v1", "locale"],
+                "additionalProperties": False,
+                "properties": {
+                    "theme_natal_generation_input_v1": {"type": "object"},
+                    "locale": {"type": "string", "pattern": "^[a-z]{2}-[A-Z]{2}$"},
+                },
+            },
+        )
+        for contract in THEME_NATAL_GENERATION_CONTRACTS
     ),
 )
 

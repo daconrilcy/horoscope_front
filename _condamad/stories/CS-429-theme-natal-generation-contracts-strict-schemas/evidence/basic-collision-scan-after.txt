@@ -1,0 +1,108 @@
+backend\tests\llm_orchestration\test_llm_convergence.py:38:    ucs = ["chat_astrologer", "guidance_daily", "natal_interpretation"]
+backend\tests\llm_orchestration\test_llm_convergence.py:63:        elif uc_key == "natal_interpretation":
+backend\tests\llm_orchestration\test_llm_convergence.py:78:            output_schema_id=schema.id if uc_key == "natal_interpretation" else None,
+backend\tests\llm_orchestration\test_llm_convergence.py:136:    # We use the seeded assembly natal/natal_interpretation/premium
+backend\tests\llm_orchestration\test_llm_convergence.py:139:            use_case="natal_interpretation",
+backend\tests\llm_orchestration\test_llm_convergence.py:141:            subfeature="natal_interpretation",
+backend\tests\llm_orchestration\test_llm_astrology_input_boundaries.py:79:        use_case="natal_interpretation",
+backend\tests\llm_orchestration\test_llm_astrology_input_boundaries.py:143:        use_case="natal_interpretation",
+backend\tests\llm_orchestration\test_assembly_resolution.py:153:            "natal_interpretation",
+backend\tests\llm_orchestration\test_assembly_resolution.py:250:        use_case_key="natal_interpretation_short",
+backend\tests\llm_orchestration\test_assembly_resolution.py:258:        use_case_key="natal_interpretation",
+backend\tests\llm_orchestration\test_assembly_resolution.py:272:            use_case="natal_interpretation",
+backend\tests\llm_orchestration\test_assembly_resolution.py:300:        use_case_key="natal_interpretation_short",
+backend\tests\llm_orchestration\test_assembly_resolution.py:308:        use_case_key="natal_interpretation",
+backend\tests\llm_orchestration\test_assembly_resolution.py:317:                use_case="natal_interpretation_short",
+backend\tests\llm_orchestration\test_assembly_resolution.py:332:                use_case="natal_interpretation",
+backend\tests\llm_orchestration\test_assembly_resolution.py:379:    assert "natal_interpretation" not in rendered_prompt
+backend\tests\llm_orchestration\test_assembly_resolution.py:380:    assert "natal_interpretation_short" not in rendered_prompt
+backend\tests\llm_orchestration\test_execution_profile_taxonomy.py:49:            feature=NATAL_CANONICAL_FEATURE, subfeature="natal_interpretation", plan="free"
+backend\tests\llm_orchestration\test_execution_profile_taxonomy.py:52:        # Check that it normalized natal_interpretation -> interpretation
+backend\tests\llm_orchestration\test_execution_profile_taxonomy.py:83:            db, feature=NATAL_CANONICAL_FEATURE, subfeature="natal_interpretation"
+backend\tests\llm_orchestration\test_execution_profile_taxonomy.py:124:        subfeature="natal_interpretation",
+backend\tests\llm_orchestration\test_narrator_migration.py:27:        natal_interpretation="Natal",
+backend\tests\llm_orchestration\test_llm_legacy_extinction.py:20:        "natal_interpretation",
+backend\tests\llm_orchestration\test_llm_legacy_extinction.py:21:        "natal_interpretation_short",
+backend\tests\llm_orchestration\test_qualified_context.py:18:    assert QualifiedContext.compute_quality(["natal_interpretation"]) == "partial"
+backend\tests\llm_orchestration\test_qualified_context.py:20:    assert QualifiedContext.compute_quality(["natal_interpretation", "natal_data"]) == "minimal"
+backend\tests\llm_orchestration\test_qualified_context.py:71:            user_id=1, use_case_key="natal_interpretation", period="daily", db=db
+backend\tests\llm_orchestration\test_qualified_context.py:78:        assert "natal_interpretation" in res.missing_fields
+backend\tests\llm_orchestration\test_qualified_context.py:84:        assert "natal_interpretation" in res.missing_fields
+backend\tests\llm_orchestration\test_prompt_governance_registry.py:61:        "natal_interpretation",
+backend\tests\llm_orchestration\test_prompt_governance_registry.py:62:        "natal_interpretation_short",
+backend\tests\llm_orchestration\test_prompt_governance_registry.py:73:        "natal_interpretation_short",
+backend\tests\llm_orchestration\test_runtime_convergence.py:98:            use_case="natal_interpretation",
+backend\tests\llm_orchestration\test_runtime_convergence.py:100:            subfeature="natal_interpretation",
+backend\tests\llm_orchestration\test_runtime_convergence.py:132:            use_case="natal_interpretation_short",
+backend\tests\llm_orchestration\test_runtime_convergence.py:170:                use_case_key="natal_interpretation",
+backend\tests\llm_orchestration\test_runtime_convergence.py:176:                use_case_key="natal_interpretation_short",
+backend\tests\llm_orchestration\test_runtime_convergence.py:187:                name="AstroResponse_v3",
+backend\tests\llm_orchestration\test_runtime_convergence.py:208:    assert basic.feature_template.use_case_key == "natal_interpretation"
+backend\tests\llm_orchestration\test_runtime_convergence.py:210:    assert basic.output_schema.name == "AstroResponse_v3"
+backend\tests\llm_orchestration\test_theme_natal_generation_contracts.py:88:    for forbidden_token in ("AstroResponse_v3", "EXIGENCE PREMIUM", "natal_interpretation"):
+backend\app\domain\llm\governance\prompt_governance_registry.py:29:LEGACY_NATAL_FEATURE: Final[str] = "natal_interpretation"
+backend\app\domain\llm\runtime\adapter.py:234:    async def generate_natal_interpretation(
+backend\app\domain\llm\runtime\adapter.py:242:            "natal_interpretation",
+backend\app\domain\llm\runtime\adapter.py:243:            "natal_interpretation_short",
+backend\app\domain\prediction\astrologer_prompt_builder.py:81:        if ctx.natal_interpretation:
+backend\app\domain\prediction\astrologer_prompt_builder.py:82:            natal_summary = " ".join(ctx.natal_interpretation.split())[:1400]
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:64:                "offer_natal_interpretation",
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:181:        name="AstroResponse_v3",
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:212:        key="natal_interpretation",
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:215:        output_schema_name="AstroResponse_v3",
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:217:        fallback_target_key="natal_interpretation_short",
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:222:        key="natal_interpretation_short",
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:272:        output_schema_name="AstroResponse_v3",
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:274:        fallback_target_key="natal_interpretation_short",
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:282:        output_schema_name="AstroResponse_v3",
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:284:        fallback_target_key="natal_interpretation_short",
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:292:        output_schema_name="AstroResponse_v3",
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:294:        fallback_target_key="natal_interpretation_short",
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:302:        output_schema_name="AstroResponse_v3",
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:304:        fallback_target_key="natal_interpretation_short",
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:312:        output_schema_name="AstroResponse_v3",
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:314:        fallback_target_key="natal_interpretation_short",
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:322:        output_schema_name="AstroResponse_v3",
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:324:        fallback_target_key="natal_interpretation_short",
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:332:        output_schema_name="AstroResponse_v3",
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:334:        fallback_target_key="natal_interpretation_short",
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:342:        output_schema_name="AstroResponse_v3",
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:344:        fallback_target_key="natal_interpretation_short",
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:353:        fallback_target_key="natal_interpretation_short",
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:363:        fallback_target_key="natal_interpretation_short",
+backend\app\domain\llm\configuration\canonical_use_case_registry.py:372:        fallback_target_key="natal_interpretation_short",
+backend\app\domain\llm\runtime\gateway.py:90:PAID_USE_CASES = {"natal_interpretation", "natal_interpretation_short"}
+backend\app\domain\llm\runtime\gateway.py:265:            and use_case != "natal_interpretation"
+backend\app\domain\llm\runtime\gateway.py:405:                        "natal_interpretation",
+backend\app\domain\llm\runtime\gateway.py:798:            and use_case == "natal_interpretation"
+backend\app\domain\llm\runtime\gateway.py:1474:            is_natal_use_case = use_case.startswith("natal_") or use_case == "natal_interpretation"
+backend\app\domain\llm\runtime\gateway.py:2015:        is_natal_use_case = use_case.startswith("natal_") or use_case == "natal_interpretation"
+backend\app\domain\llm\governance\data\legacy_residual_registry.json:142:      "stable_id": "alias.feature.natal_interpretation",
+backend\app\domain\llm\governance\data\legacy_residual_registry.json:145:      "from_value": "natal_interpretation",
+backend\app\domain\llm\governance\data\legacy_residual_registry.json:149:      "justification": "Drift historique natal_interpretation vers natal canonique.",
+backend\app\domain\llm\governance\data\legacy_residual_registry.json:154:      "stable_id": "alias.subfeature.natal_interpretation",
+backend\app\domain\llm\governance\data\legacy_residual_registry.json:157:      "from_value": "natal_interpretation",
+backend\app\domain\llm\prompting\context.py:18:from app.infra.db.models.user_natal_interpretation import (
+backend\app\domain\llm\prompting\context.py:42:    natal_interpretation: Optional[str] = None
+backend\app\domain\llm\prompting\context.py:49:    use_case_key: str  # Raw key used for logic branching (e.g. "natal_interpretation")
+backend\app\domain\llm\prompting\context.py:54:        if self.use_case_key.startswith("natal_interpretation"):
+backend\app\domain\llm\prompting\context.py:79:            if not self.payload.natal_interpretation and not self.payload.use_case_key.startswith(
+backend\app\domain\llm\prompting\context.py:80:                "natal_interpretation"
+backend\app\domain\llm\prompting\context.py:82:                missing.append("natal_interpretation")
+backend\app\domain\llm\prompting\context.py:94:    _SECONDARY_FIELDS = frozenset({"natal_interpretation", "period_covered", "today_date"})
+backend\app\domain\llm\prompting\context.py:105:        if "natal_data" in missing_set and "natal_interpretation" in missing_set:
+backend\app\domain\llm\prompting\context.py:110:            "natal_data" in missing_set or "natal_interpretation" in missing_set
+backend\app\domain\llm\prompting\context.py:188:        natal_interpretation = None
+backend\app\domain\llm\prompting\context.py:191:        if use_case_key != "natal_interpretation":
+backend\app\domain\llm\prompting\context.py:201:                natal_interpretation = payload.get("summary") or payload.get("text")
+backend\app\domain\llm\prompting\context.py:203:                missing_fields.append("natal_interpretation")
+backend\app\domain\llm\prompting\context.py:210:            if not natal_interpretation:
+backend\app\domain\llm\prompting\context.py:243:            natal_interpretation=natal_interpretation,
+backend\app\domain\llm\governance\data\prompt_governance_registry.json:6:    "natal_interpretation": "natal",
+backend\app\domain\llm\governance\data\prompt_governance_registry.json:11:      "natal_interpretation": "interpretation"
+backend\app\domain\llm\prompting\catalog.py:130:    "natal_interpretation": {
+backend\app\domain\llm\prompting\catalog.py:138:    "natal_interpretation_short": {
+backend\app\domain\llm\prompting\schemas.py:73:    "offer_natal_interpretation",
+backend\app\domain\llm\prompting\tests\__init__.py:29:LEGACY_NATAL_FEATURE: Final[str] = "natal_interpretation"
+backend\app\domain\astrology\reading\basic_natal_contracts.py:12:BASIC_NATAL_PUBLIC_SCHEMA_VERSION = "basic_natal_interpretation_v2"
+backend\app\domain\astrology\reading\basic_natal_contracts.py:211:    schema_version: Literal["basic_natal_interpretation_v2"] = BASIC_NATAL_PUBLIC_SCHEMA_VERSION
