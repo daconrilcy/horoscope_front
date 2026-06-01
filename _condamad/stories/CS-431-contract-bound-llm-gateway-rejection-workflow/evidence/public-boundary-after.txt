@@ -1,0 +1,8 @@
+# CS-431 public boundary after
+
+- New integration `test_public_slot_listing_remains_accepted_only_after_rejected_attempt`:
+  PASS. One rejected run plus one accepted run returns exactly the accepted public slot.
+- Existing integration `test_natal_interpretation_rejected_public_boundary.py`: PASS,
+  8 passed with `--long`.
+- Rejected contract-bound attempts keep `parsed_raw_response` public projection empty and
+  are not returned by `ThemeNatalReadingSlotService.get_public_slot_by_key`.

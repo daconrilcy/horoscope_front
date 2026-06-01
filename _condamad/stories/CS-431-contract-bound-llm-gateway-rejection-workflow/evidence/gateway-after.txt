@@ -1,0 +1,2 @@
+VC9 gateway ownership scan
+PASS: no matches

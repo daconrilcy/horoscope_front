@@ -1,0 +1,20 @@
+# CS-431 validation evidence
+
+- Capsule repair: PASS.
+- Capsule validation: PASS.
+- Scoped format: PASS (`ruff format <changed python files>`).
+- Targeted lint: PASS (`ruff check <changed python files>`).
+- Backend lint: PASS (`cd backend; ruff check .`).
+- Gateway/rejection tests: PASS, 11 passed.
+- Contract-bound rejection integration: PASS with `--long`, 3 passed.
+- Existing Basic runtime integration: PASS with `--long`, 13 passed.
+- Filtered cross-suite validation: PASS, 82 passed and 473 deselected.
+- Prompt/legacy guardrails: PASS, 31 passed and 32 deselected.
+- Existing public-boundary regression: PASS with `--long`, 8 passed.
+- App import/start sanity: PASS, `app.main` imported and exposed 230 routes.
+- `git diff --check`: PASS; only CRLF working-copy warnings.
+
+Notes:
+- Integration tests under `backend/tests/integration` require `--long`; without it the
+  repo hook deselects them.
+- Live provider smoke tests were not run because this story excludes live provider calls.

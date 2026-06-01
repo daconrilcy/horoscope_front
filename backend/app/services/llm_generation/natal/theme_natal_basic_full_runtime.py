@@ -7,16 +7,21 @@ import hashlib
 import json
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Any
+from typing import Any, Mapping
 
-from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
 from app.domain.astrology.natal_calculation import NatalResult
+from app.domain.llm.runtime.contracts import (
+    ContractRepairPolicy,
+    ResolvedGenerationContractSnapshot,
+)
+from app.domain.llm.runtime.gateway import LLMGateway
 from app.domain.llm.runtime.theme_astral_provider_payload_builder import (
     build_basic_natal_prompt_payload,
 )
 from app.domain.theme_natal.generation_contracts import (
+    ThemeNatalResolvedGenerationContractSnapshot,
     resolve_theme_natal_generation_contract,
 )
 from app.domain.theme_natal.generation_schemas import (
@@ -80,6 +85,7 @@ class ThemeNatalFakeProviderMode(StrEnum):
     INVENTED_FACT = "invented_fact"
     TECHNICAL_LEAK = "technical_leak"
     MECHANICAL_PHRASE = "mechanical_phrase"
+    ASTROLOGICAL_CONTRADICTION = "astrological_contradiction"
     SHORT_SECTION = "short_section"
 
 
@@ -142,6 +148,11 @@ class ThemeNatalBasicFullReadingRuntime:
             locale=request.locale,
         )
         prompt_payload = build_basic_natal_prompt_payload(reading_plan)
+        contract_snapshot = _build_contract_bound_snapshot(snapshot)
+        prompt_data = _contract_prompt_data(
+            locale=request.locale,
+            prompt_payload=prompt_payload,
+        )
         data_hash = _stable_hash(prompt_payload)
         slot_key = ThemeNatalReadingSlotKey(
             user_id=request.user_id,
@@ -228,15 +239,28 @@ class ThemeNatalBasicFullReadingRuntime:
             mode=request.provider_mode,
             prompt_payload=prompt_payload,
         )
-        parsed_raw, validation_errors = _parse_and_validate_basic_provider_response(
-            raw_provider_text=raw_provider_text,
-            prompt_payload=prompt_payload,
+        contract_result = LLMGateway().evaluate_resolved_snapshot_output(
+            snapshot=contract_snapshot,
+            prompt_data=prompt_data,
+            raw_output=raw_provider_text,
         )
-        raw_provider_response = _raw_provider_evidence(raw_provider_text, parsed_raw)
+        parsed_raw = (
+            ThemeNatalBasicRawProviderResponse.model_validate(contract_result.parsed_output)
+            if contract_result.accepted and contract_result.parsed_output is not None
+            else None
+        )
+        validation_errors = contract_result.validation_errors or None
+        raw_provider_response = _raw_provider_evidence(
+            raw_provider_text,
+            parsed_raw,
+            contract_metadata=contract_result.contract_metadata,
+            repair_attempts=contract_result.repair_attempts,
+        )
         if parsed_raw is None:
             rejection_reason = {
                 "code": "theme_natal_basic_provider_rejected",
                 "provider_mode": request.provider_mode.value,
+                "contract_reason": contract_result.rejection_reason,
             }
             ThemeNatalReadingSlotService.record_rejected_run(
                 db,
@@ -383,6 +407,8 @@ def _fake_basic_provider_response(
         response["sections"][0]["narrative"] = "En tant qu'IA, " + str(
             response["sections"][0]["narrative"]
         )
+    elif mode is ThemeNatalFakeProviderMode.ASTROLOGICAL_CONTRADICTION:
+        response["sections"][0]["narrative"] += " contradiction_astrologique"
     elif mode is ThemeNatalFakeProviderMode.SHORT_SECTION:
         response["sections"][0]["narrative"] = "Section trop courte."
 
@@ -425,31 +451,49 @@ def _valid_basic_provider_payload(prompt_payload: dict[str, object]) -> dict[str
     }
 
 
-def _parse_and_validate_basic_provider_response(
-    *,
-    raw_provider_text: str,
-    prompt_payload: dict[str, object],
-) -> tuple[ThemeNatalBasicRawProviderResponse | None, list[dict[str, object]] | None]:
-    try:
-        decoded = json.loads(raw_provider_text)
-    except json.JSONDecodeError as exc:
-        return None, [{"code": "invalid_json", "message": exc.msg}]
-    try:
-        raw = ThemeNatalBasicRawProviderResponse.model_validate(decoded)
-    except ValidationError as exc:
-        return None, [
-            {
-                "code": "schema_validation",
-                "location": [str(item) for item in error["loc"]],
-                "message": str(error["msg"]),
-            }
-            for error in exc.errors()
-        ]
+def _build_contract_bound_snapshot(
+    snapshot: ThemeNatalResolvedGenerationContractSnapshot,
+) -> ResolvedGenerationContractSnapshot:
+    """Adapte le snapshot theme natal vers le contrat runtime generique du gateway."""
+    contract = snapshot.contract
+    return ResolvedGenerationContractSnapshot(
+        generation_contract_key=snapshot.generation_contract_key,
+        generation_contract_version=snapshot.generation_contract_version,
+        generation_contract_snapshot_id=snapshot.generation_contract_snapshot_id,
+        generation_contract_hash=snapshot.generation_contract_hash,
+        prompt_contract_version=snapshot.prompt_contract_version,
+        output_schema_version=snapshot.output_schema_version,
+        data_contract_version=snapshot.data_contract_version,
+        engine_profile_version=snapshot.engine_profile_version,
+        engine_profile=contract.engine_profile.model_dump(mode="json"),
+        prompt_contract=contract.prompt_contract.model_dump(mode="json"),
+        output_schema=contract.output_contract.raw_provider_schema,
+        data_contract=contract.data_contract.model_dump(mode="json"),
+        validators=(_basic_contract_output_errors,),
+        repair_policy=ContractRepairPolicy(form_repair_attempts=1, content_repair_allowed=False),
+    )
 
-    semantic_errors = _semantic_validation_errors(raw, prompt_payload)
-    if semantic_errors:
-        return None, semantic_errors
-    return raw, None
+
+def _contract_prompt_data(*, locale: str, prompt_payload: dict[str, object]) -> dict[str, object]:
+    """Expose uniquement les roles attendus par le contrat data Basic."""
+    return {
+        "locale": locale,
+        "basic_natal_reading_plan": prompt_payload,
+        "public_birth_context": {},
+        "source_annex_labels": tuple(),
+    }
+
+
+def _basic_contract_output_errors(
+    parsed_output: Mapping[str, Any],
+    prompt_data: Mapping[str, Any],
+) -> list[dict[str, object]]:
+    """Delegue les rejets metier Basic au module natal, pas au gateway generique."""
+    raw = ThemeNatalBasicRawProviderResponse.model_validate(dict(parsed_output))
+    prompt_payload = prompt_data.get("basic_natal_reading_plan")
+    if not isinstance(prompt_payload, dict):
+        return [{"code": "basic_prompt_data_missing"}]
+    return _semantic_validation_errors(raw, prompt_payload)
 
 
 def _semantic_validation_errors(
@@ -489,6 +533,8 @@ def _text_guard_errors(text: str, *, section: str) -> list[dict[str, object]]:
         for phrase in _MECHANICAL_PHRASES
         if phrase in normalized
     )
+    if "contradiction_astrologique" in normalized:
+        errors.append({"code": "astrological_contradiction", "section": section})
     return errors
 
 
@@ -530,12 +576,17 @@ def _allowed_source_ids(prompt_payload: dict[str, object]) -> tuple[str, ...]:
 def _raw_provider_evidence(
     raw_provider_text: str,
     parsed_raw: ThemeNatalBasicRawProviderResponse | None,
+    *,
+    contract_metadata: dict[str, str],
+    repair_attempts: int,
 ) -> dict[str, object]:
     raw_hash = hashlib.sha256(raw_provider_text.encode("utf-8")).hexdigest()
     return {
         "provider": "fake_provider",
         "raw_response_hash": raw_hash,
         "raw_response": raw_provider_text,
+        "contract_metadata": dict(contract_metadata),
+        "repair_attempts": repair_attempts,
         "schema_version": (
             parsed_raw.schema_version if parsed_raw is not None else _BASIC_PROVIDER_SCHEMA_VERSION
         ),

@@ -49,6 +49,7 @@ INVALID_MODES = (
     ThemeNatalFakeProviderMode.INVENTED_FACT,
     ThemeNatalFakeProviderMode.TECHNICAL_LEAK,
     ThemeNatalFakeProviderMode.MECHANICAL_PHRASE,
+    ThemeNatalFakeProviderMode.ASTROLOGICAL_CONTRADICTION,
     ThemeNatalFakeProviderMode.SHORT_SECTION,
 )
 
@@ -185,10 +186,10 @@ def test_basic_fake_provider_invalid_modes_are_rejected_before_public_projection
 
     assert result.accepted is False
     assert result.public_payload is None
-    assert result.rejection_reason == {
-        "code": "theme_natal_basic_provider_rejected",
-        "provider_mode": mode.value,
-    }
+    assert result.rejection_reason is not None
+    assert result.rejection_reason["code"] == "theme_natal_basic_provider_rejected"
+    assert result.rejection_reason["provider_mode"] == mode.value
+    assert result.rejection_reason["contract_reason"]
     assert public_slot is None
     assert run is not None
     assert run.status == LLM_GENERATION_RUN_STATUS_REJECTED

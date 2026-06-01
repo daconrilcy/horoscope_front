@@ -1,0 +1,23 @@
+VC10 premium leakage scan
+backend/tests\architecture\test_legacy_natal_generation_inventory_guard.py:66:    "fallback_default",
+backend/tests\architecture\test_legacy_natal_generation_inventory_guard.py:67:    "AstroResponse_v3",
+backend/tests\architecture\test_legacy_natal_generation_inventory_guard.py:68:    "EXIGENCE PREMIUM",
+backend/tests\unit\test_seed_66_20_taxonomy_basic_natal.py:41:    assert contract.output_schema_name == "AstroResponse_v3"
+backend/tests\integration\test_admin_llm_catalog.py:341:                "output_contract_ref": "AstroResponse_v3",
+backend/tests\integration\test_natal_basic_complete_v3_runtime.py:47:    """Retourne une fixture AstroResponse_v3 compatible lecture Basic complete."""
+backend/tests\integration\test_natal_basic_complete_v3_runtime.py:181:            output_schema_id="AstroResponse_v3",
+backend/app/domain/llm\configuration\assembly_resolver.py:244:        template_source = "fallback_default"
+backend/app/domain/llm\configuration\admin_models.py:300:    template_source: Literal["explicit_subfeature", "fallback_default"]
+backend/app/domain/llm\configuration\canonical_use_case_registry.py:181:        name="AstroResponse_v3",
+backend/app/domain/llm\configuration\canonical_use_case_registry.py:215:        output_schema_name="AstroResponse_v3",
+backend/app/domain/llm\configuration\canonical_use_case_registry.py:272:        output_schema_name="AstroResponse_v3",
+backend/app/domain/llm\configuration\canonical_use_case_registry.py:282:        output_schema_name="AstroResponse_v3",
+backend/app/domain/llm\configuration\canonical_use_case_registry.py:292:        output_schema_name="AstroResponse_v3",
+backend/app/domain/llm\configuration\canonical_use_case_registry.py:302:        output_schema_name="AstroResponse_v3",
+backend/app/domain/llm\configuration\canonical_use_case_registry.py:312:        output_schema_name="AstroResponse_v3",
+backend/app/domain/llm\configuration\canonical_use_case_registry.py:322:        output_schema_name="AstroResponse_v3",
+backend/app/domain/llm\configuration\canonical_use_case_registry.py:332:        output_schema_name="AstroResponse_v3",
+backend/app/domain/llm\configuration\canonical_use_case_registry.py:342:        output_schema_name="AstroResponse_v3",
+backend/tests\llm_orchestration\test_theme_natal_generation_contracts.py:88:    for forbidden_token in ("AstroResponse_v3", "EXIGENCE PREMIUM", "natal_interpretation"):
+backend/tests\llm_orchestration\test_runtime_convergence.py:187:                name="AstroResponse_v3",
+backend/tests\llm_orchestration\test_runtime_convergence.py:210:    assert basic.output_schema.name == "AstroResponse_v3"

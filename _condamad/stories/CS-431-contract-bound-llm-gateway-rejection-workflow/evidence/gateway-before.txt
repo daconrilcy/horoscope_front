@@ -1,0 +1,195 @@
+
+backend\app\domain\llm\runtime\gateway.py:36:    build_fallback_use_case_config,
+backend\app\domain\llm\runtime\gateway.py:53:    FallbackType,
+backend\app\domain\llm\runtime\gateway.py:58:    LLMExecutionRequest,
+backend\app\domain\llm\runtime\gateway.py:68:from app.domain.llm.runtime.fallback_governance import FallbackGovernanceRegistry
+backend\app\domain\llm\runtime\gateway.py:71:from app.domain.llm.runtime.output_validator import ValidationResult, validate_output
+backend\app\domain\llm\runtime\gateway.py:76:from app.domain.llm.runtime.repair import build_repair_prompt
+backend\app\domain\llm\runtime\gateway.py:102:# Locale-aware fallback messages for structured-data-only calls
+backend\app\domain\llm\runtime\gateway.py:103:_FALLBACK_USER_MSG = {
+backend\app\domain\llm\runtime\gateway.py:166:    def _allows_nominal_bootstrap_fallback(self, db: Optional[Session]) -> bool:
+backend\app\domain\llm\runtime\gateway.py:168:        Allow a bounded fallback in non-production only when the canonical assembly
+backend\app\domain\llm\runtime\gateway.py:273:            return _FALLBACK_USER_MSG.get(locale, _FALLBACK_USER_MSG["fr"])
+backend\app\domain\llm\runtime\gateway.py:300:        effective_user = user_payload or _FALLBACK_USER_MSG.get(locale, _FALLBACK_USER_MSG["fr"])
+backend\app\domain\llm\runtime\gateway.py:359:            fallback_target_use_case=(
+backend\app\domain\llm\runtime\gateway.py:360:                canonical_contract.fallback_target_key if canonical_contract else None
+backend\app\domain\llm\runtime\gateway.py:364:    async def _resolve_fallback_use_case_config(
+backend\app\domain\llm\runtime\gateway.py:372:        """Resolve config for bounded fallback paths outside the nominal assembly flow."""
+backend\app\domain\llm\runtime\gateway.py:444:            config = build_fallback_use_case_config(use_case)
+backend\app\domain\llm\runtime\gateway.py:456:                        "fallback_target_use_case": canonical_contract.fallback_target_key,
+backend\app\domain\llm\runtime\gateway.py:462:                # from the bounded fallback registry.
+backend\app\domain\llm\runtime\gateway.py:478:            logger.warning("gateway_fallback_config_used use_case=%s", use_case)
+backend\app\domain\llm\runtime\gateway.py:483:        resolved_model = resolve_model(use_case, fallback_model=config.model)
+backend\app\domain\llm\runtime\gateway.py:564:            fallback_persona = db.execute(stmt).scalars().first()
+backend\app\domain\llm\runtime\gateway.py:565:            if fallback_persona is not None:
+backend\app\domain\llm\runtime\gateway.py:566:                persona_block = compose_persona_block(fallback_persona)
+backend\app\domain\llm\runtime\gateway.py:567:                resolved_persona_id = str(fallback_persona.id)
+backend\app\domain\llm\runtime\gateway.py:568:                persona_name = fallback_persona.name
+backend\app\domain\llm\runtime\gateway.py:632:            fallback_schema = get_output_schema(use_case)
+backend\app\domain\llm\runtime\gateway.py:633:            fallback_entry = get_prompt_runtime_entry(use_case)
+backend\app\domain\llm\runtime\gateway.py:634:            if fallback_schema and fallback_entry:
+backend\app\domain\llm\runtime\gateway.py:635:                schema_dict = fallback_schema
+backend\app\domain\llm\runtime\gateway.py:636:                schema_name = re.sub(r"[^a-z0-9_-]", "_", str(fallback_entry["name"]).lower())
+backend\app\domain\llm\runtime\gateway.py:670:        is_repair_call: bool = False,
+backend\app\domain\llm\runtime\gateway.py:672:    ) -> LLMExecutionRequest:
+backend\app\domain\llm\runtime\gateway.py:673:        """Maps legacy dict-based parameters to the canonical LLMExecutionRequest."""
+backend\app\domain\llm\runtime\gateway.py:724:            "is_repair_call": is_repair_call,
+backend\app\domain\llm\runtime\gateway.py:726:            "test_fallback_active": context.get("test_fallback_active", False),
+backend\app\domain\llm\runtime\gateway.py:737:        return LLMExecutionRequest(
+backend\app\domain\llm\runtime\gateway.py:755:        is_repair_call: bool = False,
+backend\app\domain\llm\runtime\gateway.py:761:        FallbackGovernanceRegistry.track_fallback(
+backend\app\domain\llm\runtime\gateway.py:762:            FallbackType.LEGACY_WRAPPER,
+backend\app\domain\llm\runtime\gateway.py:773:            is_repair_call=is_repair_call,
+backend\app\domain\llm\runtime\gateway.py:805:        request: LLMExecutionRequest,
+backend\app\domain\llm\runtime\gateway.py:835:            and not request.flags.is_repair_call
+backend\app\domain\llm\runtime\gateway.py:905:                    allow_bootstrap_fallback = self._allows_nominal_bootstrap_fallback(db)
+backend\app\domain\llm\runtime\gateway.py:909:                        and not allow_bootstrap_fallback
+backend\app\domain\llm\runtime\gateway.py:938:                        and allow_bootstrap_fallback
+backend\app\domain\llm\runtime\gateway.py:941:                            "gateway_bootstrap_no_assembly_fallback feature=%s subfeature=%s "
+backend\app\domain\llm\runtime\gateway.py:948:                        FallbackGovernanceRegistry.track_fallback(
+backend\app\domain\llm\runtime\gateway.py:949:                            FallbackType.USE_CASE_FIRST,
+backend\app\domain\llm\runtime\gateway.py:1061:                    and not request.flags.test_fallback_active
+backend\app\domain\llm\runtime\gateway.py:1062:                    and not self._allows_nominal_bootstrap_fallback(db)
+backend\app\domain\llm\runtime\gateway.py:1066:                        "Fallback to USE_CASE_FIRST is strictly forbidden.",
+backend\app\domain\llm\runtime\gateway.py:1078:                        allow_bootstrap_fallback = self._allows_nominal_bootstrap_fallback(db)
+backend\app\domain\llm\runtime\gateway.py:1079:                        config = await self._resolve_fallback_use_case_config(
+backend\app\domain\llm\runtime\gateway.py:1084:                            allow_runtime_metadata_without_prompt=allow_bootstrap_fallback,
+backend\app\domain\llm\runtime\gateway.py:1092:                    allow_bootstrap_fallback = self._allows_nominal_bootstrap_fallback(db)
+backend\app\domain\llm\runtime\gateway.py:1093:                    config = await self._resolve_fallback_use_case_config(
+backend\app\domain\llm\runtime\gateway.py:1098:                        allow_runtime_metadata_without_prompt=allow_bootstrap_fallback,
+backend\app\domain\llm\runtime\gateway.py:1102:                allow_bootstrap_fallback = self._allows_nominal_bootstrap_fallback(db)
+backend\app\domain\llm\runtime\gateway.py:1103:                fallback_is_nominal = (
+backend\app\domain\llm\runtime\gateway.py:1106:                    and not request.flags.test_fallback_active
+backend\app\domain\llm\runtime\gateway.py:1107:                    and not allow_bootstrap_fallback
+backend\app\domain\llm\runtime\gateway.py:1109:                FallbackGovernanceRegistry.track_fallback(
+backend\app\domain\llm\runtime\gateway.py:1110:                    FallbackType.USE_CASE_FIRST,
+backend\app\domain\llm\runtime\gateway.py:1111:                    call_site=f"fallback_config:{use_case}",
+backend\app\domain\llm\runtime\gateway.py:1116:                    is_nominal=fallback_is_nominal,
+backend\app\domain\llm\runtime\gateway.py:1165:        ) and not request.flags.test_fallback_active
+backend\app\domain\llm\runtime\gateway.py:1196:                    max_output_tokens_source = "verbosity_fallback"
+backend\app\domain\llm\runtime\gateway.py:1227:                    # AC5: Fallback on non-nominal/test paths
+backend\app\domain\llm\runtime\gateway.py:1234:                    FallbackGovernanceRegistry.track_fallback(
+backend\app\domain\llm\runtime\gateway.py:1235:                        FallbackType.PROVIDER_OPENAI,
+backend\app\domain\llm\runtime\gateway.py:1241:                        "gateway_non_nominal_provider_fallback provider=%s model=%s. "
+backend\app\domain\llm\runtime\gateway.py:1246:                    model_id = resolve_model(use_case, fallback_model=config.model)
+backend\app\domain\llm\runtime\gateway.py:1247:                    profile_source = "fallback_provider_unsupported"
+backend\app\domain\llm\runtime\gateway.py:1288:                # High #1 & #2: Fallback if provider/params mapping fails (Legacy)
+backend\app\domain\llm\runtime\gateway.py:1289:                FallbackGovernanceRegistry.track_fallback(
+backend\app\domain\llm\runtime\gateway.py:1290:                    FallbackType.PROVIDER_OPENAI,
+backend\app\domain\llm\runtime\gateway.py:1291:                    call_site=f"provider_fallback:{provider}",
+backend\app\domain\llm\runtime\gateway.py:1300:                model_id = resolve_model(use_case, fallback_model=config.model)
+backend\app\domain\llm\runtime\gateway.py:1301:                profile_source = "fallback_resolve_model"
+backend\app\domain\llm\runtime\gateway.py:1323:            allow_bootstrap_fallback = self._allows_nominal_bootstrap_fallback(db)
+backend\app\domain\llm\runtime\gateway.py:1326:                and not request.flags.test_fallback_active
+backend\app\domain\llm\runtime\gateway.py:1327:                and not allow_bootstrap_fallback
+backend\app\domain\llm\runtime\gateway.py:1347:            # Legacy/Fallback resolution
+backend\app\domain\llm\runtime\gateway.py:1348:            model_id = resolve_model(use_case, fallback_model=config.model)
+backend\app\domain\llm\runtime\gateway.py:1351:                if allow_bootstrap_fallback
+backend\app\domain\llm\runtime\gateway.py:1352:                else "fallback_resolve_model"
+backend\app\domain\llm\runtime\gateway.py:1355:            FallbackGovernanceRegistry.track_fallback(
+backend\app\domain\llm\runtime\gateway.py:1356:                FallbackType.RESOLVE_MODEL,
+backend\app\domain\llm\runtime\gateway.py:1359:                is_nominal=is_nominal and not allow_bootstrap_fallback,
+backend\app\domain\llm\runtime\gateway.py:1364:                FallbackGovernanceRegistry.track_fallback(
+backend\app\domain\llm\runtime\gateway.py:1365:                    FallbackType.EXECUTION_CONFIG_ADMIN,
+backend\app\domain\llm\runtime\gateway.py:1370:                    and not request.flags.test_fallback_active
+backend\app\domain\llm\runtime\gateway.py:1371:                    and not allow_bootstrap_fallback,
+backend\app\domain\llm\runtime\gateway.py:1427:        if request.flags.is_repair_call:
+backend\app\domain\llm\runtime\gateway.py:1585:        request: LLMExecutionRequest,
+backend\app\domain\llm\runtime\gateway.py:1639:        self, messages: ComposedMessages, plan: ResolvedExecutionPlan, request: LLMExecutionRequest
+backend\app\domain\llm\runtime\gateway.py:1678:        self, raw_output: str, plan: ResolvedExecutionPlan, request: LLMExecutionRequest
+backend\app\domain\llm\runtime\gateway.py:1684:        return validate_output(
+backend\app\domain\llm\runtime\gateway.py:1693:    async def _handle_repair_or_fallback(
+backend\app\domain\llm\runtime\gateway.py:1696:        request: LLMExecutionRequest,
+backend\app\domain\llm\runtime\gateway.py:1701:        """Stage 5: Orchestrates repair calls or use case fallbacks on validation failure."""
+backend\app\domain\llm\runtime\gateway.py:1703:        is_repair_call = request.flags.is_repair_call
+backend\app\domain\llm\runtime\gateway.py:1705:        if not validation_result.valid and not is_repair_call:
+backend\app\domain\llm\runtime\gateway.py:1707:                "gateway_step:repair_invoked use_case=%s errors=%s",
+backend\app\domain\llm\runtime\gateway.py:1712:                "llm_repair_invoked_total",
+backend\app\domain\llm\runtime\gateway.py:1717:                    "natal_repair_total",
+backend\app\domain\llm\runtime\gateway.py:1721:            repair_prompt = build_repair_prompt(
+backend\app\domain\llm\runtime\gateway.py:1724:            repair_request = request.model_copy(deep=True)
+backend\app\domain\llm\runtime\gateway.py:1725:            repair_request.flags.is_repair_call = True
+backend\app\domain\llm\runtime\gateway.py:1726:            repair_request.flags.visited_use_cases = request.flags.visited_use_cases + [use_case]
+backend\app\domain\llm\runtime\gateway.py:1727:            repair_request.context.extra_context["user_data_block"] = repair_prompt
+backend\app\domain\llm\runtime\gateway.py:1730:                repair_result = await self.execute_request(repair_request, db=db)
+backend\app\domain\llm\runtime\gateway.py:1731:                return RecoveryResult(result=repair_result, repair_attempts=1, fallback_reason=None)
+backend\app\domain\llm\runtime\gateway.py:1733:                logger.warning("gateway_repair_failed use_case=%s error=%s", use_case, str(e))
+backend\app\domain\llm\runtime\gateway.py:1735:        # Stage 5.2: Legacy Fallback (ONLY for non-supported features)
+backend\app\domain\llm\runtime\gateway.py:1739:                if is_repair_call and use_case.startswith("natal"):
+backend\app\domain\llm\runtime\gateway.py:1741:                        "natal_repair_fail_total",
+backend\app\domain\llm\runtime\gateway.py:1747:                    "Legacy use_case fallback is strictly forbidden.",
+backend\app\domain\llm\runtime\gateway.py:1754:            config = await self._resolve_fallback_use_case_config(
+backend\app\domain\llm\runtime\gateway.py:1761:            if config.fallback_target_use_case:
+backend\app\domain\llm\runtime\gateway.py:1763:                    "gateway_step:fallback_invoked use_case=%s fallback=%s",
+backend\app\domain\llm\runtime\gateway.py:1765:                    config.fallback_target_use_case,
+backend\app\domain\llm\runtime\gateway.py:1768:                    "llm_fallback_invoked_total",
+backend\app\domain\llm\runtime\gateway.py:1771:                fallback_request = request.model_copy(deep=True)
+backend\app\domain\llm\runtime\gateway.py:1772:                fallback_request.user_input.use_case = config.fallback_target_use_case
+backend\app\domain\llm\runtime\gateway.py:1773:                fallback_request.flags.visited_use_cases = request.flags.visited_use_cases + [
+backend\app\domain\llm\runtime\gateway.py:1776:                fallback_request.request_id = f"{request.request_id}-fallback"
+backend\app\domain\llm\runtime\gateway.py:1778:                fallback_result = await self.execute_request(fallback_request, db=db)
+backend\app\domain\llm\runtime\gateway.py:1780:                    result=fallback_result,
+backend\app\domain\llm\runtime\gateway.py:1781:                    repair_attempts=0,
+backend\app\domain\llm\runtime\gateway.py:1782:                    fallback_reason=(
+backend\app\domain\llm\runtime\gateway.py:1790:            if is_repair_call and use_case.startswith("natal"):
+backend\app\domain\llm\runtime\gateway.py:1792:                    "natal_repair_fail_total",
+backend\app\domain\llm\runtime\gateway.py:1808:        request: LLMExecutionRequest,
+backend\app\domain\llm\runtime\gateway.py:1816:        if request.flags.test_fallback_active:
+backend\app\domain\llm\runtime\gateway.py:1817:            execution_path = "test_fallback"
+backend\app\domain\llm\runtime\gateway.py:1818:            FallbackGovernanceRegistry.track_fallback(
+backend\app\domain\llm\runtime\gateway.py:1819:                FallbackType.TEST_LOCAL,
+backend\app\domain\llm\runtime\gateway.py:1824:        elif recovery.fallback_reason:
+backend\app\domain\llm\runtime\gateway.py:1825:            execution_path = "fallback_use_case"
+backend\app\domain\llm\runtime\gateway.py:1826:        elif recovery.repair_attempts > 0:
+backend\app\domain\llm\runtime\gateway.py:1827:            execution_path = "repaired"
+backend\app\domain\llm\runtime\gateway.py:1848:        result.meta.repair_attempts = max(
+backend\app\domain\llm\runtime\gateway.py:1849:            getattr(result.meta, "repair_attempts", 0), recovery.repair_attempts
+backend\app\domain\llm\runtime\gateway.py:1851:        if recovery.fallback_reason:
+backend\app\domain\llm\runtime\gateway.py:1852:            result.meta.fallback_reason = recovery.fallback_reason
+backend\app\domain\llm\runtime\gateway.py:1855:        result.meta.repair_attempted = result.meta.repair_attempts > 0
+backend\app\domain\llm\runtime\gateway.py:1856:        result.meta.fallback_triggered = result.meta.fallback_reason is not None
+backend\app\domain\llm\runtime\gateway.py:1858:        if recovery.repair_attempts > 0:
+backend\app\domain\llm\runtime\gateway.py:1859:            if result.meta.validation_status in ["valid", "repair_success"]:
+backend\app\domain\llm\runtime\gateway.py:1860:                result.meta.validation_status = "repair_success"
+backend\app\domain\llm\runtime\gateway.py:1861:        elif recovery.fallback_reason:
+backend\app\domain\llm\runtime\gateway.py:1862:            result.meta.validation_status = "fallback"
+backend\app\domain\llm\runtime\gateway.py:1904:            "fallback_resolve_model",
+backend\app\domain\llm\runtime\gateway.py:1905:            "fallback_provider_unsupported",
+backend\app\domain\llm\runtime\gateway.py:1909:                "execution-profile fallback source.",
+backend\app\domain\llm\runtime\gateway.py:1918:        if recovery.repair_attempts > 0:
+backend\app\domain\llm\runtime\gateway.py:1919:            path_kind = ExecutionPathKind.REPAIR
+backend\app\domain\llm\runtime\gateway.py:1920:        elif recovery.fallback_reason:
+backend\app\domain\llm\runtime\gateway.py:1921:            path_kind = ExecutionPathKind.LEGACY_USE_CASE_FALLBACK
+backend\app\domain\llm\runtime\gateway.py:1924:        elif plan.execution_profile_source == "fallback_resolve_model":
+backend\app\domain\llm\runtime\gateway.py:1925:            path_kind = ExecutionPathKind.LEGACY_EXECUTION_PROFILE_FALLBACK
+backend\app\domain\llm\runtime\gateway.py:1926:        elif plan.execution_profile_source == "fallback_provider_unsupported":
+backend\app\domain\llm\runtime\gateway.py:1931:            plan.execution_profile_source == "fallback_provider_unsupported"
+backend\app\domain\llm\runtime\gateway.py:1937:        # 3. Fallback Kind
+backend\app\domain\llm\runtime\gateway.py:1938:        fallback_kind = None
+backend\app\domain\llm\runtime\gateway.py:1939:        if recovery.fallback_reason:
+backend\app\domain\llm\runtime\gateway.py:1940:            fallback_kind = FallbackType.DEPRECATED_USE_CASE
+backend\app\domain\llm\runtime\gateway.py:1942:            fallback_kind = FallbackType.DEPRECATED_USE_CASE
+backend\app\domain\llm\runtime\gateway.py:1944:            fallback_kind = FallbackType.TEST_LOCAL
+backend\app\domain\llm\runtime\gateway.py:1945:        elif plan.execution_profile_source == "fallback_resolve_model":
+backend\app\domain\llm\runtime\gateway.py:1946:            fallback_kind = FallbackType.RESOLVE_MODEL
+backend\app\domain\llm\runtime\gateway.py:1947:        elif plan.execution_profile_source == "fallback_provider_unsupported":
+backend\app\domain\llm\runtime\gateway.py:1948:            fallback_kind = FallbackType.PROVIDER_OPENAI
+backend\app\domain\llm\runtime\gateway.py:1969:        elif plan.max_output_tokens_source == "verbosity_fallback":
+backend\app\domain\llm\runtime\gateway.py:1970:            tokens_source = MaxTokensSource.VERBOSITY_FALLBACK
+backend\app\domain\llm\runtime\gateway.py:1975:            fallback_kind=fallback_kind,
+backend\app\domain\llm\runtime\gateway.py:2055:        self, request: LLMExecutionRequest, db: Optional[Session] = None
+backend\app\domain\llm\runtime\gateway.py:2062:        is_repair_call = request.flags.is_repair_call
+backend\app\domain\llm\runtime\gateway.py:2083:                FallbackGovernanceRegistry.track_fallback(
+backend\app\domain\llm\runtime\gateway.py:2084:                    FallbackType.DEPRECATED_USE_CASE,
+backend\app\domain\llm\runtime\gateway.py:2115:                    FallbackGovernanceRegistry.track_fallback(
+backend\app\domain\llm\runtime\gateway.py:2116:                        FallbackType.DEPRECATED_FEATURE_ALIAS,
+backend\app\domain\llm\runtime\gateway.py:2122:            if use_case in visited and not is_repair_call:
+backend\app\domain\llm\runtime\gateway.py:2124:                    f"Infinite fallback loop detected for use case '{use_case}'",
+backend\app\domain\llm\runtime\gateway.py:2130:                    f"Fallback chain depth limit exceeded for '{use_case}'",
+backend\app\domain\llm\runtime\gateway.py:2143:                config = await self._resolve_fallback_use_case_config(
+backend\app\domain\llm\runtime\gateway.py:2183:            if not is_repair_call:
+backend\app\domain\llm\runtime\gateway.py:2216:            # Stage 5: Recovery (Repair/Fallback)
+backend\app\domain\llm\runtime\gateway.py:2219:                    recovery = await self._handle_repair_or_fallback(
+backend\app\domain\llm\runtime\gateway.py:2238:            if db and not is_repair_call:
+backend\app\domain\llm\runtime\gateway.py:2255:            if db and not is_repair_call:
+

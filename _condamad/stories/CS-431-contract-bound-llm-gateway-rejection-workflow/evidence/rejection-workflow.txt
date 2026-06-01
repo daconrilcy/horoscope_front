@@ -1,0 +1,14 @@
+# Rejection workflow evidence
+
+- `test_invalid_json_gets_exactly_one_form_repair`: PASS.
+- `test_schema_shape_error_gets_exactly_one_form_repair`: PASS.
+- `test_unknown_json_fields_are_rejected_when_repair_is_not_allowed`: PASS.
+- Parametrized policy rejection test: PASS for invented fact, astrological contradiction,
+  technical leak, mechanical text, and empty text.
+- `test_contract_bound_rejection_is_persisted_only_as_generation_run`: PASS.
+- `test_contract_bound_runs_log_contract_versions_and_hashes`: PASS.
+
+Runtime behavior:
+- Parse/schema errors are form errors and may use exactly one repair when the contract permits.
+- Policy validator errors are direct rejections and do not trigger content repair.
+- Rejected attempts are stored on `llm_generation_runs`; public slot listing remains accepted-only.

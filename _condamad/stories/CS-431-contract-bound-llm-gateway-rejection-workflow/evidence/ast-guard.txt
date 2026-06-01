@@ -1,0 +1,1 @@
+PASS: execute_resolved_snapshot is snapshot-bound and gateway has no natal business tokens

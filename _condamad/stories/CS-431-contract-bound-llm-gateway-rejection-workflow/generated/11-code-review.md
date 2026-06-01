@@ -1,5 +1,8 @@
 # CS-431 Editorial Story Review
 
+Status: OBSOLETE pre-implementation story-contract review. This file is handoff-only and
+must not be used as final implementation review evidence for CS-431.
+
 Verdict: CLEAN
 
 ## Review Scope

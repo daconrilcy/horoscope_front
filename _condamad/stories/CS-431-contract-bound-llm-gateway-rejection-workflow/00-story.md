@@ -1,5 +1,5 @@
 # Story CS-431 contract-bound-llm-gateway-rejection-workflow: Contract Bound LLM Gateway And Rejection Workflow
-Status: ready-to-dev
+Status: ready-to-review
 
 ## Trigger / Source
 

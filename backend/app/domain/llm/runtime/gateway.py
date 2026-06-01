@@ -5,7 +5,7 @@ import os
 import re
 import time
 import uuid
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Mapping, Optional
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -44,6 +44,7 @@ from app.domain.llm.prompting.prompt_renderer import PromptRenderer
 from app.domain.llm.runtime.context_quality_injector import ContextQualityInjector
 from app.domain.llm.runtime.contracts import (
     ContextCompensationStatus,
+    ContractBoundGenerationResult,
     ExecutionContext,
     ExecutionFlags,
     ExecutionMessage,
@@ -60,6 +61,7 @@ from app.domain.llm.runtime.contracts import (
     OutputValidationError,
     RecoveryResult,
     ResolvedExecutionPlan,
+    ResolvedGenerationContractSnapshot,
     ResponseFormatConfig,
     UnknownUseCaseError,
     UseCaseConfig,
@@ -162,6 +164,305 @@ class LLMGateway:
         self.client = responses_client or ResponsesClient()
         self.runtime_manager = ProviderRuntimeManager(self.client)
         self.renderer = PromptRenderer()
+
+    async def execute_resolved_snapshot(
+        self,
+        *,
+        snapshot: ResolvedGenerationContractSnapshot,
+        prompt_data: Mapping[str, Any],
+        request_id: str,
+        trace_id: str,
+    ) -> ContractBoundGenerationResult:
+        """Execute un snapshot resolu sans relire de use case metier brut."""
+        messages = self._build_contract_bound_messages(snapshot=snapshot, prompt_data=prompt_data)
+        provider_result = await self._call_contract_bound_provider(
+            snapshot=snapshot,
+            messages=messages,
+            request_id=request_id,
+            trace_id=trace_id,
+        )
+        return await self._accept_or_repair_contract_bound_output(
+            snapshot=snapshot,
+            prompt_data=prompt_data,
+            messages=messages,
+            provider_result=provider_result,
+            request_id=request_id,
+            trace_id=trace_id,
+        )
+
+    def evaluate_resolved_snapshot_output(
+        self,
+        *,
+        snapshot: ResolvedGenerationContractSnapshot,
+        prompt_data: Mapping[str, Any],
+        raw_output: str,
+    ) -> ContractBoundGenerationResult:
+        """Valide une sortie provider deja obtenue avec la politique du snapshot."""
+        validation = validate_output(
+            raw_output,
+            snapshot.output_schema,
+            evidence_catalog=None,
+            strict=True,
+            use_case=snapshot.generation_contract_key,
+            schema_version=snapshot.output_schema_version,
+        )
+        return self._contract_bound_result_from_validation(
+            snapshot=snapshot,
+            prompt_data=prompt_data,
+            raw_output=raw_output,
+            validation=validation,
+            repair_attempts=0,
+        )
+
+    def _build_contract_bound_messages(
+        self,
+        *,
+        snapshot: ResolvedGenerationContractSnapshot,
+        prompt_data: Mapping[str, Any],
+    ) -> list[dict[str, str]]:
+        """Construit le carrier provider depuis les roles prompt-visible du contrat."""
+        prompt_visible_payload = self._prompt_visible_contract_data(
+            snapshot=snapshot,
+            prompt_data=prompt_data,
+        )
+        prompt_contract = snapshot.prompt_contract
+        developer_prompt = (
+            "Contrat prompt resolu.\n"
+            f"Version: {snapshot.prompt_contract_version}\n"
+            f"Policy: {prompt_contract.get('prompt_policy_id', '')}\n"
+            f"Assembly: {prompt_contract.get('assembly_key', '')}\n"
+            f"Style: {prompt_contract.get('style_profile', '')}\n"
+            f"Safety: {prompt_contract.get('safety_policy', '')}"
+        )
+        return [
+            {"role": "developer", "content": developer_prompt},
+            {
+                "role": "user",
+                "content": json.dumps(
+                    prompt_visible_payload,
+                    ensure_ascii=False,
+                    separators=(",", ":"),
+                    sort_keys=True,
+                ),
+            },
+        ]
+
+    def _prompt_visible_contract_data(
+        self,
+        *,
+        snapshot: ResolvedGenerationContractSnapshot,
+        prompt_data: Mapping[str, Any],
+    ) -> dict[str, Any]:
+        """Filtre les donnees d'entree selon les roles prompt-visible du snapshot."""
+        visible_keys = tuple(snapshot.data_contract.get("prompt_visible", ()))
+        return {key: prompt_data[key] for key in visible_keys if key in prompt_data}
+
+    async def _call_contract_bound_provider(
+        self,
+        *,
+        snapshot: ResolvedGenerationContractSnapshot,
+        messages: list[dict[str, str]],
+        request_id: str,
+        trace_id: str,
+    ) -> GatewayResult:
+        """Appelle le provider avec le profil moteur resolu par le snapshot."""
+        engine_profile = snapshot.engine_profile
+        provider = str(engine_profile["provider"])
+        if provider != "openai":
+            raise GatewayConfigError(
+                f"Provider '{provider}' is not supported for contract-bound execution.",
+                error_code="unsupported_contract_bound_provider",
+                details={"provider": provider},
+            )
+        runtime_parameters = dict(engine_profile.get("runtime_parameters", {}))
+        response_format = {
+            "type": "json_schema",
+            "json_schema": {
+                "name": self._response_format_name(snapshot.output_schema),
+                "schema": snapshot.output_schema,
+                "strict": True,
+            },
+        }
+        return await self.runtime_manager.execute_with_resilience(
+            messages=messages,
+            model=str(engine_profile["model_family"]),
+            family=snapshot.generation_contract_key,
+            temperature=float(runtime_parameters.get("temperature", 0.7)),
+            max_output_tokens=int(runtime_parameters.get("max_output_tokens", 1000)),
+            request_id=request_id,
+            trace_id=trace_id,
+            use_case=snapshot.generation_contract_key,
+            response_format=response_format,
+        )
+
+    async def _accept_or_repair_contract_bound_output(
+        self,
+        *,
+        snapshot: ResolvedGenerationContractSnapshot,
+        prompt_data: Mapping[str, Any],
+        messages: list[dict[str, str]],
+        provider_result: GatewayResult,
+        request_id: str,
+        trace_id: str,
+    ) -> ContractBoundGenerationResult:
+        """Applique parsing strict, schema, une reparation de forme, puis validateurs injectes."""
+        validation = validate_output(
+            provider_result.raw_output,
+            snapshot.output_schema,
+            evidence_catalog=None,
+            strict=True,
+            use_case=snapshot.generation_contract_key,
+            schema_version=snapshot.output_schema_version,
+        )
+        if validation.valid or validation.error_category not in {"parse_error", "schema_error"}:
+            return self._contract_bound_result_from_validation(
+                snapshot=snapshot,
+                prompt_data=prompt_data,
+                raw_output=provider_result.raw_output,
+                validation=validation,
+                repair_attempts=0,
+                provider_result=provider_result,
+            )
+        if snapshot.repair_policy.form_repair_attempts < 1:
+            return self._contract_bound_result_from_validation(
+                snapshot=snapshot,
+                prompt_data=prompt_data,
+                raw_output=provider_result.raw_output,
+                validation=validation,
+                repair_attempts=0,
+                provider_result=provider_result,
+            )
+
+        repair_messages = [
+            *messages,
+            {
+                "role": "developer",
+                "content": build_repair_prompt(
+                    provider_result.raw_output,
+                    validation.errors,
+                    snapshot.output_schema,
+                ),
+            },
+        ]
+        repaired_provider_result = await self._call_contract_bound_provider(
+            snapshot=snapshot,
+            messages=repair_messages,
+            request_id=f"{request_id}-repair",
+            trace_id=trace_id,
+        )
+        repaired_validation = validate_output(
+            repaired_provider_result.raw_output,
+            snapshot.output_schema,
+            evidence_catalog=None,
+            strict=True,
+            use_case=snapshot.generation_contract_key,
+            schema_version=snapshot.output_schema_version,
+        )
+        return self._contract_bound_result_from_validation(
+            snapshot=snapshot,
+            prompt_data=prompt_data,
+            raw_output=repaired_provider_result.raw_output,
+            validation=repaired_validation,
+            repair_attempts=1,
+            provider_result=repaired_provider_result,
+        )
+
+    def _contract_bound_result_from_validation(
+        self,
+        *,
+        snapshot: ResolvedGenerationContractSnapshot,
+        prompt_data: Mapping[str, Any],
+        raw_output: str,
+        validation: ValidationResult,
+        repair_attempts: int,
+        provider_result: GatewayResult | None = None,
+    ) -> ContractBoundGenerationResult:
+        """Convertit validation et validateurs injectes en resultat auditable."""
+        if not validation.valid:
+            return ContractBoundGenerationResult(
+                accepted=False,
+                raw_output=raw_output,
+                parsed_output=validation.parsed,
+                validation_errors=self._validation_errors_for_contract(validation),
+                rejection_reason={
+                    "code": "contract_form_rejected",
+                    "category": validation.error_category or "validation_error",
+                },
+                repair_attempts=repair_attempts,
+                contract_metadata=self._contract_bound_metadata(snapshot),
+                provider_metadata=self._provider_metadata(provider_result),
+            )
+
+        parsed_output = validation.parsed or {}
+        validator_errors: list[dict[str, object]] = []
+        for validator in snapshot.validators:
+            validator_errors.extend(validator(parsed_output, prompt_data))
+        if validator_errors:
+            first_code = str(validator_errors[0].get("code", "contract_policy_rejected"))
+            return ContractBoundGenerationResult(
+                accepted=False,
+                raw_output=raw_output,
+                parsed_output=parsed_output,
+                validation_errors=validator_errors,
+                rejection_reason={
+                    "code": first_code,
+                    "category": "contract_policy_rejection",
+                },
+                repair_attempts=repair_attempts,
+                contract_metadata=self._contract_bound_metadata(snapshot),
+                provider_metadata=self._provider_metadata(provider_result),
+            )
+
+        return ContractBoundGenerationResult(
+            accepted=True,
+            raw_output=raw_output,
+            parsed_output=parsed_output,
+            validation_errors=[],
+            rejection_reason=None,
+            repair_attempts=repair_attempts,
+            contract_metadata=self._contract_bound_metadata(snapshot),
+            provider_metadata=self._provider_metadata(provider_result),
+        )
+
+    def _validation_errors_for_contract(
+        self,
+        validation: ValidationResult,
+    ) -> list[dict[str, object]]:
+        """Expose les erreurs de parsing ou schema dans une forme persistable."""
+        category = validation.error_category or "validation_error"
+        return [{"code": category, "message": message} for message in validation.errors]
+
+    def _contract_bound_metadata(
+        self,
+        snapshot: ResolvedGenerationContractSnapshot,
+    ) -> dict[str, str]:
+        """Retourne les versions et hash contractuels a tracer avec le run."""
+        return {
+            "generation_contract_key": snapshot.generation_contract_key,
+            "generation_contract_version": snapshot.generation_contract_version,
+            "generation_contract_snapshot_id": snapshot.generation_contract_snapshot_id,
+            "generation_contract_hash": snapshot.generation_contract_hash,
+            "prompt_contract_version": snapshot.prompt_contract_version,
+            "output_schema_version": snapshot.output_schema_version,
+            "data_contract_version": snapshot.data_contract_version,
+            "engine_profile_version": snapshot.engine_profile_version,
+        }
+
+    def _provider_metadata(self, provider_result: GatewayResult | None) -> dict[str, object]:
+        """Recopie uniquement les metadonnees techniques non narratives du provider."""
+        if provider_result is None:
+            return {}
+        return {
+            "model": provider_result.meta.model,
+            "provider": provider_result.meta.provider,
+            "attempt_count": provider_result.meta.attempt_count,
+        }
+
+    def _response_format_name(self, output_schema: Mapping[str, Any]) -> str:
+        """Normalise le nom Structured Outputs depuis l'identifiant de schema."""
+        raw_name = str(output_schema.get("$id") or output_schema.get("title") or "contract_output")
+        normalized = re.sub(r"[^A-Za-z0-9_-]+", "_", raw_name).strip("_")
+        return normalized[:64] or "contract_output"
 
     def _allows_nominal_bootstrap_fallback(self, db: Optional[Session]) -> bool:
         """

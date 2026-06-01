@@ -4,7 +4,7 @@
 import uuid
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Literal, Optional, Union
+from typing import Any, Callable, Dict, List, Literal, Mapping, Optional, Union
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -202,6 +202,57 @@ class ResponseFormatConfig(BaseModel):
     json_schema: Optional[Dict[str, Any]] = Field(default=None, alias="schema")
 
     model_config = ConfigDict(populate_by_name=True)
+
+
+ContractOutputValidator = Callable[
+    [Mapping[str, Any], Mapping[str, Any]],
+    list[dict[str, object]],
+]
+
+
+class ContractRepairPolicy(BaseModel):
+    """Politique de reparation de forme autorisee par un contrat resolu."""
+
+    form_repair_attempts: int = Field(default=1, ge=0, le=1)
+    content_repair_allowed: bool = False
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+
+class ResolvedGenerationContractSnapshot(BaseModel):
+    """Snapshot resolu qui devient la source unique d'un run gateway contractuel."""
+
+    generation_contract_key: str
+    generation_contract_version: str
+    generation_contract_snapshot_id: str
+    generation_contract_hash: str
+    prompt_contract_version: str
+    output_schema_version: str
+    data_contract_version: str
+    engine_profile_version: str
+    engine_profile: dict[str, Any]
+    prompt_contract: dict[str, Any]
+    output_schema: dict[str, Any]
+    data_contract: dict[str, Any]
+    validators: tuple[ContractOutputValidator, ...] = Field(default_factory=tuple, exclude=True)
+    repair_policy: ContractRepairPolicy
+
+    model_config = ConfigDict(arbitrary_types_allowed=True, extra="forbid", frozen=True)
+
+
+class ContractBoundGenerationResult(BaseModel):
+    """Resultat normalise d'une execution gateway pilotee par snapshot."""
+
+    accepted: bool
+    raw_output: str
+    parsed_output: dict[str, Any] | None = None
+    validation_errors: list[dict[str, object]] = Field(default_factory=list)
+    rejection_reason: dict[str, object] | None = None
+    repair_attempts: int = 0
+    contract_metadata: dict[str, str]
+    provider_metadata: dict[str, object] = Field(default_factory=dict)
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
 
 
 class ResolvedExecutionPlan(BaseModel):
@@ -492,6 +543,9 @@ class OutputValidationError(GatewayError):
 
 __all__ = [
     "ComposedMessages",
+    "ContractBoundGenerationResult",
+    "ContractOutputValidator",
+    "ContractRepairPolicy",
     "ContextCompensationStatus",
     "ExecutionContext",
     "ExecutionFlags",
@@ -521,6 +575,7 @@ __all__ = [
     "EvalFixtureResult",
     "EvalReport",
     "RecoveryResult",
+    "ResolvedGenerationContractSnapshot",
     "ResolvedExecutionPlan",
     "ResponseFormatConfig",
     "UnknownUseCaseError",
