@@ -68,6 +68,7 @@ from app.api.v1.routers.public.privacy import router as privacy_router
 from app.api.v1.routers.public.projections import router as projections_router
 from app.api.v1.routers.public.reference_data import router as reference_data_router
 from app.api.v1.routers.public.support import router as support_router
+from app.api.v1.routers.public.theme_natal_readings import router as theme_natal_readings_router
 from app.api.v1.routers.public.transit_projection import router as transit_projection_router
 from app.api.v1.routers.public.users import router as users_router
 
@@ -135,6 +136,7 @@ API_V1_ROUTER_REGISTRY: tuple[RouterRegistration, ...] = (
     RouterRegistration(projections_router),
     RouterRegistration(privacy_router),
     RouterRegistration(reference_data_router),
+    RouterRegistration(theme_natal_readings_router),
     RouterRegistration(transit_projection_router),
     RouterRegistration(users_router),
     RouterRegistration(support_router),

@@ -72,6 +72,7 @@ router = APIRouter(prefix="/v1/natal", tags=["natal-interpretation"])
         404: {"model": ErrorEnvelope},
         422: {"model": ErrorEnvelope},
         429: {"model": ErrorEnvelope},
+        410: {"model": ErrorEnvelope},
         501: {"model": ErrorEnvelope},
         502: {"model": ErrorEnvelope},
         503: {"model": ErrorEnvelope},
@@ -86,6 +87,16 @@ async def interpret_natal_chart(
     db: Session = Depends(get_db_session),
 ) -> Any:
     request_id = resolve_request_id(request)
+    raise ApplicationError(
+        code="natal_interpretation_endpoint_gone",
+        message="POST /v1/natal/interpretation is readonly; use POST /v1/theme-natal/readings.",
+        details={
+            "state": "readonly",
+            "replacement": "/v1/theme-natal/readings",
+            "chart_request_locale": body.locale,
+        },
+        request_id=request_id,
+    )
     trace_id = request_id
     current_step = "init"
     debug_errors_enabled = request.headers.get("x-debug-errors") == "1"

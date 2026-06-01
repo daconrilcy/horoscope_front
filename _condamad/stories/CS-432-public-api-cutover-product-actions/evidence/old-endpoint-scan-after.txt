@@ -1,0 +1,73 @@
+backend\app\api\v1\routers\public\natal_interpretation.py:75:        410: {"model": ErrorEnvelope},
+backend\app\api\v1\routers\public\natal_interpretation.py:92:        message="POST /v1/natal/interpretation is readonly; use POST /v1/theme-natal/readings.",
+backend\app\api\v1\routers\public\natal_interpretation.py:94:            "state": "readonly",
+backend\app\api\v1\routers\public\support.py:94:    subscription = BillingService.get_subscription_status_readonly(db, user_id=user.id)
+backend\app\api\v1\routers\public\support.py:169:    subscription = BillingService.get_subscription_status_readonly(db, user_id=user.id)
+backend\tests\architecture\test_api_contract_neutrality.py:79:    "deprecated",
+backend\tests\api\admin\test_replay_snapshot_v1_api.py:319:        ("expired", 410),
+backend\tests\api\admin\test_replay_snapshot_v1_api.py:320:        ("already_purged", 410),
+backend\tests\architecture\test_legacy_natal_generation_inventory_guard.py:16:ALLOWED_CLASSIFICATIONS = {"delete", "replace", "readonly", "keep", "needs-decision"}
+backend\tests\architecture\test_legacy_natal_generation_inventory_guard.py:148:def test_readonly_rows_are_explicitly_non_generative() -> None:
+backend\tests\architecture\test_legacy_natal_generation_inventory_guard.py:149:    """Chaque ligne readonly indique pourquoi elle ne produit pas de sortie LLM."""
+backend\tests\architecture\test_legacy_natal_generation_inventory_guard.py:153:    readonly_text = "\n".join(
+backend\tests\architecture\test_legacy_natal_generation_inventory_guard.py:156:        if row.get("classification") == "readonly"
+backend\tests\architecture\test_legacy_natal_generation_inventory_guard.py:159:    assert "non-generative" in readonly_text
+backend\tests\unit\test_backend_structure_guard.py:80:def test_deprecated_infrastructure_namespace_is_not_reintroduced() -> None:
+backend\tests\unit\prediction\test_llm_narrator_deprecation_guard.py:50:def test_prediction_tests_do_not_reintroduce_deprecated_narrator_class() -> None:
+backend\tests\unit\prediction\test_llm_narrator_deprecation_guard.py:62:                        violations.append(f"{relative}: imports deprecated narrator class")
+backend\tests\unit\prediction\test_llm_narrator_deprecation_guard.py:65:                    violations.append(f"{relative}: instantiates deprecated narrator class")
+backend\tests\unit\prediction\test_llm_narrator_deprecation_guard.py:68:                        violations.append(f"{relative}: patches deprecated narrator method")
+backend\tests\unit\prediction\test_llm_narrator_deprecation_guard.py:89:                violations.append(f"{relative}: imports deprecated narrator module")
+backend\tests\unit\prediction\test_llm_narrator_deprecation_guard.py:92:                    violations.append(f"{relative}: instantiates deprecated narrator class")
+backend\tests\llm_orchestration\test_llm_unification.py:18:async def test_deprecated_use_case_redirection(db):
+backend\tests\llm_orchestration\test_llm_unification.py:67:    # 2. Call Gateway with deprecated use_case
+backend\tests\llm_orchestration\test_llm_unification.py:118:        # but marked deprecated
+backend\tests\llm_orchestration\test_llm_unification.py:136:async def test_deprecated_full_redirection(db):
+backend\tests\llm_orchestration\test_prompt_governance_registry.py:113:def test_deprecated_use_case_mapping_matches_registry_json() -> None:
+backend\tests\llm_orchestration\test_prompt_governance_registry.py:116:    from_json = raw["deprecated_use_case_mapping"]
+backend\tests\integration\test_theme_natal_reading_slots.py:84:        "client_request_id",
+backend\tests\integration\test_theme_natal_reading_slots.py:105:def test_theme_natal_slot_reuses_run_for_same_client_request_id(db: Session) -> None:
+backend\tests\integration\test_theme_natal_reading_slots.py:110:        client_request_id="client-request-428",
+backend\tests\integration\test_theme_natal_reading_slots.py:115:        client_request_id="client-request-428",
+backend\tests\integration\test_theme_natal_reading_slots.py:133:        client_request_id="client-request-a",
+backend\tests\integration\test_theme_natal_reading_slots.py:138:        client_request_id="client-request-b",
+backend\tests\integration\test_theme_natal_reading_slots.py:152:        client_request_id="client-request-first",
+backend\tests\integration\test_theme_natal_reading_slots.py:157:        client_request_id="client-request-second",
+backend\tests\integration\test_theme_natal_reading_slots.py:193:        client_request_id: str,
+backend\tests\integration\test_theme_natal_reading_slots.py:203:        return SimpleNamespace(id=client_request_id, slot_id=slot_id), True
+backend\tests\integration\test_theme_natal_reading_slots.py:205:    def claim(client_request_id: str) -> None:
+backend\tests\integration\test_theme_natal_reading_slots.py:210:            client_request_id=client_request_id,
+backend\tests\integration\test_theme_natal_reading_slots.py:236:        client_request_id="client-request-hidden",
+backend\tests\integration\test_theme_natal_reading_slots.py:241:        client_request_id="client-request-accepted",
+backend\tests\integration\test_theme_natal_reading_slots.py:278:        client_request_id="client-request-accepted",
+backend\tests\integration\test_theme_natal_reading_slots.py:293:        client_request_id="client-request-rejected",
+backend\tests\integration\test_theme_natal_reading_slots.py:317:        client_request_id="client-request-quota-1",
+backend\tests\integration\test_theme_natal_reading_slots.py:327:        client_request_id="client-request-quota-2",
+backend\tests\integration\test_contract_bound_llm_gateway_rejections.py:36:            client_request_id="contract-bound-rejected-only",
+backend\tests\integration\test_contract_bound_llm_gateway_rejections.py:63:            client_request_id="contract-bound-metadata",
+backend\tests\integration\test_contract_bound_llm_gateway_rejections.py:97:            client_request_id="contract-bound-public-rejected",
+backend\tests\integration\test_contract_bound_llm_gateway_rejections.py:106:            client_request_id="contract-bound-public-accepted",
+backend\tests\integration\test_contract_bound_llm_gateway_rejections.py:127:    client_request_id: str,
+backend\tests\integration\test_contract_bound_llm_gateway_rejections.py:135:        client_request_id=client_request_id,
+backend\tests\integration\test_theme_natal_public_api_product_actions.py:67:    assert {"chart_id", "action", "persona_profile_id", "locale", "client_request_id"} <= set(
+backend\tests\integration\test_theme_natal_public_api_product_actions.py:119:                "client_request_id": "client-request-432",
+backend\tests\integration\test_theme_natal_public_api_product_actions.py:130:    assert runtime_request.client_request_id == "client-request-432"
+backend\tests\integration\test_theme_natal_public_api_product_actions.py:155:    assert response.json()["state"] == "readonly"
+backend\tests\integration\test_theme_natal_public_api_product_actions.py:223:                "client_request_id": "client-request-rejected",
+backend\tests\integration\test_theme_natal_public_api_product_actions.py:237:    """POST /v1/natal/interpretation renvoie 410 sans appeler l'ancien service generateur."""
+backend\tests\integration\test_theme_natal_public_api_product_actions.py:247:    assert response.status_code == 410
+backend\tests\integration\test_theme_natal_public_api_product_actions.py:249:    assert response.json()["error"]["details"]["state"] == "readonly"
+backend\tests\integration\test_theme_natal_basic_full_reading_runtime.py:60:    client_request_id: str = "client-basic-runtime",
+backend\tests\integration\test_theme_natal_basic_full_reading_runtime.py:70:        client_request_id=client_request_id,
+backend\tests\integration\test_theme_natal_basic_full_reading_runtime.py:173:                client_request_id=f"client-{mode.value}",
+backend\tests\integration\test_theme_natal_basic_full_reading_runtime.py:223:                client_request_id="client-idempotent",
+backend\tests\integration\test_theme_natal_basic_full_reading_runtime.py:232:                client_request_id="client-idempotent",
+backend\tests\integration\test_theme_natal_basic_full_reading_runtime.py:252:    client_request_id = "client-rejected-idempotent"
+backend\tests\integration\test_theme_natal_basic_full_reading_runtime.py:264:            client_request_id=client_request_id,
+backend\tests\integration\test_theme_natal_basic_full_reading_runtime.py:282:                client_request_id=client_request_id,
+backend\tests\integration\test_llm_legacy_residual_governance.py:10:    assert_deprecated_use_case_registered,
+backend\tests\integration\test_llm_legacy_residual_governance.py:32:        assert_deprecated_use_case_registered(uc)
+backend\tests\integration\test_llm_legacy_residual_governance.py:128:def test_incomplete_deprecated_use_case_rejected_by_model():
+backend\tests\integration\test_llm_legacy_residual_governance.py:137:            registry_status="deprecated",
+backend\tests\llm_orchestration\test_runtime_convergence.py:56:async def test_allow_legacy_fallback_for_deprecated_use_case():
+backend\tests\llm_orchestration\test_runtime_convergence.py:66:            use_case="chat",  # deprecated key

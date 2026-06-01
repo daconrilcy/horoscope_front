@@ -1,0 +1,47 @@
+CS-432 validation evidence - 2026-06-01
+
+All Python commands were run after `. .\.venv\Scripts\Activate.ps1`.
+
+PASS - backend scoped format:
+Set-Location backend; ruff format app\api\errors\catalog.py app\api\v1\routers\public\natal_interpretation.py app\api\v1\routers\registry.py app\api\v1\routers\public\theme_natal_readings.py app\services\api_contracts\public\theme_natal_readings.py app\services\llm_generation\natal\theme_natal_product_actions.py tests\integration\test_theme_natal_public_api_product_actions.py
+Result: 1 file reformatted on final rerun.
+
+PASS - backend lint:
+Set-Location backend; ruff check .
+Result: All checks passed.
+
+PASS - story integration suite:
+Set-Location backend; python -B -m pytest -q --long tests\integration\test_theme_natal_public_api_product_actions.py --tb=short
+Result: 6 passed.
+
+PASS - focused theme_natal api integration selection:
+Set-Location backend; python -B -m pytest -q --long tests\integration -k "theme_natal and api" --tb=short
+Result: 6 passed, 284 deselected.
+
+PASS - runtime route guard:
+Set-Location backend; python -B -c "<app.routes guard>"
+Result: PASS route /v1/theme-natal/readings POST.
+
+PASS - runtime OpenAPI guard:
+Set-Location backend; python -B -c "<app.openapi guard>"
+Result: PASS openapi product fields and old endpoint 410.
+
+PASS - targeted forbidden field scan:
+rg -n "use_case_level|variant_code|forceRefresh|plan|use_case" backend\app\services\api_contracts\public\theme_natal_readings.py backend\app\api\v1\routers\public\theme_natal_readings.py
+Result: PASS: no matches in new product-action route/schema.
+
+PASS_WITH_LIMITATIONS - broad capsule scans:
+Broad scan outputs are persisted in `legacy-fields-after.txt`, `old-endpoint-scan-after.txt`, and `product-action-symbols-after.txt`.
+Expected matches are classified in `generated/10-final-evidence.md`.
+
+PASS - old endpoint no-call evidence:
+Set-Location backend; python -B -m pytest -q --long tests\integration\test_theme_natal_public_api_product_actions.py -k old_public_endpoint --tb=short
+Result: 1 passed, 5 deselected.
+
+PASS - diff whitespace:
+git diff --check
+Result: line-ending warnings only, no whitespace errors.
+
+PASS - final capsule validation:
+python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py _condamad\stories\CS-432-public-api-cutover-product-actions --final
+Result: CONDAMAD validation: PASS.

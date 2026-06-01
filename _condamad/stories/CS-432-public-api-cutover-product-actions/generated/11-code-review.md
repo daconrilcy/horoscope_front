@@ -2,7 +2,13 @@
 
 <!-- Commentaire global: cet artefact consigne la revue redactionnelle de la story CONDAMAD CS-432. -->
 
-Verdict: CLEAN
+Verdict: obsolete editorial review; no drafting findings.
+
+Implementation evidence classification: obsolete; handoff-only.
+
+This file is an editorial/pre-implementation story review. It is preserved as
+handoff context only and must not be used as final implementation review
+evidence for CS-432.
 
 ## Scope Reviewed
 

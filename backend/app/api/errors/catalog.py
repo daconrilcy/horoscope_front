@@ -105,6 +105,7 @@ _EXPLICIT_STATUS_BY_CODE.update(
         "natal_chart_not_found": 404,
         "natal_chart_long_access_denied": 403,
         "natal_chart_long_quota_exceeded": 429,
+        "natal_interpretation_endpoint_gone": 410,
         "natal_missing": 404,
         "output_validation_error": 422,
         "persona_profile_archive_forbidden": 422,

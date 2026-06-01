@@ -1,5 +1,5 @@
 # Story CS-432 public-api-cutover-product-actions: Public API Cutover To Product Actions
-Status: ready-to-dev
+Status: ready-to-review
 
 ## Trigger / Source
 
@@ -131,17 +131,17 @@ It must also make the old public generator non-generative.
 
 ## Implementation Tasks
 
-- [ ] Task 1: Register `POST /v1/theme-natal/readings` in the canonical public API router registry. (AC: AC1)
-- [ ] Task 2: Define product command request and response schemas under public API contract ownership. (AC: AC2, AC3, AC11)
-- [ ] Task 3: Configure strict validation that rejects `use_case`, `use_case_level`, `variant_code`, `plan`, and `forceRefresh`. (AC: AC4, AC11)
-- [ ] Task 4: Delegate the route to the CS-427 product action resolver or command service owner. (AC: AC3, AC5)
-- [ ] Task 5: Wire Basic `generate_full` through the CS-430 `basic_full_reading` path. (AC: AC5)
-- [ ] Task 6: Prove Basic `preview` does not invoke the old short-generation branch. (AC: AC6)
-- [ ] Task 7: Return accepted slots or controlled product states from CS-428 slot and run owners. (AC: AC7, AC8)
-- [ ] Task 8: Change `POST /v1/natal/interpretation` to a non-generative response or strict command-service delegation. (AC: AC9)
-- [ ] Task 9: Reuse centralized API error helpers for 422, 410, controlled states, and public envelopes. (AC: AC4, AC8, AC10)
-- [ ] Task 10: Add OpenAPI, `app.routes`, `TestClient`, and no-call provider tests for the cutover. (AC: AC1, AC2, AC3, AC9, AC11)
-- [ ] Task 11: Persist OpenAPI, scan, runtime, and validation evidence artifacts. (AC: AC12)
+- [x] Task 1: Register `POST /v1/theme-natal/readings` in the canonical public API router registry. (AC: AC1)
+- [x] Task 2: Define product command request and response schemas under public API contract ownership. (AC: AC2, AC3, AC11)
+- [x] Task 3: Configure strict validation that rejects `use_case`, `use_case_level`, `variant_code`, `plan`, and `forceRefresh`. (AC: AC4, AC11)
+- [x] Task 4: Delegate the route to the CS-427 product action resolver or command service owner. (AC: AC3, AC5)
+- [x] Task 5: Wire Basic `generate_full` through the CS-430 `basic_full_reading` path. (AC: AC5)
+- [x] Task 6: Prove Basic `preview` does not invoke the old short-generation branch. (AC: AC6)
+- [x] Task 7: Return accepted slots or controlled product states from CS-428 slot and run owners. (AC: AC7, AC8)
+- [x] Task 8: Change `POST /v1/natal/interpretation` to a non-generative response or strict command-service delegation. (AC: AC9)
+- [x] Task 9: Reuse centralized API error helpers for 422, 410, controlled states, and public envelopes. (AC: AC4, AC8, AC10)
+- [x] Task 10: Add OpenAPI, `app.routes`, `TestClient`, and no-call provider tests for the cutover. (AC: AC1, AC2, AC3, AC9, AC11)
+- [x] Task 11: Persist OpenAPI, scan, runtime, and validation evidence artifacts. (AC: AC12)
 
 ## Files to Inspect First
 

@@ -1,0 +1,153 @@
+backend\app\api\v1\routers\public\astrology_engine.py:301:                "planet_positions_count": diff["summary"]["planet_positions_count"],
+backend\app\api\v1\routers\public\astrology_engine.py:303:                "max_planet_delta_degrees": diff["summary"]["max_planet_delta_degrees"],
+backend\app\api\v1\routers\public\billing.py:63:    "/plans",
+backend\app\api\v1\routers\public\billing.py:67:def list_billing_plans(
+backend\app\api\v1\routers\public\billing.py:77:    plans = db.scalars(
+backend\app\api\v1\routers\public\billing.py:85:        "data": [BillingService._to_plan_data(p).model_dump(mode="json") for p in plans],
+backend\app\api\v1\routers\public\billing.py:106:        plan_code=None,
+backend\app\api\v1\routers\public\billing.py:113:    if subscription.plan is not None:
+backend\app\api\v1\routers\public\billing.py:121:                "plan_code": subscription.plan.code,
+backend\app\api\v1\routers\public\billing.py:146:        plan_code=None,
+backend\app\api\v1\routers\public\billing.py:183:            plan_code=parsed.plan,
+backend\app\api\v1\routers\public\billing.py:194:            plan=parsed.plan,
+backend\app\api\v1\routers\public\billing.py:216:                "plan": parsed.plan,
+backend\app\api\v1\routers\public\billing.py:264:        elif error.code in {"plan_price_not_configured", "invalid_checkout_request"}:
+backend\app\api\v1\routers\public\billing.py:320:            plan_code=None,
+backend\app\api\v1\routers\public\billing.py:473:        plan_code=None,
+backend\app\api\v1\routers\public\billing.py:553:        plan_code=payload.plan,
+backend\app\api\v1\routers\public\billing.py:564:            target_plan=payload.plan,
+backend\app\api\v1\routers\public\billing.py:576:                "target_plan": payload.plan,
+backend\app\api\v1\routers\public\billing.py:603:                details={"error_code": error.code, "target_plan": payload.plan},
+backend\app\api\v1\routers\public\entitlements.py:64:    - feature_not_in_plan (false) -> Désactiver CTA, afficher badge "upgrade"
+backend\app\api\v1\routers\public\entitlements.py:97:    # AC1 - plan_code et billing_status au top-level
+backend\app\api\v1\routers\public\entitlements.py:100:            "plan_code": snapshot.plan_code,
+backend\app\api\v1\routers\public\entitlements.py:110:    "/plans",
+backend\app\api\v1\routers\public\entitlements.py:114:def get_plans_catalog(
+backend\app\api\v1\routers\public\entitlements.py:120:    Expose le catalogue des plans B2C (AC1).
+backend\app\api\v1\routers\public\entitlements.py:133:    BillingService.ensure_default_plans(db)
+backend\app\api\v1\routers\public\entitlements.py:135:    # 1. Charger les plans B2C actifs avec leurs bindings, features et quotas (anti N+1)
+backend\app\api\v1\routers\public\entitlements.py:147:    plans = db.scalars(stmt).all()
+backend\app\api\v1\routers\public\entitlements.py:149:    # 2. Charger les prix depuis billing_plans
+backend\app\api\v1\routers\public\entitlements.py:150:    billing_plans = db.scalars(select(BillingPlanModel).where(BillingPlanModel.is_active)).all()
+backend\app\api\v1\routers\public\entitlements.py:151:    price_map = {bp.code: bp for bp in billing_plans}
+backend\app\api\v1\routers\public\entitlements.py:153:    # 3. Ordonner les plans : free, basic, premium
+backend\app\api\v1\routers\public\entitlements.py:154:    plan_order = {"free": 0, "basic": 1, "premium": 2}
+backend\app\api\v1\routers\public\entitlements.py:155:    sorted_plans = sorted(plans, key=lambda p: plan_order.get(p.plan_code, 99))
+backend\app\api\v1\routers\public\entitlements.py:173:    for plan in sorted_plans:
+backend\app\api\v1\routers\public\entitlements.py:174:        bp = price_map.get(plan.plan_code)
+backend\app\api\v1\routers\public\entitlements.py:175:        if plan.plan_code != "free":
+backend\app\api\v1\routers\public\entitlements.py:180:        is_plan_active = bp.is_available_to_users if bp else plan.is_active
+backend\app\api\v1\routers\public\entitlements.py:182:        # Map des bindings existants pour ce plan
+backend\app\api\v1\routers\public\entitlements.py:183:        plan_bindings = {b.feature.feature_code: b for b in plan.bindings}
+backend\app\api\v1\routers\public\entitlements.py:188:            b = plan_bindings.get(f_code)
+backend\app\api\v1\routers\public\entitlements.py:224:                # Pas de binding = feature non incluse / désactivée pour ce plan
+backend\app\api\v1\routers\public\entitlements.py:237:                plan_code=plan.plan_code,
+backend\app\api\v1\routers\public\entitlements.py:238:                plan_name=plan.plan_name,
+backend\app\api\v1\routers\public\entitlements.py:241:                is_active=is_plan_active,
+backend\app\api\v1\routers\public\entitlements.py:242:                processing_priority=_PLAN_PRIORITY.get(plan.plan_code, "medium"),
+backend\app\api\v1\routers\public\predictions.py:267:        # Resolve variant_code (Story 64.2)
+backend\app\api\v1\routers\public\predictions.py:272:            variant_code = entitlement.variant_code
+backend\app\api\v1\routers\public\predictions.py:336:                user_id=current_user.id, use_case_key="horoscope_daily", period="daily", db=db
+backend\app\api\v1\routers\public\predictions.py:360:            variant_code=variant_code,
+backend\app\api\v1\routers\public\predictions.py:375:            variant_code=variant_code,
+backend\app\api\v1\routers\public\natal_interpretation.py:95:    variant_code: str | None = None
+backend\app\api\v1\routers\public\natal_interpretation.py:106:    if body.use_case_level == "complete":
+backend\app\api\v1\routers\public\natal_interpretation.py:113:            variant_code = entitlement_result.variant_code
+backend\app\api\v1\routers\public\natal_interpretation.py:168:            level=body.use_case_level,
+backend\app\api\v1\routers\public\natal_interpretation.py:177:            variant_code=variant_code,
+backend\app\api\v1\routers\public\natal_interpretation.py:211:        if "unknown_use_case" in code or "not configured" in str(e).lower():
+backend\app\api\v1\routers\public\natal_interpretation.py:213:            code = "unknown_use_case"
+backend\app\api\v1\routers\public\natal_interpretation.py:228:        return _raise_error(404, "unknown_use_case", str(e), request_id)
+backend\app\api\v1\routers\public\natal_interpretation.py:395:                        item.use_case
+backend\app\api\v1\routers\public\natal_interpretation.py:396:                        if item.use_case.startswith("natal_")
+backend\app\api\v1\routers\public\natal_interpretation.py:397:                        and item.use_case
+backend\app\api\v1\routers\public\natal_interpretation.py:402:                    "use_case": item.use_case,
+backend\app\api\v1\routers\public\natal_interpretation.py:455:        use_case=item.use_case,
+backend\app\api\v1\routers\public\privacy.py:60:    plan_code = subscription.plan.code if subscription.plan is not None else "no-plan"
+backend\app\api\v1\routers\public\privacy.py:63:        plan_code=plan_code,
+backend\app\api\v1\routers\public\privacy.py:136:    plan_code = subscription.plan.code if subscription.plan is not None else "no-plan"
+backend\app\api\v1\routers\public\privacy.py:139:        plan_code=plan_code,
+backend\app\api\v1\routers\public\privacy.py:182:    plan_code = subscription.plan.code if subscription.plan is not None else "no-plan"
+backend\app\api\v1\routers\public\privacy.py:185:        plan_code=plan_code,
+backend\app\api\v1\routers\public\privacy.py:300:    plan_code = subscription.plan.code if subscription.plan is not None else "no-plan"
+backend\app\api\v1\routers\public\privacy.py:303:        plan_code=plan_code,
+backend\app\api\v1\routers\public\privacy.py:346:        plan_code=None,
+backend\app\services\api_contracts\public\predictions.py:130:    planet: str
+backend\app\services\api_contracts\public\predictions.py:149:    planet_a: str
+backend\app\services\api_contracts\public\predictions.py:150:    planet_b: str | None = None
+backend\app\services\api_contracts\public\predictions.py:167:    planet_positions: list[str] | None = None
+backend\app\services\api_contracts\public\billing.py:39:    plan: Literal["basic", "premium"]
+backend\app\services\api_contracts\public\billing.py:45:    plan: Literal["basic", "premium"]
+backend\app\services\api_contracts\public\natal_interpretation.py:36:    use_case_level: Literal["short", "complete"] = Field(
+backend\app\services\api_contracts\public\natal_interpretation.py:58:    use_case: str
+backend\app\services\api_contracts\public\natal_interpretation.py:78:    use_case: str
+backend\app\services\api_contracts\public\natal_interpretation.py:111:    variant_code: Optional[str] = None  # "single_astrologer" | "multi_astrologer"
+backend\app\services\api_contracts\public\natal_interpretation.py:132:    use_case: str
+backend\app\services\api_contracts\public\entitlements.py:37:    variant_code: str | None = None
+backend\app\services\api_contracts\public\entitlements.py:45:    current_plan_code: str
+backend\app\services\api_contracts\public\entitlements.py:46:    target_plan_code: str
+backend\app\services\api_contracts\public\entitlements.py:54:    Contrat frontend unique décrivant le plan commercial et les droits effectifs.
+backend\app\services\api_contracts\public\entitlements.py:61:      "feature_not_in_plan", "billing_inactive" ou "quota_exhausted"
+backend\app\services\api_contracts\public\entitlements.py:64:    plan_code: str  # top-level (ex-dupliqué par feature)
+backend\app\services\api_contracts\public\entitlements.py:83:# --- Schémas pour le catalogue de plans (AC2) ---
+backend\app\services\api_contracts\public\entitlements.py:109:    plan_code: str
+backend\app\services\api_contracts\public\entitlements.py:110:    plan_name: str
+backend\app\services\api_contracts\public\projections.py:35:    plan_code: Literal["free", "basic", "premium"]
+backend\app\api\v1\routers\public\transit_projection.py:57:            plan_code="free",
+backend\app\api\v1\routers\public\transit_projection.py:66:            plan_code="free",
+backend\app\api\v1\routers\public\transit_projection.py:72:            plan_code="free",
+backend\app\api\v1\routers\public\transit_projection.py:81:            plan_code=exc.plan_code,
+backend\app\api\v1\routers\public\transit_projection.py:87:            plan_code="free",
+backend\app\api\v1\routers\public\transit_projection.py:92:        plan_code=access.plan_code,
+backend\app\services\api_contracts\public\transit_projection.py:27:    """Sections client autorisées selon le plan B2C."""
+backend\app\services\api_contracts\public\transit_projection.py:38:    plan_code: Literal["free", "basic", "premium"]
+backend\app\api\v1\routers\public\users.py:478:            planet_code = error.details.get("planet_code")
+backend\app\api\v1\routers\public\users.py:484:                    planet_code=planet_code,
+backend\app\api\v1\routers\public\users.py:495:                        "planet_code": planet_code,
+backend\app\services\api_contracts\admin\ai.py:30:    use_case: str
+backend\app\services\api_contracts\admin\ai.py:56:    use_case: str
+backend\app\services\api_contracts\ops\entitlement_mutation_audits.py:61:    plan_id: int
+backend\app\services\api_contracts\ops\entitlement_mutation_audits.py:62:    plan_code_snapshot: str
+backend\app\services\api_contracts\ops\entitlement_mutation_audits.py:88:    plan_code: str | None = None
+backend\app\services\api_contracts\ops\entitlement_mutation_audits.py:104:    plan_code: str | None = Field(None, max_length=64)
+backend\app\services\api_contracts\ops\entitlement_mutation_audits.py:307:    plan_code: str | None = None
+backend\app\services\api_contracts\ops\entitlement_mutation_audits.py:363:    plan_code: str | None = None
+backend\app\services\api_contracts\ops\entitlement_mutation_audits.py:412:    plan_id_snapshot: int
+backend\app\services\api_contracts\ops\entitlement_mutation_audits.py:413:    plan_code_snapshot: str
+backend\app\services\api_contracts\admin\entitlements.py:31:    variant_code: str | None
+backend\app\services\api_contracts\admin\entitlements.py:42:    plans: list[AdminEntitlementPlan]
+backend\app\services\api_contracts\admin\entitlements.py:44:    cells: dict[str, AdminEntitlementCell]  # Key: "plan_id:feature_id"
+backend\app\services\api_contracts\ops\b2b\entitlement_repair.py:29:    plans_created: int
+backend\app\services\api_contracts\ops\b2b\entitlement_repair.py:62:    canonical_plan_id: int
+backend\app\services\api_contracts\ops\b2b\entitlement_repair.py:70:    canonical_plan_id: int
+backend\app\services\api_contracts\internal\llm\qa.py:50:    use_case_level: Literal["short", "complete"] = "complete"
+backend\app\services\api_contracts\ops\b2b\entitlements_audit.py:21:    enterprise_plan_id: int | None
+backend\app\services\api_contracts\ops\b2b\entitlements_audit.py:22:    enterprise_plan_code: str | None
+backend\app\services\api_contracts\ops\b2b\entitlements_audit.py:23:    canonical_plan_id: int | None
+backend\app\services\api_contracts\ops\b2b\entitlements_audit.py:24:    canonical_plan_code: str | None
+backend\app\services\api_contracts\admin\users.py:16:    plan_code: str | None
+backend\app\services\api_contracts\admin\users.py:45:    use_case: str
+backend\app\services\api_contracts\admin\users.py:93:    plan_code: str | None
+backend\app\services\api_contracts\admin\llm\consumption.py:24:    subscription_plan: str | None = None
+backend\app\services\api_contracts\admin\llm\prompts.py:25:    "use_case_overlay",
+backend\app\services\api_contracts\admin\llm\prompts.py:26:    "plan_overlay",
+backend\app\services\api_contracts\admin\llm\prompts.py:90:    use_cases: list[str]
+backend\app\services\api_contracts\admin\llm\prompts.py:164:    use_case: str
+backend\app\services\api_contracts\admin\llm\prompts.py:199:    use_case: str
+backend\app\services\api_contracts\admin\llm\prompts.py:225:    plan: str | None = None
+backend\app\services\api_contracts\admin\llm\prompts.py:257:    plan_rules: dict[str, Any] | None = None
+backend\app\services\api_contracts\admin\llm\prompts.py:310:    plan: str | None = None
+backend\app\services\api_contracts\admin\llm\prompts.py:335:    editable_use_case_key: str | None = None
+backend\app\services\api_contracts\admin\llm\prompts.py:359:    plan: str | None = None
+backend\app\services\api_contracts\admin\llm\prompts.py:361:    use_case_key: str
+backend\app\services\api_contracts\admin\llm\prompts.py:362:    canonical_use_case_key: str | None = None
+backend\app\services\api_contracts\admin\llm\prompts.py:363:    runtime_use_case_key: str | None = None
+backend\app\services\api_contracts\admin\llm\prompts.py:364:    use_case_audit: AdminUseCaseAudit | None = None
+backend\app\services\api_contracts\admin\llm\prompts.py:365:    runtime_use_case_audit: AdminUseCaseAudit | None = None
+backend\app\services\api_contracts\admin\llm\prompts.py:398:    use_case_key: str
+backend\app\services\api_contracts\admin\logs.py:52:    plan_code: str
+backend\app\services\api_contracts\admin\llm\sample_payloads.py:27:    plan: str
+backend\app\services\api_contracts\admin\llm\sample_payloads.py:46:    plan: str
+backend\app\services\api_contracts\admin\llm\sample_payloads.py:95:    plan: str | None = Field(default=None, max_length=64)
+backend\app\services\api_contracts\admin\llm\sample_payloads.py:108:    plan: str | None = Field(default=None, max_length=64)
+backend\app\services\api_contracts\admin\llm\error_codes.py:17:    USE_CASE_NOT_FOUND = "use_case_not_found"

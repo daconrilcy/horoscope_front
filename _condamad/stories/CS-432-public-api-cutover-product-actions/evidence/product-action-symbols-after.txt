@@ -1,0 +1,63 @@
+backend\tests\unit\domain\theme_natal\test_product_contract_action_resolver.py:14:    ThemeNatalReadingAction,
+backend\tests\unit\domain\theme_natal\test_product_contract_action_resolver.py:15:    ThemeNatalReadingActionRequest,
+backend\tests\unit\domain\theme_natal\test_product_contract_action_resolver.py:26:    action: ThemeNatalReadingAction,
+backend\tests\unit\domain\theme_natal\test_product_contract_action_resolver.py:30:) -> ThemeNatalReadingActionRequest:
+backend\tests\unit\domain\theme_natal\test_product_contract_action_resolver.py:32:    return ThemeNatalReadingActionRequest(
+backend\tests\unit\domain\theme_natal\test_product_contract_action_resolver.py:49:    assert {action.value for action in ThemeNatalReadingAction} == {
+backend\tests\unit\domain\theme_natal\test_product_contract_action_resolver.py:51:        "generate_full",
+backend\tests\unit\domain\theme_natal\test_product_contract_action_resolver.py:66:            action=ThemeNatalReadingAction.GENERATE_FULL,
+backend\tests\unit\domain\theme_natal\test_product_contract_action_resolver.py:89:        _request(tier=ThemeNatalEntitlementTier.FREE, action=ThemeNatalReadingAction.PREVIEW)
+backend\tests\unit\domain\theme_natal\test_product_contract_action_resolver.py:101:        _request(tier=ThemeNatalEntitlementTier.FREE, action=ThemeNatalReadingAction.GENERATE_FULL)
+backend\tests\unit\domain\theme_natal\test_product_contract_action_resolver.py:112:        _request(tier=ThemeNatalEntitlementTier.BASIC, action=ThemeNatalReadingAction.PREVIEW)
+backend\tests\unit\domain\theme_natal\test_product_contract_action_resolver.py:134:        _request(tier=tier, action=ThemeNatalReadingAction.GENERATE_FULL)
+backend\tests\unit\domain\theme_natal\test_product_contract_action_resolver.py:148:            action=ThemeNatalReadingAction.GENERATE_FULL,
+backend\tests\unit\domain\theme_natal\test_product_contract_action_resolver.py:163:            action=ThemeNatalReadingAction.GENERATE_FULL,
+backend\tests\unit\domain\theme_natal\test_product_contract_action_resolver.py:180:            action=ThemeNatalReadingAction.REGENERATE,
+backend\tests\unit\domain\theme_natal\test_product_contract_action_resolver.py:193:        _request(tier=ThemeNatalEntitlementTier.PREMIUM, action=ThemeNatalReadingAction.DOWNLOAD)
+backend\tests\unit\domain\theme_natal\test_product_contract_action_resolver.py:225:        action=ThemeNatalReadingAction.GENERATE_FULL,
+backend\tests\unit\domain\theme_natal\test_product_contract_action_resolver.py:230:        ThemeNatalReadingActionRequest(**payload)
+backend\tests\integration\test_theme_natal_basic_full_reading_runtime.py:92:def test_basic_generate_full_accepts_fake_provider_and_persists_public_slot(
+backend\tests\integration\test_theme_natal_public_api_product_actions.py:19:    ThemeNatalReadingAction,
+backend\tests\integration\test_theme_natal_public_api_product_actions.py:20:    ThemeNatalReadingActionRequest,
+backend\tests\integration\test_theme_natal_public_api_product_actions.py:77:def test_generate_full_accepts_product_command_and_returns_accepted_slot(
+backend\tests\integration\test_theme_natal_public_api_product_actions.py:80:    """Basic generate_full passe par le runtime basic_full_reading et expose le slot accepte."""
+backend\tests\integration\test_theme_natal_public_api_product_actions.py:117:                "action": "generate_full",
+backend\tests\integration\test_theme_natal_public_api_product_actions.py:168:            "action": "generate_full",
+backend\tests\integration\test_theme_natal_public_api_product_actions.py:221:                "action": "generate_full",
+backend\tests\integration\test_theme_natal_public_api_product_actions.py:274:    """Retourne la decision produit Basic attendue pour generate_full."""
+backend\tests\integration\test_theme_natal_public_api_product_actions.py:276:        ThemeNatalReadingActionRequest(
+backend\tests\integration\test_theme_natal_public_api_product_actions.py:279:            action=ThemeNatalReadingAction.GENERATE_FULL,
+backend\app\domain\theme_natal\__init__.py:21:    ThemeNatalReadingAction,
+backend\app\domain\theme_natal\__init__.py:22:    ThemeNatalReadingActionRequest,
+backend\app\domain\theme_natal\__init__.py:40:    "ThemeNatalReadingAction",
+backend\app\domain\theme_natal\__init__.py:41:    "ThemeNatalReadingActionRequest",
+backend\app\domain\theme_natal\product_contract.py:27:class ThemeNatalReadingAction(StrEnum):
+backend\app\domain\theme_natal\product_contract.py:31:    GENERATE_FULL = "generate_full"
+backend\app\domain\theme_natal\product_contract.py:84:class ThemeNatalReadingActionRequest(_StrictProductModel):
+backend\app\domain\theme_natal\product_contract.py:89:    action: ThemeNatalReadingAction
+backend\app\domain\theme_natal\product_contract.py:101:    action: ThemeNatalReadingAction
+backend\app\domain\theme_natal\product_action_resolver.py:10:    ThemeNatalReadingAction,
+backend\app\domain\theme_natal\product_action_resolver.py:11:    ThemeNatalReadingActionRequest,
+backend\app\domain\theme_natal\product_action_resolver.py:24:    request: ThemeNatalReadingActionRequest,
+backend\app\domain\theme_natal\product_action_resolver.py:27:    if request.existing_reading_id and request.action is not ThemeNatalReadingAction.REGENERATE:
+backend\app\domain\theme_natal\product_action_resolver.py:38:    if request.action is ThemeNatalReadingAction.PREVIEW:
+backend\app\domain\theme_natal\product_action_resolver.py:48:    if request.action is ThemeNatalReadingAction.DOWNLOAD:
+backend\app\domain\theme_natal\product_action_resolver.py:55:        ThemeNatalReadingAction.GENERATE_FULL,
+backend\app\domain\theme_natal\product_action_resolver.py:56:        ThemeNatalReadingAction.REGENERATE,
+backend\app\domain\theme_natal\product_action_resolver.py:67:    request: ThemeNatalReadingActionRequest,
+backend\app\domain\theme_natal\product_action_resolver.py:102:    request: ThemeNatalReadingActionRequest,
+backend\app\domain\theme_natal\product_action_resolver.py:116:    request: ThemeNatalReadingActionRequest,
+backend\app\domain\theme_natal\product_action_resolver.py:119:    if request.action is ThemeNatalReadingAction.PREVIEW:
+backend\app\api\v1\routers\public\natal_interpretation.py:92:        message="POST /v1/natal/interpretation is readonly; use POST /v1/theme-natal/readings.",
+backend\app\services\llm_generation\natal\theme_natal_product_actions.py:15:    ThemeNatalReadingAction,
+backend\app\services\llm_generation\natal\theme_natal_product_actions.py:16:    ThemeNatalReadingActionRequest,
+backend\app\services\llm_generation\natal\theme_natal_product_actions.py:49:    if command.action is ThemeNatalReadingAction.PREVIEW:
+backend\app\services\llm_generation\natal\theme_natal_product_actions.py:58:        ThemeNatalReadingAction.GENERATE_FULL,
+backend\app\services\llm_generation\natal\theme_natal_product_actions.py:59:        ThemeNatalReadingAction.REGENERATE,
+backend\app\services\llm_generation\natal\theme_natal_product_actions.py:132:        ThemeNatalReadingActionRequest(
+backend\app\services\llm_generation\natal\theme_natal_basic_full_runtime.py:37:    ThemeNatalReadingAction,
+backend\app\services\llm_generation\natal\theme_natal_basic_full_runtime.py:38:    ThemeNatalReadingActionRequest,
+backend\app\services\llm_generation\natal\theme_natal_basic_full_runtime.py:374:        ThemeNatalReadingActionRequest(
+backend\app\services\llm_generation\natal\theme_natal_basic_full_runtime.py:377:            action=ThemeNatalReadingAction.GENERATE_FULL,
+backend\app\services\api_contracts\public\theme_natal_readings.py:11:from app.domain.theme_natal.product_contract import ThemeNatalReadingAction
+backend\app\services\api_contracts\public\theme_natal_readings.py:22:    action: ThemeNatalReadingAction
