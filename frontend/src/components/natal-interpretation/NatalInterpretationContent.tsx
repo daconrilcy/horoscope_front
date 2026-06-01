@@ -22,12 +22,12 @@ type PublicEvidenceItem = BasicNatalPublicEvidenceView & {
   usedInSections?: string[]
 }
 
-function resolveUseCase(data: NatalInterpretationViewData): string | null {
-  return data.use_case ?? data.meta.use_case ?? null
-}
-
 function hasItems<T>(items: T[] | null | undefined): items is T[] {
   return Array.isArray(items) && items.length > 0
+}
+
+function isThemeNatalPublicPayload(data: NatalInterpretationViewData): boolean {
+  return data.schema_version?.startsWith("theme_natal") ?? false
 }
 
 function normalizePublicText(value: string | null | undefined): string {
@@ -180,7 +180,7 @@ function PublicEvidenceList({
   )
 }
 
-function FreePublicReading({
+function ThemeNatalPublicReading({
   data,
   t,
 }: {
@@ -292,10 +292,9 @@ export function InterpretationContent({
   const t = natalChartTranslations[lang].interpretation
   const { meta, degraded_mode, narrative_natal_reading_v1: narrativeReading, basic_natal_interpretation_v2: basicReading } = data
   const isCompleteLevel = meta.level === "complete"
-  const useCase = resolveUseCase(data)
-  const isFreeLongInterpretation = useCase === "natal_long_free"
-  const shouldShowFreePublicReading = !narrativeReading && !basicReading && (!isCompleteLevel || isFreeLongInterpretation)
-  const shouldShowNarrativeMissing = isCompleteLevel && !narrativeReading && !basicReading && !isFreeLongInterpretation
+  const shouldShowThemeNatalPublicReading =
+    !narrativeReading && !basicReading && (!isCompleteLevel || isThemeNatalPublicPayload(data))
+  const shouldShowNarrativeMissing = isCompleteLevel && !narrativeReading && !basicReading && !isThemeNatalPublicPayload(data)
   const legalNoticeLines = t.legalNoticeLines
 
   return (
@@ -307,8 +306,8 @@ export function InterpretationContent({
         </div>
       )}
 
-      {shouldShowFreePublicReading && (
-        <FreePublicReading data={data} t={t} />
+      {shouldShowThemeNatalPublicReading && (
+        <ThemeNatalPublicReading data={data} t={t} />
       )}
 
       {narrativeReading ? (

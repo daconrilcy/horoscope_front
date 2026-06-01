@@ -10,6 +10,12 @@ export type NatalInterpretationSectionView = {
   content: string
 }
 
+export type ThemeNatalPublicChapterView = NatalInterpretationSectionView | {
+  key?: string
+  title?: string
+  text?: string
+}
+
 export type NatalNarrativeReadingChapterView = {
   key: "personality" | "emotional_world" | "relationships" | "vocation" | "evolution_path"
   title: string
@@ -67,6 +73,11 @@ export type BasicNatalInterpretationView = {
 
 export type NatalInterpretationViewData = {
   chart_id?: string
+  schema_version?: string
+  title?: string
+  introduction?: string
+  chapters?: ThemeNatalPublicChapterView[] | null
+  conclusion?: string | null
   degraded_mode?: string | null
   narrative_natal_reading_v1?: NatalNarrativeReadingView | null
   basic_natal_interpretation_v2?: BasicNatalInterpretationView | null

@@ -1,5 +1,7 @@
 # Editorial Review CS-439
 
+Implementation note (2026-06-01): this file is a pre-implementation editorial review of the story contract. It is classified as handoff-only/obsolete for final implementation evidence and is not cited as a final code review verdict.
+
 Verdict: CHANGES_REQUESTED resolved; final pass CLEAN.
 
 ## Review Cycle

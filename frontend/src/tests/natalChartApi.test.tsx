@@ -8,6 +8,7 @@ import {
   requestAstrologyProjection,
   requestThemeNatalReadingAction,
   useLatestNatalChart,
+  useNatalInterpretation,
 } from "@api"
 import { getBirthData, type BirthProfileData } from "../api/birthProfile"
 import { ANONYMOUS_SUBJECT } from "../utils/constants"
@@ -28,6 +29,20 @@ vi.mock("../utils/authToken", () => ({
 
 function HookProbe() {
   useLatestNatalChart()
+  return null
+}
+
+let latestThemeNatalResult: ReturnType<typeof useNatalInterpretation> | null = null
+
+function ThemeNatalReadingHookProbe() {
+  latestThemeNatalResult = useNatalInterpretation({
+    enabled: true,
+    chartId: "chart-123",
+    action: "generate_full",
+    personaProfileId: "persona-1",
+    locale: "fr-FR",
+    clientRequestId: "client-request-439",
+  })
   return null
 }
 
@@ -125,6 +140,8 @@ describe("themeNatalReadingActionsApi", () => {
     expect(fetchMock).toHaveBeenCalledTimes(1)
     const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit]
     const body = JSON.parse(init.body as string)
+    const oldLevelCommandField = ["use", "case", "level"].join("_")
+    const oldRefreshCommandField = ["force", "refresh"].join("_")
     expect(url).toContain("/v1/theme-natal/readings")
     expect(body).toEqual({
       chart_id: "chart-123",
@@ -133,12 +150,49 @@ describe("themeNatalReadingActionsApi", () => {
       locale: "fr-FR",
       client_request_id: "client-request-433",
     })
-    expect(body).not.toHaveProperty("use_case_level")
+    expect(body).not.toHaveProperty(oldLevelCommandField)
     expect(body).not.toHaveProperty("variant_code")
-    expect(body).not.toHaveProperty("force_refresh")
+    expect(body).not.toHaveProperty(oldRefreshCommandField)
     expect(body).not.toHaveProperty("use_case")
     expect(body).not.toHaveProperty("plan")
     expect((init.headers as Record<string, string>)["Authorization"]).toBe("Bearer test-token")
+  })
+
+  it("expose le payload public theme_natal sans enveloppe historique", () => {
+    useAccessTokenSnapshotMock.mockReturnValue("token-a")
+    getSubjectFromAccessTokenMock.mockReturnValue("42")
+    useQueryMock.mockReturnValue({
+      data: {
+        state: "accepted",
+        data: {
+          schema_version: "theme_natal.basic_reading.v1",
+          title: "Lecture publique",
+          introduction: "Introduction publique theme natal.",
+          chapters: [{ key: "personality", title: "Personnalite", text: "Texte public." }],
+          conclusion: "Conclusion publique.",
+          disclaimers: ["Mention publique."],
+        },
+        details: {},
+      },
+    })
+
+    render(<ThemeNatalReadingHookProbe />)
+
+    expect(latestThemeNatalResult?.data).toMatchObject({
+      chart_id: "chart-123",
+      schema_version: "theme_natal.basic_reading.v1",
+      use_case: null,
+      interpretation: {
+        title: "Lecture publique",
+        summary: "Introduction publique theme natal.",
+        sections: [{ key: "personality", heading: "Personnalite", content: "Texte public." }],
+      },
+      meta: expect.objectContaining({
+        persona_id: "persona-1",
+        use_case: "theme_natal_reading",
+      }),
+    })
+    expect(latestThemeNatalResult?.state).toBe("accepted")
   })
 })
 

@@ -90,21 +90,22 @@ describe("natalPublicDomGuard", () => {
     expect(container.innerHTML).not.toMatch(/SUN_TAURUS|ASPECT_|_H\d/i)
   })
 
-  it("affiche le rendu public free_short sans fallback legacy", () => {
-    const freeLongData: NatalInterpretationViewData = {
+  it("affiche le rendu public theme_natal sans fallback legacy", () => {
+    const publicPreviewData: NatalInterpretationViewData = {
       ...NARRATIVE_DATA,
-      use_case: "natal_long_free",
+      schema_version: "theme_natal.preview.v1",
+      use_case: "theme_natal_preview",
       narrative_natal_reading_v1: null,
-      meta: { level: "complete", use_case: "natal_long_free", persona_name: null },
+      meta: { level: "short", use_case: "theme_natal_preview", persona_name: null },
       interpretation: {
         title: "Portrait astrologique",
-        summary: "Resume free long visible.",
-        highlights: ["Ancien point fort free long"],
+        summary: "Resume public visible.",
+        highlights: ["Point public preview"],
         sections: [
           {
-            key: "legacy-free-long-section",
-            heading: "Ancienne section free long",
-            content: "Contenu legacy free long interdit dans le DOM public.",
+            key: "theme-natal-preview-section",
+            heading: "Section publique preview",
+            content: "Contenu public theme natal visible.",
           },
         ],
         advice: [],
@@ -112,24 +113,25 @@ describe("natalPublicDomGuard", () => {
       },
     }
 
-    const { container } = render(<InterpretationContent data={freeLongData} lang="fr" />)
+    const { container } = render(<InterpretationContent data={publicPreviewData} lang="fr" />)
 
-    expect(screen.getByText("Resume free long visible.")).toBeInTheDocument()
-    expect(screen.getByText("Ancienne section free long")).toBeInTheDocument()
-    expect(screen.getByText("Contenu legacy free long interdit dans le DOM public.")).toBeInTheDocument()
+    expect(screen.getByText("Resume public visible.")).toBeInTheDocument()
+    expect(screen.getByText("Section publique preview")).toBeInTheDocument()
+    expect(screen.getByText("Contenu public theme natal visible.")).toBeInTheDocument()
     expect(container.querySelector(".ni-evidence-tags")).toBeNull()
     expect(screen.queryByText(/Lecture complète à régénérer/i)).not.toBeInTheDocument()
   })
 
-  it("affiche le resume free_long sans message de regeneration obsolete", () => {
-    const freeLongData: NatalInterpretationViewData = {
+  it("affiche le resume public preview sans message de regeneration obsolete", () => {
+    const publicPreviewData: NatalInterpretationViewData = {
       ...NARRATIVE_DATA,
-      use_case: "natal_long_free",
+      schema_version: "theme_natal.preview.v1",
+      use_case: "theme_natal_preview",
       narrative_natal_reading_v1: null,
-      meta: { level: "complete", use_case: "natal_long_free", persona_name: null },
+      meta: { level: "short", use_case: "theme_natal_preview", persona_name: null },
       interpretation: {
         title: "Portrait astrologique",
-        summary: "Resume free long visible.",
+        summary: "Resume preview visible.",
         highlights: [],
         sections: [],
         advice: [],
@@ -137,9 +139,9 @@ describe("natalPublicDomGuard", () => {
       },
     }
 
-    render(<InterpretationContent data={freeLongData} lang="fr" />)
+    render(<InterpretationContent data={publicPreviewData} lang="fr" />)
 
-    expect(screen.getByText("Resume free long visible.")).toBeInTheDocument()
+    expect(screen.getByText("Resume preview visible.")).toBeInTheDocument()
     expect(screen.queryByText(/Lecture complète à régénérer/i)).not.toBeInTheDocument()
   })
 

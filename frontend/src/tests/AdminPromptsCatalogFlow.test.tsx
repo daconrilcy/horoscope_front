@@ -51,8 +51,8 @@ function makeResolvedPayload(overrides?: Record<string, unknown>) {
     subfeature: "interpretation",
     plan: "free",
     locale: "fr-FR",
-    use_case_key: "natal_long_free",
-    runtime_use_case_key: "natal_long_free",
+    use_case_key: "theme_natal_preview",
+    runtime_use_case_key: "theme_natal_preview",
     context_quality: "full",
     assembly_id: "assembly-natal",
     inspection_mode: "assembly_preview",
@@ -96,12 +96,12 @@ function makeResolvedPayload(overrides?: Record<string, unknown>) {
         content: "Version free: interprétation synthétique, sans approfondissement premium.",
         summary: "Surcharge éditoriale spécifique au use case runtime actif.",
         ref: "prompt-free",
-        source_label: "natal_long_free",
+        source_label: "theme_natal_preview",
         version_label: "2026-04-19T20:00:00Z",
         merge_mode: null,
         impact_status: "active",
-        editable_use_case_key: "natal_long_free",
-        meta: { use_case_key: "natal_long_free" },
+        editable_use_case_key: "theme_natal_preview",
+        meta: { use_case_key: "theme_natal_preview" },
       },
       {
         key: "output_contract",
@@ -276,7 +276,7 @@ function installCatalogFetchStub(resolvedPayload: Record<string, unknown>) {
       return makeJsonResponse({
         data: [
           {
-            key: "natal_long_free",
+            key: "theme_natal_preview",
             display_name: "Natal Long Free",
             description: "Prompt natal free actif",
             persona_strategy: "default",
@@ -296,12 +296,12 @@ function installCatalogFetchStub(resolvedPayload: Record<string, unknown>) {
         ],
       })
     }
-    if (url.endsWith("/v1/admin/llm/use-cases/natal_long_free/prompts") && !init?.method) {
+    if (url.endsWith("/v1/admin/llm/use-cases/theme_natal_preview/prompts") && !init?.method) {
       return makeJsonResponse({
         data: [
           {
             id: "prompt-free",
-            use_case_key: "natal_long_free",
+            use_case_key: "theme_natal_preview",
             status: "published",
             developer_prompt: "Version free: interprétation synthétique, sans approfondissement premium.",
             model: "gpt-5",

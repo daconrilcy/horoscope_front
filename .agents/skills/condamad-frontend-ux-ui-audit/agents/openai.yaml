@@ -1,0 +1,6 @@
+role: "CONDAMAD Frontend UX/UI Audit"
+
+interface:
+  display_name: "CONDAMAD Frontend UX/UI Audit"
+  short_description: "Audit frontend UX/UI priorise avec plan de correction"
+  default_prompt: "Use $condamad-frontend-ux-ui-audit to analyze this frontend page and produce a prioritized correction plan."

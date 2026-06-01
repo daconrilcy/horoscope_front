@@ -1825,7 +1825,7 @@ describe("NatalChartPage", () => {
               persona_id: null,
               persona_name: null,
               created_at: "2026-03-04T10:00:00Z",
-              use_case: "natal_interpretation_short",
+              use_case: "theme_natal_preview",
             },
             {
               id: 102,
@@ -1909,7 +1909,7 @@ describe("NatalChartPage", () => {
               persona_name: null,
               module: null,
               created_at: "2026-04-05T10:00:00Z",
-              use_case: "natal_long_free",
+              use_case: "theme_natal_preview",
               prompt_version_id: null,
               was_fallback: false,
             },

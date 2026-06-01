@@ -1,0 +1,40 @@
+.\frontend\src\features\natal-chart\NatalInterpretation.tsx:57:  return item.use_case === "natal_long_free"
+.\frontend\src\features\natal-chart\NatalInterpretation.tsx:79:  return items.find((item) => item.use_case === "natal_long_free") ?? null
+.\frontend\src\components\natal-interpretation\NatalInterpretationContent.tsx:296:  const isFreeLongInterpretation = useCase === "natal_long_free"
+.\frontend\src\tests\AdminPromptsCatalogFlow.test.tsx:54:    use_case_key: "natal_long_free",
+.\frontend\src\tests\AdminPromptsCatalogFlow.test.tsx:55:    runtime_use_case_key: "natal_long_free",
+.\frontend\src\tests\AdminPromptsCatalogFlow.test.tsx:99:        source_label: "natal_long_free",
+.\frontend\src\tests\AdminPromptsCatalogFlow.test.tsx:103:        editable_use_case_key: "natal_long_free",
+.\frontend\src\tests\AdminPromptsCatalogFlow.test.tsx:104:        meta: { use_case_key: "natal_long_free" },
+.\frontend\src\tests\AdminPromptsCatalogFlow.test.tsx:279:            key: "natal_long_free",
+.\frontend\src\tests\AdminPromptsCatalogFlow.test.tsx:299:    if (url.endsWith("/v1/admin/llm/use-cases/natal_long_free/prompts") && !init?.method) {
+.\frontend\src\tests\AdminPromptsCatalogFlow.test.tsx:304:            use_case_key: "natal_long_free",
+.\frontend\src\tests\natalChartApi.test.tsx:136:    expect(body).not.toHaveProperty("use_case_level")
+.\frontend\src\tests\natalChartApi.test.tsx:138:    expect(body).not.toHaveProperty("force_refresh")
+.\frontend\src\tests\NatalChartPage.test.tsx:1828:              use_case: "natal_interpretation_short",
+.\frontend\src\tests\NatalChartPage.test.tsx:1912:              use_case: "natal_long_free",
+.\frontend\src\tests\natalInterpretation.test.tsx:65:  use_case: "natal_interpretation_short",
+.\frontend\src\tests\natalInterpretation.test.tsx:80:    use_case: "natal_interpretation_short",
+.\frontend\src\tests\natalInterpretation.test.tsx:104:      use_case: "natal_interpretation_short"
+.\frontend\src\tests\natalInterpretation.test.tsx:185:      use_case: "natal_interpretation_short",
+.\frontend\src\tests\natalInterpretation.test.tsx:188:      meta: { level: "short", use_case: "natal_interpretation_short", persona_name: null },
+.\frontend\src\tests\natalInterpretation.test.tsx:519:            use_case: "natal_long_free",
+.\frontend\src\tests\natalInterpretation.test.tsx:775:            use_case: "natal_interpretation_short",
+.\frontend\src\tests\natalInterpretation.test.tsx:784:            use_case: "natal_long_free",
+.\frontend\src\tests\natalInterpretation.test.tsx:877:            use_case: "natal_long_free",
+.\frontend\src\tests\natalInterpretation.test.tsx:911:        use_case_level: "short",
+.\frontend\src\tests\natalPublicDomGuard.test.tsx:17:  /shouldRefreshShortAfterBasicUpgrade|use_case_level|variant_code|forceRefresh|natal_interpretation_short|natal_long_free|fallback_default/i
+.\frontend\src\tests\natalPublicDomGuard.test.tsx:96:      use_case: "natal_long_free",
+.\frontend\src\tests\natalPublicDomGuard.test.tsx:98:      meta: { level: "complete", use_case: "natal_long_free", persona_name: null },
+.\frontend\src\tests\natalPublicDomGuard.test.tsx:127:      use_case: "natal_long_free",
+.\frontend\src\tests\natalPublicDomGuard.test.tsx:129:      meta: { level: "complete", use_case: "natal_long_free", persona_name: null },
+.\frontend\src\api\natal-chart\index.ts:493:export type NatalInterpretationResult = {
+.\frontend\src\api\natal-chart\index.ts:562:export type UseNatalInterpretationResult = Omit<
+.\frontend\src\api\natal-chart\index.ts:566:  data: NatalInterpretationResult | null
+.\frontend\src\api\natal-chart\index.ts:612:function isNatalInterpretationResult(value: unknown): value is NatalInterpretationResult {
+.\frontend\src\api\natal-chart\index.ts:640:function mapProductActionDataToInterpretation(
+.\frontend\src\api\natal-chart\index.ts:643:): NatalInterpretationResult | null {
+.\frontend\src\api\natal-chart\index.ts:645:  if (isNatalInterpretationResult(response.data)) return response.data
+.\frontend\src\api\natal-chart\index.ts:879:      return handleResponse<NatalInterpretationResult>(response)
+.\frontend\src\api\natal-chart\index.ts:893:}): UseNatalInterpretationResult {
+.\frontend\src\api\natal-chart\index.ts:943:    data: command ? mapProductActionDataToInterpretation(command, actionResponse) : null,

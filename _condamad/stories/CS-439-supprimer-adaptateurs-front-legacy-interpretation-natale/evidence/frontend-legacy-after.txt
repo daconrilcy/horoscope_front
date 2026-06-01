@@ -1,0 +1,1 @@
+.\frontend\src\tests\natalPublicDomGuard.test.tsx:17:  /shouldRefreshShortAfterBasicUpgrade|use_case_level|variant_code|forceRefresh|natal_interpretation_short|natal_long_free|fallback_default/i

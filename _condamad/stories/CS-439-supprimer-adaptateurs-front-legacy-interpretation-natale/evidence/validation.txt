@@ -1,0 +1,24 @@
+Command: pnpm --dir frontend test -- natalChartApi.test.tsx natalInterpretation.test.tsx natalPublicDomGuard.test.tsx NatalChartPage.test.tsx AdminPromptsCatalogFlow.test.tsx
+$ node ./scripts/run-vite-logged.mjs vitest vitest run "natalChartApi.test.tsx" "natalInterpretation.test.tsx" "natalPublicDomGuard.test.tsx" "NatalChartPage.test.tsx" "AdminPromptsCatalogFlow.test.tsx"
+
+ RUN  v4.1.5 C:/dev/horoscope_front/frontend
+
+ ✓ src/tests/natalPublicDomGuard.test.tsx (6 tests) 193ms
+ ✓ src/tests/natalChartApi.test.tsx (17 tests) 21ms
+ ✓ src/tests/natalInterpretation.test.tsx (36 tests) 782ms
+ ✓ src/tests/AdminPromptsCatalogFlow.test.tsx (3 tests) 1742ms
+     ✓ affiche la lecture en activation composants et artefacts runtime  623ms
+     ✓ ouvre l édition sur le nœud use case overlay et expose la couche free  653ms
+     ✓ rend la persona et le delta before/after persona pour une cible premium  465ms
+ ✓ src/tests/NatalChartPage.test.tsx (76 tests) 2278ms
+
+ Test Files  5 passed (5)
+      Tests  138 passed (138)
+   Start at  17:03:03
+   Duration  4.12s (transform 1.86s, setup 1.21s, import 2.80s, tests 5.01s, environment 3.09s)
+
+JSON report written to C:/dev/horoscope_front/frontend/logs/vite/vitest-report.json
+Command: pnpm --dir frontend lint
+$ tsc --noEmit -p tsconfig.lint.json && tsc --noEmit -p tsconfig.node.json
+Command: python -B .agents\skills\condamad-dev-story\scripts\condamad_validate.py <capsule> --final (venv activated)
+Result: PASS

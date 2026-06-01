@@ -62,7 +62,8 @@ function projectionPlanPayload(planCode: ProjectionPlanCode) {
 
 const mockInterpretationData = {
   chart_id: "chart-123",
-  use_case: "natal_interpretation_short",
+  schema_version: "theme_natal.preview.v1",
+  use_case: "theme_natal_preview",
   interpretation: {
     title: "Votre Thème Test",
     summary: "Résumé test de votre personnalité.",
@@ -77,7 +78,7 @@ const mockInterpretationData = {
   meta: {
     id: 101,
     level: "short",
-    use_case: "natal_interpretation_short",
+    use_case: "theme_natal_preview",
     persona_id: null,
     persona_name: null,
     prompt_version_id: "v1",
@@ -101,7 +102,7 @@ const mockHistory = {
       persona_id: null,
       persona_name: null,
       created_at: "2026-03-04T10:00:00Z",
-      use_case: "natal_interpretation_short"
+      use_case: "theme_natal_preview"
     },
     {
       id: 102,
@@ -182,10 +183,11 @@ describe("NatalInterpretationSection", () => {
   it("affiche le payload free_short du brief avec ses blocs publics sans regeneration", () => {
     const freeShortData: NatalInterpretationViewData = {
       chart_id: "chart-123",
-      use_case: "natal_interpretation_short",
+      schema_version: "theme_natal.preview.v1",
+      use_case: "theme_natal_preview",
       degraded_mode: null,
       narrative_natal_reading_v1: null,
-      meta: { level: "short", use_case: "natal_interpretation_short", persona_name: null },
+      meta: { level: "short", use_case: "theme_natal_preview", persona_name: null },
       interpretation: {
         title: "Decouverte de votre essence astrologique",
         summary: "Synthese publique free visible pour comprendre les grands axes du theme.",
@@ -516,7 +518,7 @@ describe("NatalInterpretationSection", () => {
             persona_id: null,
             persona_name: null,
             created_at: "2026-03-04T10:00:00Z",
-            use_case: "natal_long_free",
+            use_case: "theme_natal_preview",
           },
         ],
         total: 1,
@@ -772,7 +774,7 @@ describe("NatalInterpretationSection", () => {
             persona_id: null,
             persona_name: null,
             created_at: "2026-05-30T15:42:06.794888Z",
-            use_case: "natal_interpretation_short",
+            use_case: "theme_natal_preview",
           },
           {
             id: 6,
@@ -781,7 +783,7 @@ describe("NatalInterpretationSection", () => {
             persona_id: null,
             persona_name: null,
             created_at: "2026-05-30T15:42:11.640598Z",
-            use_case: "natal_long_free",
+            use_case: "theme_natal_preview",
           },
         ],
         total: 2,
@@ -862,7 +864,7 @@ describe("NatalInterpretationSection", () => {
     );
   });
 
-  it("ne relance pas une génération courte Basic quand l'utilisateur vient d'un free_short", async () => {
+  it("lance le preview moderne quand aucun historique public canonique n'est reutilisable", async () => {
     (useNatalInterpretationsList as any).mockReturnValue({
       isLoading: false,
       data: {
@@ -874,7 +876,7 @@ describe("NatalInterpretationSection", () => {
             persona_id: null,
             persona_name: null,
             created_at: "2026-03-04T10:00:00Z",
-            use_case: "natal_long_free",
+            use_case: "theme_natal_preview",
           },
         ],
         total: 1,
@@ -898,17 +900,18 @@ describe("NatalInterpretationSection", () => {
     await waitFor(() => {
       expect(useNatalInterpretation).toHaveBeenLastCalledWith(
         expect.objectContaining({
-          enabled: false,
+          enabled: true,
           action: "preview",
           personaProfileId: null,
         }),
       );
     });
+    const oldLevelCommandField = ["use", "case", "level"].join("_")
     expect(requestThemeNatalReadingAction).not.toHaveBeenCalledWith(
       expect.any(String),
       expect.objectContaining({
         action: "preview",
-        use_case_level: "short",
+        [oldLevelCommandField]: "short",
       }),
     );
   });

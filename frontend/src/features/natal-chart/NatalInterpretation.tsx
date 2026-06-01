@@ -53,12 +53,8 @@ interface Props {
   longFeatureAccess?: FeatureEntitlementResponse
 }
 
-function isFreeShortInterpretation(item: NatalInterpretationListItem): boolean {
-  return item.use_case === "natal_long_free"
-}
-
 function isRealCompleteInterpretation(item: NatalInterpretationListItem): boolean {
-  return item.level === "complete" && item.use_case === "natal_interpretation"
+  return item.level === "complete" && (Boolean(item.persona_id) || Boolean(item.prompt_version_id))
 }
 
 function findLatestCompleteInterpretation(
@@ -73,16 +69,10 @@ function findLatestShortInterpretation(
   return items.find((item) => item.level === "short") ?? null
 }
 
-function findLatestFreeCompleteInterpretation(
-  items: NatalInterpretationListItem[],
-): NatalInterpretationListItem | null {
-  return items.find((item) => item.use_case === "natal_long_free") ?? null
-}
-
 function findPreferredFreeInterpretation(
   items: NatalInterpretationListItem[],
 ): NatalInterpretationListItem | null {
-  return findLatestShortInterpretation(items) ?? findLatestFreeCompleteInterpretation(items)
+  return findLatestShortInterpretation(items)
 }
 
 function localeFromLang(lang: AstrologyLang): "fr-FR" | "en-US" | "es-ES" | "de-DE" {
@@ -161,7 +151,6 @@ export function NatalInterpretationSection({
   const historyItems = historyQuery.data?.items ?? []
   const latestCompleteInterpretation = findLatestCompleteInterpretation(historyItems)
   const latestShortInterpretation = findLatestShortInterpretation(historyItems)
-  const latestFreeCompleteInterpretation = findLatestFreeCompleteInterpretation(historyItems)
   const preferredFreeInterpretation = findPreferredFreeInterpretation(historyItems)
   const isQuotaUsageExhausted = Boolean(
     longFeatureAccess?.reason_code === "quota_exhausted" ||
@@ -169,16 +158,15 @@ export function NatalInterpretationSection({
   )
   const isSingleAstrologerPlan = hasSingleCompleteReadingAccess(longFeatureAccess)
   const isPremiumPlan = hasMultiCompleteReadingAccess(longFeatureAccess)
-  const shouldPreferLatestCompleteByDefault =
-    isSingleAstrologerPlan || isPremiumPlan || (isLockedFree && latestCompleteInterpretation !== null)
-  const hasPersistedFreeShortInterpretation = historyItems.some(isFreeShortInterpretation)
+  const shouldPreferLatestCompleteByDefault = isSingleAstrologerPlan || isPremiumPlan
+  const hasPersistedShortInterpretation = latestShortInterpretation !== null
   const shouldResolveInterpretationFromHistory =
     shouldPreferLatestCompleteByDefault || isSingleAstrologerPlan
   const hasPersistedInterpretationCandidate =
     (shouldPreferLatestCompleteByDefault && latestCompleteInterpretation !== null) ||
     (isLockedFree && preferredFreeInterpretation !== null) ||
     (isSingleAstrologerPlan &&
-      (latestShortInterpretation !== null || hasPersistedFreeShortInterpretation))
+      hasPersistedShortInterpretation)
   const isResolvingPersistedInterpretation =
     !selectedInterpretationId &&
     shouldResolveInterpretationFromHistory &&

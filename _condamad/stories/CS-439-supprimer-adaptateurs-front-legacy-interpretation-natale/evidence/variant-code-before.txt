@@ -1,0 +1,3 @@
+.\frontend\src\pages\NatalChartPage.tsx:83:  const isLockedFree = natalAccess?.variant_code === "free_short"
+.\frontend\src\pages\NatalChartPage.tsx:84:  const hasSingleAstrologerQuota = natalAccess?.variant_code === "single_astrologer"
+.\frontend\src\features\natal-chart\NatalAstrologerMode.tsx:16:  return access.variant_code === "multi_astrologer" || access.variant_code === "full"

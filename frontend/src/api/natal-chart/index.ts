@@ -490,9 +490,20 @@ export type InterpretationMeta = {
   persisted_at: string | null
 }
 
-export type NatalInterpretationResult = {
-  chart_id: string
-  use_case: string
+type ThemeNatalPublicChapter = {
+  key?: string
+  title?: string
+  text?: string
+}
+
+export type ThemeNatalReadingPublicPayload = {
+  chart_id?: string
+  schema_version?: string
+  title?: string
+  introduction?: string
+  chapters?: ThemeNatalPublicChapter[]
+  conclusion?: string
+  use_case?: string | null
   interpretation: AstroInterpretation
   meta: InterpretationMeta
   degraded_mode: string | null
@@ -559,11 +570,11 @@ export type ThemeNatalReadingCommandResponse = {
   details: Record<string, unknown>
 }
 
-export type UseNatalInterpretationResult = Omit<
+export type UseThemeNatalReadingResult = Omit<
   ReturnType<typeof useQuery<ThemeNatalReadingCommandResponse>>,
   "data"
 > & {
-  data: NatalInterpretationResult | null
+  data: ThemeNatalReadingPublicPayload | null
   state: ThemeNatalReadingSlotState | null
   details: Record<string, unknown>
 }
@@ -609,46 +620,37 @@ function normalizeThemeNatalReadingState(
   return response.state
 }
 
-function isNatalInterpretationResult(value: unknown): value is NatalInterpretationResult {
-  return (
-    value !== null &&
-    typeof value === "object" &&
-    "meta" in value &&
-    "interpretation" in value
-  )
-}
-
-type ThemeNatalBasicPublicChapter = {
-  key?: string
-  title?: string
-  text?: string
-}
-
-type ThemeNatalBasicPublicPayload = {
+type ThemeNatalPublicData = {
   schema_version?: string
   title?: string
   introduction?: string
-  chapters?: ThemeNatalBasicPublicChapter[]
+  chapters?: ThemeNatalPublicChapter[]
   conclusion?: string
   disclaimers?: string[]
 }
 
-function isThemeNatalBasicPublicPayload(value: unknown): value is ThemeNatalBasicPublicPayload {
-  return value !== null && typeof value === "object" && "schema_version" in value
+function isThemeNatalPublicData(value: unknown): value is ThemeNatalPublicData {
+  if (value === null || typeof value !== "object") return false
+  const schemaVersion = "schema_version" in value ? value.schema_version : undefined
+  return typeof schemaVersion === "string" && schemaVersion.startsWith("theme_natal")
 }
 
-function mapProductActionDataToInterpretation(
+function normalizeThemeNatalReadingPublicPayload(
   command: ThemeNatalReadingCommandRequest,
   response?: ThemeNatalReadingCommandResponse,
-): NatalInterpretationResult | null {
+): ThemeNatalReadingPublicPayload | null {
   if (!response || response.state !== "accepted" || !response.data) return null
-  if (isNatalInterpretationResult(response.data)) return response.data
-  if (!isThemeNatalBasicPublicPayload(response.data)) return null
+  if (!isThemeNatalPublicData(response.data)) return null
 
   const chapters = response.data.chapters ?? []
   return {
     chart_id: command.chart_id,
-    use_case: "theme_natal_reading",
+    schema_version: response.data.schema_version,
+    title: response.data.title,
+    introduction: response.data.introduction,
+    chapters,
+    conclusion: response.data.conclusion,
+    use_case: null,
     interpretation: {
       title: response.data.title ?? "",
       summary: response.data.introduction ?? "",
@@ -876,7 +878,7 @@ export function useNatalInterpretationById(options: {
         },
       )
 
-      return handleResponse<NatalInterpretationResult>(response)
+      return handleResponse<ThemeNatalReadingPublicPayload>(response)
     },
     enabled: options.enabled && Boolean(accessToken) && Boolean(options.interpretationId),
     staleTime: 1000 * 60 * 10,
@@ -890,7 +892,7 @@ export function useNatalInterpretation(options: {
   personaProfileId?: string | null
   locale?: string
   clientRequestId?: string
-}): UseNatalInterpretationResult {
+}): UseThemeNatalReadingResult {
   const accessToken = useAccessTokenSnapshot()
   const tokenSubject = getSubjectFromAccessToken(accessToken) ?? ANONYMOUS_SUBJECT
   const canRunInterpretationQuery =
@@ -940,7 +942,7 @@ export function useNatalInterpretation(options: {
 
   return {
     ...query,
-    data: command ? mapProductActionDataToInterpretation(command, actionResponse) : null,
+    data: command ? normalizeThemeNatalReadingPublicPayload(command, actionResponse) : null,
     state: normalizeThemeNatalReadingState(actionResponse),
     details: actionResponse?.details ?? {},
   }
