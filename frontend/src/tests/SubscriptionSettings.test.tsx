@@ -230,7 +230,7 @@ describe("SubscriptionSettings", () => {
     expect(screen.queryByText(/tokens/i)).not.toBeInTheDocument()
   })
 
-  it("n'envoie jamais basic-entry ou premium-unlimited à useStripeCheckoutSession — uniquement les codes canoniques", () => {
+  it("n'envoie jamais basic-entry ou premium-unlimited à useStripeCheckoutSession - uniquement les codes canoniques", () => {
     setupCatalogMock()
     const mutate = vi.fn()
 
@@ -510,7 +510,7 @@ describe("SubscriptionSettings", () => {
 
     render(<SubscriptionSettings />)
 
-    // La carte "Basic" doit être sélectionnée (aria-pressed=true) — elle est le plan courant
+    // La carte "Basic" doit être sélectionnée (aria-pressed=true) - elle est le plan courant
     const basicCard = getPlanCard("Basic")
     expect(basicCard).toHaveAttribute("aria-pressed", "true")
 

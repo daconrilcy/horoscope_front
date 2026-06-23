@@ -46,16 +46,16 @@ export type DegradedModeMessageKey = "no_location" | "no_time"
 
 export const DEGRADED_MODE_MESSAGES: Record<DegradedModeMessageKey, Record<AstrologyLang, string>> = {
   no_location: {
-    fr: "Thème calculé en maisons égales — lieu de naissance non renseigné ou non trouvé. Pour un calcul précis, renseignez votre ville et pays dans votre profil.",
-    en: "Chart calculated with equal houses — birth location not provided or not found. For accurate calculation, enter your city and country in your profile.",
-    es: "Tema calculado con casas iguales — lugar de nacimiento no proporcionado o no encontrado. Para un cálculo preciso, ingrese su ciudad y país en su perfil.",
-    de: "Horoskop mit gleichen Häusern berechnet — Geburtsort nicht angegeben oder nicht gefunden. Für eine präzise Berechnung geben Sie Stadt und Land in Ihrem Profil an.",
+    fr: "Thème calculé en maisons égales - lieu de naissance non renseigné ou non trouvé. Pour un calcul précis, renseignez votre ville et pays dans votre profil.",
+    en: "Chart calculated with equal houses - birth location not provided or not found. For accurate calculation, enter your city and country in your profile.",
+    es: "Tema calculado con casas iguales - lugar de nacimiento no proporcionado o no encontrado. Para un cálculo preciso, ingrese su ciudad y país en su perfil.",
+    de: "Horoskop mit gleichen Häusern berechnet - Geburtsort nicht angegeben oder nicht gefunden. Für eine präzise Berechnung geben Sie Stadt und Land in Ihrem Profil an.",
   },
   no_time: {
-    fr: "Thème calculé en thème solaire — heure de naissance non renseignée. Les positions des maisons et de la Lune peuvent être inexactes.",
-    en: "Chart calculated as solar chart — birth time not provided. House and Moon positions may be inaccurate.",
-    es: "Tema calculado como tema solar — hora de nacimiento no proporcionada. Las posiciones de las casas y la Luna pueden ser inexactas.",
-    de: "Horoskop als Sonnenhoroskop berechnet — Geburtszeit nicht angegeben. Häuser- und Mondpositionen können ungenau sein.",
+    fr: "Thème calculé en thème solaire - heure de naissance non renseignée. Les positions des maisons et de la Lune peuvent être inexactes.",
+    en: "Chart calculated as solar chart - birth time not provided. House and Moon positions may be inaccurate.",
+    es: "Tema calculado como tema solar - hora de nacimiento no proporcionada. Las posiciones de las casas y la Luna pueden ser inexactas.",
+    de: "Horoskop als Sonnenhoroskop berechnet - Geburtszeit nicht angegeben. Häuser- und Mondpositionen können ungenau sein.",
   },
 }
 
@@ -113,23 +113,23 @@ const PLANETS: Record<string, Record<AstrologyLang, string>> = {
 }
 
 const HOUSES: Record<number, Record<AstrologyLang, string>> = {
-  1: { fr: "Maison I — Identité", en: "House I — Identity", es: "Casa I — Identidad", de: "Haus I — Identität" },
-  2: { fr: "Maison II — Valeurs", en: "House II — Values", es: "Casa II — Valores", de: "Haus II — Werte" },
-  3: { fr: "Maison III — Communication", en: "House III — Communication", es: "Casa III — Comunicación", de: "Haus III — Kommunikation" },
-  4: { fr: "Maison IV — Foyer", en: "House IV — Home", es: "Casa IV — Hogar", de: "Haus IV — Zuhause" },
-  5: { fr: "Maison V — Créativité", en: "House V — Creativity", es: "Casa V — Creatividad", de: "Haus V — Kreativität" },
+  1: { fr: "Maison I - Identité", en: "House I - Identity", es: "Casa I - Identidad", de: "Haus I - Identität" },
+  2: { fr: "Maison II - Valeurs", en: "House II - Values", es: "Casa II - Valores", de: "Haus II - Werte" },
+  3: { fr: "Maison III - Communication", en: "House III - Communication", es: "Casa III - Comunicación", de: "Haus III - Kommunikation" },
+  4: { fr: "Maison IV - Foyer", en: "House IV - Home", es: "Casa IV - Hogar", de: "Haus IV - Zuhause" },
+  5: { fr: "Maison V - Créativité", en: "House V - Creativity", es: "Casa V - Creatividad", de: "Haus V - Kreativität" },
   6: {
-    fr: "Maison VI — Routines / hygiène de vie",
-    en: "House VI — Routines / lifestyle hygiene",
-    es: "Casa VI — Rutinas / higiene de vida",
-    de: "Haus VI — Routinen / Lebenshygiene",
+    fr: "Maison VI - Routines / hygiène de vie",
+    en: "House VI - Routines / lifestyle hygiene",
+    es: "Casa VI - Rutinas / higiene de vida",
+    de: "Haus VI - Routinen / Lebenshygiene",
   },
-  7: { fr: "Maison VII — Relations", en: "House VII — Relationships", es: "Casa VII — Relaciones", de: "Haus VII — Beziehungen" },
-  8: { fr: "Maison VIII — Transformation", en: "House VIII — Transformation", es: "Casa VIII — Transformación", de: "Haus VIII — Transformation" },
-  9: { fr: "Maison IX — Philosophie", en: "House IX — Philosophy", es: "Casa IX — Filosofía", de: "Haus IX — Philosophie" },
-  10: { fr: "Maison X — Carrière", en: "House X — Career", es: "Casa X — Carrera", de: "Haus X — Karriere" },
-  11: { fr: "Maison XI — Communauté", en: "House XI — Community", es: "Casa XI — Comunidad", de: "Haus XI — Gemeinschaft" },
-  12: { fr: "Maison XII — Inconscient", en: "House XII — Unconscious", es: "Casa XII — Inconsciente", de: "Haus XII — Unbewusstes" },
+  7: { fr: "Maison VII - Relations", en: "House VII - Relationships", es: "Casa VII - Relaciones", de: "Haus VII - Beziehungen" },
+  8: { fr: "Maison VIII - Transformation", en: "House VIII - Transformation", es: "Casa VIII - Transformación", de: "Haus VIII - Transformation" },
+  9: { fr: "Maison IX - Philosophie", en: "House IX - Philosophy", es: "Casa IX - Filosofía", de: "Haus IX - Philosophie" },
+  10: { fr: "Maison X - Carrière", en: "House X - Career", es: "Casa X - Carrera", de: "Haus X - Karriere" },
+  11: { fr: "Maison XI - Communauté", en: "House XI - Community", es: "Casa XI - Comunidad", de: "Haus XI - Gemeinschaft" },
+  12: { fr: "Maison XII - Inconscient", en: "House XII - Unconscious", es: "Casa XII - Inconsciente", de: "Haus XII - Unbewusstes" },
 }
 
 const ASPECTS: Record<string, Record<AstrologyLang, string>> = {
@@ -211,7 +211,7 @@ export function translatePlanet(code: string, lang: AstrologyLang): string {
  * Traduit un numéro de maison vers son nom symbolique.
  * @param number - Numéro de la maison (1-12)
  * @param lang - Langue cible
- * @returns Nom complet (ex: "Maison I — Identité") ou fallback "Maison N" si hors range
+ * @returns Nom complet (ex: "Maison I - Identité") ou fallback "Maison N" si hors range
  */
 export function translateHouse(number: number, lang: AstrologyLang): string {
   const entry = HOUSES[number]

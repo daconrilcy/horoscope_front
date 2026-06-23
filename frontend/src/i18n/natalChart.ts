@@ -957,9 +957,9 @@ export const NATAL_SECTION_TEASERS: Record<NatalTeaserKey, { fr: string; en: str
     es: "El contexto de eventos y ciclos planetarios que marcan tu período actual...",
   },
   generic: {
-    fr: "Section disponible avec l'abonnement Basic — analyse approfondie de votre thème natal.",
-    en: "Section available with Basic subscription — in-depth analysis of your natal chart.",
-    es: "Sección disponible con la suscripción Basic — análisis profundo de tu tema natal.",
+    fr: "Section disponible avec l'abonnement Basic - analyse approfondie de votre thème natal.",
+    en: "Section available with Basic subscription - in-depth analysis of your natal chart.",
+    es: "Sección disponible con la suscripción Basic - análisis profundo de tu tema natal.",
   },
 }
 

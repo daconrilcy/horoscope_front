@@ -1,5 +1,6 @@
 // Client HTTP central pour les appels backend et la normalisation minimale des erreurs API.
 import { clearAccessToken, markAuthorizationBearerRejected } from "../utils/authToken"
+import { normalizeDisplayValue } from "../utils/strings"
 
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8001"
 const DEFAULT_TIMEOUT_MS = 20000
@@ -104,6 +105,24 @@ function readAuthorizationHeader(headers: HeadersInit | undefined): string | nul
   return record.Authorization ?? record.authorization ?? null
 }
 
+async function normalizeJsonResponse(response: Response): Promise<Response> {
+  const contentType = response.headers.get("content-type")
+  if (!contentType?.toLowerCase().includes("application/json")) {
+    return response
+  }
+
+  try {
+    const payload = await response.clone().json()
+    return new Response(JSON.stringify(normalizeDisplayValue(payload)), {
+      status: response.status,
+      statusText: response.statusText,
+      headers: response.headers,
+    })
+  } catch {
+    return response
+  }
+}
+
 /** Execute une requete backend avec URL canonique, timeout et propagation auth. */
 export async function apiFetch(input: RequestInfo | URL, init: ApiFetchInit = {}): Promise<Response> {
   const controller = new AbortController()
@@ -128,7 +147,7 @@ export async function apiFetch(input: RequestInfo | URL, init: ApiFetchInit = {}
         // ignore non-json 401 responses
       }
     }
-    return response
+    return normalizeJsonResponse(response)
   } finally {
     window.clearTimeout(timeoutId)
     unlinkAbortSignal()

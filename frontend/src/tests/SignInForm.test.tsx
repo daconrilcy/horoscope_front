@@ -118,7 +118,7 @@ describe("SignInForm", () => {
     })
   })
 
-  // M4 — Erreur réseau : fetch qui rejette
+  // M4 - Erreur réseau : fetch qui rejette
   it("shows generic error message when network request fails", async () => {
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("Network error")))
     renderWithRouter(<SignInForm />)
@@ -132,7 +132,7 @@ describe("SignInForm", () => {
     })
   })
 
-  // M1 — Réponse d'erreur non-JSON (502 gateway, etc.)
+  // M1 - Réponse d'erreur non-JSON (502 gateway, etc.)
   it("shows generic error message when server returns non-JSON error response", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
       ok: false,
@@ -150,7 +150,7 @@ describe("SignInForm", () => {
     })
   })
 
-  // H1 — Navigation clavier : attributs WCAG (aria-invalid, aria-describedby, type=submit)
+  // H1 - Navigation clavier : attributs WCAG (aria-invalid, aria-describedby, type=submit)
   it("submit button has type=submit for Enter key activation", () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(SUCCESS_RESPONSE))
     renderWithRouter(<SignInForm />)
@@ -191,7 +191,7 @@ describe("SignInForm", () => {
     })
   })
 
-  // M2 — prop onRegister : visibilité conditionnelle et invocation du callback
+  // M2 - prop onRegister : visibilité conditionnelle et invocation du callback
   it("shows 'Créer un compte' button when onRegister prop is provided", () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(SUCCESS_RESPONSE))
     const onRegister = vi.fn()

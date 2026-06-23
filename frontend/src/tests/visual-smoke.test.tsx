@@ -1,6 +1,6 @@
 // Verifie statiquement les contrats visuels durables des routes premium.
 /**
- * Visual smoke tests — Story 17-10: Correctifs P0 contrastes, tokens, fonds premium
+ * Visual smoke tests - Story 17-10: Correctifs P0 contrastes, tokens, fonds premium
  *
  * These static-analysis tests verify CSS structure and component source to ensure
  * no opacity on parent wrappers (AC#1), correct token presence (AC#2),
@@ -97,7 +97,7 @@ function expectBlockToContain(css: string, selector: string, declarations: strin
 
 // ─── AC#1 : Aucune opacité globale sur les wrappers principaux ───────────────
 
-describe("AC#1 — Aucune opacity sur wrappers principaux (Dashboard)", () => {
+describe("AC#1 - Aucune opacity sur wrappers principaux (Dashboard)", () => {
   it(".app-shell n'a pas de propriété opacity", () => {
     const match = appCss.match(/\.app-shell\s*\{([^}]*)\}/)
     const content = match ? match[1] : ""
@@ -149,9 +149,9 @@ describe("AC#1 — Aucune opacity sur wrappers principaux (Dashboard)", () => {
   })
 })
 
-// ─── AC#4 & AC#5 — Fond dark starfield + light noise ─────────────────────────
+// ─── AC#4 & AC#5 - Fond dark starfield + light noise ─────────────────────────
 
-describe("AC#4 — Fond dark: starfield + gradient cosmique (sans bokeh)", () => {
+describe("AC#4 - Fond dark: starfield + gradient cosmique (sans bokeh)", () => {
   it(".starfield-bg est position: fixed plein écran pointer-events: none", () => {
     const match = bgCss.match(/\.starfield-bg\s*\{([^}]*)\}/)
     const content = match ? match[1] : ""
@@ -180,7 +180,7 @@ describe("AC#4 — Fond dark: starfield + gradient cosmique (sans bokeh)", () =>
   })
 })
 
-describe("AC#5 — Fond light: gradient pastel + noise (sans overlay sombre)", () => {
+describe("AC#5 - Fond light: gradient pastel + noise (sans overlay sombre)", () => {
   it(".app-bg::after (noise) opacity entre 0.06 et 0.10", () => {
     const match = bgCss.match(/\.app-bg::after\s*\{([^}]*)\}/)
     const content = match ? match[1] : ""
@@ -202,9 +202,9 @@ describe("AC#5 — Fond light: gradient pastel + noise (sans overlay sombre)", (
   })
 })
 
-// ─── AC#6 — Icônes Lucide harmonisées ────────────────────────────────────────
+// ─── AC#6 - Icônes Lucide harmonisées ────────────────────────────────────────
 
-describe("AC#6 — Icônes Lucide: size et strokeWidth conformes", () => {
+describe("AC#6 - Icônes Lucide: size et strokeWidth conformes", () => {
   it("ShortcutCard badge icon a size=20 (cards) et strokeWidth=1.75", () => {
     const { container } = render(
       <ShortcutCard
@@ -269,7 +269,7 @@ function renderAstrologerProfileSmoke() {
   )
 }
 
-describe("CS-084 — rendu smoke Settings", () => {
+describe("CS-084 - rendu smoke Settings", () => {
   it("rend le layout Settings avec le halo heritant du proprietaire semantique", () => {
     const { container } = render(
       <SettingsLayout title="Parametres">
@@ -296,7 +296,7 @@ describe("CS-084 — rendu smoke Settings", () => {
   })
 })
 
-describe("CS-085 — rendu smoke Landing", () => {
+describe("CS-085 - rendu smoke Landing", () => {
   it("expose le scope owner landing et des styles representatifs token-backed", () => {
     expect(landingLayoutCss).toMatch(/\.landing-layout\s*\{[^}]*--landing-page-atmosphere:\s*var\(--premium-app-bg\)/)
     expect(landingLayoutCss).toMatch(/\.landing-layout\s*\{[^}]*background:\s*transparent/)
@@ -328,7 +328,7 @@ describe("CS-085 — rendu smoke Landing", () => {
   })
 })
 
-describe("CS-128 — rendu smoke Astrologers compact", () => {
+describe("CS-128 - rendu smoke Astrologers compact", () => {
   it("evite une deuxieme atmosphere floutee sur le catalogue dark", () => {
     expectBlockToContain(appCss, ".dark #root", [
       "--app-astro-catalog-page-bg: transparent",
@@ -478,7 +478,7 @@ describe("CS-128 — rendu smoke Astrologers compact", () => {
   })
 })
 
-describe("CS-129 — rendu smoke Profil astrologue", () => {
+describe("CS-129 - rendu smoke Profil astrologue", () => {
   it("rend le hero CTA, la methode aidee et l'etat avis vide sans contradiction", () => {
     mockUseAstrologer.mockReturnValue({
       data: {

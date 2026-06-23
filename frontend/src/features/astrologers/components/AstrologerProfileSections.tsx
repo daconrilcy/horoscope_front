@@ -162,7 +162,7 @@ export function AstrologerProfileReviewsSection({
                 {review.comment && <p className="review-comment">{review.comment}</p>}
                 <div className="review-footer">
                   <div className="review-user-info">
-                    <span className="review-user-name">{`— ${review.user_name}`}</span>
+                    <span className="review-user-name">{`- ${review.user_name}`}</span>
                     {review.tags.length > 0 ? (
                       <div className="review-tags">
                         {review.tags.map((tag) => (

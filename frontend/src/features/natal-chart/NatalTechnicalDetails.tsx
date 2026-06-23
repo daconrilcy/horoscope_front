@@ -117,7 +117,7 @@ export function NatalTechnicalDetails({
                 <div className="natal-aspect-item__head">
                   <span className="natal-aspect-badge">{translateAspect(item.aspect_code)}</span>
                   <h3 className="natal-aspect-title">
-                    {translatePlanet(item.planet_a)} — {translatePlanet(item.planet_b)}
+                    {translatePlanet(item.planet_a)} - {translatePlanet(item.planet_b)}
                   </h3>
                 </div>
                 <p className="natal-aspect-meaning">

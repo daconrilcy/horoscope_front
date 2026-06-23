@@ -88,9 +88,9 @@ export const HOROSCOPE_LOCKED_COPY: Record<TeaserKey, LockedTeaserCopy> = {
   },
   turningPoint: {
     teaser: {
-      fr: "Un tournant astrologique particulier est prévu ce jour — découvrez lequel...",
-      en: "A particular astrological turning point is expected today — discover it...",
-      es: "Un punto de inflexión astrológico particular está previsto hoy — descúbrelo...",
+      fr: "Un tournant astrologique particulier est prévu ce jour - découvrez lequel...",
+      en: "A particular astrological turning point is expected today - discover it...",
+      es: "Un punto de inflexión astrológico particular está previsto hoy - descúbrelo...",
     },
     lead: {
       fr: "Dans Basic, le moment clé ne se limite pas à un signal bref : il explique la bascule du jour, ce qu'elle déplace dans votre ressenti et dans quelles conditions elle devient une opportunité plutôt qu'une friction.",

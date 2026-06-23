@@ -175,7 +175,7 @@ describe("astro_profile nullable consumption", () => {
 
     const result = await generateNatalChart("test-token")
     expect(result.astro_profile).toBeUndefined()
-    // Optional chaining safe access — no crash
+    // Optional chaining safe access - no crash
     expect(result.astro_profile?.sun_sign_code).toBeUndefined()
     expect(result.astro_profile?.missing_birth_time).toBeUndefined()
   })

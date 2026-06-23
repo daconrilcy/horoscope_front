@@ -40,7 +40,7 @@ type BirthProfileTranslations = {
     save: string
     saving: string
     generate: string
-    /** Template string with `{timeout}` placeholder — use `.replace("{timeout}", value)` */
+    /** Template string with `{timeout}` placeholder - use `.replace("{timeout}", value)` */
     generating: string
   }
   status: {

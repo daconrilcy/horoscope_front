@@ -1,6 +1,7 @@
 // Normalisation des contrats d'interpretation natale Astral pour l'affichage public.
 import type { AstralJobResponse, AstralPlan } from "../../api/astral"
 import { translateAspect, translateHouse, translatePlanet, translateSign } from "../../i18n/astrology"
+import { normalizeDisplayText } from "../../utils/strings"
 
 export type NatalReadingTier = "free" | "basic" | "premium" | "unknown"
 export type NatalReadingVariant = "full" | "simplified" | "unknown"
@@ -85,7 +86,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function asText(value: unknown): string | null {
-  return typeof value === "string" && value.trim() ? value.trim() : null
+  return typeof value === "string" && value.trim() ? normalizeDisplayText(value.trim()) : null
 }
 
 function asRecord(value: unknown): Record<string, unknown> | null {

@@ -126,10 +126,10 @@ describe("buildNatalInterpretationViewModel", () => {
       "Aspects notables",
     ])
     expect(viewModel?.calculationFacts?.groups[0]?.items).toEqual([
-      { label: "Soleil", value: "Capricorne", detail: "Maison II — Valeurs - 281.45°" },
-      { label: "Lune", value: "Poissons", detail: "Maison IV — Foyer - 341.76°" },
-      { label: "Ascendant", value: "Scorpion", detail: "Maison I — Identité" },
-      { label: "Descendant", value: "Taureau", detail: "Maison VII — Relations" },
+      { label: "Soleil", value: "Capricorne", detail: "Maison II - Valeurs - 281.45°" },
+      { label: "Lune", value: "Poissons", detail: "Maison IV - Foyer - 341.76°" },
+      { label: "Ascendant", value: "Scorpion", detail: "Maison I - Identité" },
+      { label: "Descendant", value: "Taureau", detail: "Maison VII - Relations" },
     ])
   })
 
@@ -196,16 +196,16 @@ describe("buildNatalInterpretationViewModel", () => {
     const viewModel = buildNatalInterpretationViewModel(job, "basic")
 
     expect(viewModel?.calculationFacts?.groups[0]?.items).toEqual([
-      { label: "Soleil", value: "Capricorne", detail: "Maison II — Valeurs" },
-      { label: "Lune", value: "Poissons", detail: "Maison IV — Foyer" },
+      { label: "Soleil", value: "Capricorne", detail: "Maison II - Valeurs" },
+      { label: "Lune", value: "Poissons", detail: "Maison IV - Foyer" },
       { label: "Ascendant", value: "Scorpion", detail: null },
-      { label: "Descendant", value: "Taureau", detail: "Maison VII — Relations" },
-      { label: "Milieu du Ciel", value: "Lion", detail: "Maison X — Carrière" },
+      { label: "Descendant", value: "Taureau", detail: "Maison VII - Relations" },
+      { label: "Milieu du Ciel", value: "Lion", detail: "Maison X - Carrière" },
     ])
     expect(viewModel?.calculationFacts?.groups[2]?.items[0]).toEqual({
       label: "Mercure",
       value: "Capricorne",
-      detail: "Maison III — Communication",
+      detail: "Maison III - Communication",
     })
   })
 

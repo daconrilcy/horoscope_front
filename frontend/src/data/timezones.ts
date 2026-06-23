@@ -2,7 +2,7 @@
  * Liste complète des fuseaux horaires IANA standards.
  * Source: https://www.iana.org/time-zones (tzdata 2024a)
  * Utilisée par TimezoneSelect pour la sélection du fuseau horaire de naissance.
- * @note Liste statique — mise à jour manuelle requise lors de changements IANA majeurs.
+ * @note Liste statique - mise à jour manuelle requise lors de changements IANA majeurs.
  */
 export const TIMEZONES: string[] = [
   "Africa/Abidjan",

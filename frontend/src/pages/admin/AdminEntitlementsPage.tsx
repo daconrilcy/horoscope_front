@@ -49,7 +49,7 @@ export function AdminEntitlementsPage() {
       <header className="admin-page-header">
         <div className="header-left">
           <h2>Matrice des Droits (Entitlements)</h2>
-          {isEditing && <span className="editing-banner">MODE ÉDITION ACTIF — Toute modification est journalisée</span>}
+          {isEditing && <span className="editing-banner">MODE ÉDITION ACTIF - Toute modification est journalisée</span>}
         </div>
         <div className="header-actions">
           {canEdit("entitlements") && (

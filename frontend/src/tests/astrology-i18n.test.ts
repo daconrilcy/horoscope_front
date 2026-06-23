@@ -75,23 +75,23 @@ describe("translatePlanet", () => {
 })
 
 const ALL_HOUSES = [
-  [1, "Maison I — Identité", "House I — Identity", "Casa I — Identidad"],
-  [2, "Maison II — Valeurs", "House II — Values", "Casa II — Valores"],
-  [3, "Maison III — Communication", "House III — Communication", "Casa III — Comunicación"],
-  [4, "Maison IV — Foyer", "House IV — Home", "Casa IV — Hogar"],
-  [5, "Maison V — Créativité", "House V — Creativity", "Casa V — Creatividad"],
+  [1, "Maison I - Identité", "House I - Identity", "Casa I - Identidad"],
+  [2, "Maison II - Valeurs", "House II - Values", "Casa II - Valores"],
+  [3, "Maison III - Communication", "House III - Communication", "Casa III - Comunicación"],
+  [4, "Maison IV - Foyer", "House IV - Home", "Casa IV - Hogar"],
+  [5, "Maison V - Créativité", "House V - Creativity", "Casa V - Creatividad"],
   [
     6,
-    "Maison VI — Routines / hygiène de vie",
-    "House VI — Routines / lifestyle hygiene",
-    "Casa VI — Rutinas / higiene de vida",
+    "Maison VI - Routines / hygiène de vie",
+    "House VI - Routines / lifestyle hygiene",
+    "Casa VI - Rutinas / higiene de vida",
   ],
-  [7, "Maison VII — Relations", "House VII — Relationships", "Casa VII — Relaciones"],
-  [8, "Maison VIII — Transformation", "House VIII — Transformation", "Casa VIII — Transformación"],
-  [9, "Maison IX — Philosophie", "House IX — Philosophy", "Casa IX — Filosofía"],
-  [10, "Maison X — Carrière", "House X — Career", "Casa X — Carrera"],
-  [11, "Maison XI — Communauté", "House XI — Community", "Casa XI — Comunidad"],
-  [12, "Maison XII — Inconscient", "House XII — Unconscious", "Casa XII — Inconsciente"],
+  [7, "Maison VII - Relations", "House VII - Relationships", "Casa VII - Relaciones"],
+  [8, "Maison VIII - Transformation", "House VIII - Transformation", "Casa VIII - Transformación"],
+  [9, "Maison IX - Philosophie", "House IX - Philosophy", "Casa IX - Filosofía"],
+  [10, "Maison X - Carrière", "House X - Career", "Casa X - Carrera"],
+  [11, "Maison XI - Communauté", "House XI - Community", "Casa XI - Comunidad"],
+  [12, "Maison XII - Inconscient", "House XII - Unconscious", "Casa XII - Inconsciente"],
 ] as const
 
 describe("translateHouse", () => {
@@ -229,7 +229,7 @@ describe("useAstrologyLabels", () => {
     const { result } = renderHook(() => useAstrologyLabels())
     expect(result.current.translateSign("aries")).toBe("Bélier")
     expect(result.current.translatePlanet("sun")).toBe("Soleil")
-    expect(result.current.translateHouse(1)).toBe("Maison I — Identité")
+    expect(result.current.translateHouse(1)).toBe("Maison I - Identité")
     expect(result.current.translateAspect("trine")).toBe("Trigone")
   })
 

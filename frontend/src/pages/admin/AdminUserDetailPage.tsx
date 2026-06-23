@@ -79,7 +79,7 @@ function ActionDialog({
           </>
         ) : isAssignPlan ? (
           <>
-            <p className="scope-badge">Applicatif uniquement — sans effet Stripe</p>
+            <p className="scope-badge">Applicatif uniquement - sans effet Stripe</p>
             <div className="modal-form-grid">
               <label>
                 Plan
@@ -104,7 +104,7 @@ function ActionDialog({
           </>
         ) : (
           <>
-            <p className="scope-badge">Applicatif uniquement — aucun crédit Stripe</p>
+            <p className="scope-badge">Applicatif uniquement - aucun crédit Stripe</p>
             <div className="modal-form-grid">
               <label>
                 Type de geste

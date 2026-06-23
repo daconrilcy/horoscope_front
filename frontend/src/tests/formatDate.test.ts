@@ -14,12 +14,12 @@ describe("formatDate", () => {
 
   it("returns fallback for invalid date string", () => {
     const result = formatDate("not-a-date", "fr")
-    expect(result).toBe("—")
+    expect(result).toBe("-")
   })
 
   it("returns fallback for empty string", () => {
     const result = formatDate("", "fr")
-    expect(result).toBe("—")
+    expect(result).toBe("-")
   })
 
   it("uses custom fallback when provided", () => {
@@ -35,12 +35,12 @@ describe("formatDate", () => {
   it("handles dates with only date part", () => {
     const result = formatDate("2024-01-01", "en")
     expect(result).toBeTruthy()
-    expect(result).not.toBe("—")
+    expect(result).not.toBe("-")
   })
 
   it("returns fallback for NaN date (Invalid Date object)", () => {
     const result = formatDate("NaN", "fr")
-    expect(result).toBe("—")
+    expect(result).toBe("-")
   })
 })
 
@@ -48,19 +48,19 @@ describe("formatDateTime", () => {
   it("formats valid ISO datetime string with date and time", () => {
     const result = formatDateTime("2024-02-22T10:00:00Z")
     expect(result).toBeTruthy()
-    expect(result).not.toBe("—")
+    expect(result).not.toBe("-")
     // Should contain both date and time components
     expect(result).toMatch(/\d/)
   })
 
   it("returns fallback for invalid date string", () => {
     const result = formatDateTime("not-a-date")
-    expect(result).toBe("—")
+    expect(result).toBe("-")
   })
 
   it("returns fallback for empty string", () => {
     const result = formatDateTime("")
-    expect(result).toBe("—")
+    expect(result).toBe("-")
   })
 
   it("uses custom fallback when provided", () => {
@@ -71,12 +71,12 @@ describe("formatDateTime", () => {
   it("handles ISO date without time component", () => {
     const result = formatDateTime("2024-06-15")
     expect(result).toBeTruthy()
-    expect(result).not.toBe("—")
+    expect(result).not.toBe("-")
   })
 
   it("returns fallback for malformed date like 'undefined'", () => {
     const result = formatDateTime("undefined")
-    expect(result).toBe("—")
+    expect(result).toBe("-")
   })
 })
 
@@ -88,7 +88,7 @@ describe("formatLocalDate", () => {
   })
 
   it("returns fallback for invalid local date input", () => {
-    expect(formatLocalDate("invalid")).toBe("—")
+    expect(formatLocalDate("invalid")).toBe("-")
   })
 })
 
@@ -100,7 +100,7 @@ describe("formatLocalDateTime", () => {
   })
 
   it("returns fallback for invalid local date/time input", () => {
-    expect(formatLocalDateTime("invalid")).toBe("—")
+    expect(formatLocalDateTime("invalid")).toBe("-")
   })
 })
 
@@ -117,6 +117,6 @@ describe("formatDateWithOptions", () => {
   })
 
   it("returns fallback for invalid date string", () => {
-    expect(formatDateWithOptions("invalid", "fr-FR", { year: "numeric" })).toBe("—")
+    expect(formatDateWithOptions("invalid", "fr-FR", { year: "numeric" })).toBe("-")
   })
 })

@@ -45,6 +45,33 @@ describe("apiFetch", () => {
     )
   })
 
+  it("normalizes long dashes in JSON payload strings", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            data: {
+              title: "Maison I \u2014 Identite",
+              items: ["A \u2014 B"],
+            },
+          }),
+          { headers: { "Content-Type": "application/json" }, status: 200 },
+        ),
+      ),
+    )
+
+    const response = await apiFetch("/v1/example")
+    const payload = await response.json()
+
+    expect(payload).toEqual({
+      data: {
+        title: "Maison I - Identite",
+        items: ["A - B"],
+      },
+    })
+  })
+
   it("aborts request after configured timeout", async () => {
     vi.useFakeTimers()
     vi.stubGlobal(

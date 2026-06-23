@@ -149,46 +149,46 @@ describe("ShortcutsSection", () => {
 
 // ─── AC-17-12 & AC-17-14 Correctifs CSS non-régression (static analysis) ────
 
-describe("AC-17-12 & AC-17-14 Correctifs ShortcutCard — analyse CSS statique (ShortcutCard.css)", () => {
+describe("AC-17-12 & AC-17-14 Correctifs ShortcutCard - analyse CSS statique (ShortcutCard.css)", () => {
   const shortcutCssPath = path.resolve(__dirname, "../components/ShortcutCard.css")
   const glassCssPath = path.resolve(__dirname, "../styles/glass.css")
   const shortcutCssContent = fs.readFileSync(shortcutCssPath, "utf-8") + "\n" + fs.readFileSync(glassCssPath, "utf-8")
 
-  it("AC#1 — .shortcut-card a text-decoration: none (pas de soulignement sur lien)", () => {
+  it("AC#1 - .shortcut-card a text-decoration: none (pas de soulignement sur lien)", () => {
     const ruleContent = getLastCssRuleContent(shortcutCssContent, ".shortcut-card")
     expect(ruleContent).toMatch(/text-decoration\s*:\s*none/)
   })
 
-  it("AC-17-14 — .shortcut-card__badge est 44x44 (badges plus grands)", () => {
+  it("AC-17-14 - .shortcut-card__badge est 44x44 (badges plus grands)", () => {
     const badgeContent = getLastCssRuleContent(shortcutCssContent, ".shortcut-card__badge")
     expect(badgeContent).toMatch(/width\s*:\s*44px/)
     expect(badgeContent).toMatch(/height\s*:\s*44px/)
   })
 
-  it("AC-17-14 — .shortcut-card__badge a border-radius: 16px", () => {
+  it("AC-17-14 - .shortcut-card__badge a border-radius: 16px", () => {
     const badgeContent = getLastCssRuleContent(shortcutCssContent, ".shortcut-card__badge")
     expect(badgeContent).toMatch(/border-radius\s*:\s*var\(--radius-card-lg\)/)
   })
 
-  it("AC#2 — .glass-card--shortcut utilise --color-glass-shortcut pour le fond", () => {
+  it("AC#2 - .glass-card--shortcut utilise --color-glass-shortcut pour le fond", () => {
     const match = shortcutCssContent.match(/\.glass-card--shortcut\s*\{([^}]*)\}/)
     const content = match ? match[1] : ""
     expect(content).toContain("var(--color-glass-shortcut)")
   })
 
-  it("AC#2 — .glass-card--shortcut utilise --color-glass-shortcut-border pour la bordure", () => {
+  it("AC#2 - .glass-card--shortcut utilise --color-glass-shortcut-border pour la bordure", () => {
     const match = shortcutCssContent.match(/\.glass-card--shortcut\s*\{([^}]*)\}/)
     const content = match ? match[1] : ""
     expect(content).toContain("var(--color-glass-shortcut-border)")
   })
 
-  it("AC-17-14 — .shortcut-card__title a font-size: 15px et font-weight: 650", () => {
+  it("AC-17-14 - .shortcut-card__title a font-size: 15px et font-weight: 650", () => {
     const ruleContent = getLastCssRuleContent(shortcutCssContent, ".shortcut-card__title")
     expect(ruleContent).toMatch(/font-size\s*:\s*var\(--font-size-15\)/)
     expect(ruleContent).toMatch(/font-weight\s*:\s*var\(--font-weight-strong\)/)
   })
 
-  it("AC-17-15 — .glass-card--shortcut a une box-shadow (profondeur, détache du fond)", () => {
+  it("AC-17-15 - .glass-card--shortcut a une box-shadow (profondeur, détache du fond)", () => {
     const match = shortcutCssContent.match(/\.glass-card--shortcut\s*\{([^}]*)\}/)
     const content = match ? match[1] : ""
     expect(content).toMatch(/box-shadow:/)

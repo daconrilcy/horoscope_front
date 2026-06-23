@@ -748,7 +748,7 @@ describe("BirthProfilePage", () => {
     })
   })
 
-  // H1 — AC4 : invalid_timezone manquant dans la suite de tests initiale
+  // H1 - AC4 : invalid_timezone manquant dans la suite de tests initiale
   it("shows inline error on birth_timezone field when API returns invalid_timezone", async () => {
     setupToken()
     const invalidTimezoneResponse = {
@@ -773,7 +773,7 @@ describe("BirthProfilePage", () => {
     expect(screen.getByLabelText(/Fuseau horaire/i)).toHaveAttribute("aria-invalid", "true")
   })
 
-  // M1 — Régression : UTC sans slash doit passer la validation client
+  // M1 - Régression : UTC sans slash doit passer la validation client
   it("accepts UTC as valid timezone (no slash required)", async () => {
     setupToken()
     vi.stubGlobal(
@@ -906,7 +906,7 @@ describe("BirthProfilePage", () => {
 
     await waitFor(() => expect(screen.getByLabelText(/Date de naissance/i)).toBeInTheDocument())
 
-    // "00:00" is a valid explicit time, not a sentinel — checkbox must NOT be checked
+    // "00:00" is a valid explicit time, not a sentinel - checkbox must NOT be checked
     expect(screen.getByRole("checkbox", { name: /Heure inconnue/i })).not.toBeChecked()
     expect(screen.getByLabelText(/Heure de naissance/i)).toHaveValue("00:00")
     expect(screen.getByLabelText(/Heure de naissance/i)).not.toBeDisabled()

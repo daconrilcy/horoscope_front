@@ -27,22 +27,22 @@ export type ChatQuotaMessages = {
 const CHAT_QUOTA_MESSAGES: Record<AstrologyLang, ChatQuotaMessages> = {
   fr: {
     remaining: (r, l) => `${r}/${l} message(s) restant(s)`,
-    exhausted: (d) => `Quota atteint — rechargement le ${d}`,
+    exhausted: (d) => `Quota atteint - rechargement le ${d}`,
     resetDate: (d) => `Rechargement le ${d}`,
   },
   en: {
     remaining: (r, l) => `${r}/${l} message(s) left`,
-    exhausted: (d) => `Quota reached — resets on ${d}`,
+    exhausted: (d) => `Quota reached - resets on ${d}`,
     resetDate: (d) => `Resets on ${d}`,
   },
   es: {
     remaining: (r, l) => `${r}/${l} mensaje(s) restante(s)`,
-    exhausted: (d) => `Cuota alcanzada — reinicia el ${d}`,
+    exhausted: (d) => `Cuota alcanzada - reinicia el ${d}`,
     resetDate: (d) => `Reinicio el ${d}`,
   },
   de: {
     remaining: (r, l) => `${r}/${l} Nachricht(en) übrig`,
-    exhausted: (d) => `Kontingent erreicht — wird am ${d} zurückgesetzt`,
+    exhausted: (d) => `Kontingent erreicht - wird am ${d} zurückgesetzt`,
     resetDate: (d) => `Zurücksetzung am ${d}`,
   },
 }

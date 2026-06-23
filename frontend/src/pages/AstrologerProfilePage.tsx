@@ -470,7 +470,7 @@ export function AstrologerProfilePage() {
               <blockquote className="profile-quote">
                 <Quote size={24} className="quote-icon" />
                 <p>{profile.quote}</p>
-                <footer className="profile-quote-signature">— {profile.first_name}</footer>
+                <footer className="profile-quote-signature">- {profile.first_name}</footer>
               </blockquote>
             )}
           </div>

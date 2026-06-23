@@ -139,7 +139,7 @@ describe("theme.css validation (Static Analysis)", () => {
   })
 })
 
-describe("AC#2 — Valeurs exactes des tokens critiques (story 17-10)", () => {
+describe("AC#2 - Valeurs exactes des tokens critiques (story 17-10)", () => {
   it("light --color-text-primary est #1E1B2E (texte dark ink lisible sur fond clair)", () => {
     const rootMatches = [...themeContent.matchAll(/:root\s*\{([^}]*)\}/g)]
     const rootContent = rootMatches.map(m => m[1]).join("\n")
@@ -170,87 +170,87 @@ describe("AC#2 — Valeurs exactes des tokens critiques (story 17-10)", () => {
     const alphaVal = parseFloat(glassMatch![1])
     expect(alphaVal).toBeLessThanOrEqual(0.15)
   })
-  it("AC-17-15 — light --color-glass-shortcut = rgba(255,255,255,0.62) pour shortcut cards (plus blanches)", () => {
+  it("AC-17-15 - light --color-glass-shortcut = rgba(255,255,255,0.62) pour shortcut cards (plus blanches)", () => {
     const value = getTokenValue(themeContent, ":root", "--color-glass-shortcut")
     expect(normalizeCssValue(value)).toBe("rgba(255,255,255,0.62)")
   })
 
-  it("AC-17-12 — dark --color-glass-shortcut = rgba(255,255,255,0.06) pour shortcut cards", () => {
+  it("AC-17-12 - dark --color-glass-shortcut = rgba(255,255,255,0.06) pour shortcut cards", () => {
     const value = getTokenValue(themeContent, ".dark", "--color-glass-shortcut")
     expect(normalizeCssValue(value)).toBe("rgba(255,255,255,0.06)")
   })
 
-  it("AC-17-15 — light --color-glass-mini = rgba(255,255,255,0.40) pour mini-insight cards", () => {
+  it("AC-17-15 - light --color-glass-mini = rgba(255,255,255,0.40) pour mini-insight cards", () => {
     const value = getTokenValue(themeContent, ":root", "--color-glass-mini")
     expect(normalizeCssValue(value)).toBe("rgba(255,255,255,0.40)")
   })
 
-  it("AC-17-12 — dark --color-glass-mini = rgba(255,255,255,0.06) pour mini-insight cards", () => {
+  it("AC-17-12 - dark --color-glass-mini = rgba(255,255,255,0.06) pour mini-insight cards", () => {
     const value = getTokenValue(themeContent, ".dark", "--color-glass-mini")
     expect(normalizeCssValue(value)).toBe("rgba(255,255,255,0.06)")
   })
 
-  it("AC-17-12 — dark --success reste un vert doux (non fluo) pour 'En ligne'", () => {
+  it("AC-17-12 - dark --success reste un vert doux (non fluo) pour 'En ligne'", () => {
     const value = getTokenValue(themeContent, ".dark", "--color-success")
     expect(value).toBe("#86CFA2")
   })
 
-  it("AC-17-15 — light --bg-top est #FEF7F9 (gradient original proche maquette)", () => {
+  it("AC-17-15 - light --bg-top est #FEF7F9 (gradient original proche maquette)", () => {
     const value = getTokenValue(themeContent, ":root", "--color-bg-top")
     expect(value).toBe("#FEF7F9")
   })
 
-  it("AC-17-15 — light --bg-mid est #E3D8EC (gradient original proche maquette)", () => {
+  it("AC-17-15 - light --bg-mid est #E3D8EC (gradient original proche maquette)", () => {
     const value = getTokenValue(themeContent, ":root", "--color-bg-mid")
     expect(value).toBe("#E3D8EC")
   })
 
-  it("AC-17-15 — light --bg-bot est défini (gradient original proche maquette)", () => {
+  it("AC-17-15 - light --bg-bot est défini (gradient original proche maquette)", () => {
     const value = getTokenValue(themeContent, ":root", "--color-bg-bot") || getTokenValue(themeContent, ":root", "--bg-bot")
     expect(value).toBeTruthy()
   })
 
-  it("AC-17-14 — light --hero-g1 est rgba(172,132,255,0.28)", () => {
+  it("AC-17-14 - light --hero-g1 est rgba(172,132,255,0.28)", () => {
     const value = getTokenValue(themeContent, ":root", "--color-hero-g1")
     expect(normalizeCssValue(value)).toBe("rgba(172,132,255,0.28)")
   })
 
-  it("AC-17-14 — dark --hero-g1 est rgba(160,120,255,0.22)", () => {
+  it("AC-17-14 - dark --hero-g1 est rgba(160,120,255,0.22)", () => {
     const value = getTokenValue(themeContent, ".dark", "--color-hero-g1")
     expect(normalizeCssValue(value)).toBe("rgba(160,120,255,0.22)")
   })
 
-  it("AC-17-14 — light --love-g1 est #F3B5D6", () => {
+  it("AC-17-14 - light --love-g1 est #F3B5D6", () => {
     const value = getTokenValue(themeContent, ":root", "--color-love-g1")
     expect(value).toBe("#F3B5D6")
   })
 
-  it("AC-17-14 — light --work-g1 est #B9C7FF", () => {
+  it("AC-17-14 - light --work-g1 est #B9C7FF", () => {
     const value = getTokenValue(themeContent, ":root", "--color-work-g1")
     expect(value).toBe("#B9C7FF")
   })
 
-  it("AC-17-14 — light --energy-g1 est #F9DEB2", () => {
+  it("AC-17-14 - light --energy-g1 est #F9DEB2", () => {
     const value = getTokenValue(themeContent, ":root", "--color-energy-g1")
     expect(value).toBe("#F9DEB2")
   })
 
-  it("AC-17-15 — light --color-text-headline est rgb(123,109,140) (H1 muted purple proche maquette)", () => {
+  it("AC-17-15 - light --color-text-headline est rgb(123,109,140) (H1 muted purple proche maquette)", () => {
     const value = getTokenValue(themeContent, ":root", "--color-text-headline")
     expect(normalizeCssValue(value)).toBe("rgb(123,109,140)")
   })
 
-  it("AC-17-15 — dark --color-text-headline est rgba(245,245,255,0.92) (même que --color-text-primary dark)", () => {
+  it("AC-17-15 - dark --color-text-headline est rgba(245,245,255,0.92) (même que --color-text-primary dark)", () => {
     const value = getTokenValue(themeContent, ".dark", "--color-text-headline")
     expect(normalizeCssValue(value)).toBe("rgba(245,245,255,0.92)")
   })
 
-  it("AC-17-15 — light --color-glass-shortcut-border = rgba(255,255,255,0.72) pour shortcut cards", () => {
+  it("AC-17-15 - light --color-glass-shortcut-border = rgba(255,255,255,0.72) pour shortcut cards", () => {
     const value = getTokenValue(themeContent, ":root", "--color-glass-shortcut-border")
     expect(normalizeCssValue(value)).toBe("rgba(255,255,255,0.72)")
   })
 
-  it("AC-17-15 — light --nav-active-bg = rgba(134,108,208,0.16) pour item actif bottom-nav", () => {
+  it("AC-17-15 - light --nav-active-bg = rgba(134,108,208,0.16) pour item actif bottom-nav", () => {
     const value = getTokenValue(themeContent, ":root", "--color-nav-active-bg")
     expect(normalizeCssValue(value)).toBe("rgba(134,108,208,0.16)")
   })
@@ -272,7 +272,7 @@ describe("AC#2 — Valeurs exactes des tokens critiques (story 17-10)", () => {
   })
 })
 
-describe("Story 70-11 — tokens admin largeur et contraste", () => {
+describe("Story 70-11 - tokens admin largeur et contraste", () => {
   it("preserve la largeur par defaut du layout deux colonnes", () => {
     const layoutSidebarWidth = getTokenValue(themeContent, ":root", "--layout-sidebar-width")
 
