@@ -6,20 +6,40 @@ import {
   useB2BReconciliationIssueDetail,
   useB2BReconciliationIssues,
 } from "../api/b2bReconciliation"
+import { AUTH_TOKEN_KEY, setAccessToken } from "../utils/authToken"
 
 vi.mock("@tanstack/react-query", () => ({
   useMutation: (options: unknown) => options,
   useQuery: (options: unknown) => options,
 }))
 
+function toBase64Url(value: string): string {
+  return btoa(value).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "")
+}
+
+function buildAccessToken(): string {
+  const header = toBase64Url(JSON.stringify({ alg: "HS256", typ: "JWT" }))
+  const payload = toBase64Url(JSON.stringify({
+    sub: "user-1",
+    exp: Math.floor(Date.now() / 1000) + 3600,
+  }))
+  return `${header}.${payload}.sig`
+}
+
+function setTestAccessToken(): string {
+  const token = buildAccessToken()
+  setAccessToken(token)
+  return token
+}
+
 describe("b2b reconciliation api", () => {
   afterEach(() => {
     vi.unstubAllGlobals()
-    localStorage.removeItem("access_token")
+    localStorage.removeItem(AUTH_TOKEN_KEY)
   })
 
   it("loads reconciliation issues with filters", async () => {
-    localStorage.setItem("access_token", "token")
+    const token = setTestAccessToken()
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue(
@@ -39,13 +59,13 @@ describe("b2b reconciliation api", () => {
       "http://localhost:8001/v1/ops/b2b/reconciliation/issues?account_id=9&severity=major&limit=50&offset=0",
       expect.objectContaining({
         method: "GET",
-        headers: { Authorization: "Bearer token" },
+        headers: { Authorization: `Bearer ${token}` },
       }),
     )
   })
 
   it("loads reconciliation detail", async () => {
-    localStorage.setItem("access_token", "token")
+    setTestAccessToken()
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue(
@@ -84,7 +104,7 @@ describe("b2b reconciliation api", () => {
   })
 
   it("executes reconciliation action", async () => {
-    localStorage.setItem("access_token", "token")
+    setTestAccessToken()
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue(
@@ -113,7 +133,7 @@ describe("b2b reconciliation api", () => {
   })
 
   it("maps backend errors including request_id", async () => {
-    localStorage.setItem("access_token", "token")
+    setTestAccessToken()
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue(
@@ -142,7 +162,7 @@ describe("b2b reconciliation api", () => {
   })
 
   it("falls back to unknown_error on malformed response", async () => {
-    localStorage.setItem("access_token", "token")
+    setTestAccessToken()
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response("bad gateway", { status: 502 })))
     const { queryFn } = useB2BReconciliationIssues({}, true)
     try {

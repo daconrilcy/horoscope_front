@@ -6,7 +6,11 @@ import {
   type UpgradeHint,
   BillingApiError,
 } from "../api/billing"
-import { useAccessTokenSnapshot, getSubjectFromAccessToken } from "../utils/authToken"
+import {
+  getSubjectFromAccessToken,
+  hasUsableAccessToken,
+  useAccessTokenSnapshot,
+} from "../utils/authToken"
 
 const ANONYMOUS_SUBJECT = "anonymous"
 
@@ -17,13 +21,14 @@ const ANONYMOUS_SUBJECT = "anonymous"
  */
 export function useEntitlementsSnapshot() {
   const token = useAccessTokenSnapshot()
+  const hasValidSession = hasUsableAccessToken(token)
   const tokenSubject = getSubjectFromAccessToken(token) ?? ANONYMOUS_SUBJECT
 
   return useQuery<EntitlementsSnapshot, BillingApiError>({
     queryKey: ["entitlements-me", tokenSubject],
     queryFn: fetchEntitlementsSnapshot,
     staleTime: 2 * 60 * 1000, // 2 minutes (AC5)
-    enabled: !!token,
+    enabled: hasValidSession,
     retry: (failureCount, error) => {
       if (error instanceof BillingApiError && error.status === 403) return false
       return failureCount < 1

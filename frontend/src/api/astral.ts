@@ -2,7 +2,13 @@
 import { useEffect } from "react"
 import { useMutation, useQuery } from "@tanstack/react-query"
 
-import { ApiError, apiFetch, parseApiErrorDetails, type ApiResponseEnvelope } from "./client"
+import {
+  ApiError,
+  apiFetch,
+  parseApiErrorDetails,
+  type ApiResponseEnvelope,
+} from "./client"
+import { hasUsableAccessToken } from "../utils/authToken"
 
 export type AstralPlan = "free" | "basic" | "premium"
 export type AstralProduct = "natal_simplified" | "natal_full" | "horoscope_daily" | "horoscope_period"
@@ -13,6 +19,7 @@ export type AstralJobRequest = {
   plan: AstralPlan
   period?: AstralPeriod
   birth_profile_id?: number
+  chart_calculation_id?: string
   client_request_id: string
   target_language_code?: string
   audience_level?: string
@@ -53,10 +60,22 @@ export type AstralJobEvent = Partial<AstralJobResponse> & {
   event?: string
 }
 
-function authHeaders(accessToken: string) {
+export const ASTRAL_CLIENT_VERSION = "astral-auth-guard-v3"
+
+function resolveAstralClientSource(): string {
+  if (typeof window === "undefined") {
+    return "server"
+  }
+  return `${window.location.pathname}${window.location.search}`
+}
+
+function authHeaders(accessToken: string, request?: AstralJobRequest) {
   return {
     "Content-Type": "application/json",
     Authorization: `Bearer ${accessToken}`,
+    "X-Astral-Client-Version": ASTRAL_CLIENT_VERSION,
+    "X-Astral-Client-Source": resolveAstralClientSource(),
+    ...(request?.client_request_id ? { "X-Client-Request-Id": request.client_request_id } : {}),
   }
 }
 
@@ -78,9 +97,12 @@ export async function submitAstralJob(
   accessToken: string,
   request: AstralJobRequest,
 ): Promise<AstralJobResponse> {
+  if (!hasUsableAccessToken(accessToken)) {
+    throw new ApiError("unauthorized", "access token is required", 401)
+  }
   const response = await apiFetch("/v1/astral/jobs", {
     method: "POST",
-    headers: authHeaders(accessToken),
+    headers: authHeaders(accessToken, request),
     body: JSON.stringify(request),
     timeoutMs: 30000,
   })
@@ -91,6 +113,9 @@ export async function getAstralJobStatus(
   accessToken: string,
   runId: string,
 ): Promise<AstralJobResponse> {
+  if (!hasUsableAccessToken(accessToken)) {
+    throw new ApiError("unauthorized", "access token is required", 401)
+  }
   const response = await apiFetch(`/v1/astral/jobs/${encodeURIComponent(runId)}`, {
     headers: { Authorization: `Bearer ${accessToken}` },
     timeoutMs: 15000,
@@ -101,7 +126,7 @@ export async function getAstralJobStatus(
 export function useSubmitAstralJob(accessToken: string | null) {
   return useMutation({
     mutationFn: (request: AstralJobRequest) => {
-      if (!accessToken) {
+      if (!hasUsableAccessToken(accessToken)) {
         throw new ApiError("unauthorized", "access token is required", 401)
       }
       return submitAstralJob(accessToken, request)
@@ -113,7 +138,7 @@ export function useAstralJobStatus(accessToken: string | null, runId: string | n
   return useQuery({
     queryKey: ["astral-job", runId],
     queryFn: () => getAstralJobStatus(accessToken!, runId!),
-    enabled: Boolean(accessToken) && Boolean(runId),
+    enabled: hasUsableAccessToken(accessToken) && Boolean(runId),
     refetchInterval: (query) => {
       const status = query.state.data?.status
       return status === "queued" || status === "running" ? 2500 : false
@@ -147,7 +172,7 @@ export function useAstralJobEvents(
   onEvent: (event: AstralJobEvent) => void,
 ) {
   useEffect(() => {
-    if (!accessToken || !runId) return undefined
+    if (!hasUsableAccessToken(accessToken) || !runId) return undefined
     const controller = new AbortController()
 
     async function consumeEvents() {

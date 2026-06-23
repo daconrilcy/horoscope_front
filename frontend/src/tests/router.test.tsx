@@ -191,7 +191,7 @@ function renderApp(initialEntries: string[] = ["/"]) {
 }
 
 function setupToken(sub = "42", role = "user") {
-  const payload = btoa(JSON.stringify({ sub, role }))
+  const payload = btoa(JSON.stringify({ sub, role, exp: Math.floor(Date.now() / 1000) + 3600 }))
   setAccessToken(`x.${payload}.y`)
 }
 

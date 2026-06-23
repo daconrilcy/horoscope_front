@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 import { fireEvent, screen } from "@testing-library/react"
 
 import { UserMenu } from "../components/ui/UserMenu/UserMenu"
+import { AUTH_TOKEN_KEY } from "../utils/authToken"
 import { renderWithRouter } from "./test-utils"
 
 const mockNavigate = vi.fn()
@@ -38,7 +39,8 @@ describe("UserMenu", () => {
   })
 
   it("appelle clearAccessToken et navigue vers /login au clic Déconnexion", () => {
-    localStorage.setItem("access_token", "fake-token")
+    localStorage.setItem(AUTH_TOKEN_KEY, "fake-token")
+    localStorage.setItem("access_token", "legacy-token")
     const onClose = vi.fn()
 
     renderWithRouter(
@@ -47,6 +49,7 @@ describe("UserMenu", () => {
 
     fireEvent.click(screen.getByText("Se déconnecter"))
 
+    expect(localStorage.getItem(AUTH_TOKEN_KEY)).toBeNull()
     expect(localStorage.getItem("access_token")).toBeNull()
     expect(mockNavigate).toHaveBeenCalledWith("/login", { replace: true })
     expect(onClose).toHaveBeenCalled()

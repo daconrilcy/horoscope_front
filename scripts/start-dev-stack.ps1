@@ -11,6 +11,10 @@ uniquement lorsque le parametre -WithStripe est fourni.
 Ajoute un onglet Stripe qui execute scripts/stripe-listen-webhook.ps1. La CLI
 Stripe doit etre installee et disponible dans le PATH lorsque ce mode est demande.
 
+.PARAMETER NoCleanStart
+Desactive l'arret automatique des anciens services detectes pour ce depot avant
+le lancement. Par defaut, le script fait un demarrage propre.
+
 .PARAMETER Help
 Affiche l'aide du script sans lancer la stack locale.
 #>
@@ -22,6 +26,7 @@ param(
   [string] $FrontendHost = "127.0.0.1",
   [int] $FrontendPort = 5173,
   [switch] $WithStripe,
+  [switch] $NoCleanStart,
   [switch] $Help
 )
 
@@ -36,6 +41,7 @@ $repoRoot = Split-Path -Parent $PSScriptRoot
 $backendPath = Join-Path $repoRoot "backend"
 $frontendPath = Join-Path $repoRoot "frontend"
 $stripeScriptPath = Join-Path $PSScriptRoot "stripe-listen-webhook.ps1"
+$stopScriptPath = Join-Path $PSScriptRoot "stop-dev-services.ps1"
 $venvActivatePath = Join-Path $repoRoot ".venv\Scripts\Activate.ps1"
 
 function Assert-PathExists {
@@ -80,9 +86,53 @@ function Assert-CommandExists {
   }
 }
 
+function Assert-LocalPortAvailable {
+  <#
+  .SYNOPSIS
+  Verifie qu'un port local n'est pas deja occupe avant de lancer un onglet dev.
+  #>
+  param(
+    [Parameter(Mandatory = $true)]
+    [int] $Port,
+
+    [Parameter(Mandatory = $true)]
+    [string] $ServiceName
+  )
+
+  $listeners = @(
+    Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue
+  )
+  if (-not $listeners) {
+    return
+  }
+
+  $ownerIds = @($listeners | Select-Object -ExpandProperty OwningProcess -Unique)
+  $ownerSummary = @(
+    foreach ($ownerId in $ownerIds) {
+      $process = Get-CimInstance Win32_Process -Filter "ProcessId = $ownerId" -ErrorAction SilentlyContinue
+      if ($null -eq $process) {
+        "PID $ownerId"
+      } else {
+        "PID $ownerId $($process.Name)"
+      }
+    }
+  ) -join ", "
+
+  throw "$ServiceName ne peut pas demarrer: le port $Port est deja occupe ($ownerSummary). Arretez l'ancienne stack avec scripts\stop-dev-services.ps1 puis relancez."
+}
+
 Assert-PathExists -Path $backendPath -Label "Dossier backend"
 Assert-PathExists -Path $frontendPath -Label "Dossier frontend"
 Assert-CommandExists -Name "npm" -InstallHint "Installez Node.js ou ajoutez npm au PATH."
+
+if (-not $NoCleanStart) {
+  Assert-PathExists -Path $stopScriptPath -Label "Script d'arret"
+  Write-Host "Arret preventif des anciens services de developpement..."
+  & $stopScriptPath -Ports @($BackendPort, $FrontendPort, 5174, 4173, 4174)
+}
+
+Assert-LocalPortAvailable -Port $BackendPort -ServiceName "Backend"
+Assert-LocalPortAvailable -Port $FrontendPort -ServiceName "Frontend"
 
 if ($WithStripe) {
   Assert-PathExists -Path $stripeScriptPath -Label "Script Stripe"

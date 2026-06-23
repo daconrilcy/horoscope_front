@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query"
 
 import { API_BASE_URL, apiFetch } from "./client"
-import { getSubjectFromAccessToken } from "../utils/authToken"
+import { getSubjectFromAccessToken, hasUsableAccessToken } from "../utils/authToken"
 import { ANONYMOUS_SUBJECT } from "../utils/constants"
 
 type AuthMeData = {
@@ -24,15 +24,16 @@ async function fetchAuthMe(accessToken: string): Promise<AuthMeData> {
 
 export function useAuthMe(accessToken: string | null) {
   const tokenSubject = getSubjectFromAccessToken(accessToken) ?? ANONYMOUS_SUBJECT
+  const hasValidTokenShape = hasUsableAccessToken(accessToken)
   return useQuery({
     queryKey: ["auth-me", tokenSubject],
     queryFn: async () => {
-      if (!accessToken) {
+      if (!hasUsableAccessToken(accessToken)) {
         throw new Error("missing access token")
       }
       return fetchAuthMe(accessToken)
     },
-    enabled: Boolean(accessToken),
+    enabled: hasValidTokenShape,
     retry: false,
   })
 }

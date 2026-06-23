@@ -1,5 +1,5 @@
 // Client HTTP central pour les appels backend et la normalisation minimale des erreurs API.
-import { clearAccessToken } from "../utils/authToken"
+import { clearAccessToken, markAuthorizationBearerRejected } from "../utils/authToken"
 
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8001"
 const DEFAULT_TIMEOUT_MS = 20000
@@ -24,6 +24,13 @@ export type ApiErrorEnvelope<TDetails = Record<string, unknown>> = {
 export type ApiResponseEnvelope<TData> = {
   data: TData
 }
+
+const AUTH_SESSION_ERROR_CODES = new Set([
+  "missing_access_token",
+  "invalid_token",
+  "invalid_token_type",
+  "token_expired",
+])
 
 type FastApiValidationDetail = {
   msg?: string
@@ -82,7 +89,22 @@ function linkAbortSignal(controller: AbortController, signal: AbortSignal | null
   return () => signal.removeEventListener("abort", abortHandler)
 }
 
-/** Execute une requete backend avec URL canonique, timeout et propagation token_expired. */
+function readAuthorizationHeader(headers: HeadersInit | undefined): string | null {
+  if (!headers) {
+    return null
+  }
+  if (headers instanceof Headers) {
+    return headers.get("Authorization")
+  }
+  if (Array.isArray(headers)) {
+    const authorization = headers.find(([key]) => key.toLowerCase() === "authorization")
+    return authorization?.[1] ?? null
+  }
+  const record = headers as Record<string, string>
+  return record.Authorization ?? record.authorization ?? null
+}
+
+/** Execute une requete backend avec URL canonique, timeout et propagation auth. */
 export async function apiFetch(input: RequestInfo | URL, init: ApiFetchInit = {}): Promise<Response> {
   const controller = new AbortController()
   const { timeoutMs = API_TIMEOUT_MS, signal, ...requestInit } = init
@@ -94,11 +116,12 @@ export async function apiFetch(input: RequestInfo | URL, init: ApiFetchInit = {}
       signal: controller.signal,
     })
     if (response.status === 401) {
+      markAuthorizationBearerRejected(readAuthorizationHeader(requestInit.headers))
       try {
         const payload = (await response.clone().json()) as {
           error?: { code?: string }
         }
-        if (payload?.error?.code === "token_expired") {
+        if (payload?.error?.code && AUTH_SESSION_ERROR_CODES.has(payload.error.code)) {
           clearAccessToken()
         }
       } catch {

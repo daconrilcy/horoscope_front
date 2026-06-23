@@ -5,6 +5,7 @@ from __future__ import annotations
 
 from collections.abc import AsyncIterator, Awaitable, Callable
 from dataclasses import dataclass
+from datetime import date
 from typing import Any, Literal
 
 from sqlalchemy.orm import Session
@@ -62,6 +63,7 @@ class AstralJobCommand:
     plan: AstralPlan
     client_request_id: str
     birth_profile_id: int | None = None
+    chart_calculation_id: str | None = None
     period: AstralPeriod | None = None
     target_language_code: str = "fr"
     audience_level: str = "beginner"
@@ -93,25 +95,16 @@ class AstralIntegrationService:
         plan = self._resolve_user_plan(db, user.id)
         service_code = self._service_code(command.product, plan)
         birth_payload = self._resolve_birth_payload(db, user.id, command.birth_profile_id)
-        payload = {
-            "context": {
-                "request_id": command.client_request_id,
-                "idempotency_key": command.client_request_id,
-                "target_language_code": command.target_language_code,
-                "audience_level": command.audience_level,
-                "requested_plan": command.plan,
-                "effective_plan": plan,
-            },
-            "birth": birth_payload,
-        }
-        if command.period is not None:
-            payload["period"] = command.period
-
+        payload = self._build_service_payload(
+            command=command,
+            plan=plan,
+            birth_payload=birth_payload,
+        )
         astral_payload = {
             "service_code": service_code,
             "payload": payload,
             "user_language": command.target_language_code,
-            "audience_level": command.audience_level,
+            "audience_level": self._normalize_audience_level(command.audience_level),
         }
         try:
             response = await self._client.submit_job(
@@ -190,6 +183,105 @@ class AstralIntegrationService:
                 "unsupported Astral product and plan combination",
                 details={"product": product, "plan": plan},
             ) from error
+
+    @staticmethod
+    def _build_service_payload(
+        *,
+        command: AstralJobCommand,
+        plan: AstralPlan,
+        birth_payload: dict[str, Any],
+    ) -> dict[str, Any]:
+        """Construit le payload metier attendu par chaque contrat Astral."""
+        if command.product in {"horoscope_daily", "horoscope_period"}:
+            return AstralIntegrationService._build_horoscope_payload(
+                command=command,
+                birth_payload=birth_payload,
+            )
+        natal_birth_payload = AstralIntegrationService._build_natal_birth_payload(birth_payload)
+        if command.product == "natal_simplified" or plan == "free":
+            return {
+                "request_contract_version": "astro_simplified_natal_request_v1",
+                "request_id": command.client_request_id,
+                "birth": natal_birth_payload,
+            }
+        return {
+            "request_contract_version": "astro_engine_request_v1",
+            "request_id": command.client_request_id,
+            "idempotency_key": command.client_request_id,
+            "calculation": {
+                "type": "natal",
+                "house_system": "placidus",
+                "zodiacal_reference_system": "tropical",
+            },
+            "birth": natal_birth_payload,
+            "projection": {
+                "contract_version": "astro_projection_v1",
+                "level": "premium" if plan == "premium" else "standard",
+            },
+        }
+
+    @staticmethod
+    def _build_natal_birth_payload(birth_payload: dict[str, Any]) -> dict[str, Any]:
+        """Filtre les donnees de naissance selon les contrats natal Astral."""
+        payload: dict[str, Any] = {"date": birth_payload["date"]}
+        if birth_payload.get("time") is not None:
+            payload["time"] = birth_payload["time"]
+        if birth_payload.get("timezone") is not None:
+            payload["timezone"] = birth_payload["timezone"]
+
+        raw_location = birth_payload.get("location")
+        if isinstance(raw_location, dict):
+            latitude = raw_location.get("latitude")
+            longitude = raw_location.get("longitude")
+            if latitude is not None and longitude is not None:
+                payload["location"] = {
+                    "latitude": latitude,
+                    "longitude": longitude,
+                }
+        return payload
+
+    @staticmethod
+    def _build_horoscope_payload(
+        *,
+        command: AstralJobCommand,
+        birth_payload: dict[str, Any],
+    ) -> dict[str, Any]:
+        """Construit un payload horoscope uniquement avec un theme Astral calcule."""
+        if not command.chart_calculation_id:
+            raise AstralIntegrationServiceError(
+                "astral_chart_calculation_required",
+                "horoscope jobs require an Astral chart_calculation_id",
+                details={"product": command.product},
+            )
+        if command.product == "horoscope_period":
+            return {
+                "anchor_date": date.today().isoformat(),
+                "timezone": birth_payload["timezone"],
+                "target_language": command.target_language_code,
+                "target_language_code": command.target_language_code,
+                "audience_level": AstralIntegrationService._normalize_audience_level(
+                    command.audience_level
+                ),
+                "chart_calculation_id": command.chart_calculation_id,
+            }
+        return {
+            "date": date.today().isoformat(),
+            "timezone": birth_payload["timezone"],
+            "target_language": command.target_language_code,
+            "audience_level": AstralIntegrationService._normalize_audience_level(
+                command.audience_level
+            ),
+            "chart_calculation_id": command.chart_calculation_id,
+        }
+
+    @staticmethod
+    def _normalize_audience_level(value: str) -> str:
+        """Aligne les niveaux UI avec l'enum Astral."""
+        if value == "advanced":
+            return "expert"
+        if value in {"beginner", "intermediate", "expert"}:
+            return value
+        return "beginner"
 
     @staticmethod
     def _resolve_user_plan(db: Session, user_id: int) -> AstralPlan:

@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 import { cleanup, fireEvent, screen, waitFor } from "@testing-library/react"
 
 import { SignInForm } from "../features/auth/SignInForm"
+import { AUTH_TOKEN_KEY } from "../utils/authToken"
 import { renderWithRouter } from "./test-utils"
 
 const ACCESS_TOKEN = "tok.eyJzdWIiOiI0MiIsInJvbGUiOiJ1c2VyIn0.sig"
@@ -100,7 +101,7 @@ describe("SignInForm", () => {
     fireEvent.click(screen.getByRole("button", { name: "Se connecter" }))
 
     await waitFor(() => {
-      expect(localStorage.getItem("access_token")).toBe(ACCESS_TOKEN)
+      expect(localStorage.getItem(AUTH_TOKEN_KEY)).toBe(ACCESS_TOKEN)
     })
   })
 

@@ -18,7 +18,7 @@ from app.api.dependencies.b2b_auth import EnterpriseApiKeyAuthenticationError
 from app.api.errors.handlers import application_error_handler, build_error_response
 from app.api.route_exceptions import include_registered_route_exceptions
 from app.api.v1.routers.registry import include_api_v1_routers
-from app.core.config import settings
+from app.core.config import _should_load_backend_dotenv, env_path, settings
 from app.core.exceptions import ApplicationError
 from app.core.request_id import resolve_request_id
 from app.infra.db.bootstrap import ensure_local_sqlite_schema_ready
@@ -29,6 +29,20 @@ from app.startup.feature_scope_validation import run_feature_scope_startup_valid
 from app.startup.stripe_portal_validation import run_stripe_portal_startup_validation
 
 logger = logging.getLogger(__name__)
+
+
+def _classify_authorization_header(authorization: str | None) -> str:
+    """Classe le header Authorization sans journaliser sa valeur secrete."""
+    if authorization is None:
+        return "missing"
+    if not authorization.strip():
+        return "blank"
+    if authorization.startswith("Bearer "):
+        token = authorization.removeprefix("Bearer ").strip()
+        if not token:
+            return "bearer_empty"
+        return "bearer_present"
+    return "non_bearer_present"
 
 
 def _open_startup_db_session() -> Session:
@@ -126,6 +140,17 @@ async def _app_lifespan(_: FastAPI):
     from app.core.scheduler import shutdown_scheduler, start_scheduler
 
     start_scheduler()
+    logger.warning(
+        (
+            "diagnostic_startup_config_status app_env=%s backend_dotenv_loaded=%s "
+            "astral_api_key_configured=%s astral_jobs_api_url=%s astral_gateway_url=%s"
+        ),
+        settings.app_env,
+        env_path.exists() and _should_load_backend_dotenv(),
+        settings.astral_api_key is not None,
+        settings.astral_jobs_api_url,
+        settings.astral_gateway_url,
+    )
 
     ensure_local_sqlite_schema_ready()
     PricingExperimentService.record_variant_state_change(
@@ -264,6 +289,24 @@ def handle_request_validation_error(
 def handle_user_authentication_error(
     request: Request, error: UserAuthenticationError
 ) -> JSONResponse:
+    logger.warning(
+        (
+            "user_authentication_failed request_id=%s method=%s path=%s status_code=%s "
+            "error_code=%s authorization=%s origin=%s astral_client_version=%s "
+            "astral_client_source=%s client_request_id=%s user_agent=%s"
+        ),
+        resolve_request_id(request),
+        request.method,
+        request.url.path,
+        error.http_status_code,
+        error.code,
+        _classify_authorization_header(request.headers.get("authorization")),
+        request.headers.get("origin", "-"),
+        request.headers.get("x-astral-client-version", "-"),
+        request.headers.get("x-astral-client-source", "-"),
+        request.headers.get("x-client-request-id", "-"),
+        request.headers.get("user-agent", "-"),
+    )
     return build_error_response(
         status_code=error.http_status_code,
         request_id=resolve_request_id(request),

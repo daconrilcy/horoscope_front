@@ -21,6 +21,7 @@ class AstralJobCreateRequest(BaseModel):
     plan: AstralPlan = "free"
     period: AstralPeriod | None = None
     birth_profile_id: int | None = None
+    chart_calculation_id: str | None = Field(default=None, min_length=1, max_length=128)
     client_request_id: str = Field(min_length=8, max_length=128)
     target_language_code: str = Field(default="fr", min_length=2, max_length=16)
     audience_level: str = Field(default="beginner", min_length=1, max_length=32)

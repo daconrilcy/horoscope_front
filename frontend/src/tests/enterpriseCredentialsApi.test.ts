@@ -6,11 +6,31 @@ import {
   useGenerateB2BCredential,
   useRotateB2BCredential,
 } from "../api/enterpriseCredentials"
+import { setAccessToken } from "../utils/authToken"
 
 vi.mock("@tanstack/react-query", () => ({
   useQuery: (options: unknown) => options,
   useMutation: (options: unknown) => options,
 }))
+
+function toBase64Url(value: string): string {
+  return btoa(value).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "")
+}
+
+function buildAccessToken(): string {
+  const header = toBase64Url(JSON.stringify({ alg: "HS256", typ: "JWT" }))
+  const payload = toBase64Url(JSON.stringify({
+    sub: "user-1",
+    exp: Math.floor(Date.now() / 1000) + 3600,
+  }))
+  return `${header}.${payload}.sig`
+}
+
+function setTestAccessToken(): string {
+  const token = buildAccessToken()
+  setAccessToken(token)
+  return token
+}
 
 describe("enterprise credentials api", () => {
   afterEach(() => {
@@ -19,7 +39,7 @@ describe("enterprise credentials api", () => {
   })
 
   it("uses bearer token for credentials listing", async () => {
-    localStorage.setItem("access_token", "test.token.value")
+    const token = setTestAccessToken()
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue(
@@ -46,13 +66,13 @@ describe("enterprise credentials api", () => {
       "http://localhost:8001/v1/b2b/credentials",
       expect.objectContaining({
         method: "GET",
-        headers: { Authorization: "Bearer test.token.value" },
+        headers: { Authorization: `Bearer ${token}` },
       }),
     )
   })
 
   it("calls generate and rotate endpoints", async () => {
-    localStorage.setItem("access_token", "test.token.value")
+    const token = setTestAccessToken()
     vi.stubGlobal(
       "fetch",
       vi.fn()
@@ -101,7 +121,7 @@ describe("enterprise credentials api", () => {
       "http://localhost:8001/v1/b2b/credentials/generate",
       expect.objectContaining({
         method: "POST",
-        headers: { Authorization: "Bearer test.token.value" },
+        headers: { Authorization: `Bearer ${token}` },
       }),
     )
     expect(fetch).toHaveBeenNthCalledWith(
@@ -109,13 +129,13 @@ describe("enterprise credentials api", () => {
       "http://localhost:8001/v1/b2b/credentials/rotate",
       expect.objectContaining({
         method: "POST",
-        headers: { Authorization: "Bearer test.token.value" },
+        headers: { Authorization: `Bearer ${token}` },
       }),
     )
   })
 
   it("propagates backend error details and request_id", async () => {
-    localStorage.setItem("access_token", "test.token.value")
+    setTestAccessToken()
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue(

@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from fastapi import APIRouter, Depends, Request
@@ -27,6 +28,15 @@ from app.services.astral.integration_service import (
 )
 
 router = APIRouter(prefix="/v1/astral", tags=["astral"])
+logger = logging.getLogger(__name__)
+
+
+def _resolve_astral_error_status(error: AstralIntegrationServiceError) -> int:
+    """Préserve le statut HTTP upstream lorsqu'Astral l'a déjà qualifié."""
+    upstream_status = error.details.get("upstream_http_status")
+    if isinstance(upstream_status, int) and 400 <= upstream_status <= 599:
+        return upstream_status
+    return resolve_application_error_status(error.code)
 
 
 @router.post(
@@ -57,6 +67,7 @@ async def submit_astral_job(
                 plan=payload.plan,
                 period=payload.period,
                 birth_profile_id=payload.birth_profile_id,
+                chart_calculation_id=payload.chart_calculation_id,
                 client_request_id=payload.client_request_id,
                 target_language_code=payload.target_language_code,
                 audience_level=payload.audience_level,
@@ -64,6 +75,13 @@ async def submit_astral_job(
         )
         return {"data": data, "meta": {"request_id": request_id}}
     except ValidationError as error:
+        logger.warning(
+            "astral_job_request_validation_failed request_id=%s product=%s plan=%s errors_count=%s",
+            request_id,
+            payload.product,
+            payload.plan,
+            len(error.errors()),
+        )
         return build_error_response(
             status_code=422,
             request_id=request_id,
@@ -72,8 +90,22 @@ async def submit_astral_job(
             details={"errors": error.errors()},
         )
     except AstralIntegrationServiceError as error:
+        status_code = _resolve_astral_error_status(error)
+        logger.warning(
+            (
+                "astral_job_submit_failed request_id=%s product=%s requested_plan=%s "
+                "status_code=%s error_code=%s upstream_status=%s details_keys=%s"
+            ),
+            request_id,
+            payload.product,
+            payload.plan,
+            status_code,
+            error.code,
+            error.details.get("upstream_http_status"),
+            ",".join(sorted(error.details.keys())),
+        )
         return build_error_response(
-            status_code=resolve_application_error_status(error.code),
+            status_code=status_code,
             request_id=request_id,
             code=error.code,
             message=error.message,
@@ -103,8 +135,21 @@ async def get_astral_job(
         data = await AstralIntegrationService().get_job_status(run_id)
         return {"data": data, "meta": {"request_id": request_id}}
     except AstralIntegrationServiceError as error:
+        status_code = _resolve_astral_error_status(error)
+        logger.warning(
+            (
+                "astral_job_status_failed request_id=%s run_id=%s status_code=%s "
+                "error_code=%s upstream_status=%s details_keys=%s"
+            ),
+            request_id,
+            run_id,
+            status_code,
+            error.code,
+            error.details.get("upstream_http_status"),
+            ",".join(sorted(error.details.keys())),
+        )
         return build_error_response(
-            status_code=resolve_application_error_status(error.code),
+            status_code=status_code,
             request_id=request_id,
             code=error.code,
             message=error.message,

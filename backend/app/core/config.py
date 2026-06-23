@@ -135,6 +135,12 @@ class Settings:
         return f"dev-seed-{fingerprint}"
 
     @staticmethod
+    def _derive_non_prod_secret(env_name: str, app_env: str, database_url: str) -> str:
+        """Derive un secret stable pour eviter les sessions cassees en dev local."""
+        fingerprint = sha256(f"{env_name}:{app_env}:{database_url}".encode("utf-8")).hexdigest()
+        return f"dev-{env_name.lower()}-{fingerprint}"
+
+    @staticmethod
     def _allows_implicit_seed_admin_token(app_env: str) -> bool:
         return app_env in {"development", "dev", "local", "test", "testing"}
 
@@ -201,7 +207,11 @@ class Settings:
         if self.app_env == "production" and not self.jwt_secret_key:
             raise RuntimeError("JWT_SECRET_KEY must be set in production")
         if not self.jwt_secret_key:
-            self.jwt_secret_key = secrets.token_hex(32)
+            self.jwt_secret_key = self._derive_non_prod_secret(
+                "JWT_SECRET_KEY",
+                self.app_env,
+                self.database_url,
+            )
         self.jwt_previous_secret_keys = self._parse_secret_list("JWT_PREVIOUS_SECRET_KEYS")
         self.jwt_algorithm = os.getenv("JWT_ALGORITHM", "HS256")
         self.jwt_access_minutes = int(os.getenv("JWT_ACCESS_MINUTES", "15"))
@@ -210,7 +220,11 @@ class Settings:
         if self.app_env == "production" and not self.api_credentials_secret_key:
             raise RuntimeError("API_CREDENTIALS_SECRET_KEY must be set in production")
         if not self.api_credentials_secret_key:
-            self.api_credentials_secret_key = secrets.token_hex(32)
+            self.api_credentials_secret_key = self._derive_non_prod_secret(
+                "API_CREDENTIALS_SECRET_KEY",
+                self.app_env,
+                self.database_url,
+            )
         self.api_credentials_previous_secret_keys = self._parse_secret_list(
             "API_CREDENTIALS_PREVIOUS_SECRET_KEYS"
         )
@@ -249,7 +263,11 @@ class Settings:
             "ASTRAL_MERCURE_URL",
             "http://localhost:3000/.well-known/mercure",
         ).strip()
-        self.astral_api_key = os.getenv("ASTRAL_API_KEY", "").strip() or None
+        self.astral_api_key = (
+            os.getenv("ASTRAL_API_KEY", "").strip()
+            or os.getenv("ASTRAL_LLM_API_KEY", "").strip()
+            or None
+        )
         self.astral_timeout_seconds = self._parse_float_env(
             "ASTRAL_TIMEOUT_SECONDS",
             default=30.0,

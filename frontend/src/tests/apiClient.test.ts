@@ -1,11 +1,26 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
 
 import { API_BASE_URL, API_TIMEOUT_MS, apiFetch } from "../api/client"
+import { AUTH_TOKEN_KEY, hasUsableAccessToken, setAccessToken } from "../utils/authToken"
+
+function toBase64Url(value: string): string {
+  return btoa(value).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "")
+}
+
+function buildAccessToken(): string {
+  const header = toBase64Url(JSON.stringify({ alg: "HS256", typ: "JWT" }))
+  const payload = toBase64Url(JSON.stringify({
+    sub: "user-1",
+    exp: Math.floor(Date.now() / 1000) + 3600,
+  }))
+  return `${header}.${payload}.sig`
+}
 
 describe("apiFetch", () => {
   afterEach(() => {
     vi.useRealTimers()
     vi.unstubAllGlobals()
+    localStorage.clear()
   })
 
   it("returns response when request completes before timeout", async () => {
@@ -48,5 +63,42 @@ describe("apiFetch", () => {
     const rejection = expect(pendingRequest).rejects.toMatchObject({ name: "AbortError" })
     await vi.advanceTimersByTimeAsync(API_TIMEOUT_MS + 1)
     await rejection
+  })
+
+  it("clears the local session when backend rejects the token subject", async () => {
+    setAccessToken("header.payload.signature")
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            error: {
+              code: "invalid_token",
+              message: "token subject is invalid",
+            },
+          }),
+          { status: 401 },
+        ),
+      ),
+    )
+
+    const response = await apiFetch("/v1/astral/jobs")
+
+    expect(response.status).toBe(401)
+    expect(localStorage.getItem(AUTH_TOKEN_KEY)).toBeNull()
+  })
+
+  it("rejects the sent bearer locally when backend returns a non-json 401", async () => {
+    const token = buildAccessToken()
+    setAccessToken(token)
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response("Unauthorized", { status: 401 })))
+
+    const response = await apiFetch("/v1/astral/jobs", {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+
+    expect(response.status).toBe(401)
+    expect(localStorage.getItem(AUTH_TOKEN_KEY)).toBeNull()
+    expect(hasUsableAccessToken(token)).toBe(false)
   })
 })

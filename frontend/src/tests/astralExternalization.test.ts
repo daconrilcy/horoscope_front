@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest"
+import { afterEach, describe, expect, it, vi } from "vitest"
 
 import * as astralApi from "../api/astral"
 import { routes } from "../app/routes"
@@ -13,6 +13,10 @@ function collectPaths(routeList: typeof routes): string[] {
 }
 
 describe("Astral externalization guardrails", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
   it("retire les routes produit non supportees pour le moment", () => {
     const paths = collectPaths(routes)
 
@@ -36,5 +40,53 @@ describe("Astral externalization guardrails", () => {
 
   it("expose une souscription SSE backend authentifiee", () => {
     expect(typeof astralApi.useAstralJobEvents).toBe("function")
+  })
+
+  it("ne soumet pas de job Astral avec un token local inutilisable", async () => {
+    const fetchMock = vi.fn()
+    vi.stubGlobal("fetch", fetchMock)
+
+    await expect(
+      astralApi.submitAstralJob("not-a-jwt", {
+        product: "natal_simplified",
+        plan: "free",
+        client_request_id: "natal-request-1",
+      }),
+    ).rejects.toMatchObject({ code: "unauthorized", status: 401 })
+
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it("annote les submits Astral avec la version client et la source courante", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          data: { run_id: "run-1", status: "queued" },
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      ),
+    )
+    vi.stubGlobal("fetch", fetchMock)
+    const token = [
+      btoa(JSON.stringify({ alg: "HS256", typ: "JWT" })),
+      btoa(JSON.stringify({ sub: "1", exp: Math.floor(Date.now() / 1000) + 3600 })),
+      "sig",
+    ].join(".")
+
+    await astralApi.submitAstralJob(token, {
+      product: "natal_simplified",
+      plan: "free",
+      client_request_id: "natal-request-1",
+    })
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringContaining("/v1/astral/jobs"),
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          "X-Astral-Client-Version": astralApi.ASTRAL_CLIENT_VERSION,
+          "X-Client-Request-Id": "natal-request-1",
+        }),
+      }),
+    )
   })
 })

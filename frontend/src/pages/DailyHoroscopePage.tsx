@@ -1,3 +1,4 @@
+// Page horoscope quotidienne: lancement unique du job Astral et reprise manuelle en cas d'echec.
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { RefreshCw } from "lucide-react"
 
@@ -11,16 +12,18 @@ import {
   useAstralJobStatus,
   useSubmitAstralJob,
 } from "../api/astral"
-import { useAccessTokenSnapshot } from "../utils/authToken"
-import { useFeatureAccess } from "../hooks/useEntitlementSnapshot"
+import { useEntitlementsSnapshot } from "../hooks/useEntitlementSnapshot"
+import { hasUsableAccessToken, useAccessTokenSnapshot } from "../utils/authToken"
 import "./DailyHoroscopePage.css"
 
+/** Derive le plan Astral a partir du code de variante expose par l'entitlement. */
 function resolvePlan(variantCode?: string | null): AstralPlan {
   if (variantCode?.includes("premium")) return "premium"
   if (variantCode?.includes("basic")) return "basic"
   return "free"
 }
 
+/** Rend le resultat Astral en texte simple ou en JSON selon la forme du payload. */
 function renderAstralResult(job: AstralJobResponse | undefined) {
   const result = job?.result
   if (!result) return null
@@ -34,9 +37,14 @@ function renderAstralResult(job: AstralJobResponse | undefined) {
   )
 }
 
+/** Affiche le flux quotidien Astral avec lancement manuel et reprise explicite. */
 export default function DailyHoroscopePage() {
   const accessToken = useAccessTokenSnapshot()
-  const featureAccess = useFeatureAccess("horoscope_daily")
+  const hasValidSession = hasUsableAccessToken(accessToken)
+  const entitlementsSnapshot = useEntitlementsSnapshot()
+  const featureAccess = entitlementsSnapshot.data?.features.find(
+    (feature) => feature.feature_code === "horoscope_daily",
+  )
   const plan = useMemo(() => resolvePlan(featureAccess?.variant_code), [featureAccess?.variant_code])
   const [runId, setRunId] = useState<string | null>(null)
   const [eventJob, setEventJob] = useState<AstralJobResponse | null>(null)
@@ -60,13 +68,6 @@ export default function DailyHoroscopePage() {
   function requestDailyJob() {
     void startDailyJob().catch(() => undefined)
   }
-
-  useEffect(() => {
-    if (!accessToken || runId || submitJob.isPending || submitJob.data) return
-    requestDailyJob()
-    // Le demarrage automatique doit rester lie au token et au plan courant.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [accessToken, plan, runId, submitJob.data, submitJob.isPending])
 
   useEffect(() => {
     setEventJob(null)
@@ -117,7 +118,7 @@ export default function DailyHoroscopePage() {
           ) : job?.status === "failed" ? (
             <p>Le job Astral a echoue.</p>
           ) : (
-            <button type="button" onClick={requestDailyJob} disabled={!accessToken}>
+            <button type="button" onClick={requestDailyJob} disabled={!hasValidSession}>
               Lancer l'horoscope
             </button>
           )}

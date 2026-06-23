@@ -35,6 +35,7 @@ def test_default_dev_stack_does_not_require_or_start_stripe() -> None:
     content = _script_content()
 
     assert "[switch] $WithStripe" in content
+    assert "[switch] $NoCleanStart" in content
     assert "[switch] $Help" in content
     assert "if ($Help)" in content
     assert "SkipStripe" not in content
@@ -55,6 +56,31 @@ def test_default_dev_stack_does_not_require_or_start_stripe() -> None:
     assert '"--title", "Backend"' in base_wt_arguments.group("body")
     assert '"--title", "Frontend"' in base_wt_arguments.group("body")
     assert '"--title", "Stripe"' not in base_wt_arguments.group("body")
+
+
+def test_default_dev_stack_checks_backend_and_frontend_ports_before_launch() -> None:
+    """Le script doit echouer avant un demarrage partiel si un port est occupe."""
+    content = _script_content()
+
+    assert "function Assert-LocalPortAvailable" in content
+    assert "Get-NetTCPConnection -LocalPort $Port -State Listen" in content
+    assert 'Assert-LocalPortAvailable -Port $BackendPort -ServiceName "Backend"' in content
+    assert 'Assert-LocalPortAvailable -Port $FrontendPort -ServiceName "Frontend"' in content
+    assert "scripts\\stop-dev-services.ps1" in content
+
+
+def test_default_dev_stack_stops_stale_project_services_before_port_checks() -> None:
+    """Le demarrage nominal doit nettoyer les anciens serveurs du depot."""
+    content = _script_content()
+    stop_call_index = content.index("& $stopScriptPath")
+    backend_port_check_index = content.index(
+        'Assert-LocalPortAvailable -Port $BackendPort -ServiceName "Backend"'
+    )
+
+    assert '$stopScriptPath = Join-Path $PSScriptRoot "stop-dev-services.ps1"' in content
+    assert "if (-not $NoCleanStart)" in content
+    assert "& $stopScriptPath -Ports @($BackendPort, $FrontendPort, 5174, 4173, 4174)" in content
+    assert stop_call_index < backend_port_check_index
 
 
 def test_with_stripe_branch_requires_cli_and_reuses_listener_script() -> None:

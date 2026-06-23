@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi, beforeEach } from "vitest"
 import { cleanup, fireEvent, screen, waitFor } from "@testing-library/react"
 
 import { SignUpForm } from "../features/auth/SignUpForm"
+import { AUTH_TOKEN_KEY } from "../utils/authToken"
 import { renderWithRouter } from "./test-utils"
 
 const ACCESS_TOKEN = "tok.eyJzdWIiOiI0MiIsInJvbGUiOiJ1c2VyIn0.sig"
@@ -159,7 +160,7 @@ describe("SignUpForm", () => {
     fireEvent.click(screen.getByRole("button", { name: "Créer mon compte" }))
 
     await waitFor(() => {
-      expect(localStorage.getItem("access_token")).toBe(ACCESS_TOKEN)
+      expect(localStorage.getItem(AUTH_TOKEN_KEY)).toBe(ACCESS_TOKEN)
     })
   })
 

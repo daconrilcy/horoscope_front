@@ -1,3 +1,4 @@
+// Page theme natal: lancement unique du job Astral et reprise manuelle en cas d'echec.
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { Link } from "react-router-dom"
 import { RefreshCw } from "lucide-react"
@@ -12,16 +13,18 @@ import {
   useAstralJobStatus,
   useSubmitAstralJob,
 } from "../api/astral"
-import { useAccessTokenSnapshot } from "../utils/authToken"
-import { useFeatureAccess } from "../hooks/useEntitlementSnapshot"
+import { useEntitlementsSnapshot } from "../hooks/useEntitlementSnapshot"
+import { hasUsableAccessToken, useAccessTokenSnapshot } from "../utils/authToken"
 import "./NatalChartPage.css"
 
+/** Derive le plan Astral a partir du code de variante expose par l'entitlement. */
 function resolvePlan(variantCode?: string | null): AstralPlan {
   if (variantCode?.includes("premium")) return "premium"
   if (variantCode?.includes("basic") || variantCode === "single_astrologer") return "basic"
   return "free"
 }
 
+/** Rend le resultat Astral en texte simple ou en JSON selon la forme du payload. */
 function renderReading(job: AstralJobResponse | undefined) {
   const result = job?.result
   if (!result) return null
@@ -37,7 +40,11 @@ function renderReading(job: AstralJobResponse | undefined) {
 
 export function NatalChartPage() {
   const accessToken = useAccessTokenSnapshot()
-  const natalAccess = useFeatureAccess("horoscope_daily")
+  const hasValidSession = hasUsableAccessToken(accessToken)
+  const entitlementsSnapshot = useEntitlementsSnapshot()
+  const natalAccess = entitlementsSnapshot.data?.features.find(
+    (feature) => feature.feature_code === "horoscope_daily",
+  )
   const plan = useMemo(() => resolvePlan(natalAccess?.variant_code), [natalAccess?.variant_code])
   const [runId, setRunId] = useState<string | null>(null)
   const [eventJob, setEventJob] = useState<AstralJobResponse | null>(null)
@@ -63,13 +70,6 @@ export function NatalChartPage() {
   function requestNatalJob() {
     void startNatalJob().catch(() => undefined)
   }
-
-  useEffect(() => {
-    if (!accessToken || runId || submitJob.isPending || submitJob.data) return
-    requestNatalJob()
-    // Le demarrage automatique doit rester lie au token et au plan courant.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [accessToken, plan, runId, submitJob.data, submitJob.isPending])
 
   useEffect(() => {
     setEventJob(null)
@@ -127,7 +127,7 @@ export function NatalChartPage() {
             type="button"
             className="ni-action-btn ni-action-btn--regenerate"
             onClick={requestNatalJob}
-            disabled={!accessToken}
+            disabled={!hasValidSession}
           >
             Lancer le theme natal
           </button>
