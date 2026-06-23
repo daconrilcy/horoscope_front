@@ -1,6 +1,6 @@
 // Page theme natal: lancement unique du job Astral et reprise manuelle en cas d'echec.
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { Link } from "react-router-dom"
+import { Link, useSearchParams } from "react-router-dom"
 import { RefreshCw } from "lucide-react"
 
 import { PageLayout } from "../layouts"
@@ -20,6 +20,8 @@ import { hasUsableAccessToken, useAccessTokenSnapshot } from "../utils/authToken
 import "./NatalChartPage.css"
 
 const ASTRAL_TERMINAL_ERROR_STATUSES = new Set(["failed", "safety_rejected", "cancelled", "expired"])
+const PUBLIC_ASTRAL_JOB_ERROR_MESSAGE =
+  "Le service Astral n'a pas pu produire votre theme natal pour le moment. Veuillez reessayer plus tard."
 
 /** Derive le plan Astral a partir du code de variante expose par l'entitlement. */
 function resolvePlan(variantCode?: string | null): AstralPlan {
@@ -53,13 +55,15 @@ function completedJobLead(readingStatus: string | undefined): string {
 
 export function NatalChartPage() {
   const accessToken = useAccessTokenSnapshot()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const initialRunId = searchParams.get("runId")
   const hasValidSession = hasUsableAccessToken(accessToken)
   const entitlementsSnapshot = useEntitlementsSnapshot()
   const natalAccess = entitlementsSnapshot.data?.features.find(
     (feature) => feature.feature_code === "horoscope_daily",
   )
   const plan = useMemo(() => resolvePlan(natalAccess?.variant_code), [natalAccess?.variant_code])
-  const [runId, setRunId] = useState<string | null>(null)
+  const [runId, setRunId] = useState<string | null>(initialRunId)
   const [eventJob, setEventJob] = useState<AstralJobResponse | null>(null)
   const submitJob = useSubmitAstralJob(accessToken)
   const jobStatus = useAstralJobStatus(accessToken, runId)
@@ -82,6 +86,9 @@ export function NatalChartPage() {
       audience_level: plan === "premium" ? "expert" : "beginner",
     })
     setRunId(response.run_id)
+    const nextParams = new URLSearchParams(searchParams)
+    nextParams.set("runId", response.run_id)
+    setSearchParams(nextParams, { replace: true })
   }
 
   function requestNatalJob() {
@@ -141,7 +148,15 @@ export function NatalChartPage() {
           </>
         ) : terminalJob?.status && ASTRAL_TERMINAL_ERROR_STATUSES.has(terminalJob.status) ? (
           <div className="chat-error natal-card__error" role="alert">
-            <p>Le job Astral n'a pas pu produire de lecture. Statut: {terminalJob.status}.</p>
+            <p>{PUBLIC_ASTRAL_JOB_ERROR_MESSAGE}</p>
+            <button
+              type="button"
+              className="ni-action-btn ni-action-btn--regenerate"
+              onClick={requestNatalJob}
+              disabled={!hasValidSession || submitJob.isPending}
+            >
+              Relancer le theme natal
+            </button>
             <Link to="/profile" className="btn-link natal-card__secondary-link">
               Verifier mon profil de naissance
             </Link>

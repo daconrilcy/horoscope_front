@@ -9,7 +9,12 @@ import { Field } from "@ui/Field"
 import { Button } from "@ui/Button"
 
 import { getBirthData, saveBirthData, BirthProfileApiError, type BirthProfileData } from "@api"
-import { generateNatalChart, ApiError, type LatestNatalChart } from "@api"
+import {
+  ApiError,
+  buildAstralClientRequestId,
+  submitAstralJob,
+  type AstralJobResponse,
+} from "@api"
 import { GeocodingError, reverseGeocode } from "../api/geocoding"
 import { type GeocodingState, inferCityCountryFromBirthPlace, performGeocode } from "@utils/geocoding"
 import { useAccessTokenSnapshot, getSubjectFromAccessToken } from "../utils/authToken"
@@ -100,17 +105,20 @@ export function BirthProfilePage() {
     staleTime: 1000 * 60 * 5, // 5 minutes
   })
 
-  const generationMutation = useMutation<LatestNatalChart, Error | ApiError>({
+  const generationMutation = useMutation<AstralJobResponse, Error | ApiError>({
     mutationFn: async () => {
       if (!accessToken) throw new Error("No access token available")
-      return generateNatalChart(accessToken, true)
+      return submitAstralJob(accessToken, {
+        product: "natal_full",
+        plan: "premium",
+        client_request_id: buildAstralClientRequestId("natal-profile"),
+        target_language_code: "fr",
+        audience_level: "beginner",
+      })
     },
-    onSuccess: () => {
-      // Le POST /natal-chart ne contient pas toujours les champs enrichis
-      // (created_at, astro_profile) retournés par /natal-chart/latest.
-      // On purge donc la cache pour forcer un fetch frais sur la page /natal.
-      queryClient.removeQueries({ queryKey: ["latest-natal-chart", tokenSubject], exact: true })
-      navigate("/natal")
+    onSuccess: (job) => {
+      queryClient.removeQueries({ queryKey: ["astral-job", job.run_id], exact: true })
+      navigate(`/natal?runId=${encodeURIComponent(job.run_id)}`)
     },
     onError: (err) => {
       if (err instanceof ApiError && shouldLogSupportForApiError(err)) {

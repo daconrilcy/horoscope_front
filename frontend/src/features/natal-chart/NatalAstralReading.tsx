@@ -7,6 +7,9 @@ type NatalAstralReadingProps = {
   reading: NatalInterpretationViewModel
 }
 
+const PUBLIC_READING_ERROR_MESSAGE =
+  "La lecture Astral n'a pas pu etre generee pour le moment. Veuillez reessayer plus tard."
+
 function renderStatusMeta(reading: NatalInterpretationViewModel): string {
   const meta = [reading.label]
   if (reading.completeness === "partial") meta.push("completude partielle")
@@ -23,9 +26,7 @@ export function NatalAstralReading({ reading }: NatalAstralReadingProps) {
           <h2>{reading.title}</h2>
         </header>
         <div className="chat-error natal-card__error" role="alert">
-          <p>{reading.error?.message ?? "La lecture Astral n'a pas pu etre generee."}</p>
-          {reading.error?.code ? <p>Code: {reading.error.code}</p> : null}
-          {reading.error?.ruleId ? <p>Regle: {reading.error.ruleId}</p> : null}
+          <p>{PUBLIC_READING_ERROR_MESSAGE}</p>
           <Link to="/profile" className="btn-link natal-card__secondary-link">
             Verifier mon profil de naissance
           </Link>

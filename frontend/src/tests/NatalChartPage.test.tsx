@@ -46,10 +46,10 @@ vi.mock("../utils/authToken", () => ({
 
 let queryClient: QueryClient
 
-function renderNatalChartPage() {
+function renderNatalChartPage(initialEntries = ["/natal"]) {
   return render(
     <QueryClientProvider client={queryClient}>
-      <MemoryRouter>
+      <MemoryRouter initialEntries={initialEntries}>
         <NatalChartPage />
       </MemoryRouter>
     </QueryClientProvider>,
@@ -108,6 +108,28 @@ describe("NatalChartPage", () => {
 
     expect(await screen.findByRole("button", { name: "Lancer le theme natal" })).toBeEnabled()
     expect(mockSubmitAstralJob).not.toHaveBeenCalled()
+  })
+
+  it("reprend un job Astral transmis depuis le profil sans appeler l'ancien endpoint natal", async () => {
+    mockUseAstralJobStatus.mockReturnValue({
+      data: {
+        run_id: "run-from-profile",
+        status: "queued",
+        service_code: "natal_basic",
+      },
+      isError: false,
+      isPending: false,
+    })
+
+    renderNatalChartPage(["/natal?runId=run-from-profile"])
+
+    expect(await screen.findByRole("status")).toHaveTextContent("Statut: queued")
+    expect(mockSubmitAstralJob).not.toHaveBeenCalled()
+    expect(mockUseAstralJobEvents).toHaveBeenCalledWith(
+      "access-token",
+      "run-from-profile",
+      expect.any(Function),
+    )
   })
 
   it("soumet le theme natal full au backend pour laisser la facade choisir le service Astral", async () => {
@@ -253,8 +275,46 @@ describe("NatalChartPage", () => {
 
     renderNatalChartPage()
 
-    expect(await screen.findByRole("alert")).toHaveTextContent("safety_rejected")
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Le service Astral n'a pas pu produire votre theme natal",
+    )
+    expect(screen.queryByText(/safety_rejected/i)).not.toBeInTheDocument()
     expect(screen.queryByRole("button", { name: "Lancer le theme natal" })).not.toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Relancer le theme natal" })).toBeEnabled()
+  })
+
+  it("permet de relancer un theme natal depuis un ancien run failed", async () => {
+    const user = userEvent.setup()
+    mockUseAstralJobStatus.mockReturnValue({
+      data: {
+        run_id: "old-failed-run",
+        status: "failed",
+        service_code: "natal_basic",
+        error: { code: "astral_external_service_error", message: "Erreur publique" },
+      },
+      isError: false,
+      isPending: false,
+    })
+    mockSubmitAstralJob.mockResolvedValue({
+      run_id: "new-run",
+      status: "queued",
+      service_code: "natal_basic",
+    })
+
+    renderNatalChartPage(["/natal?runId=old-failed-run"])
+
+    await user.click(await screen.findByRole("button", { name: "Relancer le theme natal" }))
+
+    await waitFor(() => {
+      expect(mockSubmitAstralJob).toHaveBeenCalledWith(
+        expect.objectContaining({
+          product: "natal_full",
+          plan: "basic",
+          audience_level: "beginner",
+        }),
+        expect.anything(),
+      )
+    })
   })
 
   it("rend un rejet de securite interne sans exposer le payload technique", async () => {
@@ -282,11 +342,13 @@ describe("NatalChartPage", () => {
 
     renderNatalChartPage()
 
-    expect(await screen.findByRole("alert")).toHaveTextContent("La lecture a ete refusee")
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "La lecture Astral n'a pas pu etre generee",
+    )
     expect(screen.getByText("Lecture Astral non generee.")).toBeVisible()
     expect(screen.queryByText("Resultat Astral pret.")).not.toBeInTheDocument()
-    expect(screen.getByText("Code: SAFETY_REJECTED")).toBeVisible()
-    expect(screen.getByText("Regle: medical_claim")).toBeVisible()
+    expect(screen.queryByText("Code: SAFETY_REJECTED")).not.toBeInTheDocument()
+    expect(screen.queryByText("Regle: medical_claim")).not.toBeInTheDocument()
     expect(screen.queryByText(/secret prompt/i)).not.toBeInTheDocument()
     expect(screen.queryByText(/internal/i)).not.toBeInTheDocument()
     expect(screen.queryByLabelText("Resultat Astral")).not.toBeInTheDocument()

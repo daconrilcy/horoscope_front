@@ -4,11 +4,14 @@
 from __future__ import annotations
 
 import json
+import logging
 from collections.abc import AsyncIterator, Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any
 
 import httpx
+
+logger = logging.getLogger(__name__)
 
 
 class AstralClientError(Exception):
@@ -100,6 +103,13 @@ class AstralClient:
                             break
                         yield chunk
         except httpx.HTTPError as error:
+            logger.warning(
+                "astral_mercure_stream_failed mercure_url=%s topic=%s error=%s",
+                self.mercure_url,
+                topic,
+                str(error),
+                exc_info=True,
+            )
             payload = json.dumps(
                 {
                     "code": "astral_mercure_unavailable",

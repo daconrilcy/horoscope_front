@@ -111,7 +111,7 @@ function renderBirthProfilePage(initialEntries = ["/profile"]) {
 }
 
 function setupToken() {
-  const payload = btoa(JSON.stringify({ sub: "42", role: "user" }))
+  const payload = btoa(JSON.stringify({ sub: "42", role: "user", exp: 4_102_444_800 }))
   setAccessToken(`x.${payload}.y`)
 }
 
@@ -376,20 +376,9 @@ describe("BirthProfilePage", () => {
       status: 200,
       json: async () => ({
         data: {
-          chart_id: "chart-cs-381-paris-1973",
-          metadata: { reference_version: "1.0.0", ruleset_version: "1.0.0", degraded_mode: null },
-          result: {
-            prepared_input: {
-              birth_datetime_local: "1973-04-24T11:00:00",
-              birth_timezone: "Europe/Paris",
-            },
-            traditional_conditions: {
-              sun: {
-                hayz: { is_hayz: true },
-                rejoicing: { is_rejoicing: false },
-              },
-            },
-          },
+          run_id: "run-profile-natal-1",
+          status: "queued",
+          service_code: "natal_premium",
         },
         meta: { request_id: "r3" },
       }),
@@ -397,7 +386,7 @@ describe("BirthProfilePage", () => {
 
     const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input)
-      if (url.includes("/natal-chart") && init?.method === "POST") {
+      if (url.includes("/v1/astral/jobs") && init?.method === "POST") {
         generationRequestBody = JSON.parse(init.body as string)
         return SUCCESS_GENERATE_RESPONSE
       }
@@ -418,7 +407,15 @@ describe("BirthProfilePage", () => {
     await waitFor(() => {
       expect(screen.queryByRole("button", { name: /Générer mon thème astral/i })).not.toBeInTheDocument()
     })
-    expect(generationRequestBody).toEqual({ accurate: true })
+    expect(generationRequestBody).toEqual(
+      expect.objectContaining({
+        product: "natal_full",
+        plan: "premium",
+        target_language_code: "fr",
+        audience_level: "beginner",
+      }),
+    )
+    expect(generationRequestBody?.client_request_id).toMatch(/^natal-profile-/)
   })
 
   it("shows specific error message and requestId on natal generation timeout", async () => {

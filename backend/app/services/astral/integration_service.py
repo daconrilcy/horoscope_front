@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+import hashlib
+import json
 from collections.abc import AsyncIterator, Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any, Literal
@@ -13,6 +15,9 @@ from app.core.auth_context import AuthenticatedUser
 from app.core.config import settings
 from app.core.datetime_provider import datetime_provider
 from app.infra.astral.client import AstralClient, AstralClientConfig, AstralClientError
+from app.infra.db.repositories.user_astral_natal_theme_repository import (
+    UserAstralNatalThemeRepository,
+)
 from app.infra.db.repositories.user_birth_profile_repository import UserBirthProfileRepository
 from app.services.entitlement.effective_entitlement_resolver_service import (
     EffectiveEntitlementResolverService,
@@ -36,6 +41,8 @@ SERVICE_CODES: dict[tuple[AstralProduct, AstralPlan], str] = {
     ("horoscope_period", "basic"): "horoscope_basic_next_7_days_natal",
     ("horoscope_period", "premium"): "horoscope_premium_next_7_days_natal",
 }
+PLAN_RANK: dict[AstralPlan, int] = {"free": 0, "basic": 1, "premium": 2}
+NATAL_PRODUCTS: frozenset[AstralProduct] = frozenset({"natal_simplified", "natal_full"})
 
 
 class AstralIntegrationServiceError(Exception):
@@ -92,16 +99,36 @@ class AstralIntegrationService:
         command: AstralJobCommand,
     ) -> dict[str, Any]:
         """Soumet un job Astral apres resolution du profil de naissance."""
-        plan = self._resolve_user_plan(db, user.id)
+        plan = self._resolve_effective_plan(db, user.id, command.plan)
         birth_payload = self._resolve_birth_payload(db, user.id, command.birth_profile_id)
-        service_code = self._service_code(
-            AstralIntegrationService._effective_product(
-                product=command.product,
-                plan=plan,
-                birth_payload=birth_payload,
-            ),
-            plan,
+        birth_profile_id = self._birth_profile_id(db, user.id, command.birth_profile_id)
+        effective_product = AstralIntegrationService._effective_product(
+            product=command.product,
+            plan=plan,
+            birth_payload=birth_payload,
         )
+        birth_fingerprint = self._natal_birth_fingerprint(
+            birth_payload=birth_payload,
+            effective_product=effective_product,
+        )
+        service_code = self._service_code(effective_product, plan)
+        theme_level = self._theme_level(
+            product=command.product,
+            plan=plan,
+            effective_product=effective_product,
+        )
+        if theme_level in {"free", "basic"}:
+            for reusable in UserAstralNatalThemeRepository(db).list_limited_themes(
+                user_id=user.id,
+                birth_profile_id=birth_profile_id,
+                theme_level=theme_level,
+                birth_fingerprint=birth_fingerprint,
+            ):
+                if reusable.status in {"queued", "running"}:
+                    return self._cached_job_response(reusable.response_payload)
+                if self._is_reusable_natal_response(reusable.response_payload):
+                    return self._cached_job_response(reusable.response_payload)
+
         payload = self._build_service_payload(
             command=command,
             plan=plan,
@@ -111,14 +138,39 @@ class AstralIntegrationService:
             "service_code": service_code,
             "payload": payload,
             "user_language": command.target_language_code,
-            "audience_level": self._normalize_audience_level(command.audience_level),
+            "audience_level": self._effective_audience_level(
+                plan=plan,
+                requested_audience_level=command.audience_level,
+            ),
         }
         try:
             response = await self._client.submit_job(
                 astral_payload,
                 idempotency_key=command.client_request_id,
             )
-            return self._sanitize_job_response(response)
+            sanitized = self._sanitize_job_response(response)
+            if theme_level is not None:
+                if theme_level in {"free", "basic"}:
+                    UserAstralNatalThemeRepository(db).mark_limited_theme_superseded(
+                        user_id=user.id,
+                        birth_profile_id=birth_profile_id,
+                        theme_level=theme_level,
+                        active_birth_fingerprint=birth_fingerprint,
+                    )
+                self._persist_natal_theme_response(
+                    db=db,
+                    user_id=user.id,
+                    birth_profile_id=birth_profile_id,
+                    birth_fingerprint=birth_fingerprint,
+                    theme_level=theme_level,
+                    requested_product=command.product,
+                    requested_plan=plan,
+                    service_code=service_code,
+                    client_request_id=command.client_request_id,
+                    response=sanitized,
+                )
+                db.commit()
+            return sanitized
         except AstralClientError as error:
             raise AstralIntegrationServiceError(
                 error.code,
@@ -129,11 +181,33 @@ class AstralIntegrationService:
                 },
             ) from error
 
-    async def get_job_status(self, run_id: str) -> dict[str, Any]:
+    async def get_job_status(
+        self,
+        run_id: str,
+        *,
+        db: Session | None = None,
+        user: AuthenticatedUser | None = None,
+    ) -> dict[str, Any]:
         """Recupere l'etat d'un job Astral sans recalcul local."""
+        if db is not None and user is not None:
+            persisted = UserAstralNatalThemeRepository(db).get_by_run_id(run_id)
+            if (
+                persisted is not None
+                and persisted.user_id == user.id
+                and self._is_reusable_natal_response(persisted.response_payload)
+            ):
+                return self._cached_job_response(persisted.response_payload)
         try:
             response = await self._client.get_job_status(run_id)
-            return self._sanitize_job_response(response)
+            sanitized = self._sanitize_job_response(response)
+            if db is not None and user is not None:
+                self._update_persisted_natal_theme_response(
+                    db=db,
+                    user_id=user.id,
+                    run_id=run_id,
+                    response=sanitized,
+                )
+            return sanitized
         except AstralClientError as error:
             raise AstralIntegrationServiceError(
                 error.code,
@@ -180,6 +254,13 @@ class AstralIntegrationService:
         return sanitized
 
     @staticmethod
+    def _cached_job_response(response: dict[str, Any]) -> dict[str, Any]:
+        """Marque une réponse relue depuis la base sans modifier son contrat public."""
+        cached = dict(response)
+        cached["cached"] = True
+        return cached
+
+    @staticmethod
     def _service_code(product: AstralProduct, plan: AstralPlan) -> str:
         """Mappe le produit backend vers le catalogue Astral."""
         try:
@@ -204,6 +285,20 @@ class AstralIntegrationService:
         if AstralIntegrationService._has_full_natal_birth_data(birth_payload):
             return product
         return "natal_simplified"
+
+    @staticmethod
+    def _theme_level(
+        *,
+        product: AstralProduct,
+        plan: AstralPlan,
+        effective_product: AstralProduct,
+    ) -> AstralPlan | None:
+        """Détermine le slot d'abonnement d'un thème natal persisté."""
+        if product not in NATAL_PRODUCTS:
+            return None
+        if plan == "free" or effective_product == "natal_simplified":
+            return "free"
+        return plan
 
     @staticmethod
     def _build_service_payload(
@@ -350,6 +445,20 @@ class AstralIntegrationService:
         return "beginner"
 
     @staticmethod
+    def _effective_audience_level(
+        *,
+        plan: AstralPlan,
+        requested_audience_level: str,
+    ) -> str:
+        """Limite le niveau éditorial Astral au plan effectivement autorisé."""
+        normalized = AstralIntegrationService._normalize_audience_level(requested_audience_level)
+        if plan == "premium":
+            return normalized
+        if normalized == "expert":
+            return "beginner"
+        return normalized
+
+    @staticmethod
     def _resolve_user_plan(db: Session, user_id: int) -> AstralPlan:
         """Derive le plan Astral uniquement depuis les droits serveur."""
         try:
@@ -370,6 +479,16 @@ class AstralIntegrationService:
         if "basic" in plan_code:
             return "basic"
         return "free"
+
+    @staticmethod
+    def _resolve_effective_plan(
+        db: Session,
+        user_id: int,
+        requested_plan: AstralPlan,
+    ) -> AstralPlan:
+        """Autorise un niveau demandé uniquement s'il est inclus dans l'abonnement."""
+        user_plan = AstralIntegrationService._resolve_user_plan(db, user_id)
+        return requested_plan if PLAN_RANK[requested_plan] <= PLAN_RANK[user_plan] else user_plan
 
     @staticmethod
     def _resolve_birth_payload(
@@ -424,3 +543,125 @@ class AstralIntegrationService:
             "location": location,
             "current_location": current_location,
         }
+
+    @staticmethod
+    def _birth_profile_id(db: Session, user_id: int, birth_profile_id: int | None) -> int:
+        """Retourne l'identifiant du profil de naissance déjà validé."""
+        model = UserBirthProfileRepository(db).get_by_user_id(user_id)
+        if model is None or (birth_profile_id is not None and model.id != birth_profile_id):
+            raise AstralIntegrationServiceError(
+                "birth_profile_not_found",
+                "birth profile not found",
+                details={"birth_profile_id": str(birth_profile_id) if birth_profile_id else ""},
+            )
+        return int(model.id)
+
+    @staticmethod
+    def _birth_fingerprint(birth_payload: dict[str, Any]) -> str:
+        """Calcule une empreinte stable des données natales envoyées à Astral."""
+        encoded = json.dumps(
+            birth_payload,
+            sort_keys=True,
+            separators=(",", ":"),
+            default=str,
+        ).encode("utf-8")
+        return hashlib.sha256(encoded).hexdigest()
+
+    @staticmethod
+    def _natal_birth_fingerprint(
+        *,
+        birth_payload: dict[str, Any],
+        effective_product: AstralProduct,
+    ) -> str:
+        """Calcule l'empreinte des seules données natales consommées par Astral."""
+        if effective_product not in NATAL_PRODUCTS:
+            return AstralIntegrationService._birth_fingerprint(birth_payload)
+        return AstralIntegrationService._birth_fingerprint(
+            AstralIntegrationService._build_natal_birth_payload(
+                birth_payload,
+                require_full=effective_product == "natal_full",
+            )
+        )
+
+    @staticmethod
+    def _is_reusable_natal_response(response: dict[str, Any]) -> bool:
+        """Réutilise uniquement les thèmes terminés avec une lecture publique."""
+        if response.get("status") != "completed":
+            return False
+        result = response.get("result")
+        if not isinstance(result, dict):
+            return False
+        reading_response = result.get("reading")
+        if isinstance(reading_response, str):
+            return bool(reading_response.strip())
+        if not isinstance(reading_response, dict):
+            return False
+        if reading_response.get("status") not in {None, "success"}:
+            return False
+        return isinstance(reading_response.get("reading"), dict)
+
+    @staticmethod
+    def _persist_natal_theme_response(
+        *,
+        db: Session,
+        user_id: int,
+        birth_profile_id: int,
+        birth_fingerprint: str,
+        theme_level: AstralPlan,
+        requested_product: AstralProduct,
+        requested_plan: AstralPlan,
+        service_code: str,
+        client_request_id: str,
+        response: dict[str, Any],
+    ) -> None:
+        """Stocke la première réponse connue d'un job natal Astral."""
+        run_id = response.get("run_id")
+        status = response.get("status")
+        if not isinstance(run_id, str) or not isinstance(status, str):
+            return
+        UserAstralNatalThemeRepository(db).upsert_response(
+            user_id=user_id,
+            birth_profile_id=birth_profile_id,
+            birth_fingerprint=birth_fingerprint,
+            theme_level=theme_level,
+            requested_product=requested_product,
+            requested_plan=requested_plan,
+            service_code=service_code,
+            status=status,
+            run_id=run_id,
+            client_request_id=client_request_id,
+            response_payload=response,
+        )
+
+    @staticmethod
+    def _update_persisted_natal_theme_response(
+        *,
+        db: Session,
+        user_id: int,
+        run_id: str,
+        response: dict[str, Any],
+    ) -> None:
+        """Actualise la ligne persistée quand le polling récupère le résultat final."""
+        repository = UserAstralNatalThemeRepository(db)
+        model = repository.get_by_run_id(run_id)
+        if model is None or model.user_id != user_id:
+            return
+        if model.status == "superseded":
+            return
+        status = response.get("status")
+        if not isinstance(status, str):
+            return
+        repository.upsert_response(
+            user_id=model.user_id,
+            birth_profile_id=model.birth_profile_id,
+            birth_fingerprint=model.birth_fingerprint,
+            theme_level=model.theme_level,
+            requested_product=model.requested_product,
+            requested_plan=model.requested_plan,
+            service_code=str(response.get("service_code") or model.service_code),
+            status=status,
+            run_id=run_id,
+            client_request_id=model.client_request_id,
+            response_payload=response,
+        )
+        db.commit()
