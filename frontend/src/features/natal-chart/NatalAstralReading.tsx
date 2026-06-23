@@ -1,7 +1,10 @@
 // Composant public d'affichage de l'interpretation natale Astral normalisee.
 import { Link } from "react-router-dom"
 
-import type { NatalInterpretationViewModel } from "./natalAstralReadingViewModel"
+import type {
+  NatalCalculationFactsViewModel,
+  NatalInterpretationViewModel,
+} from "./natalAstralReadingViewModel"
 
 type NatalAstralReadingProps = {
   reading: NatalInterpretationViewModel
@@ -10,10 +13,32 @@ type NatalAstralReadingProps = {
 const PUBLIC_READING_ERROR_MESSAGE =
   "La lecture Astral n'a pas pu etre generee pour le moment. Veuillez reessayer plus tard."
 
-function renderStatusMeta(reading: NatalInterpretationViewModel): string {
-  const meta = [reading.label]
-  if (reading.completeness === "partial") meta.push("completude partielle")
-  return meta.join(" - ")
+function NatalCalculationFacts({ facts }: { facts: NatalCalculationFactsViewModel }) {
+  return (
+    <section className="natal-reading-facts" aria-labelledby="natal-reading-facts-title">
+      <div className="natal-reading-facts__header">
+        <h2 id="natal-reading-facts-title">Base du calcul natal</h2>
+      </div>
+      <div className="natal-reading-facts__grid">
+        {facts.groups.map((group) => (
+          <section className="natal-reading-facts__group" key={group.title} aria-label={group.title}>
+            <h3>{group.title}</h3>
+            <dl className="natal-reading-facts__list">
+              {group.items.map((item) => (
+                <div className="natal-reading-facts__item" key={`${group.title}-${item.label}-${item.value}`}>
+                  <dt>{item.label}</dt>
+                  <dd>
+                    <strong>{item.value}</strong>
+                    {item.detail ? <span>{item.detail}</span> : null}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </section>
+        ))}
+      </div>
+    </section>
+  )
 }
 
 /** Affiche la lecture Astral sans exposer les champs techniques du moteur externe. */
@@ -36,20 +61,22 @@ export function NatalAstralReading({ reading }: NatalAstralReadingProps) {
   }
 
   return (
-    <article className="natal-reading" aria-label="Lecture Astral du theme natal">
+    <article className="natal-reading" aria-label="Interprétation de votre thème natal">
+      {reading.calculationFacts ? <NatalCalculationFacts facts={reading.calculationFacts} /> : null}
+
       <header className="natal-reading__header">
-        <span className="natal-section-eyebrow">Lecture Astral</span>
+        <span className="natal-section-eyebrow">Interprétation de votre thème natal</span>
         <div className="natal-reading__summary">
           <h2>{reading.title}</h2>
-          <span className="natal-reading__badge">{renderStatusMeta(reading)}</span>
+          <span className="natal-reading__badge">{reading.label}</span>
         </div>
         {reading.shortText ? <p>{reading.shortText}</p> : null}
       </header>
 
       {reading.isPartial ? (
-        <p className="natal-reading__precision-note" role="status">
-          Lecture indicative : sans heure de naissance fiable, l'ascendant, les maisons et certains angles peuvent etre
-          absents.
+        <p className="natal-reading__precision-note natal-reading__partial-alert" role="alert">
+          Theme partiel : certaines donnees de naissance manquent ou ne sont pas assez fiables. L'ascendant, les
+          maisons et certains angles peuvent etre absents ou limites.
         </p>
       ) : null}
 

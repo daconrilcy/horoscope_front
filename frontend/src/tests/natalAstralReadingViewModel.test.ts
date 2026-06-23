@@ -43,7 +43,7 @@ describe("buildNatalInterpretationViewModel", () => {
     const viewModel = buildNatalInterpretationViewModel(job, "basic")
 
     expect(viewModel?.status).toBe("success")
-    expect(viewModel?.label).toBe("Lecture structuree")
+    expect(viewModel?.label).toBe("basic")
     expect(viewModel?.chapters[0]?.paragraphs).toEqual(["Premier paragraphe.", "Second paragraphe."])
     expect(viewModel?.chapters[0]?.confidenceLabel).toBe("Confiance elevee")
     expect(viewModel?.chapters[0]?.astroBasis).toEqual(["Soleil en Lion", "Lune en Balance (appui)"])
@@ -64,7 +64,43 @@ describe("buildNatalInterpretationViewModel", () => {
         quality: {
           reading_completeness: "completed",
         },
-        calculation: {},
+        calculation: {
+          core_identity: {
+            sun: {
+              placement: {
+                object: "Sun",
+                sign: "Capricorn",
+                house: { number: 2, theme: "Resources" },
+                longitude_deg: 281.4543,
+              },
+            },
+            moon: {
+              placement: {
+                object: "Moon",
+                sign: "Pisces",
+                house: { number: 4, theme: "Home" },
+                longitude_deg: 341.7641,
+              },
+            },
+          },
+          angles: {
+            ascendant: { sign: "Scorpio", house: 1 },
+            descendant: { sign: "Taurus", house: 7 },
+          },
+          dominant_themes: {
+            houses: [{ number: 2, theme: "Resources", importance: "Very high" }],
+          },
+          dynamics: {
+            major_aspects: [
+              {
+                aspect: "Jupiter opposition Uranus",
+                objects: ["Jupiter", "Uranus"],
+                orb_degrees: 0.76,
+                quality: "Tension",
+              },
+            ],
+          },
+        },
         reading: {
           status: "success",
           reading: {
@@ -82,8 +118,95 @@ describe("buildNatalInterpretationViewModel", () => {
 
     expect(viewModel?.tier).toBe("premium")
     expect(viewModel?.variant).toBe("full")
-    expect(viewModel?.label).toBe("Lecture approfondie")
+    expect(viewModel?.label).toBe("premium")
     expect(viewModel?.isPartial).toBe(false)
+    expect(viewModel?.calculationFacts?.groups.map((group) => group.title)).toEqual([
+      "Repères principaux",
+      "Maisons",
+      "Aspects notables",
+    ])
+    expect(viewModel?.calculationFacts?.groups[0]?.items).toEqual([
+      { label: "Soleil", value: "Capricorne", detail: "Maison II — Valeurs - 281.45°" },
+      { label: "Lune", value: "Poissons", detail: "Maison IV — Foyer - 341.76°" },
+      { label: "Ascendant", value: "Scorpion", detail: "Maison I — Identité" },
+      { label: "Descendant", value: "Taureau", detail: "Maison VII — Relations" },
+    ])
+  })
+
+  it("lit les faits natals depuis calculation.llm_payload quand le calcul Astral est enveloppe", () => {
+    const job: AstralJobResponse = {
+      run_id: "run-real-shape",
+      status: "completed",
+      service_code: "natal_basic",
+      result: {
+        calculation: {
+          response_contract_version: "astro_engine_response_v1",
+          calculation_result: {
+            status: "completed",
+            chart_calculation_id: "chart-1",
+          },
+          llm_payload: {
+            core_identity: {
+              sun: {
+                placement: {
+                  object: "Sun",
+                  sign: "Capricorn",
+                  house: { number: 2, theme: "Resources" },
+                },
+              },
+              moon: {
+                placement: {
+                  object: "Moon",
+                  sign: "Pisces",
+                  house: { number: 4, theme: "Home" },
+                },
+              },
+              ascendant: {
+                sign: "Scorpio",
+              },
+            },
+            angles: {
+              descendant: { sign: "Taurus", house: 7 },
+              midheaven: { sign: "Leo", house: 10 },
+            },
+            placements: {
+              supporting: [
+                {
+                  object: "Mercury",
+                  sign: "Capricorn",
+                  house: { number: 3, theme: "Communication" },
+                },
+              ],
+            },
+            dominant_themes: {
+              houses: [{ number: 2, theme: "Resources", importance: "Very high" }],
+            },
+          },
+        },
+        reading: {
+          status: "success",
+          reading: {
+            summary: { title: "Lecture basic" },
+            chapters: [],
+          },
+        },
+      },
+    }
+
+    const viewModel = buildNatalInterpretationViewModel(job, "basic")
+
+    expect(viewModel?.calculationFacts?.groups[0]?.items).toEqual([
+      { label: "Soleil", value: "Capricorne", detail: "Maison II — Valeurs" },
+      { label: "Lune", value: "Poissons", detail: "Maison IV — Foyer" },
+      { label: "Ascendant", value: "Scorpion", detail: null },
+      { label: "Descendant", value: "Taureau", detail: "Maison VII — Relations" },
+      { label: "Milieu du Ciel", value: "Lion", detail: "Maison X — Carrière" },
+    ])
+    expect(viewModel?.calculationFacts?.groups[2]?.items[0]).toEqual({
+      label: "Mercure",
+      value: "Capricorne",
+      detail: "Maison III — Communication",
+    })
   })
 
   it("marque une lecture simplifiee sans heure comme partielle", () => {
@@ -107,7 +230,7 @@ describe("buildNatalInterpretationViewModel", () => {
 
     expect(viewModel?.variant).toBe("simplified")
     expect(viewModel?.completeness).toBe("partial")
-    expect(viewModel?.label).toBe("Lecture partielle")
+    expect(viewModel?.label).toBe("basic")
     expect(viewModel?.isPartial).toBe(true)
   })
 
@@ -169,7 +292,7 @@ describe("buildNatalInterpretationViewModel", () => {
     const viewModel = buildNatalInterpretationViewModel(job)
 
     expect(viewModel?.status).toBe("empty")
-    expect(viewModel?.label).toBe("Lecture Astral")
+    expect(viewModel?.label).toBe("unknown")
     expect(viewModel?.shortText).toContain("forme publique")
     expect(JSON.stringify(viewModel)).not.toContain("hidden")
   })

@@ -46,13 +46,6 @@ function mergeAstralJobState(
   }
 }
 
-function completedJobLead(readingStatus: string | undefined): string {
-  if (readingStatus === "failed" || readingStatus === "safety_rejected") {
-    return "Lecture Astral non generee."
-  }
-  return "Resultat Astral pret."
-}
-
 export function NatalChartPage() {
   const accessToken = useAccessTokenSnapshot()
   const [searchParams, setSearchParams] = useSearchParams()
@@ -139,7 +132,6 @@ export function NatalChartPage() {
           </div>
         ) : terminalJob?.status === "completed" ? (
           <>
-            <p className="natal-card__lead">{completedJobLead(natalReading?.status)}</p>
             {natalReading ? (
               <NatalAstralReading reading={natalReading} />
             ) : (

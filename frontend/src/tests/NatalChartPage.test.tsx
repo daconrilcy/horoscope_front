@@ -164,6 +164,54 @@ describe("NatalChartPage", () => {
         status: "completed",
         service_code: "natal_simplified",
         result: {
+          calculation: {
+            core_identity: {
+              sun: {
+                placement: {
+                  object: "Sun",
+                  sign: "Capricorn",
+                  house: { number: 2, theme: "Resources" },
+                  longitude_deg: 281.4543,
+                },
+              },
+              moon: {
+                placement: {
+                  object: "Moon",
+                  sign: "Pisces",
+                  house: { number: 4, theme: "Home" },
+                  longitude_deg: 341.7641,
+                },
+              },
+            },
+            angles: {
+              ascendant: { sign: "Scorpio", house: 1 },
+              descendant: { sign: "Taurus", house: 7 },
+            },
+            placements: {
+              supporting: [
+                {
+                  object: "Mercury",
+                  sign: "Capricorn",
+                  house: { number: 3, theme: "Communication" },
+                  longitude_deg: 295.4488,
+                  motion: "Retrograde motion",
+                },
+              ],
+            },
+            dominant_themes: {
+              houses: [{ number: 2, theme: "Resources", importance: "Very high" }],
+            },
+            dynamics: {
+              major_aspects: [
+                {
+                  aspect: "Jupiter opposition Uranus",
+                  objects: ["Jupiter", "Uranus"],
+                  orb_degrees: 0.76,
+                  quality: "Tension",
+                },
+              ],
+            },
+          },
           reading: {
             status: "success",
             run_id: "generation-run-1",
@@ -207,13 +255,27 @@ describe("NatalChartPage", () => {
     renderNatalChartPage()
 
     expect(await screen.findByRole("heading", { name: "Lecture natale publique" })).toBeVisible()
+    expect(screen.getByRole("heading", { name: "Base du calcul natal" })).toBeVisible()
+    expect(screen.queryByText("Données de calcul Astral")).not.toBeInTheDocument()
+    const renderedText = document.body.textContent ?? ""
+    expect(renderedText.indexOf("Base du calcul natal")).toBeLessThan(
+      renderedText.indexOf("Lecture natale publique"),
+    )
+    expect(screen.getByRole("region", { name: "Repères principaux" })).toHaveTextContent("Soleil")
+    expect(screen.getByRole("region", { name: "Repères principaux" })).toHaveTextContent("Ascendant")
+    expect(screen.getByRole("region", { name: "Repères principaux" })).toHaveTextContent("Descendant")
+    expect(screen.getByRole("region", { name: "Maisons" })).toHaveTextContent("Maison II")
+    expect(screen.getByRole("region", { name: "Planètes notables" })).toHaveTextContent("Mercure")
+    expect(screen.getByRole("region", { name: "Aspects notables" })).toHaveTextContent("Jupiter - Uranus")
     expect(screen.getByText("Une synthese claire du theme.")).toBeVisible()
+    expect(screen.getByText("basic")).toBeVisible()
     expect(screen.getByRole("heading", { name: "Identite" })).toBeVisible()
     expect(screen.getByText(/dynamique personnelle stable/i)).toBeVisible()
     expect(screen.getByText("Confiance moyenne")).toBeVisible()
     expect(screen.getByText("Soleil en Cancer")).toBeVisible()
     expect(screen.getByText("Lune en Balance")).toBeVisible()
-    expect(screen.getByText(/Lecture indicative : sans heure de naissance fiable/i)).toBeVisible()
+    expect(screen.getByRole("alert")).toHaveTextContent(/Theme partiel : certaines donnees de naissance/i)
+    expect(screen.queryByText(/completude partielle/i)).not.toBeInTheDocument()
     expect(screen.queryByLabelText("Resultat Astral")).not.toBeInTheDocument()
   })
 
@@ -345,7 +407,6 @@ describe("NatalChartPage", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "La lecture Astral n'a pas pu etre generee",
     )
-    expect(screen.getByText("Lecture Astral non generee.")).toBeVisible()
     expect(screen.queryByText("Resultat Astral pret.")).not.toBeInTheDocument()
     expect(screen.queryByText("Code: SAFETY_REJECTED")).not.toBeInTheDocument()
     expect(screen.queryByText("Regle: medical_claim")).not.toBeInTheDocument()
@@ -406,7 +467,7 @@ describe("NatalChartPage", () => {
     renderNatalChartPage()
 
     expect(await screen.findByRole("heading", { name: "Lecture premium Astral" })).toBeVisible()
-    expect(screen.getByText("Lecture approfondie")).toBeVisible()
+    expect(screen.getByText("premium")).toBeVisible()
     expect(screen.getByText("Milieu du Ciel en Taureau (central)")).toBeVisible()
     expect(screen.queryByText(/signal:mc:taurus/i)).not.toBeInTheDocument()
     expect(screen.queryByText(/hidden gateway/i)).not.toBeInTheDocument()

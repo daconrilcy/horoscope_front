@@ -118,7 +118,7 @@ describe("ShortcutsSection", () => {
   it("rend les raccourcis par défaut sous forme de liens", () => {
     render(<ShortcutsSection />, { wrapper: RouterWrapper })
     expect(screen.getByText("Thème natal")).toBeInTheDocument()
-    expect(screen.getByText("Lecture Astral")).toBeInTheDocument()
+    expect(screen.getByText("Interprétation de votre thème natal")).toBeInTheDocument()
     expect(screen.getByText("Historique")).toBeInTheDocument()
     expect(screen.getAllByRole("link")).toHaveLength(2)
   })
@@ -142,7 +142,7 @@ describe("ShortcutsSection", () => {
 
     expect(screen.getByRole("heading", { name: "Activities" })).toBeInTheDocument()
     expect(screen.getByText("Natal chart")).toBeInTheDocument()
-    expect(screen.getByText("Astral reading")).toBeInTheDocument()
+    expect(screen.getByText("Interpretation of your natal chart")).toBeInTheDocument()
     expect(screen.getByText("History")).toBeInTheDocument()
   })
 })

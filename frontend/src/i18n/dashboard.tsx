@@ -70,7 +70,7 @@ const dashboardPageTranslations: Record<SupportedLocale, DashboardPageTranslatio
     activities: "Activités",
     shortcuts: {
       natalTitle: "Thème natal",
-      natalSubtitle: "Lecture Astral",
+      natalSubtitle: "Interprétation de votre thème natal",
       historyTitle: "Historique",
       historySubtitle: "Mes prédictions",
     },
@@ -95,7 +95,7 @@ const dashboardPageTranslations: Record<SupportedLocale, DashboardPageTranslatio
     activities: "Activities",
     shortcuts: {
       natalTitle: "Natal chart",
-      natalSubtitle: "Astral reading",
+      natalSubtitle: "Interpretation of your natal chart",
       historyTitle: "History",
       historySubtitle: "My predictions",
     },
@@ -120,7 +120,7 @@ const dashboardPageTranslations: Record<SupportedLocale, DashboardPageTranslatio
     activities: "Actividades",
     shortcuts: {
       natalTitle: "Carta natal",
-      natalSubtitle: "Lectura Astral",
+      natalSubtitle: "Interpretación de tu carta natal",
       historyTitle: "Historial",
       historySubtitle: "Mis predicciones",
     },
@@ -145,7 +145,7 @@ const dashboardPageTranslations: Record<SupportedLocale, DashboardPageTranslatio
     activities: "Aktivitäten",
     shortcuts: {
       natalTitle: "Geburtshoroskop",
-      natalSubtitle: "Astral-Lesung",
+      natalSubtitle: "Deutung Ihres Geburtshoroskops",
       historyTitle: "Verlauf",
       historySubtitle: "Meine Vorhersagen",
     },
