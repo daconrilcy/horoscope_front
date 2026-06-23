@@ -5,13 +5,13 @@ from __future__ import annotations
 
 from collections.abc import AsyncIterator, Awaitable, Callable
 from dataclasses import dataclass
-from datetime import date
 from typing import Any, Literal
 
 from sqlalchemy.orm import Session
 
 from app.core.auth_context import AuthenticatedUser
 from app.core.config import settings
+from app.core.datetime_provider import datetime_provider
 from app.infra.astral.client import AstralClient, AstralClientConfig, AstralClientError
 from app.infra.db.repositories.user_birth_profile_repository import UserBirthProfileRepository
 from app.services.entitlement.effective_entitlement_resolver_service import (
@@ -93,8 +93,15 @@ class AstralIntegrationService:
     ) -> dict[str, Any]:
         """Soumet un job Astral apres resolution du profil de naissance."""
         plan = self._resolve_user_plan(db, user.id)
-        service_code = self._service_code(command.product, plan)
         birth_payload = self._resolve_birth_payload(db, user.id, command.birth_profile_id)
+        service_code = self._service_code(
+            AstralIntegrationService._effective_product(
+                product=command.product,
+                plan=plan,
+                birth_payload=birth_payload,
+            ),
+            plan,
+        )
         payload = self._build_service_payload(
             command=command,
             plan=plan,
@@ -185,6 +192,20 @@ class AstralIntegrationService:
             ) from error
 
     @staticmethod
+    def _effective_product(
+        *,
+        product: AstralProduct,
+        plan: AstralPlan,
+        birth_payload: dict[str, Any],
+    ) -> AstralProduct:
+        """Dégrade les lectures full vers le simplifié si l'heure manque."""
+        if product != "natal_full" or plan == "free":
+            return product
+        if AstralIntegrationService._has_full_natal_birth_data(birth_payload):
+            return product
+        return "natal_simplified"
+
+    @staticmethod
     def _build_service_payload(
         *,
         command: AstralJobCommand,
@@ -197,13 +218,25 @@ class AstralIntegrationService:
                 command=command,
                 birth_payload=birth_payload,
             )
-        natal_birth_payload = AstralIntegrationService._build_natal_birth_payload(birth_payload)
-        if command.product == "natal_simplified" or plan == "free":
+        effective_product = AstralIntegrationService._effective_product(
+            product=command.product,
+            plan=plan,
+            birth_payload=birth_payload,
+        )
+        if effective_product == "natal_simplified":
+            natal_birth_payload = AstralIntegrationService._build_natal_birth_payload(
+                birth_payload,
+                require_full=False,
+            )
             return {
                 "request_contract_version": "astro_simplified_natal_request_v1",
                 "request_id": command.client_request_id,
                 "birth": natal_birth_payload,
             }
+        natal_birth_payload = AstralIntegrationService._build_natal_birth_payload(
+            birth_payload,
+            require_full=True,
+        )
         return {
             "request_contract_version": "astro_engine_request_v1",
             "request_id": command.client_request_id,
@@ -212,20 +245,29 @@ class AstralIntegrationService:
                 "type": "natal",
                 "house_system": "placidus",
                 "zodiacal_reference_system": "tropical",
+                "coordinate_reference_system": "geocentric",
             },
             "birth": natal_birth_payload,
             "projection": {
-                "contract_version": "astro_projection_v1",
-                "level": "premium" if plan == "premium" else "standard",
+                "level": "rich" if plan == "premium" else "compact",
             },
         }
 
     @staticmethod
-    def _build_natal_birth_payload(birth_payload: dict[str, Any]) -> dict[str, Any]:
+    def _build_natal_birth_payload(
+        birth_payload: dict[str, Any],
+        *,
+        require_full: bool,
+    ) -> dict[str, Any]:
         """Filtre les donnees de naissance selon les contrats natal Astral."""
         payload: dict[str, Any] = {"date": birth_payload["date"]}
-        if birth_payload.get("time") is not None:
-            payload["time"] = birth_payload["time"]
+        birth_time = birth_payload.get("time")
+        if birth_time is not None:
+            payload["time"] = (
+                AstralIntegrationService._normalize_full_birth_time(str(birth_time))
+                if require_full
+                else birth_time
+            )
         if birth_payload.get("timezone") is not None:
             payload["timezone"] = birth_payload["timezone"]
 
@@ -234,11 +276,35 @@ class AstralIntegrationService:
             latitude = raw_location.get("latitude")
             longitude = raw_location.get("longitude")
             if latitude is not None and longitude is not None:
-                payload["location"] = {
+                location_payload = {
                     "latitude": latitude,
                     "longitude": longitude,
                 }
+                label = raw_location.get("label")
+                if label:
+                    location_payload["label"] = label
+                payload["location"] = location_payload
         return payload
+
+    @staticmethod
+    def _has_full_natal_birth_data(birth_payload: dict[str, Any]) -> bool:
+        """Vérifie les champs requis par astro_engine_request_v1."""
+        raw_location = birth_payload.get("location")
+        return (
+            bool(birth_payload.get("time"))
+            and bool(birth_payload.get("timezone"))
+            and isinstance(raw_location, dict)
+            and raw_location.get("latitude") is not None
+            and raw_location.get("longitude") is not None
+        )
+
+    @staticmethod
+    def _normalize_full_birth_time(value: str) -> str:
+        """Convertit HH:MM en HH:MM:SS pour le contrat full Astral."""
+        parts = value.split(":")
+        if len(parts) == 2:
+            return f"{value}:00"
+        return value
 
     @staticmethod
     def _build_horoscope_payload(
@@ -255,7 +321,7 @@ class AstralIntegrationService:
             )
         if command.product == "horoscope_period":
             return {
-                "anchor_date": date.today().isoformat(),
+                "anchor_date": datetime_provider.today().isoformat(),
                 "timezone": birth_payload["timezone"],
                 "target_language": command.target_language_code,
                 "target_language_code": command.target_language_code,
@@ -265,7 +331,7 @@ class AstralIntegrationService:
                 "chart_calculation_id": command.chart_calculation_id,
             }
         return {
-            "date": date.today().isoformat(),
+            "date": datetime_provider.today().isoformat(),
             "timezone": birth_payload["timezone"],
             "target_language": command.target_language_code,
             "audience_level": AstralIntegrationService._normalize_audience_level(

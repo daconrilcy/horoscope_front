@@ -13,9 +13,13 @@ import {
   useAstralJobStatus,
   useSubmitAstralJob,
 } from "../api/astral"
+import { NatalAstralReading } from "../features/natal-chart/NatalAstralReading"
+import { buildNatalInterpretationViewModel } from "../features/natal-chart/natalAstralReadingViewModel"
 import { useEntitlementsSnapshot } from "../hooks/useEntitlementSnapshot"
 import { hasUsableAccessToken, useAccessTokenSnapshot } from "../utils/authToken"
 import "./NatalChartPage.css"
+
+const ASTRAL_TERMINAL_ERROR_STATUSES = new Set(["failed", "safety_rejected", "cancelled", "expired"])
 
 /** Derive le plan Astral a partir du code de variante expose par l'entitlement. */
 function resolvePlan(variantCode?: string | null): AstralPlan {
@@ -24,18 +28,27 @@ function resolvePlan(variantCode?: string | null): AstralPlan {
   return "free"
 }
 
-/** Rend le resultat Astral en texte simple ou en JSON selon la forme du payload. */
-function renderReading(job: AstralJobResponse | undefined) {
-  const result = job?.result
-  if (!result) return null
-  if (typeof result.reading === "string") {
-    return <p className="natal-card__lead">{result.reading}</p>
+function mergeAstralJobState(
+  eventJob: AstralJobResponse | null,
+  statusJob: AstralJobResponse | undefined,
+  submittedJob: AstralJobResponse | undefined,
+): AstralJobResponse | undefined {
+  if (!eventJob) return statusJob ?? submittedJob
+  return {
+    ...(submittedJob ?? {}),
+    ...(statusJob ?? {}),
+    ...eventJob,
+    result: eventJob.result ?? statusJob?.result ?? submittedJob?.result ?? null,
+    error: eventJob.error ?? statusJob?.error ?? submittedJob?.error ?? null,
+    token_usage: eventJob.token_usage ?? statusJob?.token_usage ?? submittedJob?.token_usage,
   }
-  return (
-    <pre className="natal-card__json" aria-label="Resultat Astral">
-      {JSON.stringify(result.reading ?? result, null, 2)}
-    </pre>
-  )
+}
+
+function completedJobLead(readingStatus: string | undefined): string {
+  if (readingStatus === "failed" || readingStatus === "safety_rejected") {
+    return "Lecture Astral non generee."
+  }
+  return "Resultat Astral pret."
 }
 
 export function NatalChartPage() {
@@ -50,7 +63,11 @@ export function NatalChartPage() {
   const [eventJob, setEventJob] = useState<AstralJobResponse | null>(null)
   const submitJob = useSubmitAstralJob(accessToken)
   const jobStatus = useAstralJobStatus(accessToken, runId)
-  const terminalJob = eventJob ?? jobStatus.data ?? submitJob.data
+  const terminalJob = mergeAstralJobState(eventJob, jobStatus.data, submitJob.data)
+  const natalReading = useMemo(
+    () => buildNatalInterpretationViewModel(terminalJob, plan),
+    [plan, terminalJob],
+  )
   const isWorking =
     submitJob.isPending ||
     terminalJob?.status === "queued" ||
@@ -58,11 +75,11 @@ export function NatalChartPage() {
 
   async function startNatalJob() {
     const response = await submitJob.mutateAsync({
-      product: plan === "free" ? "natal_simplified" : "natal_full",
+      product: "natal_full",
       plan,
       client_request_id: buildAstralClientRequestId("natal"),
       target_language_code: "fr",
-      audience_level: plan === "premium" ? "advanced" : "beginner",
+      audience_level: plan === "premium" ? "expert" : "beginner",
     })
     setRunId(response.run_id)
   }
@@ -115,12 +132,19 @@ export function NatalChartPage() {
           </div>
         ) : terminalJob?.status === "completed" ? (
           <>
-            <p className="natal-card__lead">Resultat Astral pret.</p>
-            {renderReading(terminalJob)}
+            <p className="natal-card__lead">{completedJobLead(natalReading?.status)}</p>
+            {natalReading ? (
+              <NatalAstralReading reading={natalReading} />
+            ) : (
+              <p className="natal-card__lead">La lecture est indisponible pour ce job Astral.</p>
+            )}
           </>
-        ) : terminalJob?.status === "failed" ? (
+        ) : terminalJob?.status && ASTRAL_TERMINAL_ERROR_STATUSES.has(terminalJob.status) ? (
           <div className="chat-error natal-card__error" role="alert">
-            <p>Le job Astral a echoue.</p>
+            <p>Le job Astral n'a pas pu produire de lecture. Statut: {terminalJob.status}.</p>
+            <Link to="/profile" className="btn-link natal-card__secondary-link">
+              Verifier mon profil de naissance
+            </Link>
           </div>
         ) : (
           <button

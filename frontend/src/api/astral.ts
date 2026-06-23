@@ -30,6 +30,7 @@ export type AstralJobStatus =
   | "running"
   | "completed"
   | "failed"
+  | "safety_rejected"
   | "cancelled"
   | "expired"
   | string
