@@ -32,17 +32,6 @@ export type AdminAuditLogsResponse = {
   per_page: number
 }
 
-export type AdminLlmLog = {
-  id: string
-  request_id: string
-  timestamp: string
-  use_case: string
-  validation_status: string
-  latency_ms: number
-  tokens_total: number
-  prompt_version_id: string | null
-}
-
 export type AdminStripeEvent = {
   id: number
   stripe_event_id: string
@@ -52,37 +41,11 @@ export type AdminStripeEvent = {
   last_error: string | null
 }
 
-export type AdminReplayPayload = {
-  data?: unknown
-}
-
 function adminAuthHeaders(token: string | null, contentType?: string): HeadersInit {
   return {
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...(contentType ? { "Content-Type": contentType } : {}),
   }
-}
-
-export function buildAdminLlmLogsPath(useCaseFilter: string, statusFilter: string, periodFilter: string) {
-  const params = new URLSearchParams()
-  if (useCaseFilter !== "all") {
-    params.set("use_case", useCaseFilter)
-  }
-  if (statusFilter !== "all") {
-    params.set("status", statusFilter)
-  }
-  if (periodFilter !== "all") {
-    const now = new Date()
-    const fromDate = new Date(now)
-    if (periodFilter === "7d") {
-      fromDate.setDate(now.getDate() - 7)
-    } else if (periodFilter === "30d") {
-      fromDate.setDate(now.getDate() - 30)
-    }
-    params.set("from_date", fromDate.toISOString())
-  }
-  const query = params.toString()
-  return query ? `/v1/admin/llm/call-logs?${query}` : "/v1/admin/llm/call-logs"
 }
 
 export function buildAdminAuditLogsPath(actorFilter: string, actionFilter: string, periodFilter: string) {
@@ -119,7 +82,6 @@ export async function extractAdminApiErrorMessage(response: Response, fallback: 
 export const adminLogsQueryKeys = {
   quotaAlerts: ["admin-logs", "quota-alerts"] as const,
   audit: (actor: string, action: string, period: string) => ["admin-logs", "audit", actor, action, period] as const,
-  llm: (useCase: string, status: string, period: string) => ["admin-logs", "llm", useCase, status, period] as const,
   stripe: ["admin-logs", "stripe"] as const,
 }
 
@@ -157,26 +119,6 @@ export function useAdminAuditLogsQuery(
   })
 }
 
-export function useAdminLlmLogsQuery(
-  token: string | null,
-  useCaseFilter: string,
-  statusFilter: string,
-  periodFilter: string,
-  enabled: boolean,
-) {
-  return useQuery<{ data: AdminLlmLog[] }>({
-    queryKey: adminLogsQueryKeys.llm(useCaseFilter, statusFilter, periodFilter),
-    queryFn: async () =>
-      readAdminJson(
-        await apiFetch(buildAdminLlmLogsPath(useCaseFilter, statusFilter, periodFilter), {
-          headers: adminAuthHeaders(token),
-        }),
-        "Chargement des logs LLM impossible.",
-      ),
-    enabled: Boolean(token) && enabled,
-  })
-}
-
 export function useAdminStripeLogsQuery(token: string | null, enabled: boolean) {
   return useQuery<{ data: AdminStripeEvent[] }>({
     queryKey: adminLogsQueryKeys.stripe,
@@ -188,23 +130,6 @@ export function useAdminStripeLogsQuery(token: string | null, enabled: boolean) 
         "Chargement des logs Stripe impossible.",
       ),
     enabled: Boolean(token) && enabled,
-  })
-}
-
-export function useReplayAdminLlmLogMutation(token: string | null) {
-  return useMutation({
-    mutationFn: async (log: AdminLlmLog) =>
-      readAdminJson<AdminReplayPayload>(
-        await apiFetch("/v1/admin/llm/replay", {
-          method: "POST",
-          headers: adminAuthHeaders(token, "application/json"),
-          body: JSON.stringify({
-            request_id: log.request_id,
-            prompt_version_id: log.prompt_version_id,
-          }),
-        }),
-        "Replay failed",
-      ),
   })
 }
 

@@ -54,7 +54,7 @@ def b2c_plan(db):
 @pytest.fixture()
 def chat_feature(db):
     feature = FeatureCatalogModel(
-        feature_code="astrologer_chat",
+        feature_code="horoscope_daily",
         feature_name="Chat",
         is_metered=True,
         is_active=True,
@@ -87,7 +87,7 @@ def test_audit_row_created_on_binding_create(db, b2c_plan, chat_feature):
     CanonicalEntitlementMutationService.upsert_plan_feature_configuration(
         db,
         plan=b2c_plan,
-        feature_code="astrologer_chat",
+        feature_code="horoscope_daily",
         is_enabled=True,
         access_mode=AccessMode.QUOTA,
         quotas=quotas,
@@ -101,7 +101,7 @@ def test_audit_row_created_on_binding_create(db, b2c_plan, chat_feature):
     audit = audits[0]
     assert audit.operation == "upsert_plan_feature_configuration"
     assert audit.plan_id == b2c_plan.id
-    assert audit.feature_code == "astrologer_chat"
+    assert audit.feature_code == "horoscope_daily"
 
 
 def test_audit_row_created_on_binding_update(db, b2c_plan, chat_feature):
@@ -109,7 +109,7 @@ def test_audit_row_created_on_binding_update(db, b2c_plan, chat_feature):
     CanonicalEntitlementMutationService.upsert_plan_feature_configuration(
         db,
         plan=b2c_plan,
-        feature_code="astrologer_chat",
+        feature_code="horoscope_daily",
         is_enabled=True,
         access_mode=AccessMode.UNLIMITED,
         quotas=[],
@@ -134,7 +134,7 @@ def test_audit_row_created_on_binding_update(db, b2c_plan, chat_feature):
     CanonicalEntitlementMutationService.upsert_plan_feature_configuration(
         db,
         plan=b2c_plan,
-        feature_code="astrologer_chat",
+        feature_code="horoscope_daily",
         is_enabled=True,
         access_mode=AccessMode.QUOTA,
         quotas=quotas,
@@ -155,7 +155,7 @@ def test_audit_row_contains_before_and_after_payload(db, b2c_plan, chat_feature)
     CanonicalEntitlementMutationService.upsert_plan_feature_configuration(
         db,
         plan=b2c_plan,
-        feature_code="astrologer_chat",
+        feature_code="horoscope_daily",
         is_enabled=True,
         access_mode=AccessMode.UNLIMITED,
         quotas=[],
@@ -176,7 +176,7 @@ def test_audit_row_contains_actor_context(db, b2c_plan, chat_feature):
     CanonicalEntitlementMutationService.upsert_plan_feature_configuration(
         db,
         plan=b2c_plan,
-        feature_code="astrologer_chat",
+        feature_code="horoscope_daily",
         is_enabled=True,
         access_mode=AccessMode.UNLIMITED,
         quotas=[],
@@ -197,7 +197,7 @@ def test_no_audit_row_on_validation_error(db, b2c_plan, chat_feature):
         CanonicalEntitlementMutationService.upsert_plan_feature_configuration(
             db,
             plan=b2c_plan,
-            feature_code="astrologer_chat",
+            feature_code="horoscope_daily",
             is_enabled=True,
             access_mode=AccessMode.DISABLED,  # Error: is_enabled=True with DISABLED
             quotas=[],
@@ -216,7 +216,7 @@ def test_no_audit_row_on_dry_run(db, b2c_plan, chat_feature):
         CanonicalEntitlementMutationService.upsert_plan_feature_configuration(
             db,
             plan=b2c_plan,
-            feature_code="astrologer_chat",
+            feature_code="horoscope_daily",
             is_enabled=True,
             access_mode=AccessMode.UNLIMITED,
             quotas=[],
@@ -246,7 +246,7 @@ def test_no_audit_row_when_no_effective_change(db, b2c_plan, chat_feature):
     CanonicalEntitlementMutationService.upsert_plan_feature_configuration(
         db,
         plan=b2c_plan,
-        feature_code="astrologer_chat",
+        feature_code="horoscope_daily",
         is_enabled=True,
         access_mode=AccessMode.QUOTA,
         quotas=quotas,
@@ -261,7 +261,7 @@ def test_no_audit_row_when_no_effective_change(db, b2c_plan, chat_feature):
     CanonicalEntitlementMutationService.upsert_plan_feature_configuration(
         db,
         plan=b2c_plan,
-        feature_code="astrologer_chat",
+        feature_code="horoscope_daily",
         is_enabled=True,
         access_mode=AccessMode.QUOTA,
         quotas=quotas,
@@ -285,7 +285,7 @@ def test_audit_row_is_rolled_back_with_transaction(engine, db, b2c_plan, chat_fe
         CanonicalEntitlementMutationService.upsert_plan_feature_configuration(
             db,
             plan=b2c_plan,
-            feature_code="astrologer_chat",
+            feature_code="horoscope_daily",
             is_enabled=True,
             access_mode=AccessMode.UNLIMITED,
             quotas=[],

@@ -34,7 +34,7 @@ def _seed_audit(db) -> CanonicalEntitlementMutationAuditModel:
         operation="upsert_plan_feature_configuration",
         plan_id=1,
         plan_code_snapshot="basic",
-        feature_code="astrologer_chat",
+        feature_code="horoscope_daily",
         actor_type="script",
         actor_identifier="test.py",
         source_origin="manual",

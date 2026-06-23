@@ -8,7 +8,7 @@ import type { FeatureEntitlementResponse } from "../api/billing"
 
 function access(variantCode: string, granted = true): FeatureEntitlementResponse {
   return {
-    feature_code: "natal_chart_long",
+    feature_code: "horoscope_daily",
     granted,
     reason_code: granted ? "granted" : "upgrade_required",
     access_mode: "quota",

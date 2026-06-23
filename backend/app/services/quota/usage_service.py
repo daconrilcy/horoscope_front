@@ -27,7 +27,7 @@ class QuotaExhaustedError(Exception):
 
 
 class QuotaUsageService:
-    _ANNIVERSARY_ANCHORED_FEATURES = frozenset({"astrologer_chat"})
+    _ANNIVERSARY_ANCHORED_FEATURES = frozenset({"horoscope_daily"})
 
     @staticmethod
     def _resolve_billing_cycle_anchor(
@@ -212,8 +212,8 @@ class QuotaUsageService:
         """
         Consume a quota up to its configured limit without raising on overflow.
 
-        This is useful when usage is measured after an LLM call. The full token usage
-        can still be logged while the user-facing quota counter saturates at its limit.
+        Utile quand une consommation technique doit être journalisée tout en bornant
+        le compteur de quota utilisateur à sa limite contractuelle.
         """
         require_feature_scope(feature_code, FeatureScope.B2C)
 

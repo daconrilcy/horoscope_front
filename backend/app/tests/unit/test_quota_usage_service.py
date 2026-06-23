@@ -140,7 +140,7 @@ def test_get_usage_counter_absent(db_session):
     usage = QuotaUsageService.get_usage(
         db_session,
         user_id=1,
-        feature_code="astrologer_chat",
+        feature_code="horoscope_daily",
         quota=quota,
         ref_dt=datetime(2026, 3, 15, 10, 0, tzinfo=UTC),
     )
@@ -156,7 +156,7 @@ def test_get_usage_counter_present(db_session):
     window_start = datetime(2026, 3, 15, 0, 0, tzinfo=UTC)
     counter = FeatureUsageCounterModel(
         user_id=1,
-        feature_code="astrologer_chat",
+        feature_code="horoscope_daily",
         quota_key="daily",
         period_unit="day",
         period_value=1,
@@ -171,7 +171,7 @@ def test_get_usage_counter_present(db_session):
     usage = QuotaUsageService.get_usage(
         db_session,
         user_id=1,
-        feature_code="astrologer_chat",
+        feature_code="horoscope_daily",
         quota=quota,
         ref_dt=datetime(2026, 3, 15, 10, 0, tzinfo=UTC),
     )
@@ -187,7 +187,7 @@ def test_get_usage_exhausted(db_session):
     window_start = datetime(2026, 3, 15, 0, 0, tzinfo=UTC)
     counter = FeatureUsageCounterModel(
         user_id=1,
-        feature_code="astrologer_chat",
+        feature_code="horoscope_daily",
         quota_key="daily",
         period_unit="day",
         period_value=1,
@@ -202,7 +202,7 @@ def test_get_usage_exhausted(db_session):
     usage = QuotaUsageService.get_usage(
         db_session,
         user_id=1,
-        feature_code="astrologer_chat",
+        feature_code="horoscope_daily",
         quota=quota,
         ref_dt=datetime(2026, 3, 15, 10, 0, tzinfo=UTC),
     )
@@ -218,7 +218,7 @@ def test_consume_first_creates_counter(db_session):
     usage = QuotaUsageService.consume(
         db_session,
         user_id=1,
-        feature_code="astrologer_chat",
+        feature_code="horoscope_daily",
         quota=quota,
         amount=1,
         ref_dt=datetime(2026, 3, 15, 10, 0, tzinfo=UTC),
@@ -243,10 +243,10 @@ def test_consume_increments(db_session):
     )
     ref_dt = datetime(2026, 3, 15, 10, 0, tzinfo=UTC)
     QuotaUsageService.consume(
-        db_session, user_id=1, feature_code="astrologer_chat", quota=quota, amount=2, ref_dt=ref_dt
+        db_session, user_id=1, feature_code="horoscope_daily", quota=quota, amount=2, ref_dt=ref_dt
     )
     usage = QuotaUsageService.consume(
-        db_session, user_id=1, feature_code="astrologer_chat", quota=quota, amount=1, ref_dt=ref_dt
+        db_session, user_id=1, feature_code="horoscope_daily", quota=quota, amount=1, ref_dt=ref_dt
     )
 
     assert usage.used == 3
@@ -262,10 +262,10 @@ def test_consume_amount_3(db_session):
     )
     ref_dt = datetime(2026, 3, 15, 10, 0, tzinfo=UTC)
     QuotaUsageService.consume(
-        db_session, user_id=1, feature_code="astrologer_chat", quota=quota, amount=2, ref_dt=ref_dt
+        db_session, user_id=1, feature_code="horoscope_daily", quota=quota, amount=2, ref_dt=ref_dt
     )
     usage = QuotaUsageService.consume(
-        db_session, user_id=1, feature_code="astrologer_chat", quota=quota, amount=3, ref_dt=ref_dt
+        db_session, user_id=1, feature_code="horoscope_daily", quota=quota, amount=3, ref_dt=ref_dt
     )
 
     assert usage.used == 5
@@ -279,14 +279,14 @@ def test_consume_exceeded_raises(db_session):
     )
     ref_dt = datetime(2026, 3, 15, 10, 0, tzinfo=UTC)
     QuotaUsageService.consume(
-        db_session, user_id=1, feature_code="astrologer_chat", quota=quota, amount=5, ref_dt=ref_dt
+        db_session, user_id=1, feature_code="horoscope_daily", quota=quota, amount=5, ref_dt=ref_dt
     )
 
     with pytest.raises(QuotaExhaustedError) as excinfo:
         QuotaUsageService.consume(
             db_session,
             user_id=1,
-            feature_code="astrologer_chat",
+            feature_code="horoscope_daily",
             quota=quota,
             amount=1,
             ref_dt=ref_dt,
@@ -302,7 +302,7 @@ def test_consume_amount_zero_raises(db_session):
     )
     with pytest.raises(ValueError, match="amount must be >= 1"):
         QuotaUsageService.consume(
-            db_session, user_id=1, feature_code="astrologer_chat", quota=quota, amount=0
+            db_session, user_id=1, feature_code="horoscope_daily", quota=quota, amount=0
         )
 
 
@@ -312,7 +312,7 @@ def test_consume_amount_negative_raises(db_session):
     )
     with pytest.raises(ValueError, match="amount must be >= 1"):
         QuotaUsageService.consume(
-            db_session, user_id=1, feature_code="astrologer_chat", quota=quota, amount=-1
+            db_session, user_id=1, feature_code="horoscope_daily", quota=quota, amount=-1
         )
 
 
@@ -322,10 +322,10 @@ def test_usage_state_contains_all_fields(db_session):
     )
     ref_dt = datetime(2026, 3, 15, 10, 0, tzinfo=UTC)
     usage = QuotaUsageService.get_usage(
-        db_session, user_id=1, feature_code="astrologer_chat", quota=quota, ref_dt=ref_dt
+        db_session, user_id=1, feature_code="horoscope_daily", quota=quota, ref_dt=ref_dt
     )
 
-    assert usage.feature_code == "astrologer_chat"
+    assert usage.feature_code == "horoscope_daily"
     assert usage.quota_key == "daily"
     assert usage.quota_limit == 5
     assert usage.period_unit == "day"
@@ -342,7 +342,7 @@ def test_get_usage_still_available(db_session):
     window_start = datetime(2026, 3, 15, 0, 0, tzinfo=UTC)
     counter = FeatureUsageCounterModel(
         user_id=1,
-        feature_code="astrologer_chat",
+        feature_code="horoscope_daily",
         quota_key="daily",
         period_unit="day",
         period_value=1,
@@ -357,7 +357,7 @@ def test_get_usage_still_available(db_session):
     usage = QuotaUsageService.get_usage(
         db_session,
         user_id=1,
-        feature_code="astrologer_chat",
+        feature_code="horoscope_daily",
         quota=quota,
         ref_dt=datetime(2026, 3, 15, 10, 0, tzinfo=UTC),
     )
@@ -380,10 +380,10 @@ def test_get_usage_multiple_quotas_same_feature(db_session):
     ref_dt = datetime(2026, 3, 15, 10, 0, tzinfo=UTC)
 
     usage_daily = QuotaUsageService.get_usage(
-        db_session, user_id=1, feature_code="astrologer_chat", quota=quota_daily, ref_dt=ref_dt
+        db_session, user_id=1, feature_code="horoscope_daily", quota=quota_daily, ref_dt=ref_dt
     )
     usage_monthly = QuotaUsageService.get_usage(
-        db_session, user_id=1, feature_code="astrologer_chat", quota=quota_monthly, ref_dt=ref_dt
+        db_session, user_id=1, feature_code="horoscope_daily", quota=quota_monthly, ref_dt=ref_dt
     )
 
     assert usage_daily.quota_key == "daily"
@@ -401,10 +401,10 @@ def test_get_usage_no_side_effect(db_session):
     ref_dt = datetime(2026, 3, 15, 10, 0, tzinfo=UTC)
 
     usage1 = QuotaUsageService.get_usage(
-        db_session, user_id=1, feature_code="astrologer_chat", quota=quota, ref_dt=ref_dt
+        db_session, user_id=1, feature_code="horoscope_daily", quota=quota, ref_dt=ref_dt
     )
     usage2 = QuotaUsageService.get_usage(
-        db_session, user_id=1, feature_code="astrologer_chat", quota=quota, ref_dt=ref_dt
+        db_session, user_id=1, feature_code="horoscope_daily", quota=quota, ref_dt=ref_dt
     )
 
     assert usage1.used == usage2.used == 0
@@ -418,11 +418,11 @@ def test_consume_exactly_limit(db_session):
     )
     ref_dt = datetime(2026, 3, 15, 10, 0, tzinfo=UTC)
     QuotaUsageService.consume(
-        db_session, user_id=1, feature_code="astrologer_chat", quota=quota, amount=4, ref_dt=ref_dt
+        db_session, user_id=1, feature_code="horoscope_daily", quota=quota, amount=4, ref_dt=ref_dt
     )
 
     usage = QuotaUsageService.consume(
-        db_session, user_id=1, feature_code="astrologer_chat", quota=quota, amount=1, ref_dt=ref_dt
+        db_session, user_id=1, feature_code="horoscope_daily", quota=quota, amount=1, ref_dt=ref_dt
     )
     assert usage.used == 5
     assert usage.remaining == 0
@@ -435,14 +435,14 @@ def test_consume_amount_exceeds_raises(db_session):
     )
     ref_dt = datetime(2026, 3, 15, 10, 0, tzinfo=UTC)
     QuotaUsageService.consume(
-        db_session, user_id=1, feature_code="astrologer_chat", quota=quota, amount=3, ref_dt=ref_dt
+        db_session, user_id=1, feature_code="horoscope_daily", quota=quota, amount=3, ref_dt=ref_dt
     )
 
     with pytest.raises(QuotaExhaustedError):
         QuotaUsageService.consume(
             db_session,
             user_id=1,
-            feature_code="astrologer_chat",
+            feature_code="horoscope_daily",
             quota=quota,
             amount=3,
             ref_dt=ref_dt,
@@ -461,7 +461,7 @@ def test_consume_up_to_limit_caps_without_raising(db_session):
     usage = QuotaUsageService.consume_up_to_limit(
         db_session,
         user_id=1,
-        feature_code="astrologer_chat",
+        feature_code="horoscope_daily",
         quota=quota,
         amount=8,
         ref_dt=ref_dt,
@@ -497,7 +497,7 @@ def test_consume_atomicity_with_for_update(db_session):
     QuotaUsageService._find_or_create_counter(
         fake_db,
         user_id=1,
-        feature_code="astrologer_chat",
+        feature_code="horoscope_daily",
         quota=quota,
         window=window,
     )
@@ -522,7 +522,7 @@ def test_upgrade_behavior(db_session):
     QuotaUsageService.consume(
         db_session,
         user_id=1,
-        feature_code="astrologer_chat",
+        feature_code="horoscope_daily",
         quota=quota_basic,
         amount=10,
         ref_dt=ref_dt,
@@ -540,7 +540,7 @@ def test_upgrade_behavior(db_session):
 
     # Check usage under premium
     usage = QuotaUsageService.get_usage(
-        db_session, user_id=1, feature_code="astrologer_chat", quota=quota_premium, ref_dt=ref_dt
+        db_session, user_id=1, feature_code="horoscope_daily", quota=quota_premium, ref_dt=ref_dt
     )
 
     assert usage.used == 10
@@ -586,13 +586,13 @@ def test_get_usage_tokens_can_use_subscription_anniversary_windows(db_session):
     ref_dt = datetime(2026, 4, 26, 9, 0, tzinfo=UTC)
 
     usage_day = QuotaUsageService.get_usage(
-        db_session, user_id=1, feature_code="astrologer_chat", quota=quota_day, ref_dt=ref_dt
+        db_session, user_id=1, feature_code="horoscope_daily", quota=quota_day, ref_dt=ref_dt
     )
     usage_week = QuotaUsageService.get_usage(
-        db_session, user_id=1, feature_code="astrologer_chat", quota=quota_week, ref_dt=ref_dt
+        db_session, user_id=1, feature_code="horoscope_daily", quota=quota_week, ref_dt=ref_dt
     )
     usage_month = QuotaUsageService.get_usage(
-        db_session, user_id=1, feature_code="astrologer_chat", quota=quota_month, ref_dt=ref_dt
+        db_session, user_id=1, feature_code="horoscope_daily", quota=quota_month, ref_dt=ref_dt
     )
 
     assert usage_day.window_start == datetime(2026, 4, 25, 10, 0, tzinfo=UTC)

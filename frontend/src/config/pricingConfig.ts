@@ -4,7 +4,7 @@
 export type PlanCode = 'free' | 'trial' | 'basic' | 'premium'
 
 export interface PlanFeature {
-  id: 'natal' | 'horoscope' | 'chat' | 'consultation' | 'predictions' | 'support'
+  id: 'natal' | 'horoscope' | 'support'
   enabled: boolean
   quota?: string
 }
@@ -32,9 +32,6 @@ export const PRICING_CONFIG: Record<string, PlanPricing> = {
     features: [
       { id: 'natal', enabled: true },
       { id: 'horoscope', enabled: true },
-      { id: 'chat', enabled: true, quota: '1/week' },
-      { id: 'consultation', enabled: false },
-      { id: 'predictions', enabled: false },
       { id: 'support', enabled: false },
     ],
   },
@@ -47,9 +44,6 @@ export const PRICING_CONFIG: Record<string, PlanPricing> = {
     features: [
       { id: 'natal', enabled: true },
       { id: 'horoscope', enabled: true },
-      { id: 'chat', enabled: false },
-      { id: 'consultation', enabled: true },
-      { id: 'predictions', enabled: false },
       { id: 'support', enabled: false },
     ],
   },
@@ -62,9 +56,6 @@ export const PRICING_CONFIG: Record<string, PlanPricing> = {
     features: [
       { id: 'natal', enabled: true },
       { id: 'horoscope', enabled: true },
-      { id: 'chat', enabled: true },
-      { id: 'consultation', enabled: true },
-      { id: 'predictions', enabled: true },
       { id: 'support', enabled: false },
     ],
   },
@@ -77,9 +68,6 @@ export const PRICING_CONFIG: Record<string, PlanPricing> = {
     features: [
       { id: 'natal', enabled: true },
       { id: 'horoscope', enabled: true },
-      { id: 'chat', enabled: true },
-      { id: 'consultation', enabled: true },
-      { id: 'predictions', enabled: true },
       { id: 'support', enabled: true },
     ],
   },

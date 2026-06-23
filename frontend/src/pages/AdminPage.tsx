@@ -29,23 +29,6 @@ function EntitlementsIcon({ className }: { className?: string }) {
   )
 }
 
-function AiIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
-      <circle cx="12" cy="12" r="4" />
-    </svg>
-  )
-}
-
-function PromptsIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
-    </svg>
-  )
-}
-
 function ContentIcon({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -97,8 +80,6 @@ export function AdminPage() {
     { path: "/admin/dashboard", label: tSections.dashboard, Icon: DashboardIcon },
     { path: "/admin/users", label: tSections.users, Icon: UsersIcon },
     { path: "/admin/entitlements", label: tSections.entitlements, Icon: EntitlementsIcon },
-    { path: "/admin/ai-generations", label: tSections.ai_generations, Icon: AiIcon },
-    { path: "/admin/prompts", label: tSections.prompts, Icon: PromptsIcon },
     { path: "/admin/content", label: tSections.content, Icon: ContentIcon },
     { path: "/admin/billing", label: tSections.billing, Icon: BillingIcon },
     { path: "/admin/logs", label: tSections.logs, Icon: LogsIcon },

@@ -53,7 +53,6 @@ def _seed_dev_admin_sync() -> None:
                 email=admin_email,
                 password_hash=hash_password(admin_password),
                 role=admin_role,
-                astrologer_profile="standard",
                 email_unsubscribed=False,
             )
             db.add(admin_user)

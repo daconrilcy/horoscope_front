@@ -248,28 +248,23 @@ export const supportTranslations = {
       planHighlights: {
         free: [
           "Horoscope du jour essentiel",
-          "1 message de chat par semaine",
+          "1 horoscope quotidien",
           "Découverte de l’expérience astrologique",
         ],
         basic: [
           "Horoscope du jour enrichi",
-          "Chat astrologique inclus",
-          "Accès aux consultations thématiques",
-          "Capacité d’usage IA confortable pour un usage régulier",
+          "Horoscope quotidien inclus",
+          "Capacité d’usage confortable pour un usage régulier",
         ],
         premium: [
           "Horoscope du jour enrichi",
-          "Chat astrologique complet",
-          "Consultations thématiques incluses",
-          "Capacité d’usage IA étendue pour un usage intensif",
+          "Horoscope quotidien complet",
+          "Capacité d’usage étendue pour un usage intensif",
           "Expérience la plus complète et la plus confortable",
         ],
       },
       features: {
-        natal_chart_short: "Thème natal",
-        natal_chart_long: "Interprétation complète du thème natal",
-        astrologer_chat: "Chat astrologique",
-        thematic_consultation: "Consultations thématiques",
+        horoscope_daily: "Horoscope quotidien",
       },
       quota: {
         tokens_per_day: "{{n}} tokens / jour",
@@ -553,28 +548,23 @@ export const supportTranslations = {
       planHighlights: {
         free: [
           "Essential daily horoscope",
-          "1 chat message per week",
+          "1 daily horoscope",
           "Discover the astrological experience",
         ],
         basic: [
           "Enhanced daily horoscope",
-          "Astrologer chat included",
-          "Access to thematic consultations",
-          "Comfortable AI usage capacity for regular use",
+          "Daily horoscope included",
+          "Comfortable usage capacity for regular use",
         ],
         premium: [
           "Enhanced daily horoscope",
-          "Full astrologer chat",
-          "Thematic consultations included",
-          "Extended AI usage capacity for intensive use",
+          "Full Daily horoscope",
+          "Extended usage capacity for intensive use",
           "The most complete and comfortable experience",
         ],
       },
       features: {
-        natal_chart_short: "Natal chart (short)",
-        natal_chart_long: "Natal chart (detailed)",
-        astrologer_chat: "Astrologer chat",
-        thematic_consultation: "Thematic consultations",
+        horoscope_daily: "Daily horoscope",
       },
       quota: {
         tokens_per_day: "{{n}} tokens / day",
@@ -859,28 +849,23 @@ export const supportTranslations = {
       planHighlights: {
         free: [
           "Horóscopo diario esencial",
-          "1 mensaje de chat por semana",
+          "1 horóscopo diario",
           "Descubrimiento de la experiencia astrológica",
         ],
         basic: [
           "Horóscopo diario enriquecido",
-          "Chat astrológico incluido",
-          "Acceso a las consultas temáticas",
-          "Capacidad de uso de IA cómoda para un uso regular",
+          "Horóscopo diario incluido",
+          "Capacidad de uso cómoda para un uso regular",
         ],
         premium: [
           "Horóscopo diario enriquecido",
-          "Chat astrológico completo",
-          "Consultas temáticas incluidas",
-          "Capacidad de uso de IA extendida para un uso intensivo",
+          "Horóscopo diario completo",
+          "Capacidad de uso extendida para un uso intensivo",
           "La experiencia más completa y confortable",
         ],
       },
       features: {
-        natal_chart_short: "Carta natal (corta)",
-        natal_chart_long: "Carta natal (detallada)",
-        astrologer_chat: "Chat con astrólogo",
-        thematic_consultation: "Consultas temáticas",
+        horoscope_daily: "Horóscopo diario",
       },
       quota: {
         tokens_per_day: "{{n}} tokens / día",

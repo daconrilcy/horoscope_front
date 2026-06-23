@@ -12,7 +12,7 @@ from app.core.datetime_provider import utc_now
 from app.infra.db.base import Base
 
 if TYPE_CHECKING:
-    from app.infra.db.models.reference import LanguageModel
+    from app.infra.db.models.language import LanguageModel
 
 
 class UserModel(Base):
@@ -24,8 +24,6 @@ class UserModel(Base):
     email: Mapped[str] = mapped_column(String(255), unique=True, index=True)
     password_hash: Mapped[str] = mapped_column(String(255))
     role: Mapped[str] = mapped_column(String(16), index=True)
-    astrologer_profile: Mapped[str] = mapped_column(String(32), default="standard")
-    default_astrologer_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
     default_language_id: Mapped[int | None] = mapped_column(
         ForeignKey("languages.id"),
         nullable=True,

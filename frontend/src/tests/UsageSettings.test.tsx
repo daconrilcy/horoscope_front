@@ -3,48 +3,30 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 
 import { UsageSettings } from "../pages/settings/UsageSettings"
 
-const mockUseChatEntitlementUsage = vi.fn()
-const mockUseChatEntitlementFeature = vi.fn()
+const mockUseHoroscopeDailyEntitlementFeature = vi.fn()
 
 vi.mock("@api/billing", async (importActual) => {
   const actual = await importActual<typeof import("@api/billing")>()
   return {
     ...actual,
-    useChatEntitlementUsage: () => mockUseChatEntitlementUsage(),
-    useChatEntitlementFeature: () => mockUseChatEntitlementFeature(),
+    useHoroscopeDailyEntitlementFeature: () => mockUseHoroscopeDailyEntitlementFeature(),
   }
 })
 
 afterEach(() => {
   cleanup()
-  mockUseChatEntitlementUsage.mockReset()
-  mockUseChatEntitlementFeature.mockReset()
+  mockUseHoroscopeDailyEntitlementFeature.mockReset()
 })
 
 describe("UsageSettings", () => {
   it("affiche des lignes jour semaine mois avec un detail formate en tokens", () => {
-    mockUseChatEntitlementUsage.mockReturnValue({
+    mockUseHoroscopeDailyEntitlementFeature.mockReturnValue({
       isLoading: false,
       isError: false,
       error: null,
       refetch: vi.fn(),
       data: {
-        quota_date: "2026-04-01",
-        quota_key: "tokens",
-        limit: 200000,
-        consumed: 12450,
-        remaining: 187550,
-        reset_at: "2026-05-01T00:00:00Z",
-        blocked: false,
-      },
-    })
-    mockUseChatEntitlementFeature.mockReturnValue({
-      isLoading: false,
-      isError: false,
-      error: null,
-      refetch: vi.fn(),
-      data: {
-        feature_code: "astrologer_chat",
+        feature_code: "horoscope_daily",
         granted: true,
         reason_code: "granted",
         access_mode: "quota",

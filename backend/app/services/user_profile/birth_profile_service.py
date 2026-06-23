@@ -9,12 +9,12 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
+from datetime import date
 from typing import Any
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, model_validator
 from sqlalchemy.orm import Session
 
-from app.domain.astrology.natal_preparation import BirthInput, prepare_birth_data
 from app.infra.db.models.geo_place_resolved import GeoPlaceResolvedModel
 from app.infra.db.repositories.geo_place_resolved_repository import GeoPlaceResolvedRepository
 from app.infra.db.repositories.user_birth_profile_repository import UserBirthProfileRepository
@@ -42,10 +42,62 @@ class UserBirthProfileServiceError(Exception):
 logger = logging.getLogger(__name__)
 
 
+class BirthInput(BaseModel):
+    """Contrat local du profil de naissance brut conserve par le backend."""
+
+    birth_date: date | None = None
+    birth_year: int | None = Field(default=None, ge=1, le=9999)
+    birth_month: int | None = Field(default=None, ge=1, le=12)
+    birth_day: int | None = Field(default=None, ge=1, le=31)
+    birth_date_precision: str = Field(default="full", pattern="^(full|year_month|year)$")
+    birth_time: str | None = Field(default=None, max_length=8)
+    birth_place: str = Field(min_length=1, max_length=255)
+    birth_timezone: str = Field(min_length=1, max_length=64)
+    birth_city: str | None = Field(default=None, max_length=255)
+    birth_country: str | None = Field(default=None, max_length=100)
+    birth_lat: float | None = None
+    birth_lon: float | None = None
+    place_resolved_id: int | None = None
+    geolocation_consent: bool = False
+    current_city: str | None = Field(default=None, max_length=255)
+    current_country: str | None = Field(default=None, max_length=100)
+    current_lat: float | None = None
+    current_lon: float | None = None
+    current_location_display: str | None = Field(default=None, max_length=255)
+    current_timezone: str | None = Field(default=None, max_length=64)
+
+    @model_validator(mode="after")
+    def validate_birth_date_parts(self) -> "BirthInput":
+        """Garantit la cohérence entre date complète et précision partielle."""
+        if self.birth_date is not None:
+            self.birth_year = self.birth_date.year
+            self.birth_month = self.birth_date.month
+            self.birth_day = self.birth_date.day
+            self.birth_date_precision = "full"
+            return self
+        if self.birth_date_precision == "full":
+            raise ValueError("birth_date is required when birth_date_precision is full")
+        if self.birth_year is None:
+            raise ValueError("birth_year is required for partial birth dates")
+        if self.birth_date_precision == "year_month" and self.birth_month is None:
+            raise ValueError("birth_month is required for year_month precision")
+        if self.birth_date_precision == "year" and (
+            self.birth_month is not None or self.birth_day is not None
+        ):
+            raise ValueError("birth_month and birth_day must be empty for year precision")
+        if self.birth_date_precision == "year_month" and self.birth_day is not None:
+            raise ValueError("birth_day must be empty for year_month precision")
+        return self
+
+
 class UserBirthProfileData(BaseModel):
     """Données du profil de naissance d'un utilisateur."""
 
-    birth_date: str
+    birth_date: str | None
+    birth_year: int | None = None
+    birth_month: int | None = None
+    birth_day: int | None = None
+    birth_date_precision: str = "full"
     birth_time: str | None
     # Kept for backward compatibility with existing clients.
     birth_place: str
@@ -95,8 +147,7 @@ class UserBirthProfileService:
     """
     Service de gestion des profils de naissance.
 
-    Gère les données de naissance des utilisateurs nécessaires
-    aux calculs astrologiques.
+    Gère les données de naissance des utilisateurs nécessaires à la façade Astral.
     """
 
     @staticmethod
@@ -180,7 +231,11 @@ class UserBirthProfileService:
                 )
 
         return UserBirthProfileData(
-            birth_date=model.birth_date.isoformat(),
+            birth_date=model.birth_date.isoformat() if model.birth_date is not None else None,
+            birth_year=model.birth_year,
+            birth_month=model.birth_month,
+            birth_day=model.birth_day,
+            birth_date_precision=model.birth_date_precision,
             birth_time=model.birth_time,
             birth_place=model.birth_place,
             birth_place_text=model.birth_place,
@@ -223,8 +278,6 @@ class UserBirthProfileService:
                 details={"user_id": str(user_id)},
             )
 
-        # Reuse existing preparation for deterministic birth-data validation.
-        prepare_birth_data(payload)
         if payload.place_resolved_id is not None:
             resolved = GeoPlaceResolvedRepository(db).find_by_id(payload.place_resolved_id)
             if resolved is None:
@@ -237,6 +290,10 @@ class UserBirthProfileService:
         model = UserBirthProfileRepository(db).upsert(
             user_id=user_id,
             birth_date=payload.birth_date,
+            birth_year=payload.birth_year,
+            birth_month=payload.birth_month,
+            birth_day=payload.birth_day,
+            birth_date_precision=payload.birth_date_precision,
             birth_time=payload.birth_time,
             birth_place=payload.birth_place,
             birth_timezone=payload.birth_timezone,
@@ -270,7 +327,11 @@ class UserBirthProfileService:
                 )
 
         return UserBirthProfileData(
-            birth_date=model.birth_date.isoformat(),
+            birth_date=model.birth_date.isoformat() if model.birth_date is not None else None,
+            birth_year=model.birth_year,
+            birth_month=model.birth_month,
+            birth_day=model.birth_day,
+            birth_date_precision=model.birth_date_precision,
             birth_time=model.birth_time,
             birth_place=model.birth_place,
             birth_place_text=model.birth_place,

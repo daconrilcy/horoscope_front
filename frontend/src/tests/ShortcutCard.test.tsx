@@ -77,9 +77,9 @@ describe("ShortcutCard", () => {
     })
 
     it("est un lien si 'to' est présent", () => {
-      render(<ShortcutCard {...defaultProps} to="/chat" />, { wrapper: RouterWrapper })
+      render(<ShortcutCard {...defaultProps} to="/natal" />, { wrapper: RouterWrapper })
       const link = screen.getByRole("link")
-      expect(link).toHaveAttribute("href", "/chat")
+      expect(link).toHaveAttribute("href", "/natal")
       expect(link).toHaveClass("shortcut-card")
     })
 
@@ -100,7 +100,7 @@ describe("ShortcutCard", () => {
 
     it("appelle onClick lors du clic sur lien", () => {
       const onClick = vi.fn()
-      render(<ShortcutCard {...defaultProps} to="/chat" onClick={onClick} />, { wrapper: RouterWrapper })
+      render(<ShortcutCard {...defaultProps} to="/natal" onClick={onClick} />, { wrapper: RouterWrapper })
       fireEvent.click(screen.getByRole("link"))
       expect(onClick).toHaveBeenCalledTimes(1)
     })
@@ -117,25 +117,17 @@ describe("ShortcutsSection", () => {
 
   it("rend les raccourcis par défaut sous forme de liens", () => {
     render(<ShortcutsSection />, { wrapper: RouterWrapper })
-    expect(screen.getByText("Chat astrologue")).toBeInTheDocument()
-    expect(screen.getByText("Consultation")).toBeInTheDocument()
-    expect(screen.getByText("Guidance ciblée")).toBeInTheDocument()
+    expect(screen.getByText("Thème natal")).toBeInTheDocument()
+    expect(screen.getByText("Lecture Astral")).toBeInTheDocument()
     expect(screen.getByText("Historique")).toBeInTheDocument()
-    expect(screen.getAllByRole("link")).toHaveLength(3)
+    expect(screen.getAllByRole("link")).toHaveLength(2)
   })
 
-  it("déclenche onChatClick lors du clic sur le chat", () => {
-    const onChatClick = vi.fn()
-    render(<ShortcutsSection onChatClick={onChatClick} />, { wrapper: RouterWrapper })
-    fireEvent.click(screen.getByRole("link", { name: /Chat astrologue/i }))
-    expect(onChatClick).toHaveBeenCalledTimes(1)
-  })
-
-  it("déclenche onConsultationClick lors du clic sur la consultation", () => {
-    const onConsultationClick = vi.fn()
-    render(<ShortcutsSection onConsultationClick={onConsultationClick} />, { wrapper: RouterWrapper })
-    fireEvent.click(screen.getByRole("link", { name: /Consultation/i }))
-    expect(onConsultationClick).toHaveBeenCalledTimes(1)
+  it("déclenche onNatalClick lors du clic sur le theme natal", () => {
+    const onNatalClick = vi.fn()
+    render(<ShortcutsSection onNatalClick={onNatalClick} />, { wrapper: RouterWrapper })
+    fireEvent.click(screen.getByRole("link", { name: /Thème natal/i }))
+    expect(onNatalClick).toHaveBeenCalledTimes(1)
   })
 
   it("utilise une structure sémantique <section>", () => {
@@ -149,9 +141,8 @@ describe("ShortcutsSection", () => {
     render(<ShortcutsSection />, { wrapper: RouterWrapper })
 
     expect(screen.getByRole("heading", { name: "Activities" })).toBeInTheDocument()
-    expect(screen.getByText("Astrologer chat")).toBeInTheDocument()
-    expect(screen.getByText("Consultation")).toBeInTheDocument()
-    expect(screen.getByText("Targeted guidance")).toBeInTheDocument()
+    expect(screen.getByText("Natal chart")).toBeInTheDocument()
+    expect(screen.getByText("Astral reading")).toBeInTheDocument()
     expect(screen.getByText("History")).toBeInTheDocument()
   })
 })

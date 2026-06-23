@@ -25,23 +25,12 @@ from app.infra.db.models.billing import (
     UserDailyQuotaUsageModel,
     UserSubscriptionModel,
 )
-from app.infra.db.models.chart_result import ChartResultModel
-from app.infra.db.models.chat_conversation import ChatConversationModel
-from app.infra.db.models.chat_message import ChatMessageModel
-from app.infra.db.models.consultation_third_party import (
-    ConsultationThirdPartyProfileModel,
-    ConsultationThirdPartyUsageModel,
-)
-from app.infra.db.models.daily_prediction import DailyPredictionRunModel
-from app.infra.db.models.dignity_reference import AstralChartPlanetDignityResultModel
 from app.infra.db.models.privacy import UserPrivacyRequestModel
 from app.infra.db.models.product_entitlements import FeatureUsageCounterModel
 from app.infra.db.models.stripe_billing import StripeBillingProfileModel
 from app.infra.db.models.token_usage_log import UserTokenUsageLogModel
 from app.infra.db.models.user import UserModel
 from app.infra.db.models.user_birth_profile import UserBirthProfileModel
-from app.infra.db.models.user_natal_interpretation import UserNatalInterpretationModel
-from app.infra.db.models.user_prediction_baseline import UserPredictionBaselineModel
 from app.infra.db.models.user_refresh_token import UserRefreshTokenModel
 from app.infra.observability.metrics import increment_counter, observe_duration
 
@@ -131,9 +120,6 @@ class PrivacyService:
             return {
                 "contains_user_data": isinstance(result_data.get("user"), dict),
                 "birth_profile_present": result_data.get("birth_profile") is not None,
-                "chart_results_count": int(result_data.get("chart_results_count", 0)),
-                "conversations_count": int(result_data.get("conversations_count", 0)),
-                "messages_count": int(result_data.get("messages_count", 0)),
                 "subscriptions_count": int(result_data.get("subscriptions_count", 0)),
                 "payment_attempts_count": int(result_data.get("payment_attempts_count", 0)),
                 "quota_usage_count": int(result_data.get("quota_usage_count", 0)),
@@ -306,21 +292,6 @@ class PrivacyService:
                 .where(UserBirthProfileModel.user_id == user_id)
                 .limit(1)
             )
-            chart_results = db.scalars(
-                select(ChartResultModel).where(ChartResultModel.user_id == user_id)
-            ).all()
-            conversations = db.scalars(
-                select(ChatConversationModel).where(ChatConversationModel.user_id == user_id)
-            ).all()
-            conversation_ids = [conversation.id for conversation in conversations]
-            messages = []
-            if conversation_ids:
-                messages = db.scalars(
-                    select(ChatMessageModel).where(
-                        ChatMessageModel.conversation_id.in_(conversation_ids)
-                    )
-                ).all()
-
             subscriptions = db.scalars(
                 select(UserSubscriptionModel).where(UserSubscriptionModel.user_id == user_id)
             ).all()
@@ -342,7 +313,15 @@ class PrivacyService:
                 },
                 "birth_profile": (
                     {
-                        "birth_date": birth_profile.birth_date.isoformat(),
+                        "birth_date": (
+                            birth_profile.birth_date.isoformat()
+                            if birth_profile.birth_date is not None
+                            else None
+                        ),
+                        "birth_year": birth_profile.birth_year,
+                        "birth_month": birth_profile.birth_month,
+                        "birth_day": birth_profile.birth_day,
+                        "birth_date_precision": birth_profile.birth_date_precision,
                         "birth_time": birth_profile.birth_time,
                         "birth_place": birth_profile.birth_place,
                         "birth_timezone": birth_profile.birth_timezone,
@@ -350,9 +329,6 @@ class PrivacyService:
                     if birth_profile is not None
                     else None
                 ),
-                "chart_results_count": len(chart_results),
-                "conversations_count": len(conversations),
-                "messages_count": len(messages),
                 "subscriptions_count": len(subscriptions),
                 "payment_attempts_count": len(payment_attempts),
                 "quota_usage_count": len(quota_usage),
@@ -392,59 +368,6 @@ class PrivacyService:
         """
         deleted_entities: list[str] = []
 
-        conversation_ids = db.scalars(
-            select(ChatConversationModel.id).where(ChatConversationModel.user_id == user_id)
-        ).all()
-        if conversation_ids:
-            db.execute(
-                delete(ChatMessageModel).where(
-                    ChatMessageModel.conversation_id.in_(conversation_ids)
-                )
-            )
-            deleted_entities.append("chat_messages")
-        db.execute(delete(ChatConversationModel).where(ChatConversationModel.user_id == user_id))
-        deleted_entities.append("chat_conversations")
-
-        db.execute(
-            delete(UserNatalInterpretationModel).where(
-                UserNatalInterpretationModel.user_id == user_id
-            )
-        )
-        deleted_entities.append("user_natal_interpretations")
-
-        third_party_profile_ids = db.scalars(
-            select(ConsultationThirdPartyProfileModel.id).where(
-                ConsultationThirdPartyProfileModel.user_id == user_id
-            )
-        ).all()
-        if third_party_profile_ids:
-            db.execute(
-                delete(ConsultationThirdPartyUsageModel).where(
-                    ConsultationThirdPartyUsageModel.third_party_profile_id.in_(
-                        third_party_profile_ids
-                    )
-                )
-            )
-            deleted_entities.append("consultation_third_party_usages")
-        db.execute(
-            delete(ConsultationThirdPartyProfileModel).where(
-                ConsultationThirdPartyProfileModel.user_id == user_id
-            )
-        )
-        deleted_entities.append("consultation_third_party_profiles")
-
-        db.execute(
-            delete(DailyPredictionRunModel).where(DailyPredictionRunModel.user_id == user_id)
-        )
-        deleted_entities.append("daily_prediction_runs")
-
-        db.execute(
-            delete(UserPredictionBaselineModel).where(
-                UserPredictionBaselineModel.user_id == user_id
-            )
-        )
-        deleted_entities.append("user_prediction_baselines")
-
         db.execute(delete(UserTokenUsageLogModel).where(UserTokenUsageLogModel.user_id == user_id))
         deleted_entities.append("user_token_usage_logs")
 
@@ -463,19 +386,6 @@ class PrivacyService:
 
         db.execute(delete(UserBirthProfileModel).where(UserBirthProfileModel.user_id == user_id))
         deleted_entities.append("user_birth_profiles")
-
-        chart_result_ids = db.scalars(
-            select(ChartResultModel.id).where(ChartResultModel.user_id == user_id)
-        ).all()
-        if chart_result_ids:
-            db.execute(
-                delete(AstralChartPlanetDignityResultModel).where(
-                    AstralChartPlanetDignityResultModel.chart_result_id.in_(chart_result_ids)
-                )
-            )
-            deleted_entities.append("astral_chart_planet_dignity_results")
-        db.execute(delete(ChartResultModel).where(ChartResultModel.user_id == user_id))
-        deleted_entities.append("chart_results")
 
         db.execute(
             delete(UserDailyQuotaUsageModel).where(UserDailyQuotaUsageModel.user_id == user_id)
@@ -562,7 +472,6 @@ class PrivacyService:
             user.email = anonymized_email
             user.password_hash = hash_password(uuid4().hex)
             user.role = "user"
-            user.default_astrologer_id = None
             user.detected_locale = None
             user.detected_country_code = None
             user.detected_timezone = None

@@ -67,7 +67,7 @@ def b2b_plan(db):
 @pytest.fixture()
 def chat_feature(db):
     feature = FeatureCatalogModel(
-        feature_code="astrologer_chat",
+        feature_code="horoscope_daily",
         feature_name="Chat",
         is_metered=True,
         is_active=True,
@@ -93,7 +93,7 @@ def test_upsert_creates_binding_and_quotas_nominal(db, b2c_plan, chat_feature):
     binding = CanonicalEntitlementMutationService.upsert_plan_feature_configuration(
         db,
         plan=b2c_plan,
-        feature_code="astrologer_chat",
+        feature_code="horoscope_daily",
         is_enabled=True,
         access_mode=AccessMode.QUOTA,
         quotas=quotas,
@@ -142,7 +142,7 @@ def test_upsert_updates_existing_binding(db, b2c_plan, chat_feature):
     binding = CanonicalEntitlementMutationService.upsert_plan_feature_configuration(
         db,
         plan=b2c_plan,
-        feature_code="astrologer_chat",
+        feature_code="horoscope_daily",
         is_enabled=True,
         access_mode=AccessMode.QUOTA,
         quotas=quotas,
@@ -201,7 +201,7 @@ def test_upsert_replaces_stale_quotas(db, b2c_plan, chat_feature):
     CanonicalEntitlementMutationService.upsert_plan_feature_configuration(
         db,
         plan=b2c_plan,
-        feature_code="astrologer_chat",
+        feature_code="horoscope_daily",
         is_enabled=True,
         access_mode=AccessMode.QUOTA,
         quotas=new_quotas,
@@ -240,7 +240,7 @@ def test_validation_fails_feature_absent_from_catalog(db, b2c_plan):
         CanonicalEntitlementMutationService.upsert_plan_feature_configuration(
             db,
             plan=b2c_plan,
-            feature_code="natal_chart_short",  # In registry
+            feature_code="horoscope_daily",  # In registry
             is_enabled=True,
             access_mode=AccessMode.UNLIMITED,
             quotas=[],
@@ -260,7 +260,7 @@ def test_validation_fails_feature_inactive_in_catalog(db, b2c_plan, chat_feature
         CanonicalEntitlementMutationService.upsert_plan_feature_configuration(
             db,
             plan=b2c_plan,
-            feature_code="astrologer_chat",
+            feature_code="horoscope_daily",
             is_enabled=True,
             access_mode=AccessMode.UNLIMITED,
             quotas=[],
@@ -298,7 +298,7 @@ def test_validation_fails_b2c_feature_on_b2b_plan(db, b2b_plan, chat_feature):
         CanonicalEntitlementMutationService.upsert_plan_feature_configuration(
             db,
             plan=b2b_plan,
-            feature_code="astrologer_chat",
+            feature_code="horoscope_daily",
             is_enabled=True,
             access_mode=AccessMode.UNLIMITED,
             quotas=[],
@@ -313,7 +313,7 @@ def test_validation_fails_quota_mode_without_quotas(db, b2c_plan, chat_feature):
         CanonicalEntitlementMutationService.upsert_plan_feature_configuration(
             db,
             plan=b2c_plan,
-            feature_code="astrologer_chat",
+            feature_code="horoscope_daily",
             is_enabled=True,
             access_mode=AccessMode.QUOTA,
             quotas=[],
@@ -328,7 +328,7 @@ def test_validation_fails_quota_mode_with_non_positive_quota_limit(db, b2c_plan,
         CanonicalEntitlementMutationService.upsert_plan_feature_configuration(
             db,
             plan=b2c_plan,
-            feature_code="astrologer_chat",
+            feature_code="horoscope_daily",
             is_enabled=True,
             access_mode=AccessMode.QUOTA,
             quotas=[
@@ -351,7 +351,7 @@ def test_validation_fails_unlimited_with_quotas(db, b2c_plan, chat_feature):
         CanonicalEntitlementMutationService.upsert_plan_feature_configuration(
             db,
             plan=b2c_plan,
-            feature_code="astrologer_chat",
+            feature_code="horoscope_daily",
             is_enabled=True,
             access_mode=AccessMode.UNLIMITED,
             quotas=[
@@ -374,7 +374,7 @@ def test_validation_fails_disabled_with_quotas(db, b2c_plan, chat_feature):
         CanonicalEntitlementMutationService.upsert_plan_feature_configuration(
             db,
             plan=b2c_plan,
-            feature_code="astrologer_chat",
+            feature_code="horoscope_daily",
             is_enabled=False,
             access_mode=AccessMode.DISABLED,
             quotas=[
@@ -397,7 +397,7 @@ def test_validation_fails_disabled_with_is_enabled_true(db, b2c_plan, chat_featu
         CanonicalEntitlementMutationService.upsert_plan_feature_configuration(
             db,
             plan=b2c_plan,
-            feature_code="astrologer_chat",
+            feature_code="horoscope_daily",
             is_enabled=True,
             access_mode=AccessMode.DISABLED,
             quotas=[],
@@ -412,7 +412,7 @@ def test_validation_fails_quota_with_is_enabled_false(db, b2c_plan, chat_feature
         CanonicalEntitlementMutationService.upsert_plan_feature_configuration(
             db,
             plan=b2c_plan,
-            feature_code="astrologer_chat",
+            feature_code="horoscope_daily",
             is_enabled=False,
             access_mode=AccessMode.QUOTA,
             quotas=[
@@ -434,14 +434,14 @@ def test_validation_aggregates_multiple_errors(db, b2b_plan):
     # GIVEN: B2C feature on B2B plan + DISABLED with is_enabled=True
     with pytest.raises(CanonicalMutationValidationError) as excinfo:
         # Need feature in catalog
-        f = FeatureCatalogModel(feature_code="astrologer_chat", feature_name="Chat", is_active=True)
+        f = FeatureCatalogModel(feature_code="horoscope_daily", feature_name="Chat", is_active=True)
         db.add(f)
         db.flush()
 
         CanonicalEntitlementMutationService.upsert_plan_feature_configuration(
             db,
             plan=b2b_plan,
-            feature_code="astrologer_chat",
+            feature_code="horoscope_daily",
             is_enabled=True,
             access_mode=AccessMode.DISABLED,
             quotas=[],
@@ -461,7 +461,7 @@ def test_no_partial_write_on_validation_error(db, b2c_plan, chat_feature):
         CanonicalEntitlementMutationService.upsert_plan_feature_configuration(
             db,
             plan=b2c_plan,
-            feature_code="astrologer_chat",
+            feature_code="horoscope_daily",
             is_enabled=True,
             access_mode=AccessMode.DISABLED,
             quotas=[],

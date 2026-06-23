@@ -35,7 +35,6 @@ function frontendSourceFiles(): string[] {
 
 const NATAL_PROJECTION_ACTIVE_ROOTS = [
   "features/natal-chart",
-  "components/natal-interpretation",
   "pages/NatalChartPage",
 ] as const
 
@@ -78,30 +77,6 @@ function extractModuleSpecifiers(source: string): string[] {
     ...source.matchAll(/\b(?:import|export)\s+(?:type\s+)?(?:[^"']*?\s+from\s+)?["']([^"']+)["']/g),
     ...source.matchAll(/\bimport\(\s*["']([^"']+)["']\s*\)/g),
   ].map((match) => match[1].replace(/\\/g, "/"))
-}
-
-function modulePathVariants(parts: string[]): Set<string> {
-  const legacyPath = pathPrefix(parts)
-  return new Set([legacyPath, `${legacyPath}/index`])
-}
-
-function isForbiddenNatalInterpretationSpecifier(specifier: string): boolean {
-  const oldComponentVariants = modulePathVariants(["components", "NatalInterpretation"])
-  const oldSelectorVariants = modulePathVariants([
-    "components",
-    "natal-interpretation",
-    "NatalInterpretationPersonaSelector",
-  ])
-  const forbiddenVariants = [...oldComponentVariants, ...oldSelectorVariants]
-
-  return forbiddenVariants.some(
-    (variant) =>
-      specifier === `@/${variant}` ||
-      specifier === `@${variant}` ||
-      specifier.endsWith(`/${variant}`) ||
-      specifier.endsWith(`/${variant}.ts`) ||
-      specifier.endsWith(`/${variant}.tsx`),
-  )
 }
 
 function componentOwnerModule(parts: string[]): string {
@@ -201,63 +176,12 @@ describe("component-architecture guards", () => {
     expect(readFrontendFile("pages/LoginPage.tsx")).toContain('from "../features/auth/SignInForm"')
   })
 
-  it("garde NatalInterpretation sous feature natal-chart et les enfants presentational sans API", () => {
-    const legacyNatalFiles = componentSourceFiles().filter(
-      (file) =>
-        isActiveModuleUnderPrefix(file, ["components", "NatalInterpretation"]) ||
-        isActiveModuleUnderPrefix(file, [
-          "components",
-          "natal-interpretation",
-          "NatalInterpretationPersonaSelector",
-        ]),
-    )
-    const legacyNatalImports = frontendSourceFiles()
-      .map((file) => ({
-        file,
-        forbiddenSpecifiers: extractModuleSpecifiers(readFrontendFile(file)).filter(
-          isForbiddenNatalInterpretationSpecifier,
-        ),
-      }))
-      .filter(({ forbiddenSpecifiers }) => forbiddenSpecifiers.length > 0)
-    const staleNatalAllowlistEntries = COMPONENT_API_IMPORT_EXCEPTIONS.filter((entry) =>
-      isActiveModuleUnderPrefix(entry.file, ["components", "NatalInterpretation"]) ||
-      isActiveModuleUnderPrefix(entry.file, [
-        "components",
-        "natal-interpretation",
-        "NatalInterpretationPersonaSelector",
-      ]),
-    )
-
-    expect(readFrontendFile("features/natal-chart/NatalInterpretation.tsx")).toContain(
-      "requestThemeNatalReadingAction",
-    )
-    expect(readFrontendFile("features/natal-chart/NatalInterpretation.tsx")).toContain(
-      'from "../../components/natal-interpretation/NatalInterpretationContent"',
-    )
-    expect(legacyNatalFiles).toEqual([])
-    expect(legacyNatalImports).toEqual([])
-    expect(staleNatalAllowlistEntries).toEqual([])
-
-    const presentationalFiles = [
-      "components/natal-interpretation/NatalInterpretationContent.tsx",
-      "components/natal-interpretation/NatalInterpretationMenus.tsx",
-    ]
-
-    for (const file of presentationalFiles) {
-      expect(hasApiOrFeatureOwnership(readFrontendFile(file))).toBe(false)
-    }
-  })
-
   it("bloque une matrice locale free basic premium dans les owners React de projection natale", () => {
     const activeNatalProjectionFiles = frontendSourceFiles().filter(isNatalProjectionActiveSource)
     const policyViolations = activeNatalProjectionFiles
       .map((file) => ({ file, hasLocalPolicy: hasLocalNatalPlanPolicy(readFrontendFile(file)) }))
       .filter((entry) => entry.hasLocalPolicy)
 
-    expect(readFrontendFile("tests/natalInterpretation.test.tsx")).toContain(
-      'type ProjectionPlanCode = "free" | "basic" | "premium"',
-    )
-    expect(readFrontendFile("tests/natalInterpretation.test.tsx")).toContain("plan_code: planCode")
     expect(policyViolations).toEqual([])
   })
 

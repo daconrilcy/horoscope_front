@@ -15,7 +15,6 @@ import { EnterpriseLayout } from "../components/layout/EnterpriseLayout"
 import { EnterpriseCredentialsPanel } from "../features/enterprise/EnterpriseCredentialsPanel"
 import { SupportOpsPanel } from "../features/support/SupportOpsPanel"
 
-import { ConsultationLayout } from "../features/consultations/components/ConsultationLayout"
 import { LoginPage } from "../pages/LoginPage"
 import { RegisterPage } from "../pages/RegisterPage"
 
@@ -54,9 +53,6 @@ const BirthProfilePage = lazy(() =>
     default: BirthProfilePage,
   })),
 )
-const ChatPage = lazy(() =>
-  import("../pages/ChatPage").then(({ ChatPage }) => ({ default: ChatPage })),
-)
 const AstrologersPage = lazy(() =>
   import("../pages/AstrologersPage").then(({ AstrologersPage }) => ({
     default: AstrologersPage,
@@ -76,25 +72,6 @@ const NotFoundPage = lazy(() =>
   import("../pages/NotFoundPage").then(({ NotFoundPage }) => ({
     default: NotFoundPage,
   })),
-)
-const ConsultationsPage = lazy(() =>
-  import("../pages/ConsultationsPage").then(({ ConsultationsPage }) => ({
-    default: ConsultationsPage,
-  })),
-)
-const ConsultationWizardPage = lazy(() =>
-  import("../pages/ConsultationWizardPage").then(
-    ({ ConsultationWizardPage }) => ({
-      default: ConsultationWizardPage,
-    }),
-  ),
-)
-const ConsultationResultPage = lazy(() =>
-  import("../pages/ConsultationResultPage").then(
-    ({ ConsultationResultPage }) => ({
-      default: ConsultationResultPage,
-    }),
-  ),
 )
 const HelpPage = lazy(() => import("../pages/HelpPage"))
 const EnterpriseDashboardPage = lazy(() =>
@@ -155,18 +132,6 @@ const AdminEntitlementsPage = lazy(() =>
     }),
   ),
 )
-const AdminAiGenerationsPage = lazy(() =>
-  import("../pages/admin/AdminAiGenerationsPage").then(
-    ({ AdminAiGenerationsPage }) => ({
-      default: AdminAiGenerationsPage,
-    }),
-  ),
-)
-const AdminPromptsPage = lazy(() =>
-  import("../pages/admin/AdminPromptsPage").then(({ AdminPromptsPage }) => ({
-    default: AdminPromptsPage,
-  })),
-)
 const AdminContentPage = lazy(() =>
   import("../pages/admin/AdminContentPage").then(({ AdminContentPage }) => ({
     default: AdminContentPage,
@@ -222,11 +187,6 @@ export function RouteLoadingFallback() {
 /** Enveloppe un ecran charge a la demande dans une limite Suspense locale. */
 function lazyElement(element: ReactNode) {
   return <Suspense fallback={<RouteLoadingFallback />}>{element}</Suspense>
-}
-
-/** Enfant de route pour les sections prompts : le rendu réel est entièrement dans `AdminPromptsPage`. */
-function AdminPromptsRouteSlot() {
-  return null
 }
 
 export const routes: RouteObject[] = [
@@ -297,38 +257,12 @@ export const routes: RouteObject[] = [
             element: lazyElement(<BillingCancelPage />),
           },
           {
-            path: "chat",
-            element: lazyElement(<ChatPage />),
-          },
-          {
-            path: "chat/:conversationId",
-            element: lazyElement(<ChatPage />),
-          },
-          {
             path: "astrologers",
             element: lazyElement(<AstrologersPage />),
           },
           {
             path: "astrologers/:id",
             element: lazyElement(<AstrologerProfilePage />),
-          },
-          {
-            path: "consultations",
-            element: <ConsultationLayout />,
-            children: [
-              {
-                index: true,
-                element: lazyElement(<ConsultationsPage />),
-              },
-              {
-                path: "new",
-                element: lazyElement(<ConsultationWizardPage />),
-              },
-              {
-                path: "result",
-                element: lazyElement(<ConsultationResultPage />),
-              },
-            ],
           },
           {
             path: "settings",
@@ -417,30 +351,6 @@ export const routes: RouteObject[] = [
               {
                 path: "entitlements",
                 element: lazyElement(<AdminEntitlementsPage />),
-              },
-              {
-                path: "ai-generations",
-                element: lazyElement(<AdminAiGenerationsPage />),
-              },
-              {
-                path: "prompts",
-                element: lazyElement(<AdminPromptsPage />),
-                children: [
-                  { index: true, element: <Navigate to="catalog" replace /> },
-                  { path: "catalog", element: <AdminPromptsRouteSlot /> },
-                  { path: "archive", element: <AdminPromptsRouteSlot /> },
-                  { path: "release", element: <AdminPromptsRouteSlot /> },
-                  { path: "consumption", element: <AdminPromptsRouteSlot /> },
-                  { path: "personas", element: <AdminPromptsRouteSlot /> },
-                  {
-                    path: "sample-payloads",
-                    element: <AdminPromptsRouteSlot />,
-                  },
-                  {
-                    path: "*",
-                    element: <Navigate to="/admin/prompts/catalog" replace />,
-                  },
-                ],
               },
               {
                 path: "content",

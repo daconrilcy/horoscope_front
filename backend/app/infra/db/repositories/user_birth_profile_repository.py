@@ -20,7 +20,11 @@ class UserBirthProfileRepository:
     def upsert(
         self,
         user_id: int,
-        birth_date: date,
+        birth_date: date | None,
+        birth_year: int | None,
+        birth_month: int | None,
+        birth_day: int | None,
+        birth_date_precision: str,
         birth_time: str | None,
         birth_place: str,
         birth_timezone: str,
@@ -42,6 +46,10 @@ class UserBirthProfileRepository:
             model = UserBirthProfileModel(
                 user_id=user_id,
                 birth_date=birth_date,
+                birth_year=birth_year,
+                birth_month=birth_month,
+                birth_day=birth_day,
+                birth_date_precision=birth_date_precision,
                 birth_time=birth_time,
                 birth_place=birth_place,
                 birth_timezone=birth_timezone,
@@ -62,6 +70,10 @@ class UserBirthProfileRepository:
             return model
 
         model.birth_date = birth_date
+        model.birth_year = birth_year
+        model.birth_month = birth_month
+        model.birth_day = birth_day
+        model.birth_date_precision = birth_date_precision
         model.birth_time = birth_time
         model.birth_place = birth_place
         model.birth_timezone = birth_timezone

@@ -6,10 +6,6 @@ import re
 
 from app.core.sensitive_data import DataCategory
 
-ADMIN_MANUAL_LLM_EXECUTE_SURFACE = "admin_catalog_manual_execute_sample"
-ADMIN_MANUAL_EXECUTE_RESPONSE_HEADER = "X-Admin-Manual-Llm-Execute"
-ADMIN_MANUAL_EXECUTE_ROUTE_PATH = "/catalog/{manifest_entry_id}/execute-sample"
-
 VALID_VIEWS: frozenset[str] = frozenset({"user", "subscription", "feature"})
 MAX_PAGE_SIZE = 100
 DEFAULT_DRILLDOWN_LIMIT = 50
@@ -23,23 +19,7 @@ BLOCKED_CATEGORIES: frozenset[DataCategory] = frozenset(
     }
 )
 
-FEATURES_TO_QUERY: tuple[str, ...] = (
-    "astrologer_chat",
-    "thematic_consultation",
-    "natal_chart_long",
-    "natal_chart_short",
-    "horoscope_daily",
-)
-
-LEGACY_USE_CASE_KEYS_REMOVED: frozenset[str] = frozenset(
-    {
-        "daily_prediction",
-        "horoscope_daily_free",
-        "horoscope_daily_full",
-        "chat",
-        "chat_astrologer",
-    }
-)
+FEATURES_TO_QUERY: tuple[str, ...] = ("horoscope_daily",)
 
 PDF_TEMPLATE_CONFIG_DOC = (
     "Optional runtime config for PDF export. "
@@ -67,20 +47,10 @@ VALID_RESOLUTION_SOURCES: frozenset[str] = frozenset(
     }
 )
 
-CONSULTATION_TYPE_ALIASES: dict[str, str] = {
-    "work": "career",
-    "relation": "relationship",
-}
-
 DEFAULT_CONFIG_TEXTS: tuple[dict[str, str], ...] = (
     {
         "key": "paywall.daily.locked_section",
         "value": "Passez premium pour debloquer l'analyse complete de la journee.",
-        "category": "paywall",
-    },
-    {
-        "key": "paywall.natal.upgrade_cta",
-        "value": "Activez le theme complet et comparez plusieurs astrologues.",
         "category": "paywall",
     },
     {
@@ -92,22 +62,5 @@ DEFAULT_CONFIG_TEXTS: tuple[dict[str, str], ...] = (
         "key": "marketing.in_app.welcome",
         "value": "Explorez vos tendances du moment avec un guidage plus precis.",
         "category": "marketing",
-    },
-)
-
-DEFAULT_EDITORIAL_TEMPLATES: tuple[dict[str, object], ...] = (
-    {
-        "template_code": "daily_overview",
-        "title": "Daily overview",
-        "content": "<intro>\n<momentum>\n<advice>",
-        "expected_tags": ["intro", "momentum", "advice"],
-        "example_render": "Intro concise puis momentum et un conseil actionnable.",
-    },
-    {
-        "template_code": "natal_unlock",
-        "title": "Natal unlock",
-        "content": "<context>\n<insights>\n<next_step>",
-        "expected_tags": ["context", "insights", "next_step"],
-        "example_render": "Contexte natal suivi de deux insights et d'une recommandation.",
     },
 )

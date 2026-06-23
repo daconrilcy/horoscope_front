@@ -143,7 +143,7 @@ export function AdminEntitlementsPage() {
                         {!isEditing && hoveredCell === key && (
                           <div className="cell-tooltip">
                             <div className="tooltip-row"><strong>Mode:</strong> {cell.access_mode}</div>
-                            {cell.variant_code && <div className="tooltip-row"><strong>LLM Variant:</strong> {cell.variant_code}</div>}
+                            {cell.variant_code && <div className="tooltip-row"><strong>Variant:</strong> {cell.variant_code}</div>}
                             {cell.quota_limit !== null && <div className="tooltip-row"><strong>Limite:</strong> {cell.quota_limit} ({cell.period})</div>}
                             <div className="tooltip-row"><strong>Activé:</strong> {cell.is_enabled ? "Oui" : "Non"}</div>
                           </div>
@@ -163,7 +163,7 @@ export function AdminEntitlementsPage() {
         <div className="rules-grid">
           <div className="rule-card">
             <h4>Édition Restreinte</h4>
-            <p>Seuls le <strong>mode d'accès</strong>, la <strong>limite de quota</strong> et le flag <strong>is_enabled</strong> sont modifiables ici. Le variant LLM est géré dans la section Prompts.</p>
+            <p>Seuls le <strong>mode d'accès</strong>, la <strong>limite de quota</strong> et le flag <strong>is_enabled</strong> sont modifiables ici.</p>
           </div>
           <div className="rule-card">
             <h4>Audit Trail</h4>

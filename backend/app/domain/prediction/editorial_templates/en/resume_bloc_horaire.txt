@@ -1,1 +1,0 @@
-From {start_time} to {end_time}, {tone_label} mood — {categories_labels}.

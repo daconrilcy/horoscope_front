@@ -146,8 +146,8 @@ export function AdminSettingsPage() {
 
           <div className="export-card">
             <div className="export-info">
-              <h4>Générations LLM</h4>
-              <p>Volumes, tokens, latence et erreurs (sans contenu).</p>
+              <h4>Jobs Astral</h4>
+              <p>Volumes, latence et erreurs (sans contenu).</p>
             </div>
             {canExport ? (
               <button className="action-button" onClick={() => setActiveExport("generations")}>

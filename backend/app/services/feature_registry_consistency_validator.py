@@ -2,12 +2,6 @@
 
 from app.services.b2b.api_entitlement_gate import B2BApiEntitlementGate
 from app.services.entitlement import feature_scope_registry
-from app.services.entitlement.chat_entitlement_gate import ChatEntitlementGate
-from app.services.entitlement.natal_chart_long_entitlement_gate import NatalChartLongEntitlementGate
-from app.services.entitlement.thematic_consultation_entitlement_gate import (
-    ThematicConsultationEntitlementGate,
-)
-from app.services.transit_projection.access_gate import TRANSIT_PROJECTION_FEATURE_CODE
 
 
 class FeatureRegistryConsistencyError(ValueError):
@@ -19,27 +13,12 @@ class FeatureRegistryConsistencyValidator:
 
     # Liste canonique attendue : (feature_code, expected_scope)
     EXPECTED_GATE_SCOPES: list[tuple[str, feature_scope_registry.FeatureScope]] = [
-        (ChatEntitlementGate.FEATURE_CODE, feature_scope_registry.FeatureScope.B2C),
-        (
-            ThematicConsultationEntitlementGate.FEATURE_CODE,
-            feature_scope_registry.FeatureScope.B2C,
-        ),
-        (
-            NatalChartLongEntitlementGate.FEATURE_CODE,
-            feature_scope_registry.FeatureScope.B2C,
-        ),
-        (TRANSIT_PROJECTION_FEATURE_CODE, feature_scope_registry.FeatureScope.B2C),
+        ("horoscope_daily", feature_scope_registry.FeatureScope.B2C),
         (B2BApiEntitlementGate.FEATURE_CODE, feature_scope_registry.FeatureScope.B2B),
     ]
 
     # Features metered B2C du seed canonique (static, pas de DB)
-    CANONICAL_B2C_METERED_FEATURES: frozenset[str] = frozenset(
-        {
-            "natal_chart_long",
-            "astrologer_chat",
-            "thematic_consultation",
-        }
-    )
+    CANONICAL_B2C_METERED_FEATURES: frozenset[str] = frozenset({})
 
     @staticmethod
     def _get_registry() -> dict[str, object]:

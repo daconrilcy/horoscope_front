@@ -19,6 +19,7 @@ from app.infra.db.models.product_entitlements import (
     PlanFeatureQuotaModel,
     ResetMode,
 )
+from app.infra.db.models.user import UserModel
 from app.services.billing.service import BillingPlanData, SubscriptionStatusData
 from scripts.migrate_legacy_quota_to_canonical import migrate
 
@@ -50,8 +51,21 @@ def _patch_script_session(monkeypatch: pytest.MonkeyPatch, db_session: Session) 
     )
 
 
+def _seed_user(db_session: Session, user_id: int) -> None:
+    """Crée l'utilisateur requis par les contraintes FK des usages legacy."""
+    db_session.add(
+        UserModel(
+            id=user_id,
+            email=f"user-{user_id}@example.test",
+            password_hash="test",
+            role="user",
+        )
+    )
+    db_session.flush()
+
+
 def _seed_chat_feature(db_session: Session) -> FeatureCatalogModel:
-    feature = FeatureCatalogModel(feature_code="astrologer_chat", feature_name="Astrologer Chat")
+    feature = FeatureCatalogModel(feature_code="horoscope_daily", feature_name="Horoscope Daily")
     db_session.add(feature)
     db_session.flush()
     return feature
@@ -74,7 +88,7 @@ def _seed_plan(
     db_session.flush()
 
     feature = db_session.scalar(
-        select(FeatureCatalogModel).where(FeatureCatalogModel.feature_code == "astrologer_chat")
+        select(FeatureCatalogModel).where(FeatureCatalogModel.feature_code == "horoscope_daily")
     )
     if access_mode is None or feature is None:
         return plan
@@ -111,6 +125,7 @@ def test_migrate_counts_no_binding_as_anomaly(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     _patch_script_session(monkeypatch, db_session)
+    _seed_user(db_session, 42)
     _seed_chat_feature(db_session)
     _seed_plan(db_session, plan_code="basic", access_mode=None)
     db_session.add(
@@ -140,6 +155,7 @@ def test_migrate_skips_disabled_bindings_without_anomaly(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     _patch_script_session(monkeypatch, db_session)
+    _seed_user(db_session, 7)
     _seed_chat_feature(db_session)
     _seed_plan(db_session, plan_code="free", access_mode=AccessMode.DISABLED)
     db_session.add(
@@ -167,6 +183,7 @@ def test_migrate_monthly_uses_current_window_by_default(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     _patch_script_session(monkeypatch, db_session)
+    _seed_user(db_session, 99)
     _seed_chat_feature(db_session)
     _seed_plan(
         db_session,
@@ -198,7 +215,7 @@ def test_migrate_monthly_uses_current_window_by_default(
     counter = db_session.scalar(
         select(FeatureUsageCounterModel).where(
             FeatureUsageCounterModel.user_id == 99,
-            FeatureUsageCounterModel.feature_code == "astrologer_chat",
+            FeatureUsageCounterModel.feature_code == "horoscope_daily",
             FeatureUsageCounterModel.period_unit == PeriodUnit.MONTH,
         )
     )

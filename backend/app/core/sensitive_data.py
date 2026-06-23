@@ -12,15 +12,13 @@ class DataCategory(str, enum.Enum):
     TECHNICAL_CORRELATION_IDENTIFIER = "technical_correlation_identifier"
     CORRELABLE_BUSINESS_IDENTIFIER = "correlable_business_identifier"
     USER_AUTHORED_CONTENT = "user_authored_content"
-    DERIVED_SENSITIVE_DOMAIN_DATA = "derived_sensitive_domain_data"
+    LOCATION_OR_BIRTH_DATA = "location_or_birth_data"
     OPERATIONAL_METADATA = "operational_metadata"
 
 
 class Sink(str, enum.Enum):
     STRUCTURED_LOGS = "structured_logs"
     OBS_SNAPSHOT = "obs_snapshot"
-    LLM_CALL_LOGS = "llm_call_logs"
-    LLM_REPLAY_SNAPSHOTS = "llm_replay_snapshots"
     ADMIN_API = "admin_api"
     AUDIT_TRAIL = "audit_trail"
 
@@ -89,31 +87,20 @@ OPERATIONAL_FIELDS: Set[str] = {
     "input_ref",
     "input_schema_version",
     "input_key_hashes",
-    "prompt_version_id",
-    "prompt_version",
-    "prompt_ref",
-    "prompt_snapshot_ref",
     "answer_id",
     "answer_type",
-    "projection_version",
-    "projection_hash",
-    "llm_input_version",
-    "llm_input_hash",
     "grounding_status",
     "evidence_refs",
-    "persona_id",
     "assembly_id",
     "status",
     "attempt",
     "error_code",
     "input_hash",  # SHA-256 hash is allowed for correlation (AC12)
-    "birth_data_ref_hash",
     "version_identity",
     "provenance",
     "redaction_state",
     "payload_boundary",
     "diff_summary",
-    "replay_attempt_id",
     "diagnostics_ref",
     "audit_ref",
     "correlation_ref",
@@ -126,10 +113,8 @@ OPERATIONAL_FIELDS: Set[str] = {
     "start",
     "end",
     "content_key",
-    "template_code",
     "flag_code",
     "rule_code",
-    "persona_name",
     "gesture_type",
     "reason",
     "account_id",
@@ -156,11 +141,9 @@ OPERATIONAL_FIELDS: Set[str] = {
     "decision",
     "diagnostic_scope",
     "node_count",
-    "projection_id",
     "review_status",
     "route_family",
     "subject_reference_hash",
-    "consultation",
 }
 
 # AC2: Matrix sink -> treatment
@@ -171,7 +154,7 @@ SINK_POLICY: Dict[Sink, Dict[DataCategory, PolicyAction]] = {
         DataCategory.TECHNICAL_CORRELATION_IDENTIFIER: PolicyAction.ALLOWED,
         DataCategory.CORRELABLE_BUSINESS_IDENTIFIER: PolicyAction.MASKED,
         DataCategory.USER_AUTHORED_CONTENT: PolicyAction.REDACED,
-        DataCategory.DERIVED_SENSITIVE_DOMAIN_DATA: PolicyAction.REDACED,
+        DataCategory.LOCATION_OR_BIRTH_DATA: PolicyAction.REDACED,
         DataCategory.OPERATIONAL_METADATA: PolicyAction.ALLOWED,
     },
     Sink.OBS_SNAPSHOT: {
@@ -180,25 +163,7 @@ SINK_POLICY: Dict[Sink, Dict[DataCategory, PolicyAction]] = {
         DataCategory.TECHNICAL_CORRELATION_IDENTIFIER: PolicyAction.ALLOWED,
         DataCategory.CORRELABLE_BUSINESS_IDENTIFIER: PolicyAction.FORBIDDEN,
         DataCategory.USER_AUTHORED_CONTENT: PolicyAction.FORBIDDEN,
-        DataCategory.DERIVED_SENSITIVE_DOMAIN_DATA: PolicyAction.FORBIDDEN,
-        DataCategory.OPERATIONAL_METADATA: PolicyAction.ALLOWED,
-    },
-    Sink.LLM_CALL_LOGS: {
-        DataCategory.SECRET_CREDENTIAL: PolicyAction.FORBIDDEN,
-        DataCategory.DIRECT_IDENTIFIER: PolicyAction.FORBIDDEN,
-        DataCategory.TECHNICAL_CORRELATION_IDENTIFIER: PolicyAction.ALLOWED,
-        DataCategory.CORRELABLE_BUSINESS_IDENTIFIER: PolicyAction.HASHED,
-        DataCategory.USER_AUTHORED_CONTENT: PolicyAction.HASHED,
-        DataCategory.DERIVED_SENSITIVE_DOMAIN_DATA: PolicyAction.HASHED,
-        DataCategory.OPERATIONAL_METADATA: PolicyAction.ALLOWED,
-    },
-    Sink.LLM_REPLAY_SNAPSHOTS: {
-        DataCategory.SECRET_CREDENTIAL: PolicyAction.FORBIDDEN,
-        DataCategory.DIRECT_IDENTIFIER: PolicyAction.HASHED,
-        DataCategory.TECHNICAL_CORRELATION_IDENTIFIER: PolicyAction.ALLOWED,
-        DataCategory.CORRELABLE_BUSINESS_IDENTIFIER: PolicyAction.HASHED,
-        DataCategory.USER_AUTHORED_CONTENT: PolicyAction.HASHED,
-        DataCategory.DERIVED_SENSITIVE_DOMAIN_DATA: PolicyAction.HASHED,
+        DataCategory.LOCATION_OR_BIRTH_DATA: PolicyAction.FORBIDDEN,
         DataCategory.OPERATIONAL_METADATA: PolicyAction.ALLOWED,
     },
     Sink.ADMIN_API: {
@@ -207,7 +172,7 @@ SINK_POLICY: Dict[Sink, Dict[DataCategory, PolicyAction]] = {
         DataCategory.TECHNICAL_CORRELATION_IDENTIFIER: PolicyAction.ALLOWED,
         DataCategory.CORRELABLE_BUSINESS_IDENTIFIER: PolicyAction.MASKED,
         DataCategory.USER_AUTHORED_CONTENT: PolicyAction.REDACED,
-        DataCategory.DERIVED_SENSITIVE_DOMAIN_DATA: PolicyAction.REDACED,
+        DataCategory.LOCATION_OR_BIRTH_DATA: PolicyAction.REDACED,
         DataCategory.OPERATIONAL_METADATA: PolicyAction.ALLOWED,
     },
     Sink.AUDIT_TRAIL: {
@@ -216,7 +181,7 @@ SINK_POLICY: Dict[Sink, Dict[DataCategory, PolicyAction]] = {
         DataCategory.TECHNICAL_CORRELATION_IDENTIFIER: PolicyAction.ALLOWED,
         DataCategory.CORRELABLE_BUSINESS_IDENTIFIER: PolicyAction.MASKED,  # Medium Finding fix
         DataCategory.USER_AUTHORED_CONTENT: PolicyAction.FORBIDDEN,
-        DataCategory.DERIVED_SENSITIVE_DOMAIN_DATA: PolicyAction.FORBIDDEN,
+        DataCategory.LOCATION_OR_BIRTH_DATA: PolicyAction.FORBIDDEN,
         DataCategory.OPERATIONAL_METADATA: PolicyAction.ALLOWED,
     },
 }
@@ -242,22 +207,18 @@ FIELD_CLASSIFICATION: Dict[str, DataCategory] = {
     "message": DataCategory.USER_AUTHORED_CONTENT,
     "messages": DataCategory.USER_AUTHORED_CONTENT,
     "question": DataCategory.USER_AUTHORED_CONTENT,
-    "prompt": DataCategory.USER_AUTHORED_CONTENT,
     "raw_rejected_answer": DataCategory.USER_AUTHORED_CONTENT,
     "raw_output": DataCategory.USER_AUTHORED_CONTENT,
     "structured_output": DataCategory.USER_AUTHORED_CONTENT,
-    "birth_data": DataCategory.DERIVED_SENSITIVE_DOMAIN_DATA,
-    "birth_date": DataCategory.DERIVED_SENSITIVE_DOMAIN_DATA,
-    "birthdate": DataCategory.DERIVED_SENSITIVE_DOMAIN_DATA,
-    "birth_time": DataCategory.DERIVED_SENSITIVE_DOMAIN_DATA,
-    "birth_place": DataCategory.DERIVED_SENSITIVE_DOMAIN_DATA,
-    "latitude": DataCategory.DERIVED_SENSITIVE_DOMAIN_DATA,
-    "longitude": DataCategory.DERIVED_SENSITIVE_DOMAIN_DATA,
-    "birth_lat": DataCategory.DERIVED_SENSITIVE_DOMAIN_DATA,
-    "birth_lon": DataCategory.DERIVED_SENSITIVE_DOMAIN_DATA,
-    "natal_data": DataCategory.DERIVED_SENSITIVE_DOMAIN_DATA,
-    "natal_chart_summary": DataCategory.DERIVED_SENSITIVE_DOMAIN_DATA,
-    "chart_json": DataCategory.DERIVED_SENSITIVE_DOMAIN_DATA,
+    "birth_data": DataCategory.LOCATION_OR_BIRTH_DATA,
+    "birth_date": DataCategory.LOCATION_OR_BIRTH_DATA,
+    "birthdate": DataCategory.LOCATION_OR_BIRTH_DATA,
+    "birth_time": DataCategory.LOCATION_OR_BIRTH_DATA,
+    "birth_place": DataCategory.LOCATION_OR_BIRTH_DATA,
+    "latitude": DataCategory.LOCATION_OR_BIRTH_DATA,
+    "longitude": DataCategory.LOCATION_OR_BIRTH_DATA,
+    "birth_lat": DataCategory.LOCATION_OR_BIRTH_DATA,
+    "birth_lon": DataCategory.LOCATION_OR_BIRTH_DATA,
 }
 
 
@@ -279,11 +240,11 @@ def classify_field(field_name: str) -> DataCategory:
     if any(s in field_lower for s in ("id", "user", "target", "profile", "account")):
         return DataCategory.CORRELABLE_BUSINESS_IDENTIFIER
 
-    if any(s in field_lower for s in ("content", "text", "msg", "prompt", "output", "input")):
+    if any(s in field_lower for s in ("content", "text", "msg", "output", "input")):
         return DataCategory.USER_AUTHORED_CONTENT
 
-    if any(s in field_lower for s in ("birth", "natal", "chart", "astro")):
-        return DataCategory.DERIVED_SENSITIVE_DOMAIN_DATA
+    if any(s in field_lower for s in ("birth", "latitude", "longitude")):
+        return DataCategory.LOCATION_OR_BIRTH_DATA
 
     # Default to USER_AUTHORED_CONTENT for safety if it looks like text, or DIRECT_IDENTIFIER
     return DataCategory.USER_AUTHORED_CONTENT

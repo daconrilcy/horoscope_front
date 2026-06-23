@@ -57,27 +57,21 @@ def test_compute_upgrade_hints_free_user(mock_next_plan, db_session):
         plan_code="free",
         entitlements={
             "horoscope_daily": _make_access(granted=True, variant_code="summary_only"),
-            "astrologer_chat": _make_access(granted=False),
-            "natal_chart_long": _make_access(granted=True, variant_code="free_short"),
-            "natal_chart_short": _make_access(granted=True),
         },
     )
 
     hints = EffectiveEntitlementResolverService.compute_upgrade_hints(snapshot, db_session)
 
-    assert len(hints) == 3
+    assert len(hints) == 1
     codes = [h.feature_code for h in hints]
-    assert "astrologer_chat" in codes
     assert "horoscope_daily" in codes
-    assert "natal_chart_long" in codes
-    assert "natal_chart_short" not in codes
 
-    chat_hint = next(h for h in hints if h.feature_code == "astrologer_chat")
-    assert chat_hint.current_plan_code == "free"
-    assert chat_hint.target_plan_code == "basic"
-    assert chat_hint.benefit_key == "upgrade.astrologer_chat.unlimited_messages"
-    assert chat_hint.cta_variant == "banner"
-    assert chat_hint.priority == 10
+    hint = next(h for h in hints if h.feature_code == "horoscope_daily")
+    assert hint.current_plan_code == "free"
+    assert hint.target_plan_code == "basic"
+    assert hint.benefit_key == "upgrade.horoscope_daily.full_access"
+    assert hint.cta_variant == "inline"
+    assert hint.priority == 20
 
 
 def test_compute_upgrade_hints_no_next_plan(db_session):

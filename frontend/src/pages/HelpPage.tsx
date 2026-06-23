@@ -4,9 +4,7 @@ import { useTranslation } from "@i18n"
 import { PageLayout } from "@layouts/PageLayout"
 import {
   LayoutDashboard,
-  MessageSquare,
   Sparkles,
-  ScrollText,
   ChevronRight,
   ArrowRight,
   CheckCircle2,
@@ -48,9 +46,7 @@ export default function HelpPage() {
 
   const shortcuts = [
     { icon: LayoutDashboard, key: "dashboard", to: "/dashboard/horoscope" },
-    { icon: MessageSquare, key: "chat", to: "/chat" },
     { icon: Sparkles, key: "natal", to: "/natal" },
-    { icon: ScrollText, key: "consultations", to: "/consultations" },
   ] as const
 
   return (

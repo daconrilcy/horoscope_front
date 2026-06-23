@@ -9,9 +9,7 @@ from app.services.entitlement.feature_scope_registry import (
 
 
 def test_known_b2c_feature_codes():
-    assert get_feature_scope("astrologer_chat") == FeatureScope.B2C
-    assert get_feature_scope("thematic_consultation") == FeatureScope.B2C
-    assert get_feature_scope("natal_chart_long") == FeatureScope.B2C
+    assert get_feature_scope("horoscope_daily") == FeatureScope.B2C
 
 
 def test_known_b2b_feature_codes():

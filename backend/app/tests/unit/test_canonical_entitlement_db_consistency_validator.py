@@ -31,9 +31,7 @@ def db():
 
 def _seed_consistent_db(db: Session) -> None:
     mandatory_metered_features = {
-        "astrologer_chat",
-        "thematic_consultation",
-        "natal_chart_long",
+        "horoscope_daily",
         "b2b_api_access",
     }
     features = []
@@ -65,7 +63,7 @@ def _seed_consistent_db(db: Session) -> None:
     db.flush()
 
     # B2C feature bound to B2C plan (QUOTA with quota)
-    chat_feature = next(f for f in features if f.feature_code == "astrologer_chat")
+    chat_feature = next(f for f in features if f.feature_code == "horoscope_daily")
     binding_b2c = PlanFeatureBindingModel(
         plan_id=b2c_plan.id,
         feature_id=chat_feature.id,
@@ -111,7 +109,7 @@ def test_validator_fails_feature_missing_from_catalog(db):
 
 def test_validator_fails_feature_inactive_in_catalog(db):
     _seed_consistent_db(db)
-    feature = db.query(FeatureCatalogModel).filter_by(feature_code="astrologer_chat").one()
+    feature = db.query(FeatureCatalogModel).filter_by(feature_code="horoscope_daily").one()
     feature.is_active = False
     db.commit()
 
@@ -142,7 +140,7 @@ def test_validator_fails_b2b_feature_bound_to_b2c_plan(db):
 
 def test_validator_fails_b2c_feature_bound_to_b2b_plan(db):
     _seed_consistent_db(db)
-    b2c_feature = db.query(FeatureCatalogModel).filter_by(feature_code="astrologer_chat").one()
+    b2c_feature = db.query(FeatureCatalogModel).filter_by(feature_code="horoscope_daily").one()
     b2b_plan = db.query(PlanCatalogModel).filter_by(audience=Audience.B2B).first()
 
     db.add(
@@ -162,17 +160,9 @@ def test_validator_fails_b2c_feature_bound_to_b2b_plan(db):
 
 def test_validator_fails_quota_binding_without_quota(db):
     _seed_consistent_db(db)
-    feature = db.query(FeatureCatalogModel).filter_by(feature_code="thematic_consultation").one()
-    b2c_plan = db.query(PlanCatalogModel).filter_by(audience=Audience.B2C).first()
-
-    db.add(
-        PlanFeatureBindingModel(
-            plan_id=b2c_plan.id,
-            feature_id=feature.id,
-            access_mode=AccessMode.QUOTA,
-            is_enabled=True,
-        )
-    )
+    binding = db.query(PlanFeatureBindingModel).filter_by(access_mode=AccessMode.QUOTA).one()
+    for quota in list(binding.quotas):
+        db.delete(quota)
     db.commit()
 
     with pytest.raises(CanonicalEntitlementDbConsistencyError) as excinfo:
@@ -202,27 +192,8 @@ def test_validator_fails_unlimited_binding_with_quota(db):
 
 def test_validator_fails_disabled_binding_with_quota(db):
     _seed_consistent_db(db)
-    feature = db.query(FeatureCatalogModel).filter_by(feature_code="thematic_consultation").one()
-    b2c_plan = db.query(PlanCatalogModel).filter_by(audience=Audience.B2C).first()
-
-    binding = PlanFeatureBindingModel(
-        plan_id=b2c_plan.id,
-        feature_id=feature.id,
-        access_mode=AccessMode.DISABLED,
-        is_enabled=True,
-    )
-    db.add(binding)
-    db.flush()
-    db.add(
-        PlanFeatureQuotaModel(
-            plan_feature_binding_id=binding.id,
-            quota_key="parasite",
-            quota_limit=10,
-            period_unit=PeriodUnit.DAY,
-            period_value=1,
-            reset_mode=ResetMode.CALENDAR,
-        )
-    )
+    binding = db.query(PlanFeatureBindingModel).filter_by(access_mode=AccessMode.QUOTA).one()
+    binding.access_mode = AccessMode.DISABLED
     db.commit()
 
     with pytest.raises(CanonicalEntitlementDbConsistencyError) as excinfo:

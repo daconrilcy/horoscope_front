@@ -1,5 +1,5 @@
 """
-Migration one-shot : user_daily_quota_usages -> feature_usage_counters pour astrologer_chat.
+Migration one-shot : user_daily_quota_usages -> feature_usage_counters pour horoscope_daily.
 
 Le script résout le quota canonique courant de chaque user :
 - basic (day/calendar) -> migration 1:1 par fenêtre journalière
@@ -41,7 +41,7 @@ from app.services.quota.window_resolver import QuotaWindow, QuotaWindowResolver
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
 
-FEATURE_CODE = "astrologer_chat"
+FEATURE_CODE = "horoscope_daily"
 QUOTA_KEY = "messages"
 
 ResolutionStatus = Literal["quota", "disabled", "no_binding", "missing_catalog"]

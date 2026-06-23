@@ -155,13 +155,7 @@ def get_plans_catalog(
     sorted_plans = sorted(plans, key=lambda p: plan_order.get(p.plan_code, 99))
 
     # 4. Charger toutes les features du catalogue pour garantir l'exhaustivité (AC1)
-    feature_order = {
-        "natal_chart_short": 0,
-        "natal_chart_long": 1,
-        "astrologer_chat": 2,
-        "thematic_consultation": 3,
-        "horoscope_daily": 4,
-    }
+    feature_order = {"horoscope_daily": 0}
     all_features = db.scalars(
         select(FeatureCatalogModel).where(
             FeatureCatalogModel.feature_code.in_(feature_order.keys())

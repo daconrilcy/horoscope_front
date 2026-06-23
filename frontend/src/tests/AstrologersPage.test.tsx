@@ -62,7 +62,7 @@ function renderAstrologersPage() {
         <Routes>
           <Route path="/astrologers" element={<AstrologersPage />} />
           <Route path="/astrologers/:id" element={<AstrologerProfilePage />} />
-          <Route path="/chat" element={<div>Chat Page</div>} />
+          <Route path="/natal" element={<div>Natal Page</div>} />
         </Routes>
       </MemoryRouter>
     </QueryClientProvider>
@@ -76,10 +76,7 @@ function renderProfilePage(id: string) {
         <Routes>
           <Route path="/astrologers" element={<AstrologersPage />} />
           <Route path="/astrologers/:id" element={<AstrologerProfilePage />} />
-          <Route path="/chat" element={<div>Chat Page</div>} />
-          <Route path="/chat/:conversationId" element={<div>Chat Conversation</div>} />
           <Route path="/natal" element={<div>Natal Page</div>} />
-          <Route path="/consultations/new" element={<div>Consultation Wizard</div>} />
         </Routes>
       </MemoryRouter>
     </QueryClientProvider>
@@ -358,7 +355,7 @@ describe("AstrologersPage", () => {
       expect(mockNavigate).toHaveBeenCalledWith(`/astrologers/${encodeURIComponent("1")}`)
     })
 
-    it("starts a chat when clicking the primary catalogue CTA", () => {
+    it("starts a natal reading when clicking the primary catalogue CTA", () => {
       mockUseAstrologers.mockReturnValue({
         data: mockAstrologersList,
         isPending: false,
@@ -369,7 +366,7 @@ describe("AstrologersPage", () => {
 
       fireEvent.click(screen.getByRole("button", { name: "Commencer avec Luna" }))
 
-      expect(mockNavigate).toHaveBeenCalledWith(`/chat?personaId=${encodeURIComponent("1")}`)
+      expect(mockNavigate).toHaveBeenCalledWith(`/natal?personaId=${encodeURIComponent("1")}`)
     })
 
     it("uses encodeURIComponent for profile navigation with valid ID formats", () => {
@@ -497,7 +494,7 @@ describe("AstrologerProfilePage", () => {
       expect(screen.getByText("Thème natal")).toBeInTheDocument()
       expect(screen.getByText(/Luna propose une astrologie centrée sur les émotions/)).toBeInTheDocument()
       expect(screen.getByText("Je vous aide à relire votre thème avec douceur.")).toBeInTheDocument()
-      expect(screen.getAllByRole("button", { name: /Lancer une consultation|Start a consultation/i })[0]).toBeInTheDocument()
+      expect(screen.getAllByRole("button", { name: /Demander mon interprétation|Request my interpretation/i })[0]).toBeInTheDocument()
       expect(screen.getByText("Personnes accompagnées")).toBeInTheDocument()
       expect(screen.getByText(/Marie/)).toBeInTheDocument()
       expect(screen.getByRole("heading", { name: "Avis" })).toBeInTheDocument()
@@ -544,8 +541,8 @@ describe("AstrologerProfilePage", () => {
     })
   })
 
-  describe("AC4: Démarrer conversation", () => {
-    it("creates or resumes chat from the profile CTA", () => {
+  describe("AC4: Démarrer lecture natale", () => {
+    it("starts a natal reading from the profile CTA", () => {
       mockUseAstrologer.mockReturnValue({
         data: mockProfile,
         isPending: false,
@@ -555,13 +552,13 @@ describe("AstrologerProfilePage", () => {
 
       renderProfilePage("1")
 
-      const ctaButton = screen.getByRole("button", { name: /Démarrer un chat|Start a chat/i })
+      const ctaButton = screen.getAllByRole("button", { name: /Demander mon interprétation|Request my interpretation/i })[0]
       fireEvent.click(ctaButton)
 
-      expect(mockNavigate).toHaveBeenCalledWith(`/chat?personaId=${encodeURIComponent("1")}`)
+      expect(mockNavigate).toHaveBeenCalledWith(`/natal?personaId=${encodeURIComponent("1")}`)
     })
 
-    it("resumes the existing conversation when one already exists", () => {
+    it("uses the natal route even when legacy chat state exists", () => {
       const otherProfile = {
         ...mockProfile,
         id: "42",
@@ -581,13 +578,13 @@ describe("AstrologerProfilePage", () => {
 
       renderProfilePage("42")
 
-      const ctaButton = screen.getByRole("button", { name: /Reprendre le chat|Resume chat/i })
+      const ctaButton = screen.getAllByRole("button", { name: /Demander mon interprétation|Request my interpretation/i })[0]
       fireEvent.click(ctaButton)
 
-      expect(mockNavigate).toHaveBeenCalledWith(`/chat/${encodeURIComponent("902")}`)
+      expect(mockNavigate).toHaveBeenCalledWith(`/natal?personaId=${encodeURIComponent("42")}`)
     })
 
-    it("routes natal and consultation CTAs to supported pages", () => {
+    it("routes profile CTAs to the supported natal page", () => {
       const astrologerWithActions = {
         ...mockProfile,
         id: "astro_expert_42",
@@ -607,12 +604,7 @@ describe("AstrologerProfilePage", () => {
       renderProfilePage("astro_expert_42")
 
       fireEvent.click(screen.getByRole("button", { name: /Voir mon interprétation|View my interpretation/i }))
-      expect(mockNavigate).toHaveBeenCalledWith("/natal?interpretationId=321")
-
-      fireEvent.click(screen.getAllByRole("button", { name: /Lancer une consultation|Start a consultation/i })[0])
-      expect(mockNavigate).toHaveBeenCalledWith(
-        `/consultations/new?astrologerId=${encodeURIComponent("astro_expert_42")}`
-      )
+      expect(mockNavigate).toHaveBeenCalledWith(`/natal?personaId=${encodeURIComponent("astro_expert_42")}`)
     })
   })
 

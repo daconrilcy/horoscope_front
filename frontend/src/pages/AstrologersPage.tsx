@@ -84,7 +84,7 @@ export function AstrologersPage() {
   }
 
   const handleStartAstrologer = (expert: Astrologer) => {
-    navigate(`/chat?personaId=${encodeURIComponent(expert.id)}`)
+    navigate(`/natal?personaId=${encodeURIComponent(expert.id)}`)
   }
 
   const handleIntentClick = (intentKey: AstrologerIntentKey) => {

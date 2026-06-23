@@ -224,7 +224,7 @@ describe("SubscriptionSettings", () => {
     expect(screen.getByText(/Résumé de l'abonnement|Subscription snapshot/i)).toBeInTheDocument()
     expect(screen.getByRole("heading", { name: "Premium", level: 3 })).toBeInTheDocument()
     expect(screen.getAllByText(/Pour une expérience complète|For a complete experience/i).length).toBeGreaterThan(0)
-    expect(screen.getAllByText(/Consultations thématiques incluses|Thematic consultations included/i).length).toBeGreaterThan(0)
+    expect(screen.getAllByText(/Horoscope quotidien complet|Full daily horoscope/i).length).toBeGreaterThan(0)
     expect(screen.getByText(/Renouvellement automatique|Auto-renew enabled/i)).toBeInTheDocument()
     expect(screen.getByRole("button", { name: /Voir les formules|Browse plans/i })).toBeInTheDocument()
     expect(screen.queryByText(/tokens/i)).not.toBeInTheDocument()

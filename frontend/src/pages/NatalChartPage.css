@@ -708,6 +708,20 @@
   margin-top: 48px;
 }
 
+.natal-card__json {
+  overflow: auto;
+  max-height: 520px;
+  margin: 20px 0 0;
+  padding: 16px;
+  border: 1px solid var(--premium-card-border);
+  border-radius: var(--radius-md);
+  background: var(--premium-card-bg);
+  color: var(--text-main);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-relaxed);
+  white-space: pre-wrap;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .page-layout.natal-page-container .page-layout__main {

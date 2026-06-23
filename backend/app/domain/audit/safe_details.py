@@ -13,84 +13,12 @@ class BaseSafeAuditDetails(BaseModel):
     model_config = ConfigDict(extra="forbid")  # AC8: Force bounded structure
 
 
-class LlmCallAuditDetails(BaseSafeAuditDetails):
-    """Structure sûre pour les événements liés aux appels LLM."""
-
-    request_id: str
-    log_id: Optional[str] = None
-    prompt_version_id: Optional[str] = None
-    feature: Optional[str] = None
-    subfeature: Optional[str] = None
-    status: str
-    reason: Optional[str] = None
-
-
-class LlmReplayAuditDetails(BaseSafeAuditDetails):
-    """Structure sûre pour les événements de replay LLM."""
-
-    original_request_id: str
-    replay_request_id: str
-    log_id: str
-    status: str
-    diff_summary: Optional[Dict[str, Any]] = None
-
-
-class ReplaySnapshotPurgeAuditDetails(BaseSafeAuditDetails):
-    """Structure sûre pour les événements de purge replay_snapshot_v1."""
-
-    snapshot_id: str
-    call_log_id: str
-    status: str
-    purge_policy: str
-    purged_count: int
-
-
-class ReplaySnapshotActivityAuditDetails(BaseSafeAuditDetails):
-    """Structure sûre pour les événements admin replay_snapshot_v1."""
-
-    action: str
-    status: str
-    snapshot_id: str
-    request_id: str
-    reason: Optional[str] = None
-    diff_summary: Optional[Dict[str, Any]] = None
-
-
-class ReplaySnapshotBulkPurgeAuditDetails(BaseSafeAuditDetails):
-    """Structure sûre pour les événements de purge automatique replay_snapshot_v1."""
-
-    snapshot_type: str
-    status: str
-    purge_policy: str
-    purged_count: int
-
-
 class AdminActionAuditDetails(BaseSafeAuditDetails):
     """Structure sûre pour les actions d’administration génériques."""
 
     action_type: str
     target_id: Optional[str] = None
     change_summary: Optional[str] = None
-
-
-class NatalInterpretationAuditDetails(BaseSafeAuditDetails):
-    """Structure sûre pour les événements d’interprétation natale."""
-
-    target_interpretation_id: int
-    chart_id: int
-    level: str
-    persona_id: Optional[str] = None
-    created_at: str
-    deleted_at: Optional[str] = None
-
-
-class LlmPromptAuditDetails(BaseSafeAuditDetails):
-    """Structure sûre pour les événements de gestion des prompts LLM."""
-
-    use_case_key: str
-    from_version: Optional[str] = None
-    to_version: str
-    action: Optional[str] = None
 
 
 def _normalize_safe_value(value: Any) -> Any:

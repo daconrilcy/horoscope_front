@@ -36,9 +36,6 @@ class UserTokenUsageLogModel(Base):
     tokens_out: Mapped[int] = mapped_column(Integer, nullable=False)
     tokens_total: Mapped[int] = mapped_column(Integer, nullable=False)
     request_id: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
-    llm_call_log_id: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("llm_call_logs.id"), nullable=True
-    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime_provider.utcnow(),
@@ -48,7 +45,6 @@ class UserTokenUsageLogModel(Base):
 
     # Relationships
     user = relationship("UserModel")
-    llm_call_log = relationship("LlmCallLogModel")
 
     __table_args__ = (
         CheckConstraint(

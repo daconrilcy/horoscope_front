@@ -1,7 +1,7 @@
 import {
-  useChatEntitlementFeature,
+  useHoroscopeDailyEntitlementFeature,
   type BillingApiError,
-  type ChatEntitlementUsageState,
+  type HoroscopeDailyEntitlementUsageState,
 } from "@api/billing"
 import { detectLang, type AstrologyLang } from "@i18n/astrology"
 import { settingsTranslations } from "@i18n/settings"
@@ -93,16 +93,16 @@ function getErrorMessage(error: BillingApiError | null, lang: AstrologyLang): st
 export function UsageSettings() {
   const lang = detectLang()
   const t = settingsTranslations.usage[lang]
-  const chatFeature = useChatEntitlementFeature()
+  const dailyFeature = useHoroscopeDailyEntitlementFeature()
 
-  const pageError = chatFeature.error as BillingApiError | null
-  const isLoading = chatFeature.isLoading
-  const isError = chatFeature.isError
+  const pageError = dailyFeature.error as BillingApiError | null
+  const isLoading = dailyFeature.isLoading
+  const isError = dailyFeature.isError
 
-  const usageRows: Array<{ key: string; label: string; data: ChatEntitlementUsageState }> =
-    chatFeature.data == null
+  const usageRows: Array<{ key: string; label: string; data: HoroscopeDailyEntitlementUsageState }> =
+    dailyFeature.data == null
       ? []
-      : chatFeature.data.usage_states
+      : dailyFeature.data.usage_states
           .filter((state) => state.quota_key === "tokens")
           .map((state) => ({
             key: `${state.period_unit}:${state.period_value}`,
@@ -138,7 +138,7 @@ export function UsageSettings() {
               type="button"
               className="settings-tab"
               onClick={() => {
-                void chatFeature.refetch()
+                void dailyFeature.refetch()
               }}
             >
               {t.retry}
@@ -146,7 +146,7 @@ export function UsageSettings() {
           </div>
         )}
 
-        {chatFeature.data && (
+        {dailyFeature.data && (
           <>
             <h3 className="settings-section-title settings-section-title--usage">
               {t.dailyUsage}
@@ -172,7 +172,7 @@ export function UsageSettings() {
           </>
         )}
 
-        {!isLoading && !isError && !chatFeature.data && (
+        {!isLoading && !isError && !dailyFeature.data && (
           <p className="app-state app-state--empty">{t.noData}</p>
         )}
       </section>

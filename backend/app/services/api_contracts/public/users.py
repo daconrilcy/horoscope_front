@@ -2,32 +2,13 @@
 
 from __future__ import annotations
 
-from datetime import datetime
-from threading import Lock
-from time import monotonic
 from typing import Any
 
 from pydantic import BaseModel, Field
 
-from app.services.llm_generation.natal.interpretation_service import (
-    NatalInterpretationData,
-)
-from app.services.user_profile.astro_profile_service import (
-    UserAstroProfileData,
-)
 from app.services.user_profile.birth_profile_service import (
     UserBirthProfileData,
 )
-from app.services.user_profile.natal_chart_service import (
-    UserNatalChartConsistencyData,
-    UserNatalChartMetadata,
-)
-
-_INCONSISTENT_LOG_WINDOW_SECONDS = 60.0
-_INCONSISTENT_LOG_ALWAYS_PER_WINDOW = 10
-_INCONSISTENT_LOG_SAMPLING_RATIO = 0.01
-_inconsistent_log_sampling_lock = Lock()
-_inconsistent_log_sampling_state = {"window_start": monotonic(), "count": 0}
 
 
 class ResponseMeta(BaseModel):
@@ -46,7 +27,11 @@ class UserBirthProfileApiResponse(BaseModel):
 class UserBirthProfileWithAstroData(BaseModel):
     """Contrat Pydantic exposé par l'API."""
 
-    birth_date: str
+    birth_date: str | None
+    birth_year: int | None = None
+    birth_month: int | None = None
+    birth_day: int | None = None
+    birth_date_precision: str = "full"
     birth_time: str | None
     birth_place: str
     birth_place_text: str
@@ -64,7 +49,7 @@ class UserBirthProfileWithAstroData(BaseModel):
     current_lon: float | None = None
     current_location_display: str | None = None
     current_timezone: str | None = None
-    astro_profile: UserAstroProfileData | None = None
+    astro_profile: dict[str, Any] | None = None
 
 
 class UserBirthProfileWithAstroApiResponse(BaseModel):
@@ -74,82 +59,9 @@ class UserBirthProfileWithAstroApiResponse(BaseModel):
     meta: ResponseMeta
 
 
-class NatalChartGenerateRequest(BaseModel):
-    """Contrat Pydantic exposé par l'API."""
-
-    reference_version: str | None = None
-    accurate: bool = False
-    zodiac: str | None = None
-    ayanamsa: str | None = None
-    frame: str | None = None
-    house_system: str | None = None
-    altitude_m: float | None = None
-
-
-class UserNatalChartPublicGenerationData(BaseModel):
-    """Contrat Pydantic public du theme natal genere."""
-
-    chart_id: str
-    result: dict[str, Any]
-    metadata: UserNatalChartMetadata
-
-
-class UserNatalChartPublicReadData(BaseModel):
-    """Contrat Pydantic public du theme natal recharge."""
-
-    chart_id: str
-    result: dict[str, Any]
-    metadata: UserNatalChartMetadata
-    created_at: datetime
-
-
-class UserNatalChartApiResponse(BaseModel):
-    """Contrat Pydantic exposé par l'API."""
-
-    data: UserNatalChartPublicGenerationData
-    meta: ResponseMeta
-
-
-class UserNatalChartReadApiResponse(BaseModel):
-    """Contrat Pydantic exposé par l'API."""
-
-    data: UserNatalChartPublicReadData
-    meta: ResponseMeta
-
-
-class UserNatalChartLatestData(UserNatalChartPublicReadData):
-    """Contrat Pydantic exposé par l'API."""
-
-    interpretation: NatalInterpretationData | None = None
-    astro_profile: UserAstroProfileData | None = None
-
-
-class UserNatalChartLatestApiResponse(BaseModel):
-    """Contrat Pydantic exposé par l'API."""
-
-    data: UserNatalChartLatestData
-    meta: ResponseMeta
-
-
-class UserNatalChartConsistencyApiResponse(BaseModel):
-    """Contrat Pydantic exposé par l'API."""
-
-    data: UserNatalChartConsistencyData
-    meta: ResponseMeta
-
-
-class NatalInterpretationApiResponse(BaseModel):
-    """Contrat Pydantic exposé par l'API."""
-
-    data: NatalInterpretationData
-    meta: ResponseMeta
-
-
 class UserSettingsData(BaseModel):
     """Contrat Pydantic exposé par l'API."""
 
-    astrologer_profile: str
-    default_astrologer_id: str | None = None
     default_language_code: str | None = None
     detected_locale: str | None = None
     detected_country_code: str | None = None
@@ -166,8 +78,6 @@ class UserSettingsApiResponse(BaseModel):
 class UserSettingsPatchRequest(BaseModel):
     """Contrat Pydantic exposé par l'API."""
 
-    astrologer_profile: str | None = None
-    default_astrologer_id: str | None = None
     default_language_code: str | None = Field(default=None, max_length=16)
     detected_locale: str | None = Field(default=None, max_length=64)
     detected_country_code: str | None = Field(default=None, max_length=2)

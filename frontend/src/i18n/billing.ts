@@ -2,8 +2,6 @@ import type { AstrologyLang } from "./astrology"
 
 export type UpgradeBenefitKey =
   | "upgrade.horoscope_daily.full_access"
-  | "upgrade.natal_chart_long.full_interpretation"
-  | "upgrade.astrologer_chat.unlimited_messages"
 
 export const UPGRADE_BENEFIT_LABELS: Record<UpgradeBenefitKey, Record<AstrologyLang, string>> = {
   "upgrade.horoscope_daily.full_access": {
@@ -11,18 +9,6 @@ export const UPGRADE_BENEFIT_LABELS: Record<UpgradeBenefitKey, Record<AstrologyL
     en: "Get full horoscope",
     es: "Obtener el horóscopo completo",
     de: "Vollständiges Horoskop freischalten",
-  },
-  "upgrade.natal_chart_long.full_interpretation": {
-    fr: "Débloquer l'interprétation complète",
-    en: "Unlock full interpretation",
-    es: "Desbloquear la interpretación completa",
-    de: "Vollständige Deutung freischalten",
-  },
-  "upgrade.astrologer_chat.unlimited_messages": {
-    fr: "Échanger sans limite",
-    en: "Chat without limits",
-    es: "Chatear sin límites",
-    de: "Unbegrenzt chatten",
   },
 }
 

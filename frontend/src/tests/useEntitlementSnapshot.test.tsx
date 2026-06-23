@@ -73,7 +73,7 @@ describe("useEntitlementSnapshot hooks", () => {
   it("useFeatureAccess returns the correct access", async () => {
     vi.mocked(authUtils.useAccessTokenSnapshot).mockReturnValue("mock-token")
     const feature: billingApi.FeatureEntitlementResponse = {
-      feature_code: "natal_chart_long",
+      feature_code: "horoscope_daily",
       granted: true,
       reason_code: "granted",
       access_mode: "unlimited",
@@ -88,7 +88,7 @@ describe("useEntitlementSnapshot hooks", () => {
     }
     vi.mocked(billingApi.fetchEntitlementsSnapshot).mockResolvedValue(mockData)
 
-    const { result } = renderHook(() => useFeatureAccess("natal_chart_long"), { wrapper })
+    const { result } = renderHook(() => useFeatureAccess("horoscope_daily"), { wrapper })
 
     await waitFor(() => expect(result.current).toEqual(feature))
   })

@@ -1,36 +1,26 @@
-import { MessageCircle, Layers, Calendar } from 'lucide-react'
+import { Calendar, Sparkles } from 'lucide-react'
 import { ShortcutCard } from './ShortcutCard'
 import type { BadgeColorValue } from './ui'
 import { useAstrologyLabels } from '../i18n/astrology'
 import { translateDashboardPage } from '../i18n/dashboard'
 
 export interface ShortcutsSectionProps {
-  onChatClick?: () => void
-  onConsultationClick?: () => void
+  onNatalClick?: () => void
   onHistoryClick?: () => void
 }
 
-export function ShortcutsSection({ onChatClick, onConsultationClick, onHistoryClick }: ShortcutsSectionProps) {
+export function ShortcutsSection({ onNatalClick, onHistoryClick }: ShortcutsSectionProps) {
   const { lang } = useAstrologyLabels()
   const { activities, shortcuts } = translateDashboardPage(lang)
   const shortcutItems = [
     {
-      key: 'chat',
-      title: shortcuts.chatTitle,
-      subtitle: shortcuts.chatSubtitle,
-      icon: MessageCircle,
-      badgeColor: 'var(--color-badge-chat)',
-      path: '/chat',
+      key: 'natal',
+      title: shortcuts.natalTitle,
+      subtitle: shortcuts.natalSubtitle,
+      icon: Sparkles,
+      badgeColor: 'var(--color-primary)',
+      path: '/natal',
       isOnline: true,
-    },
-    {
-      key: 'session',
-      title: shortcuts.consultationTitle,
-      subtitle: shortcuts.consultationSubtitle,
-      icon: Layers,
-      badgeColor: 'var(--color-badge-consultation)',
-      path: '/consultations',
-      isOnline: false,
     },
     {
       key: 'history',
@@ -42,10 +32,10 @@ export function ShortcutsSection({ onChatClick, onConsultationClick, onHistoryCl
       isOnline: false,
     },
   ] satisfies Array<{
-    key: 'chat' | 'session' | 'history'
+    key: 'natal' | 'history'
     title: string
     subtitle: string
-    icon: typeof MessageCircle
+    icon: typeof Sparkles
     badgeColor: BadgeColorValue
     path: string
     isOnline: boolean
@@ -59,8 +49,7 @@ export function ShortcutsSection({ onChatClick, onConsultationClick, onHistoryCl
       <div className="shortcuts-grid">
         {shortcutItems.map((shortcut) => {
           let handleClick = undefined;
-          if (shortcut.key === 'chat') handleClick = onChatClick;
-          else if (shortcut.key === 'session') handleClick = onConsultationClick;
+          if (shortcut.key === 'natal') handleClick = onNatalClick;
           else if (shortcut.key === 'history') handleClick = onHistoryClick;
 
           return (

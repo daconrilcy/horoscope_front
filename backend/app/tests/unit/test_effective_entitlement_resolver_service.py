@@ -63,9 +63,9 @@ def test_resolve_b2c_user_snapshot_no_plan(db):
         assert snapshot.plan_code == "none"
         assert snapshot.billing_status == "none"
         # Toutes les features B2C doivent être présentes avec reason_code="feature_not_in_plan"
-        assert "astrologer_chat" in snapshot.entitlements
+        assert "horoscope_daily" in snapshot.entitlements
         assert (
-            snapshot.entitlements["astrologer_chat"].reason_code
+            snapshot.entitlements["horoscope_daily"].reason_code
             == EffectiveEntitlementResolverService.REASON_FEATURE_NOT_IN_PLAN
         )
 
@@ -101,7 +101,7 @@ def test_resolve_b2c_user_snapshot_user_not_found(db):
     assert snapshot.plan_code == "none"
     assert snapshot.billing_status == "none"
     assert (
-        snapshot.entitlements["astrologer_chat"].reason_code
+        snapshot.entitlements["horoscope_daily"].reason_code
         == EffectiveEntitlementResolverService.REASON_SUBJECT_NOT_ELIGIBLE
     )
 
@@ -111,7 +111,7 @@ def test_resolve_b2c_user_snapshot_granted_quota(db):
     user = UserModel(id=1, email="test@example.com", password_hash="hash", role="user")
     db.add(user)
     plan = PlanCatalogModel(plan_code="premium", plan_name="Premium", audience=Audience.B2C)
-    feat = FeatureCatalogModel(feature_code="astrologer_chat", feature_name="Chat")
+    feat = FeatureCatalogModel(feature_code="horoscope_daily", feature_name="Chat")
     db.add_all([plan, feat])
     db.commit()
 
@@ -158,7 +158,7 @@ def test_resolve_b2c_user_snapshot_granted_quota(db):
 
         assert snapshot.plan_code == "premium"
         assert snapshot.billing_status == "active"
-        access = snapshot.entitlements["astrologer_chat"]
+        access = snapshot.entitlements["horoscope_daily"]
         assert access.granted is True
         assert access.reason_code == EffectiveEntitlementResolverService.REASON_GRANTED
         assert access.access_mode == "quota"
@@ -218,7 +218,7 @@ def test_resolve_b2c_user_snapshot_past_due_preserves_access(db):
     user = UserModel(id=1, email="test@example.com", password_hash="hash", role="user")
     db.add(user)
     plan = PlanCatalogModel(plan_code="premium", plan_name="Premium", audience=Audience.B2C)
-    feat = FeatureCatalogModel(feature_code="astrologer_chat", feature_name="Chat")
+    feat = FeatureCatalogModel(feature_code="horoscope_daily", feature_name="Chat")
     db.add_all([plan, feat])
     db.commit()
 
@@ -252,7 +252,7 @@ def test_resolve_b2c_user_snapshot_past_due_preserves_access(db):
         snapshot = EffectiveEntitlementResolverService.resolve_b2c_user_snapshot(db, app_user_id=1)
 
         assert snapshot.billing_status == "past_due"
-        access = snapshot.entitlements["astrologer_chat"]
+        access = snapshot.entitlements["horoscope_daily"]
         assert access.granted is True
         assert access.reason_code == EffectiveEntitlementResolverService.REASON_GRANTED
 
@@ -261,7 +261,7 @@ def test_resolve_b2c_user_snapshot_trialing_is_treated_as_active(db):
     user = UserModel(id=7, email="trial@example.com", password_hash="hash", role="user")
     db.add(user)
     plan = PlanCatalogModel(plan_code="trial-plan", plan_name="Trial", audience=Audience.B2C)
-    feat = FeatureCatalogModel(feature_code="astrologer_chat", feature_name="Chat")
+    feat = FeatureCatalogModel(feature_code="horoscope_daily", feature_name="Chat")
     db.add_all([plan, feat])
     db.commit()
 
@@ -294,7 +294,7 @@ def test_resolve_b2c_user_snapshot_trialing_is_treated_as_active(db):
     ):
         snapshot = EffectiveEntitlementResolverService.resolve_b2c_user_snapshot(db, app_user_id=7)
 
-    access = snapshot.entitlements["astrologer_chat"]
+    access = snapshot.entitlements["horoscope_daily"]
     assert snapshot.billing_status == "trialing"
     assert access.granted is True
     assert access.reason_code == EffectiveEntitlementResolverService.REASON_GRANTED
@@ -304,7 +304,7 @@ def test_resolve_b2c_user_snapshot_quota_exhausted(db):
     user = UserModel(id=1, email="test@example.com", password_hash="hash", role="user")
     db.add(user)
     plan = PlanCatalogModel(plan_code="premium", plan_name="Premium", audience=Audience.B2C)
-    feat = FeatureCatalogModel(feature_code="astrologer_chat", feature_name="Chat")
+    feat = FeatureCatalogModel(feature_code="horoscope_daily", feature_name="Chat")
     db.add_all([plan, feat])
     db.commit()
 
@@ -337,7 +337,7 @@ def test_resolve_b2c_user_snapshot_quota_exhausted(db):
 
     counter = FeatureUsageCounterModel(
         user_id=1,
-        feature_code="astrologer_chat",
+        feature_code="horoscope_daily",
         quota_key="chats",
         period_unit=PeriodUnit.DAY,
         period_value=1,
@@ -369,7 +369,7 @@ def test_resolve_b2c_user_snapshot_quota_exhausted(db):
     ):
         snapshot = EffectiveEntitlementResolverService.resolve_b2c_user_snapshot(db, app_user_id=1)
 
-        access = snapshot.entitlements["astrologer_chat"]
+        access = snapshot.entitlements["horoscope_daily"]
         assert access.granted is False
         assert access.reason_code == EffectiveEntitlementResolverService.REASON_QUOTA_EXHAUSTED
         assert access.quota_remaining == 0
@@ -379,7 +379,7 @@ def test_resolve_b2c_user_snapshot_disabled(db):
     user = UserModel(id=1, email="test@example.com", password_hash="hash", role="user")
     db.add(user)
     plan = PlanCatalogModel(plan_code="premium", plan_name="Premium", audience=Audience.B2C)
-    feat = FeatureCatalogModel(feature_code="astrologer_chat", feature_name="Chat")
+    feat = FeatureCatalogModel(feature_code="horoscope_daily", feature_name="Chat")
     db.add_all([plan, feat])
     db.commit()
 
@@ -412,7 +412,7 @@ def test_resolve_b2c_user_snapshot_disabled(db):
     ):
         snapshot = EffectiveEntitlementResolverService.resolve_b2c_user_snapshot(db, app_user_id=1)
 
-        access = snapshot.entitlements["astrologer_chat"]
+        access = snapshot.entitlements["horoscope_daily"]
         assert access.granted is False
         assert access.reason_code == EffectiveEntitlementResolverService.REASON_BINDING_DISABLED
 
@@ -497,7 +497,7 @@ def test_resolve_b2c_user_snapshot_quota_binding_without_quotas_is_denied(db):
     user = UserModel(id=30, email="broken@example.com", password_hash="hash", role="user")
     db.add(user)
     plan = PlanCatalogModel(plan_code="broken-plan", plan_name="Broken", audience=Audience.B2C)
-    feat = FeatureCatalogModel(feature_code="astrologer_chat", feature_name="Chat")
+    feat = FeatureCatalogModel(feature_code="horoscope_daily", feature_name="Chat")
     db.add_all([plan, feat])
     db.commit()
 
@@ -533,7 +533,7 @@ def test_resolve_b2c_user_snapshot_quota_binding_without_quotas_is_denied(db):
             app_user_id=30,
         )
 
-    access = snapshot.entitlements["astrologer_chat"]
+    access = snapshot.entitlements["horoscope_daily"]
     assert access.granted is False
     assert access.reason_code == EffectiveEntitlementResolverService.REASON_BINDING_DISABLED
     assert access.usage_states == []
@@ -543,7 +543,7 @@ def test_resolve_b2c_user_snapshot_does_not_create_missing_usage_counter(db):
     user = UserModel(id=31, email="readonly@example.com", password_hash="hash", role="user")
     db.add(user)
     plan = PlanCatalogModel(plan_code="readonly-plan", plan_name="Readonly", audience=Audience.B2C)
-    feat = FeatureCatalogModel(feature_code="astrologer_chat", feature_name="Chat")
+    feat = FeatureCatalogModel(feature_code="horoscope_daily", feature_name="Chat")
     db.add_all([plan, feat])
     db.commit()
 
@@ -592,7 +592,7 @@ def test_resolve_b2c_user_snapshot_does_not_create_missing_usage_counter(db):
             app_user_id=31,
         )
 
-    access = snapshot.entitlements["astrologer_chat"]
+    access = snapshot.entitlements["horoscope_daily"]
     assert access.granted is True
     assert db.scalar(select(FeatureUsageCounterModel.id).limit(1)) is None
 

@@ -136,7 +136,7 @@ const ENTITLEMENTS_ME = {
     data: {
       features: [
         {
-          feature_code: "astrologer_chat",
+          feature_code: "horoscope_daily",
           final_access: true,
           reason: "canonical_binding",
           usage_states: [
@@ -165,47 +165,10 @@ const PRIVACY_EMPTY = {
   json: async () => ({ data: null }),
 }
 
-const DAILY_PREDICTION_SUCCESS = {
-  ok: true,
-  status: 200,
-  json: async () => ({
-    meta: {
-      date_local: "2026-03-08",
-      timezone: "Europe/Paris",
-      computed_at: "2026-03-08T06:00:00Z",
-      reference_version: "2026.03",
-      ruleset_version: "1.0.0",
-      was_reused: false,
-      house_system_effective: "placidus",
-    },
-    summary: {
-      overall_tone: "open",
-      top_categories: ["love"],
-      bottom_categories: ["energy"],
-      best_window: null,
-      main_turning_point: null,
-    },
-    day_climate: {
-      label: "Climat favorable",
-      tone: "open",
-      intensity: 7,
-      stability: 6,
-      summary: "Journee favorable pour prendre contact.",
-      top_domains: ["love"],
-      watchout: null,
-      best_window_ref: null,
-    },
-    categories: [],
-    timeline: [],
-    turning_points: [],
-  }),
-}
-
 function makeFetchMock(authMeResponse: object = AUTH_ME_USER) {
   return vi.fn(async (input: RequestInfo | URL) => {
     const url = String(input)
     if (url.endsWith("/v1/auth/me")) return authMeResponse
-    if (url.includes("/v1/predictions/daily")) return DAILY_PREDICTION_SUCCESS
     if (url.endsWith("/v1/billing/subscription")) return BILLING_SUBSCRIPTION
     if (url.endsWith("/v1/entitlements/me")) return ENTITLEMENTS_ME
     if (url.endsWith("/v1/privacy/export")) return PRIVACY_EMPTY
@@ -363,19 +326,6 @@ describe("Dashboard Path", () => {
   })
 })
 
-describe("Consultations Routing", () => {
-  it("renders /consultations without missing provider error", async () => {
-    vi.stubGlobal("fetch", makeFetchMock())
-    setupToken()
-
-    renderApp(["/consultations"])
-
-    await waitFor(() => {
-      expect(screen.getByRole("heading", { level: 1, name: /consultation/i })).toBeInTheDocument()
-    })
-  })
-})
-
 describe("Route config", () => {
   function collectPaths(routeList: typeof routes): string[] {
     return routeList.flatMap((route) => {
@@ -385,7 +335,7 @@ describe("Route config", () => {
     })
   }
 
-  it("déclare les routes astrologers et chat conversation", () => {
+  it("déclare les routes actives et retire les surfaces externalisees non supportees", () => {
     const paths = collectPaths(routes)
 
     expect(paths).toContain("privacy")
@@ -393,8 +343,11 @@ describe("Route config", () => {
     expect(paths).toContain("billing/cancel")
     expect(paths).toContain("astrologers")
     expect(paths).toContain("astrologers/:id")
-    expect(paths).toContain("chat/:conversationId")
     expect(paths).toContain("profile")
+    expect(paths).not.toContain("chat")
+    expect(paths).not.toContain("chat/:conversationId")
+    expect(paths).not.toContain("consultations")
+    expect(paths).not.toContain("prompts")
     expect(paths).not.toContain("today")
     expect(paths).not.toContain("natal-chart")
     expect(paths).not.toContain("birth-profile")

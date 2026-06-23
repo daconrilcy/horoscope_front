@@ -66,7 +66,7 @@ export type PlanCatalog = {
   features: PlanFeature[]
 }
 
-export type ChatEntitlementUsageStatus = {
+export type HoroscopeDailyEntitlementUsageStatus = {
   quota_date: string
   quota_key: string
   limit: number
@@ -76,7 +76,7 @@ export type ChatEntitlementUsageStatus = {
   blocked: boolean
 }
 
-export type ChatEntitlementUsageState = {
+export type HoroscopeDailyEntitlementUsageState = {
   quota_key: string
   quota_limit: number
   used: number
@@ -89,7 +89,7 @@ export type ChatEntitlementUsageState = {
   window_end: string | null
 }
 
-export type ChatEntitlementFeatureStatus = {
+export type HoroscopeDailyEntitlementFeatureStatus = {
   feature_code: string
   granted: boolean
   reason_code: string
@@ -97,7 +97,7 @@ export type ChatEntitlementFeatureStatus = {
   quota_limit: number | null
   quota_remaining: number | null
   variant_code: string | null
-  usage_states: ChatEntitlementUsageState[]
+  usage_states: HoroscopeDailyEntitlementUsageState[]
 }
 
 export type TokenUsagePeriod = {
@@ -200,9 +200,11 @@ type TokenUsageApiResponse = {
   data: TokenUsageStatus
 }
 
-const CHAT_QUOTA_FEATURE_CODE = "astrologer_chat"
+const HOROSCOPE_DAILY_FEATURE_CODE = "horoscope_daily"
 
-function toChatEntitlementUsage(feature: FeatureEntitlementResponse | undefined): ChatEntitlementUsageStatus | null {
+function toHoroscopeDailyEntitlementUsage(
+  feature: FeatureEntitlementResponse | undefined,
+): HoroscopeDailyEntitlementUsageStatus | null {
   const usage = feature?.usage_states[0]
   if (!usage) {
     return null
@@ -219,7 +221,9 @@ function toChatEntitlementUsage(feature: FeatureEntitlementResponse | undefined)
   }
 }
 
-function toChatEntitlementFeature(feature: FeatureEntitlementResponse | undefined): ChatEntitlementFeatureStatus | null {
+function toHoroscopeDailyEntitlementFeature(
+  feature: FeatureEntitlementResponse | undefined,
+): HoroscopeDailyEntitlementFeatureStatus | null {
   if (!feature) {
     return null
   }
@@ -283,12 +287,12 @@ async function fetchEntitlementsPlans(): Promise<PlanCatalog[]> {
   return body.data
 }
 
-async function fetchChatEntitlementUsage(): Promise<ChatEntitlementUsageStatus | null> {
+async function fetchHoroscopeDailyEntitlementUsage(): Promise<HoroscopeDailyEntitlementUsageStatus | null> {
   const body = await fetchEntitlementsSnapshot()
-  const chatEntitlement = body.features.find(
-    (feature) => feature.feature_code === CHAT_QUOTA_FEATURE_CODE,
+  const dailyEntitlement = body.features.find(
+    (feature) => feature.feature_code === HOROSCOPE_DAILY_FEATURE_CODE,
   )
-  return toChatEntitlementUsage(chatEntitlement)
+  return toHoroscopeDailyEntitlementUsage(dailyEntitlement)
 }
 
 export async function fetchEntitlementsSnapshot(): Promise<EntitlementsSnapshot> {
@@ -303,12 +307,12 @@ export async function fetchEntitlementsSnapshot(): Promise<EntitlementsSnapshot>
   return body.data
 }
 
-async function fetchChatEntitlementFeature(): Promise<ChatEntitlementFeatureStatus | null> {
+async function fetchHoroscopeDailyEntitlementFeature(): Promise<HoroscopeDailyEntitlementFeatureStatus | null> {
   const body = await fetchEntitlementsSnapshot()
-  const chatEntitlement = body.features.find(
-    (feature) => feature.feature_code === CHAT_QUOTA_FEATURE_CODE,
+  const dailyEntitlement = body.features.find(
+    (feature) => feature.feature_code === HOROSCOPE_DAILY_FEATURE_CODE,
   )
-  return toChatEntitlementFeature(chatEntitlement)
+  return toHoroscopeDailyEntitlementFeature(dailyEntitlement)
 }
 
 async function fetchTokenUsagePeriod(period: "current_day" | "current_week" | "current_month"): Promise<TokenUsageStatus> {
@@ -354,10 +358,10 @@ export function useEntitlementsPlans() {
   })
 }
 
-export function useChatEntitlementUsage() {
+export function useHoroscopeDailyEntitlementUsage() {
   return useQuery({
-    queryKey: ["chat-entitlement-usage"],
-    queryFn: fetchChatEntitlementUsage,
+    queryKey: ["horoscope-daily-entitlement-usage"],
+    queryFn: fetchHoroscopeDailyEntitlementUsage,
     retry: (failureCount, error) => {
       if (error instanceof BillingApiError && error.status === 403) return false
       return failureCount < 1
@@ -376,10 +380,10 @@ export function useTokenUsageBreakdown() {
   })
 }
 
-export function useChatEntitlementFeature() {
+export function useHoroscopeDailyEntitlementFeature() {
   return useQuery({
-    queryKey: ["chat-entitlement-feature"],
-    queryFn: fetchChatEntitlementFeature,
+    queryKey: ["horoscope-daily-entitlement-feature"],
+    queryFn: fetchHoroscopeDailyEntitlementFeature,
     retry: (failureCount, error) => {
       if (error instanceof BillingApiError && error.status === 403) return false
       return failureCount < 1

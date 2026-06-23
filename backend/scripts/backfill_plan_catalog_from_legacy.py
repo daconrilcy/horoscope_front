@@ -1,7 +1,7 @@
 """Backfill script to populate canonical plan catalog from legacy billing tables.
 
 This script is idempotent and maps:
-- billing_plans -> plan_catalog (B2C) + astrologer_chat quotas
+- billing_plans -> plan_catalog (B2C) + horoscope_daily quotas
 - enterprise_billing_plans -> plan_catalog (B2B) + b2b_api_access quotas
 
 Key guarantees:
@@ -50,7 +50,7 @@ _BACKFILL_CONTEXT = CanonicalMutationContext(
 
 
 B2B_FEATURE_CODE = "b2b_api_access"
-B2C_CHAT_FEATURE_CODE = "astrologer_chat"
+B2C_HOROSCOPE_FEATURE_CODE = "horoscope_daily"
 
 SOURCE_BILLING = SourceOrigin.MIGRATED_FROM_BILLING_PLAN.value
 SOURCE_ENTERPRISE = SourceOrigin.MIGRATED_FROM_ENTERPRISE_PLAN.value
@@ -112,12 +112,12 @@ def ensure_b2b_feature(db: Session) -> FeatureCatalogModel:
     )
 
 
-def ensure_b2c_chat_feature(db: Session) -> FeatureCatalogModel:
+def ensure_b2c_horoscope_feature(db: Session) -> FeatureCatalogModel:
     return _ensure_feature(
         db,
-        feature_code=B2C_CHAT_FEATURE_CODE,
-        feature_name="Astrologer Chat",
-        description="Messagerie avec un astrologue",
+        feature_code=B2C_HOROSCOPE_FEATURE_CODE,
+        feature_name="Horoscope Daily",
+        description="Horoscope quotidien servi par la façade Astral",
         is_metered=True,
     )
 
@@ -272,8 +272,7 @@ def _record_quota_report(
 
 def backfill_b2c_plans(db: Session, report: BackfillReport | None = None) -> None:
     report = report or BackfillReport()
-    # Ensure chat feature exists (no change here)
-    chat_feature = ensure_b2c_chat_feature(db)
+    horoscope_feature = ensure_b2c_horoscope_feature(db)
 
     legacy_plans = db.execute(select(BillingPlanModel)).scalars().all()
     legacy_codes = {plan.code for plan in legacy_plans}
@@ -298,7 +297,7 @@ def backfill_b2c_plans(db: Session, report: BackfillReport | None = None) -> Non
         existing_binding = db.scalar(
             select(PlanFeatureBindingModel).where(
                 PlanFeatureBindingModel.plan_id == plan.id,
-                PlanFeatureBindingModel.feature_id == chat_feature.id,
+                PlanFeatureBindingModel.feature_id == horoscope_feature.id,
             )
         )
         binding_before = _binding_snapshot(existing_binding)
@@ -333,7 +332,7 @@ def backfill_b2c_plans(db: Session, report: BackfillReport | None = None) -> Non
             SOURCE_BILLING,
         }:
             msg = (
-                f"Collision on binding plan_id={plan.id} feature_id={chat_feature.id}: "
+                f"Collision on binding plan_id={plan.id} feature_id={horoscope_feature.id}: "
                 f"existing source_origin='{existing_binding.source_origin}'. Skipping."
             )
             logger.warning(msg)
@@ -357,7 +356,7 @@ def backfill_b2c_plans(db: Session, report: BackfillReport | None = None) -> Non
         CanonicalEntitlementMutationService.upsert_plan_feature_configuration(
             db,
             plan=plan,
-            feature_code=B2C_CHAT_FEATURE_CODE,
+            feature_code=B2C_HOROSCOPE_FEATURE_CODE,
             is_enabled=is_enabled,
             access_mode=access_mode,
             quotas=quotas,
@@ -368,7 +367,7 @@ def backfill_b2c_plans(db: Session, report: BackfillReport | None = None) -> Non
         updated_binding = db.scalar(
             select(PlanFeatureBindingModel).where(
                 PlanFeatureBindingModel.plan_id == plan.id,
-                PlanFeatureBindingModel.feature_id == chat_feature.id,
+                PlanFeatureBindingModel.feature_id == horoscope_feature.id,
             )
         )
         assert updated_binding is not None

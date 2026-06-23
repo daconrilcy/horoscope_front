@@ -257,38 +257,11 @@ export function AstrologerProfilePage() {
     await submitReview(trimmedReview)
   }
 
-  const handleChatCta = () => {
-    if (!profile) {
-      return
-    }
-    if (profile.action_state.has_chat && profile.action_state.last_chat_id) {
-      navigate(`/chat/${encodeURIComponent(profile.action_state.last_chat_id)}`)
-      return
-    }
-    navigate(`/chat?personaId=${encodeURIComponent(profile.id)}`)
-  }
-
   const handleNatalCta = () => {
     if (!profile) {
       return
     }
-    if (
-      profile.action_state.has_natal_interpretation &&
-      profile.action_state.last_natal_interpretation_id
-    ) {
-      navigate(
-        `/natal?interpretationId=${encodeURIComponent(profile.action_state.last_natal_interpretation_id)}`
-      )
-      return
-    }
     navigate(`/natal?personaId=${encodeURIComponent(profile.id)}`)
-  }
-
-  const handleConsultationCta = () => {
-    if (!profile) {
-      return
-    }
-    navigate(`/consultations/new?astrologerId=${encodeURIComponent(profile.id)}`)
   }
 
   if (isPending) {
@@ -453,9 +426,9 @@ export function AstrologerProfilePage() {
                 variant="primary"
                 size="lg"
                 className="premium-cta premium-cta--primary profile-hero-cta"
-                onClick={handleConsultationCta}
+                onClick={handleNatalCta}
               >
-                {t("cta_consultation", lang)}
+                {t("cta_natal_new", lang)}
               </Button>
               {isDefault ? (
                 <span className="profile-default-badge profile-default-badge--selected">
@@ -618,12 +591,8 @@ export function AstrologerProfilePage() {
           profile={profile}
           trustItems={trustItems}
           labels={{
-            session: t("cta_consultation", lang),
-            chat: profile.action_state.has_chat ? t("cta_chat_resume", lang) : t("cta_chat_new", lang),
             natal: profile.action_state.has_natal_interpretation ? t("cta_natal_view", lang) : t("cta_natal_new", lang),
           }}
-          onConsultation={handleConsultationCta}
-          onChat={handleChatCta}
           onNatal={handleNatalCta}
         />
 

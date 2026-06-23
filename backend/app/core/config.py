@@ -6,14 +6,12 @@ import logging
 import os
 import secrets
 import sys
-from enum import Enum
 from hashlib import sha256
 from pathlib import Path
 
 from dotenv import load_dotenv
 
 from app.core.versions import ACTIVE_REFERENCE_VERSION, ACTIVE_RULESET_VERSION
-from app.domain.astrology.house_system_codes import HouseSystemCode
 
 backend_root = Path(__file__).parent.parent.parent
 env_path = backend_root / ".env"
@@ -30,35 +28,6 @@ def _should_load_backend_dotenv() -> bool:
 # Load .env file from backend root if it exists and the current runtime allows it.
 if env_path.exists() and _should_load_backend_dotenv():
     load_dotenv(dotenv_path=env_path)
-
-
-class ZodiacType(str, Enum):
-    TROPICAL = "tropical"
-    SIDEREAL = "sidereal"
-
-
-class FrameType(str, Enum):
-    GEOCENTRIC = "geocentric"
-    TOPOCENTRIC = "topocentric"
-
-
-class HouseSystemType(str, Enum):
-    PLACIDUS = HouseSystemCode.PLACIDUS
-    WHOLE_SIGN = HouseSystemCode.WHOLE_SIGN
-    EQUAL = HouseSystemCode.EQUAL
-    PORPHYRY = HouseSystemCode.PORPHYRY
-
-
-class AspectSchoolType(str, Enum):
-    MODERN = "modern"
-    CLASSIC = "classic"
-    STRICT = "strict"
-
-
-class DailyEngineMode(str, Enum):
-    V2 = "v2"
-    V3 = "v3"
-    DUAL = "dual"
 
 
 class Settings:
@@ -100,17 +69,6 @@ class Settings:
             return raw_mode
         logger.warning(
             "stripe_portal_startup_validation_invalid_mode mode=%s fallback=strict",
-            raw_mode,
-        )
-        return "strict"
-
-    @staticmethod
-    def _parse_llm_coherence_validation_mode() -> str:
-        raw_mode = os.getenv("LLM_COHERENCE_VALIDATION_MODE", "strict").strip().lower()
-        if raw_mode in {"strict", "warn", "off"}:
-            return raw_mode
-        logger.warning(
-            "llm_coherence_startup_validation_invalid_mode mode=%s fallback=strict",
             raw_mode,
         )
         return "strict"
@@ -212,16 +170,22 @@ class Settings:
         return parsed
 
     @staticmethod
-    def _parse_daily_engine_mode(raw_value: str | DailyEngineMode | None) -> DailyEngineMode:
-        if isinstance(raw_value, DailyEngineMode):
-            return raw_value
-        if raw_value is None:
-            return DailyEngineMode.V2
-        normalized = str(raw_value).strip().lower()
+    def _parse_float_env(
+        env_name: str,
+        *,
+        default: float,
+        minimum: float | None = None,
+    ) -> float:
+        raw = os.getenv(env_name)
+        if raw is None or not raw.strip():
+            return default
         try:
-            return DailyEngineMode(normalized)
+            parsed = float(raw.strip())
         except ValueError:
-            return DailyEngineMode.V2
+            return default
+        if minimum is not None and parsed < minimum:
+            return minimum
+        return parsed
 
     def __init__(self) -> None:
         self.app_env = os.getenv("APP_ENV", "development").strip().lower()
@@ -232,45 +196,6 @@ class Settings:
             "ACTIVE_REFERENCE_VERSION", ACTIVE_REFERENCE_VERSION
         )
         self._ruleset_version = os.getenv("RULESET_VERSION", ACTIVE_RULESET_VERSION)
-
-        default_zodiac = (
-            os.getenv("NATAL_RULESET_DEFAULT_ZODIAC", ZodiacType.TROPICAL).strip().lower()
-        )
-        try:
-            self.natal_ruleset_default_zodiac = ZodiacType(default_zodiac)
-        except ValueError:
-            self.natal_ruleset_default_zodiac = ZodiacType.TROPICAL
-
-        default_ayanamsa_raw = os.getenv("NATAL_RULESET_DEFAULT_AYANAMSA", "").strip().lower()
-        self.natal_ruleset_default_ayanamsa = default_ayanamsa_raw or None
-
-        default_frame = (
-            os.getenv("NATAL_RULESET_DEFAULT_FRAME", FrameType.GEOCENTRIC).strip().lower()
-        )
-        try:
-            self.natal_ruleset_default_frame = FrameType(default_frame)
-        except ValueError:
-            self.natal_ruleset_default_frame = FrameType.GEOCENTRIC
-
-        default_house_system = (
-            os.getenv("NATAL_RULESET_DEFAULT_HOUSE_SYSTEM", HouseSystemType.PLACIDUS)
-            .strip()
-            .lower()
-        )
-        try:
-            self.natal_ruleset_default_house_system = HouseSystemType(default_house_system)
-        except ValueError:
-            self.natal_ruleset_default_house_system = HouseSystemType.PLACIDUS
-
-        default_aspect_school = (
-            os.getenv("NATAL_RULESET_DEFAULT_ASPECT_SCHOOL", AspectSchoolType.MODERN)
-            .strip()
-            .lower()
-        )
-        try:
-            self.natal_ruleset_default_aspect_school = AspectSchoolType(default_aspect_school)
-        except ValueError:
-            self.natal_ruleset_default_aspect_school = AspectSchoolType.MODERN
 
         self.jwt_secret_key = os.getenv("JWT_SECRET_KEY", "").strip()
         if self.app_env == "production" and not self.jwt_secret_key:
@@ -289,44 +214,14 @@ class Settings:
         self.api_credentials_previous_secret_keys = self._parse_secret_list(
             "API_CREDENTIALS_PREVIOUS_SECRET_KEYS"
         )
-        self.natal_generation_timeout_seconds = int(
-            os.getenv("NATAL_GENERATION_TIMEOUT_SECONDS", "150")
-        )
-        self.chat_llm_timeout_seconds = int(os.getenv("CHAT_LLM_TIMEOUT_SECONDS", "20"))
-        self.chat_llm_retry_count = int(os.getenv("CHAT_LLM_RETRY_COUNT", "1"))
-        self.chat_llm_retry_backoff_seconds = float(
-            os.getenv("CHAT_LLM_RETRY_BACKOFF_SECONDS", "0")
-        )
-        self.chat_llm_retry_backoff_max_seconds = float(
-            os.getenv("CHAT_LLM_RETRY_BACKOFF_MAX_SECONDS", "1.5")
-        )
-        self.chat_llm_retry_jitter_seconds = float(os.getenv("CHAT_LLM_RETRY_JITTER_SECONDS", "0"))
-        self.chat_context_window_messages = int(os.getenv("CHAT_CONTEXT_WINDOW_MESSAGES", "12"))
-        self.chat_context_max_characters = int(os.getenv("CHAT_CONTEXT_MAX_CHARACTERS", "4000"))
-        self.chat_prompt_version = os.getenv("CHAT_PROMPT_VERSION", "chat-v1").strip() or "chat-v1"
         self.billing_subscription_cache_ttl_seconds = float(
             os.getenv("BILLING_SUBSCRIPTION_CACHE_TTL_SECONDS", "5")
         )
-        self.llm_anonymization_salt = os.getenv("LLM_ANONYMIZATION_SALT", "").strip()
-        if self.app_env == "production" and not self.llm_anonymization_salt:
-            raise RuntimeError("LLM_ANONYMIZATION_SALT must be set in production")
-        if not self.llm_anonymization_salt:
-            self.llm_anonymization_salt = secrets.token_hex(32)
         self.enable_reference_seed_admin_fallback = self._parse_bool_env(
             "ENABLE_REFERENCE_SEED_ADMIN_FALLBACK", default=False
         )
         self.seed_admin = self._parse_bool_env("SEED_ADMIN", default=False)
         self.dev_allow_legacy_seed = self._parse_bool_env("DEV_ALLOW_LEGACY_SEED", default=False)
-        self.llm_qa_routes_enabled = self._parse_bool_env("LLM_QA_ROUTES_ENABLED", default=False)
-        self.llm_qa_routes_allow_production = self._parse_bool_env(
-            "LLM_QA_ROUTES_ALLOW_PRODUCTION", default=False
-        )
-        self.llm_qa_seed_user_enabled = self._parse_bool_env(
-            "LLM_QA_SEED_USER_ENABLED", default=False
-        )
-        self.llm_qa_seed_user_allow_production = self._parse_bool_env(
-            "LLM_QA_SEED_USER_ALLOW_PRODUCTION", default=False
-        )
         # pricing experiment settings
         self.pricing_experiment_enabled = self._parse_bool_env(
             "PRICING_EXPERIMENT_ENABLED",
@@ -348,35 +243,18 @@ class Settings:
         self.geocoding_cache_ttl_seconds = self._parse_int_env(
             "GEOCODING_CACHE_TTL_SECONDS", default=3600, minimum=1
         )
-        self.swisseph_enabled = self._parse_bool_env("SWISSEPH_ENABLED", default=False)
-        self.swisseph_pro_mode = self._parse_bool_env("SWISSEPH_PRO_MODE", default=False)
-        # Story 26.1: offline timezone derivation from lat/lon (SWISSEPH_PRO_MODE phase 3).
-        self.timezone_derived_enabled = self._parse_bool_env(
-            "TIMEZONE_DERIVED_ENABLED", default=False
-        )
-        self.ephemeris_path = os.getenv(
-            "SWISSEPH_DATA_PATH", os.getenv("EPHEMERIS_PATH", "")
+        self.astral_gateway_url = os.getenv("ASTRAL_GATEWAY_URL", "http://localhost:8082").strip()
+        self.astral_jobs_api_url = os.getenv("ASTRAL_JOBS_API_URL", "http://localhost:8081").strip()
+        self.astral_mercure_url = os.getenv(
+            "ASTRAL_MERCURE_URL",
+            "http://localhost:3000/.well-known/mercure",
         ).strip()
-        self.ephemeris_path_version = os.getenv(
-            "SWISSEPH_PATH_VERSION", os.getenv("EPHEMERIS_PATH_VERSION", "")
-        ).strip()
-        self.ephemeris_path_hash = os.getenv("EPHEMERIS_PATH_HASH", "").strip()
-        self.ephemeris_required_files = self._parse_secret_list("EPHEMERIS_REQUIRED_FILES")
-        # Backward-compatible aliases from previous stories.
-        self.swisseph_data_path = self.ephemeris_path
-        self.swisseph_path_version = self.ephemeris_path_version
-        natal_engine_default = os.getenv("NATAL_ENGINE_DEFAULT", "swisseph").strip().lower()
-        if natal_engine_default not in {"swisseph", "simplified"}:
-            natal_engine_default = "swisseph"
-        self.natal_engine_default = natal_engine_default
-        self.natal_engine_simplified_enabled = self._parse_bool_env(
-            "NATAL_ENGINE_SIMPLIFIED_ENABLED", default=False
+        self.astral_api_key = os.getenv("ASTRAL_API_KEY", "").strip() or None
+        self.astral_timeout_seconds = self._parse_float_env(
+            "ASTRAL_TIMEOUT_SECONDS",
+            default=30.0,
+            minimum=0.1,
         )
-        self.natal_engine_compare_enabled = self._parse_bool_env(
-            "NATAL_ENGINE_COMPARE_ENABLED", default=False
-        )
-        self.llm_narrator_enabled = self._parse_bool_env("LLM_NARRATOR_ENABLED", default=False)
-        self.daily_engine_mode = self._parse_daily_engine_mode(os.getenv("DAILY_ENGINE_MODE"))
 
         # Review Queue Alerting (Story 61.39)
         self.ops_review_queue_alerts_enabled = self._parse_bool_env(
@@ -391,8 +269,6 @@ class Settings:
         # Feature Scope Validation Mode (Story 61.29)
         self.feature_scope_validation_mode = self._parse_feature_scope_validation_mode()
         self.stripe_portal_validation_mode = self._parse_stripe_portal_validation_mode()
-        self.llm_coherence_validation_mode = self._parse_llm_coherence_validation_mode()
-
         # Story 61.30
         self.canonical_db_validation_mode = self._parse_canonical_db_validation_mode()
 
@@ -454,9 +330,6 @@ class Settings:
             self._parse_stripe_trial_missing_payment_method_behavior()
         )
 
-        # LLM Engine Configuration
-        self.openai_model_default = os.getenv("OPENAI_MODEL_DEFAULT", "gpt-4o-mini").strip()
-
         # Email Configuration
         self.enable_email = self._parse_bool_env("ENABLE_EMAIL", default=False)
         self.email_onboarding_sequence_enabled = self._parse_bool_env(
@@ -471,15 +344,6 @@ class Settings:
         self.v3_engine_version = os.getenv("V3_ENGINE_VERSION", "v3.0.0-alpha").strip()
         self.v3_snapshot_version = os.getenv("V3_SNAPSHOT_VERSION", "1.0").strip()
         self.v3_evidence_pack_version = os.getenv("V3_EVIDENCE_PACK_VERSION", "1.0").strip()
-
-        self.natal_schema_version = os.getenv("NATAL_SCHEMA_VERSION", "v3").strip().lower()
-        self.llm_replay_encryption_key = os.getenv("LLM_REPLAY_ENCRYPTION_KEY", "").strip()
-        if self.app_env == "production" and not self.llm_replay_encryption_key:
-            raise RuntimeError("LLM_REPLAY_ENCRYPTION_KEY must be set in production")
-        if not self.llm_replay_encryption_key:
-            from cryptography.fernet import Fernet
-
-            self.llm_replay_encryption_key = Fernet.generate_key().decode()
 
         token = os.getenv("REFERENCE_SEED_ADMIN_TOKEN", "").strip()
         if token:

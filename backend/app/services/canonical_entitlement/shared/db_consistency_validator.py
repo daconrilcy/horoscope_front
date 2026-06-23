@@ -25,9 +25,7 @@ _SCOPE_TO_AUDIENCE: dict[FeatureScope, Audience] = {
 }
 _MANDATORY_METERED_FEATURES = frozenset(
     {
-        "astrologer_chat",
-        "thematic_consultation",
-        "natal_chart_long",
+        "horoscope_daily",
         "b2b_api_access",
     }
 )

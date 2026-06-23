@@ -1,1 +1,0 @@
-{category_label}: Your score is {note_20}/20 ({band} climate).

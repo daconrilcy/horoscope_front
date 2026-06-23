@@ -14,9 +14,7 @@ from app.infra.db.models.product_entitlements import (
     AccessMode,
     Audience,
     FeatureCatalogModel,
-    PeriodUnit,
     PlanCatalogModel,
-    ResetMode,
     SourceOrigin,
 )
 from app.infra.db.session import SessionLocal
@@ -35,269 +33,37 @@ _SEED_CONTEXT = CanonicalMutationContext(
 )
 
 
-def _single_lifetime_interpretation_quota() -> list[dict[str, object]]:
-    return [
-        {
-            "quota_key": "interpretations",
-            "quota_limit": 1,
-            "period_unit": PeriodUnit.LIFETIME,
-            "period_value": 1,
-            "reset_mode": ResetMode.LIFETIME,
-        }
-    ]
-
-
 def seed() -> None:
     desired_bindings: dict[str, dict[str, dict]] = {
         "free": {
-            "natal_chart_short": {
-                "is_enabled": True,
-                "access_mode": AccessMode.UNLIMITED,
-                "variant_code": None,
-                "quotas": [],
-            },
-            "natal_chart_long": {
-                "is_enabled": True,
-                "access_mode": AccessMode.UNLIMITED,
-                "variant_code": "free_short",
-                "quotas": [],
-            },
-            "astrologer_chat": {
-                "is_enabled": True,
-                "access_mode": AccessMode.QUOTA,
-                "variant_code": None,
-                "quotas": [
-                    {
-                        "quota_key": "messages",
-                        "quota_limit": 1,
-                        "period_unit": PeriodUnit.WEEK,
-                        "period_value": 1,
-                        "reset_mode": ResetMode.CALENDAR,
-                    }
-                ],
-            },
-            "thematic_consultation": {
-                "is_enabled": False,
-                "access_mode": AccessMode.DISABLED,
-                "variant_code": None,
-                "quotas": [],
-            },
             "horoscope_daily": {
                 "is_enabled": True,
                 "access_mode": AccessMode.UNLIMITED,
                 "variant_code": "summary_only",
                 "quotas": [],
             },
-            "transit_client_projection": {
-                "is_enabled": True,
-                "access_mode": AccessMode.UNLIMITED,
-                "variant_code": "free",
-                "quotas": [],
-            },
         },
         "trial": {
-            "natal_chart_short": {
-                "is_enabled": True,
-                "access_mode": AccessMode.QUOTA,
-                "variant_code": None,
-                "quotas": _single_lifetime_interpretation_quota(),
-            },
-            "natal_chart_long": {
-                "is_enabled": True,
-                "access_mode": AccessMode.QUOTA,
-                "variant_code": "single_astrologer",
-                "quotas": [
-                    {
-                        "quota_key": "interpretations",
-                        "quota_limit": 1,
-                        "period_unit": PeriodUnit.LIFETIME,
-                        "period_value": 1,
-                        "reset_mode": ResetMode.LIFETIME,
-                    }
-                ],
-            },
-            "astrologer_chat": {
-                "is_enabled": False,
-                "access_mode": AccessMode.DISABLED,
-                "variant_code": None,
-                "quotas": [],
-            },
-            "thematic_consultation": {
-                "is_enabled": True,
-                "access_mode": AccessMode.QUOTA,
-                "variant_code": None,
-                "quotas": [
-                    {
-                        "quota_key": "tokens",
-                        "quota_limit": 5000,
-                        "period_unit": PeriodUnit.WEEK,
-                        "period_value": 1,
-                        "reset_mode": ResetMode.CALENDAR,
-                    }
-                ],
-            },
             "horoscope_daily": {
                 "is_enabled": True,
                 "access_mode": AccessMode.UNLIMITED,
                 "variant_code": "full",
-                "quotas": [],
-            },
-            "transit_client_projection": {
-                "is_enabled": False,
-                "access_mode": AccessMode.DISABLED,
-                "variant_code": None,
                 "quotas": [],
             },
         },
         "basic": {
-            "natal_chart_short": {
-                "is_enabled": True,
-                "access_mode": AccessMode.UNLIMITED,
-                "variant_code": None,
-                "quotas": [],
-            },
-            "natal_chart_long": {
-                "is_enabled": True,
-                "access_mode": AccessMode.QUOTA,
-                "variant_code": "single_astrologer",
-                "quotas": [
-                    {
-                        "quota_key": "interpretations",
-                        "quota_limit": 1,
-                        "period_unit": PeriodUnit.LIFETIME,
-                        "period_value": 1,
-                        "reset_mode": ResetMode.LIFETIME,
-                    }
-                ],
-            },
-            "astrologer_chat": {
-                "is_enabled": True,
-                "access_mode": AccessMode.QUOTA,
-                "variant_code": None,
-                "quotas": [
-                    {
-                        "quota_key": "tokens",
-                        "quota_limit": 10000,
-                        "period_unit": PeriodUnit.DAY,
-                        "period_value": 1,
-                        "reset_mode": ResetMode.CALENDAR,
-                    },
-                    {
-                        "quota_key": "tokens",
-                        "quota_limit": 50000,
-                        "period_unit": PeriodUnit.WEEK,
-                        "period_value": 1,
-                        "reset_mode": ResetMode.CALENDAR,
-                    },
-                    {
-                        "quota_key": "tokens",
-                        "quota_limit": 200000,
-                        "period_unit": PeriodUnit.MONTH,
-                        "period_value": 1,
-                        "reset_mode": ResetMode.CALENDAR,
-                    },
-                ],
-            },
-            "thematic_consultation": {
-                "is_enabled": True,
-                "access_mode": AccessMode.QUOTA,
-                "variant_code": None,
-                "quotas": [
-                    {
-                        "quota_key": "tokens",
-                        "quota_limit": 20000,
-                        "period_unit": PeriodUnit.WEEK,
-                        "period_value": 1,
-                        "reset_mode": ResetMode.CALENDAR,
-                    }
-                ],
-            },
             "horoscope_daily": {
                 "is_enabled": True,
                 "access_mode": AccessMode.UNLIMITED,
                 "variant_code": "full",
-                "quotas": [],
-            },
-            "transit_client_projection": {
-                "is_enabled": True,
-                "access_mode": AccessMode.UNLIMITED,
-                "variant_code": "basic",
                 "quotas": [],
             },
         },
         "premium": {
-            "natal_chart_short": {
-                "is_enabled": True,
-                "access_mode": AccessMode.UNLIMITED,
-                "variant_code": None,
-                "quotas": [],
-            },
-            "natal_chart_long": {
-                "is_enabled": True,
-                "access_mode": AccessMode.QUOTA,
-                "variant_code": "multi_astrologer",
-                "quotas": [
-                    {
-                        "quota_key": "interpretations",
-                        "quota_limit": 5,
-                        "period_unit": PeriodUnit.LIFETIME,
-                        "period_value": 1,
-                        "reset_mode": ResetMode.LIFETIME,
-                    }
-                ],
-            },
-            "astrologer_chat": {
-                "is_enabled": True,
-                "access_mode": AccessMode.QUOTA,
-                "variant_code": None,
-                "quotas": [
-                    {
-                        "quota_key": "tokens",
-                        "quota_limit": 50000,
-                        "period_unit": PeriodUnit.DAY,
-                        "period_value": 1,
-                        "reset_mode": ResetMode.CALENDAR,
-                    },
-                    {
-                        "quota_key": "tokens",
-                        "quota_limit": 375000,
-                        "period_unit": PeriodUnit.WEEK,
-                        "period_value": 1,
-                        "reset_mode": ResetMode.CALENDAR,
-                    },
-                    {
-                        "quota_key": "tokens",
-                        "quota_limit": 1500000,
-                        "period_unit": PeriodUnit.MONTH,
-                        "period_value": 1,
-                        "reset_mode": ResetMode.CALENDAR,
-                    },
-                ],
-            },
-            "thematic_consultation": {
-                "is_enabled": True,
-                "access_mode": AccessMode.QUOTA,
-                "variant_code": None,
-                "quotas": [
-                    {
-                        "quota_key": "tokens",
-                        "quota_limit": 200000,
-                        "period_unit": PeriodUnit.MONTH,
-                        "period_value": 1,
-                        "reset_mode": ResetMode.CALENDAR,
-                    }
-                ],
-            },
             "horoscope_daily": {
                 "is_enabled": True,
                 "access_mode": AccessMode.UNLIMITED,
                 "variant_code": "full",
-                "quotas": [],
-            },
-            "transit_client_projection": {
-                "is_enabled": True,
-                "access_mode": AccessMode.UNLIMITED,
-                "variant_code": "premium",
                 "quotas": [],
             },
         },
@@ -355,33 +121,8 @@ def seed() -> None:
 
             features_data = [
                 {
-                    "feature_code": "natal_chart_short",
-                    "feature_name": "Natal Chart Short",
-                    "is_metered": True,
-                },
-                {
-                    "feature_code": "natal_chart_long",
-                    "feature_name": "Natal Chart Long",
-                    "is_metered": True,
-                },
-                {
-                    "feature_code": "astrologer_chat",
-                    "feature_name": "Astrologer Chat",
-                    "is_metered": True,
-                },
-                {
-                    "feature_code": "thematic_consultation",
-                    "feature_name": "Thematic Consultation",
-                    "is_metered": True,
-                },
-                {
                     "feature_code": "horoscope_daily",
                     "feature_name": "Horoscope Daily",
-                    "is_metered": False,
-                },
-                {
-                    "feature_code": "transit_client_projection",
-                    "feature_name": "Transit Client Projection",
                     "is_metered": False,
                 },
             ]

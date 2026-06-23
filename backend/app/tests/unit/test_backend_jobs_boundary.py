@@ -14,20 +14,13 @@ TEST_ROOTS = (APP_ROOT, BACKEND_ROOT / "tests", BACKEND_ROOT / "scripts")
 
 ALLOWED_SCHEDULED_TASK_MODULES = {
     "__init__.py",
-    "compute_calibration_percentiles.py",
-    "generate_daily_calibration_dataset.py",
-    "refresh_user_baselines.py",
 }
 FORBIDDEN_IMPORT_PREFIXES = (
     "app.jobs",
     "app.jobs.calibration",
     "app.jobs.qa",
 )
-ALLOWED_SCHEDULED_TASK_IMPORTS = {
-    "app.scheduled_tasks.compute_calibration_percentiles",
-    "app.scheduled_tasks.generate_daily_calibration_dataset",
-    "app.scheduled_tasks.refresh_user_baselines",
-}
+ALLOWED_SCHEDULED_TASK_IMPORTS: set[str] = set()
 
 
 def _python_files(root: Path) -> list[Path]:

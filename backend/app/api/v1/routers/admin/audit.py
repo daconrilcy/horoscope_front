@@ -6,22 +6,18 @@ import io
 import json
 import logging
 from typing import Any, Literal
-from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query, Request, Response, status
-from fastapi.responses import JSONResponse, StreamingResponse
+from fastapi import APIRouter, Depends, Query, Request
+from fastapi.responses import StreamingResponse
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_admin_user
-from app.api.errors import raise_api_error
 from app.core.request_id import resolve_request_id
 from app.infra.db.session import get_db_session
 from app.services.api_contracts.admin.audit import (
     AdminAuditExportRequest,
     AdminAuditLogResponse,
-    AdminReplaySnapshotV1MetadataResponse,
-    AdminReplaySnapshotV1ReplayAttemptResponse,
 )
 from app.services.ops.admin_audit import (
     _build_export_filename,
@@ -30,59 +26,11 @@ from app.services.ops.admin_audit import (
     _mask_target_id,
 )
 from app.services.ops.audit_service import AuditEventCreatePayload, AuditService
-from app.services.replay_snapshot_v1_service import (
-    ReplaySnapshotMetadata,
-    ReplaySnapshotResult,
-    ReplaySnapshotV1Service,
-)
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/v1/admin/audit", tags=["admin-audit"])
 AuditPeriod = Literal["7d", "30d", "all"]
-
-
-def get_replay_snapshot_v1_service() -> type[ReplaySnapshotV1Service]:
-    """Retourne le service canonique du cycle de vie replay snapshot."""
-    return ReplaySnapshotV1Service
-
-
-def raise_unavailable_replay_snapshot(result: ReplaySnapshotResult) -> None:
-    """Mappe les etats service non disponibles vers les erreurs HTTP stables."""
-    if result.status == "not_found":
-        raise_api_error(status_code=404, message="Replay snapshot not found")
-    if result.status in {"expired", "already_purged"}:
-        raise_api_error(
-            status_code=410,
-            code="replay_snapshot_unavailable",
-            message="Replay snapshot is no longer available",
-            details={"status": result.status},
-        )
-    raise_api_error(
-        status_code=400,
-        message="Replay snapshot operation failed",
-        details={"status": result.status},
-    )
-
-
-def to_replay_snapshot_response(
-    metadata: ReplaySnapshotMetadata,
-    *,
-    audit_event_id: int | None = None,
-    replay_attempt_id: str | None = None,
-) -> AdminReplaySnapshotV1MetadataResponse:
-    """Projette les metadonnees internes vers le contrat admin redige."""
-    return AdminReplaySnapshotV1MetadataResponse(
-        snapshot_id=metadata.snapshot_id,
-        status=metadata.status,
-        created_at=metadata.created_at,
-        expires_at=metadata.expires_at,
-        redaction_state=metadata.redaction_state,
-        version_identity=metadata.version_identity or None,
-        provenance_refs=metadata.provenance or None,
-        audit_event_id=audit_event_id,
-        replay_attempt_id=replay_attempt_id,
-    )
 
 
 @router.get("", response_model=AdminAuditLogResponse)
@@ -128,97 +76,6 @@ def get_audit_log(
         "page": page,
         "per_page": per_page,
     }
-
-
-@router.get(
-    "/replay_snapshot_v1/{snapshot_id}",
-    response_model=AdminReplaySnapshotV1MetadataResponse,
-)
-def get_replay_snapshot_v1_metadata(
-    snapshot_id: UUID,
-    request: Request,
-    current_user: AuthenticatedUser = Depends(require_admin_user),
-    db: Session = Depends(get_db_session),
-    service: type[ReplaySnapshotV1Service] = Depends(get_replay_snapshot_v1_service),
-) -> AdminReplaySnapshotV1MetadataResponse:
-    """Retourne les metadonnees admin redigees d'un snapshot replay."""
-    result = service.get_snapshot_metadata(
-        db,
-        snapshot_id=snapshot_id,
-        request_id=resolve_request_id(request),
-        actor_user_id=current_user.id,
-        actor_role=current_user.role,
-        audit=True,
-    )
-    if result.status != "success" or result.metadata is None:
-        if result.audit_event_id is not None:
-            db.commit()
-        raise_unavailable_replay_snapshot(result)
-    db.commit()
-    return to_replay_snapshot_response(result.metadata, audit_event_id=result.audit_event_id)
-
-
-@router.post(
-    "/replay_snapshot_v1/{snapshot_id}/replay-attempt",
-    response_model=AdminReplaySnapshotV1ReplayAttemptResponse,
-    status_code=status.HTTP_202_ACCEPTED,
-)
-def start_replay_snapshot_v1_attempt(
-    snapshot_id: UUID,
-    request: Request,
-    current_user: AuthenticatedUser = Depends(require_admin_user),
-    db: Session = Depends(get_db_session),
-    service: type[ReplaySnapshotV1Service] = Depends(get_replay_snapshot_v1_service),
-) -> JSONResponse:
-    """Accepte une tentative de replay admin sans retourner le payload source."""
-    result = service.start_replay_attempt(
-        db,
-        snapshot_id=snapshot_id,
-        request_id=resolve_request_id(request),
-        actor_user_id=current_user.id,
-        actor_role=current_user.role,
-    )
-    if result.status != "success" or result.metadata is None or result.replay_attempt_id is None:
-        if result.audit_event_id is not None:
-            db.commit()
-        raise_unavailable_replay_snapshot(result)
-    db.commit()
-    response = to_replay_snapshot_response(
-        result.metadata,
-        audit_event_id=result.audit_event_id,
-        replay_attempt_id=result.replay_attempt_id,
-    )
-    return JSONResponse(
-        status_code=status.HTTP_202_ACCEPTED,
-        content=response.model_dump(mode="json", exclude_none=True),
-    )
-
-
-@router.delete(
-    "/replay_snapshot_v1/{snapshot_id}",
-    status_code=status.HTTP_204_NO_CONTENT,
-)
-def purge_replay_snapshot_v1(
-    snapshot_id: UUID,
-    request: Request,
-    current_user: AuthenticatedUser = Depends(require_admin_user),
-    db: Session = Depends(get_db_session),
-    service: type[ReplaySnapshotV1Service] = Depends(get_replay_snapshot_v1_service),
-) -> Response:
-    """Purge manuellement un snapshot replay via le service canonique audite."""
-    result = service.purge_snapshot(
-        db,
-        snapshot_id=snapshot_id,
-        request_id=resolve_request_id(request),
-        actor_user_id=current_user.id,
-        actor_role=current_user.role,
-    )
-    if result.status != "success":
-        if result.audit_event_id is not None:
-            db.commit()
-        raise_unavailable_replay_snapshot(result)
-    db.commit()
-    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.post("/export")

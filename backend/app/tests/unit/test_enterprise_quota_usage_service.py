@@ -74,7 +74,7 @@ def test_enterprise_quota_usage_service_rejects_b2c_feature_on_get_usage() -> No
             EnterpriseQuotaUsageService.get_usage(
                 db,
                 account_id=account_id,
-                feature_code="astrologer_chat",
+                feature_code="horoscope_daily",
                 quota=quota,
             )
     assert "QuotaUsageService" in str(exc_info.value)
@@ -97,7 +97,7 @@ def test_enterprise_quota_usage_service_rejects_b2c_feature_on_consume() -> None
             EnterpriseQuotaUsageService.consume(
                 db,
                 account_id=account_id,
-                feature_code="thematic_consultation",
+                feature_code="horoscope_daily",
                 quota=quota,
             )
     assert "QuotaUsageService" in str(exc_info.value)
@@ -117,7 +117,7 @@ def test_enterprise_quota_usage_service_rejects_b2c_feature_before_db_access() -
         EnterpriseQuotaUsageService.get_usage(
             fake_db,
             account_id=1,
-            feature_code="astrologer_chat",
+            feature_code="horoscope_daily",
             quota=quota,
         )
 

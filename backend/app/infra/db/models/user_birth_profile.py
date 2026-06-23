@@ -14,7 +14,11 @@ class UserBirthProfileModel(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), unique=True, index=True)
-    birth_date: Mapped[date] = mapped_column(Date)
+    birth_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    birth_year: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    birth_month: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    birth_day: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    birth_date_precision: Mapped[str] = mapped_column(String(16), nullable=False, default="full")
     birth_time: Mapped[str | None] = mapped_column(String(8), nullable=True)
     birth_place: Mapped[str] = mapped_column(String(255))
     birth_timezone: Mapped[str] = mapped_column(String(64))

@@ -2,7 +2,7 @@ import type { AppLocale } from "./types"
 
 export type SupportedLocale = AppLocale
 
-export type DashboardCardId = "natal" | "chat" | "consultations" | "astrologers" | "settings"
+export type DashboardCardId = "natal" | "astrologers" | "settings"
 
 type DashboardCardTranslation = {
   label: string
@@ -19,10 +19,8 @@ export type DashboardPageTranslation = {
   summaryLoading: string
   activities: string
   shortcuts: {
-    chatTitle: string
-    chatSubtitle: string
-    consultationTitle: string
-    consultationSubtitle: string
+    natalTitle: string
+    natalSubtitle: string
     historyTitle: string
     historySubtitle: string
   }
@@ -40,29 +38,21 @@ export type DashboardPageTranslation = {
 const dashboardCardTranslations: Record<SupportedLocale, Record<DashboardCardId, DashboardCardTranslation>> = {
   fr: {
     natal: { label: "Mon thème astral", description: "Consultez votre thème natal" },
-    chat: { label: "Chat astrologue", description: "Discutez avec votre astrologue" },
-    consultations: { label: "Consultations", description: "Vos consultations passées" },
     astrologers: { label: "Astrologues", description: "Nos astrologues" },
     settings: { label: "Paramètres", description: "Gérez vos préférences" },
   },
   en: {
     natal: { label: "My birth chart", description: "View your natal chart" },
-    chat: { label: "Astrologer chat", description: "Chat with your astrologer" },
-    consultations: { label: "Consultations", description: "Your past consultations" },
     astrologers: { label: "Astrologers", description: "Our astrologers" },
     settings: { label: "Settings", description: "Manage your preferences" },
   },
   es: {
     natal: { label: "Mi carta natal", description: "Consulta tu carta natal" },
-    chat: { label: "Chat astrólogo", description: "Habla con tu astrólogo" },
-    consultations: { label: "Consultas", description: "Tus consultas pasadas" },
     astrologers: { label: "Astrólogos", description: "Nuestros astrólogos" },
     settings: { label: "Ajustes", description: "Gestiona tus preferencias" },
   },
   de: {
     natal: { label: "Mein Geburtshoroskop", description: "Ihr Geburtshoroskop ansehen" },
-    chat: { label: "Astrologen-Chat", description: "Mit Ihrem Astrologen chatten" },
-    consultations: { label: "Beratungen", description: "Ihre vergangenen Beratungen" },
     astrologers: { label: "Astrologen", description: "Unsere Astrologen" },
     settings: { label: "Einstellungen", description: "Ihre Präferenzen verwalten" },
   },
@@ -79,10 +69,8 @@ const dashboardPageTranslations: Record<SupportedLocale, DashboardPageTranslatio
     summaryLoading: "Horoscope du jour en cours de rédaction",
     activities: "Activités",
     shortcuts: {
-      chatTitle: "Chat astrologue",
-      chatSubtitle: "En ligne",
-      consultationTitle: "Consultation",
-      consultationSubtitle: "Guidance ciblée",
+      natalTitle: "Thème natal",
+      natalSubtitle: "Lecture Astral",
       historyTitle: "Historique",
       historySubtitle: "Mes prédictions",
     },
@@ -106,10 +94,8 @@ const dashboardPageTranslations: Record<SupportedLocale, DashboardPageTranslatio
     summaryLoading: "Today's horoscope is being written",
     activities: "Activities",
     shortcuts: {
-      chatTitle: "Astrologer chat",
-      chatSubtitle: "Online",
-      consultationTitle: "Consultation",
-      consultationSubtitle: "Targeted guidance",
+      natalTitle: "Natal chart",
+      natalSubtitle: "Astral reading",
       historyTitle: "History",
       historySubtitle: "My predictions",
     },
@@ -133,10 +119,8 @@ const dashboardPageTranslations: Record<SupportedLocale, DashboardPageTranslatio
     summaryLoading: "El horóscopo del día se está redactando",
     activities: "Actividades",
     shortcuts: {
-      chatTitle: "Chat astrólogo",
-      chatSubtitle: "En línea",
-      consultationTitle: "Consulta",
-      consultationSubtitle: "Guía enfocada",
+      natalTitle: "Carta natal",
+      natalSubtitle: "Lectura Astral",
       historyTitle: "Historial",
       historySubtitle: "Mis predicciones",
     },
@@ -160,10 +144,8 @@ const dashboardPageTranslations: Record<SupportedLocale, DashboardPageTranslatio
     summaryLoading: "Das Tageshoroskop wird gerade geschrieben",
     activities: "Aktivitäten",
     shortcuts: {
-      chatTitle: "Astrologen-Chat",
-      chatSubtitle: "Online",
-      consultationTitle: "Beratung",
-      consultationSubtitle: "Gezielte Begleitung",
+      natalTitle: "Geburtshoroskop",
+      natalSubtitle: "Astral-Lesung",
       historyTitle: "Verlauf",
       historySubtitle: "Meine Vorhersagen",
     },
@@ -190,12 +172,10 @@ export function translateDashboardPage(locale: SupportedLocale = "fr"): Dashboar
   return dashboardPageTranslations[locale] ?? dashboardPageTranslations.fr
 }
 
-export const DASHBOARD_CARD_IDS: DashboardCardId[] = ["natal", "chat", "consultations", "astrologers", "settings"]
+export const DASHBOARD_CARD_IDS: DashboardCardId[] = ["natal", "astrologers", "settings"]
 
 export const DASHBOARD_CARD_PATHS: Record<DashboardCardId, string> = {
   natal: "/natal",
-  chat: "/chat",
-  consultations: "/consultations",
   astrologers: "/astrologers",
   settings: "/settings",
 }

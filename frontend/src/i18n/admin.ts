@@ -1,39 +1,13 @@
 // @ts-nocheck
 // Catalogue central des libelles d'administration multi-langues.
 import type { AstrologyLang } from "./astrology"
-import type { AdminPromptsArchiveStrings } from "./adminPromptsArchive"
-import { adminPromptsArchiveByLang } from "./adminPromptsArchive"
-import type { AdminPromptsEditorStrings } from "./adminPromptsEditor"
-import { adminPromptsEditorByLang } from "./adminPromptsEditor"
-import type { AdminPromptsConsumptionStrings } from "./adminPromptsConsumption"
-import { adminPromptsConsumptionByLang } from "./adminPromptsConsumption"
-import type { AdminPromptsCatalogStrings } from "./adminPromptsCatalog"
-import { adminPromptsCatalogStrings } from "./adminPromptsCatalog"
 
 export interface AdminTranslation {
   page: { title: string; backToHub: string }
-  promptsSubNav: {
-    catalog: string
-    archive: string
-    release: string
-    consumption: string
-    personas: string
-    sample_payloads: string
-  }
-  promptsPageHeader: {
-    catalog: { title: string; intro: string }
-    archive: { title: string; intro: string }
-    release: { title: string; intro: string }
-    consumption: { title: string; intro: string }
-    personas: { title: string; intro: string }
-    samplePayloads: { title: string; intro: string }
-  }
   sections: {
     dashboard: string
     users: string
     entitlements: string
-    ai_generations: string
-    prompts: string
     content: string
     billing: string
     logs: string
@@ -183,10 +157,6 @@ export interface AdminTranslation {
       errorDeleteRequest: (msg: string) => string
     }
   }
-  promptsArchive: AdminPromptsArchiveStrings
-  promptsEditor: AdminPromptsEditorStrings
-  promptsConsumption: AdminPromptsConsumptionStrings
-  promptsCatalog: AdminPromptsCatalogStrings
 }
 
 export interface PricingTranslations {
@@ -218,147 +188,11 @@ export const adminTranslations = {
     es: { title: "Administración", backToHub: "← Volver al hub" },
   } as Record<Exclude<AstrologyLang, "de">, { title: string; backToHub: string }>,
 
-  promptsSubNav: {
-    fr: {
-      catalog: "Catalogue canonique",
-      archive: "Historique archive",
-      release: "Historique release",
-      consumption: "Consommation",
-      personas: "Personas",
-      sample_payloads: "Échantillons runtime",
-    },
-    en: {
-      catalog: "Canonical catalog",
-      archive: "Archive history",
-      release: "Release history",
-      consumption: "Consumption",
-      personas: "Personas",
-      sample_payloads: "Runtime samples",
-    },
-    es: {
-      catalog: "Catálogo canónico",
-      archive: "Historial archive",
-      release: "Historial de release",
-      consumption: "Consumo",
-      personas: "Personas",
-      sample_payloads: "Muestras runtime",
-    },
-  } as Record<
-    AstrologyLang,
-    {
-      catalog: string
-      archive: string
-      release: string
-      consumption: string
-      personas: string
-      sample_payloads: string
-    }
-  >,
-
-  promptsPageHeader: {
-    fr: {
-      catalog: {
-        title: "Catalogue prompts LLM",
-        intro:
-          "Vue canonique feature/subfeature/plan/locale gouvernée par snapshot actif, avec historique archive séparé.",
-      },
-      archive: {
-        title: "Historique LLM hors catalogue",
-        intro:
-          "Investigation seule : versions historiques par cas d’usage, comparaison au prompt actif et restauration confirmée — sans éditer le catalogue canonique.",
-      },
-      release: {
-        title: "Historique release",
-        intro: "Timeline des snapshots déployés et comparaisons entre versions.",
-      },
-      consumption: {
-        title: "Consommation LLM",
-        intro: "Métriques agrégées et drill-down par période, utilisateur ou feature.",
-      },
-      personas: {
-        title: "Personas LLM",
-        intro: "Personas astrologues en production : état, style et limites, sans redéploiement.",
-      },
-      samplePayloads: {
-        title: "Échantillons runtime",
-        intro: "Payloads d'exemple et exécution contrôlée pour valider le catalogue hors trafic nominal.",
-      },
-    },
-    en: {
-      catalog: {
-        title: "LLM prompt catalog",
-        intro:
-          "Canonical feature/subfeature/plan/locale view governed by the active snapshot, with separate archive history.",
-      },
-      archive: {
-        title: "Off-catalog LLM history",
-        intro:
-          "Investigation only: historical versions per use case, diff against the active prompt, and confirmed restore — without editing the canonical catalog.",
-      },
-      release: {
-        title: "Release history",
-        intro: "Deployed snapshot timeline and version comparisons.",
-      },
-      consumption: {
-        title: "LLM consumption",
-        intro: "Aggregated metrics and drill-down by period, user, or feature.",
-      },
-      personas: {
-        title: "LLM personas",
-        intro: "Astrologer personas in production: status, style, and boundaries without redeploy.",
-      },
-      samplePayloads: {
-        title: "Runtime samples",
-        intro: "Sample payloads and controlled execution to validate the catalog off nominal traffic.",
-      },
-    },
-    es: {
-      catalog: {
-        title: "Catálogo de prompts LLM",
-        intro:
-          "Vista canónica feature/subfeature/plan/locale gobernada por el snapshot activo, con historial archive aparte.",
-      },
-      archive: {
-        title: "Historial LLM fuera del catálogo",
-        intro:
-          "Solo investigación: versiones históricas por caso de uso, comparación con el prompt activo y restauración confirmada — sin editar el catálogo canónico.",
-      },
-      release: {
-        title: "Historial de release",
-        intro: "Línea de tiempo de snapshots desplegados y comparaciones entre versiones.",
-      },
-      consumption: {
-        title: "Consumo LLM",
-        intro: "Métricas agregadas y drill-down por periodo, usuario o feature.",
-      },
-      personas: {
-        title: "Personas LLM",
-        intro: "Personas de astrólogos en producción: estado, estilo y límites sin redeploy.",
-      },
-      samplePayloads: {
-        title: "Muestras runtime",
-        intro: "Payloads de ejemplo y ejecución controlada para validar el catálogo fuera del tráfico nominal.",
-      },
-    },
-  } as Record<
-    AstrologyLang,
-    {
-      catalog: { title: string; intro: string }
-      archive: { title: string; intro: string }
-      release: { title: string; intro: string }
-      consumption: { title: string; intro: string }
-      personas: { title: string; intro: string }
-      samplePayloads: { title: string; intro: string }
-    }
-  >,
-
   sections: {
     fr: {
       dashboard: "Tableau de bord",
       users: "Utilisateurs",
       entitlements: "Abonnements & Droits",
-      ai_generations: "Générations IA",
-      prompts: "Prompts & Personas",
       content: "Contenus & Paywalls",
       billing: "Billing",
       logs: "Logs & Incidents",
@@ -373,8 +207,6 @@ export const adminTranslations = {
       dashboard: "Dashboard",
       users: "Users",
       entitlements: "Subscriptions & Rights",
-      ai_generations: "AI Generations",
-      prompts: "Prompts & Personas",
       content: "Content & Paywalls",
       billing: "Billing",
       logs: "Logs & Incidents",
@@ -389,8 +221,6 @@ export const adminTranslations = {
       dashboard: "Panel de control",
       users: "Usuarios",
       entitlements: "Suscripciones y Derechos",
-      ai_generations: "Generaciones de IA",
-      prompts: "Prompts y Personas",
       content: "Contenidos y Paywalls",
       billing: "Facturación",
       logs: "Logs e Incidentes",
@@ -915,17 +745,11 @@ export function translateAdmin(lang: AstrologyLang = "fr"): AdminTranslation {
   const adminLang: Exclude<AstrologyLang, "de"> = lang === "de" ? "en" : lang
   return {
     page: adminTranslations.page[adminLang],
-    promptsSubNav: adminTranslations.promptsSubNav[adminLang],
-    promptsPageHeader: adminTranslations.promptsPageHeader[adminLang],
     sections: adminTranslations.sections[adminLang],
     monitoring: adminTranslations.monitoring[adminLang],
     personas: adminTranslations.personas[adminLang],
     reconciliation: adminTranslations.reconciliation[adminLang],
     b2b: adminTranslations.b2b[adminLang],
     pricing: adminTranslations.pricing[adminLang],
-    promptsArchive: adminPromptsArchiveByLang[adminLang],
-    promptsEditor: adminPromptsEditorByLang[adminLang],
-    promptsConsumption: adminPromptsConsumptionByLang[adminLang],
-    promptsCatalog: adminPromptsCatalogStrings(adminLang),
   }
 }

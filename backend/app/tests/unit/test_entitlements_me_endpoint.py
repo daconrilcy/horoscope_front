@@ -85,13 +85,7 @@ def test_no_plan_user(mock_resolve, mock_hints):
         billing_status="none",
         entitlements={
             fc: _make_access(granted=False, reason_code="feature_not_in_plan")
-            for fc in [
-                "astrologer_chat",
-                "thematic_consultation",
-                "natal_chart_long",
-                "natal_chart_short",
-                "horoscope_daily",
-            ]
+            for fc in ["horoscope_daily"]
         },
     )
 
@@ -102,7 +96,7 @@ def test_no_plan_user(mock_resolve, mock_hints):
     assert data["plan_code"] == "none"
     assert data["billing_status"] == "none"
     features = data["features"]
-    assert len(features) == 5
+    assert len(features) == 1
     for f in features:
         assert f["granted"] is False
         assert f["reason_code"] == "feature_not_in_plan"
@@ -131,13 +125,7 @@ def test_billing_inactive(mock_resolve, mock_hints):
         billing_status="past_due",
         entitlements={
             fc: _make_access(granted=False, reason_code="billing_inactive", access_mode="quota")
-            for fc in [
-                "astrologer_chat",
-                "thematic_consultation",
-                "natal_chart_long",
-                "natal_chart_short",
-                "horoscope_daily",
-            ]
+            for fc in ["horoscope_daily"]
         },
     )
 
@@ -147,7 +135,7 @@ def test_billing_inactive(mock_resolve, mock_hints):
     assert data["plan_code"] == "basic"
     assert data["billing_status"] == "past_due"
     features = data["features"]
-    assert len(features) == 5
+    assert len(features) == 1
     for f in features:
         assert f["granted"] is False
         assert f["reason_code"] == "billing_inactive"
@@ -167,7 +155,7 @@ def test_quota_path_no_consume(mock_resolve, mock_hints, mock_consume):
     mock_hints.return_value = []
 
     usage = UsageState(
-        feature_code="astrologer_chat",
+        feature_code="horoscope_daily",
         quota_key="messages",
         quota_limit=5,
         used=1,
@@ -186,7 +174,7 @@ def test_quota_path_no_consume(mock_resolve, mock_hints, mock_consume):
         plan_code="basic",
         billing_status="active",
         entitlements={
-            "astrologer_chat": _make_access(
+            "horoscope_daily": _make_access(
                 granted=True,
                 reason_code="granted",
                 access_mode="quota",
@@ -194,10 +182,6 @@ def test_quota_path_no_consume(mock_resolve, mock_hints, mock_consume):
                 quota_limit=5,
                 usage_states=[usage],
             ),
-            "thematic_consultation": _make_access(granted=True, reason_code="granted"),
-            "natal_chart_long": _make_access(granted=True, reason_code="granted"),
-            "natal_chart_short": _make_access(granted=True, reason_code="granted"),
-            "horoscope_daily": _make_access(granted=True, reason_code="granted"),
         },
     )
 
@@ -231,11 +215,6 @@ def test_unknown_feature_ignored_gracefully(mock_resolve, mock_hints):
                 reason_code="granted",
                 access_mode="unlimited",
             ),
-            # Les 5 features prioritaires
-            "astrologer_chat": _make_access(granted=True, reason_code="granted"),
-            "thematic_consultation": _make_access(granted=True, reason_code="granted"),
-            "natal_chart_long": _make_access(granted=True, reason_code="granted"),
-            "natal_chart_short": _make_access(granted=True, reason_code="granted"),
             "horoscope_daily": _make_access(granted=True, reason_code="granted"),
         },
     )
@@ -243,8 +222,7 @@ def test_unknown_feature_ignored_gracefully(mock_resolve, mock_hints):
     response = client.get("/v1/entitlements/me")
     assert response.status_code == 200
     features = response.json()["data"]["features"]
-    # On vérifie qu'on n'a QUE les 5 features prioritaires (AC2)
-    assert len(features) == 5
+    assert len(features) == 1
     feature_codes = [f["feature_code"] for f in features]
     assert "unknown_feature" not in feature_codes
     app.dependency_overrides.clear()
@@ -267,10 +245,7 @@ def test_missing_priority_feature_is_returned_as_denied(mock_resolve, mock_hints
         plan_code="basic",
         billing_status="active",
         entitlements={
-            "astrologer_chat": _make_access(granted=True, reason_code="granted"),
-            "thematic_consultation": _make_access(granted=True, reason_code="granted"),
-            "natal_chart_short": _make_access(granted=True, reason_code="granted"),
-            "horoscope_daily": _make_access(granted=True, reason_code="granted"),
+            "unknown_feature": _make_access(granted=True, reason_code="granted"),
         },
     )
 
@@ -278,8 +253,8 @@ def test_missing_priority_feature_is_returned_as_denied(mock_resolve, mock_hints
     assert response.status_code == 200
 
     features = response.json()["data"]["features"]
-    assert len(features) == 5
-    missing_feature = next(f for f in features if f["feature_code"] == "natal_chart_long")
+    assert len(features) == 1
+    missing_feature = next(f for f in features if f["feature_code"] == "horoscope_daily")
     assert missing_feature["granted"] is False
     assert missing_feature["reason_code"] == "feature_not_in_plan"
     assert missing_feature["access_mode"] is None

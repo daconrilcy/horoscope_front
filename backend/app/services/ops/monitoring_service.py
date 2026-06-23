@@ -2,7 +2,7 @@
 Service de monitoring opérationnel.
 
 Ce module fournit des KPIs et des alertes pour le monitoring de l'application :
-conversations, latence, erreurs, quotas et expérimentations tarifaires.
+latence, erreurs, quotas et expérimentations tarifaires.
 """
 
 from __future__ import annotations
@@ -20,7 +20,6 @@ from app.infra.observability.metrics import (
     get_counter_sum_in_window,
     get_counter_sums_by_prefix_in_window,
     get_duration_values_by_prefix_in_window,
-    get_duration_values_in_window,
 )
 
 WINDOWS: dict[str, timedelta] = {
@@ -48,19 +47,6 @@ class OpsMonitoringServiceError(Exception):
         super().__init__(message)
 
 
-class OpsMonitoringKpisData(BaseModel):
-    """KPIs de conversation et guidance."""
-
-    window: str
-    aggregation_scope: str
-    messages_total: int
-    out_of_scope_count: int
-    out_of_scope_rate: float
-    llm_error_count: int
-    llm_error_rate: float
-    p95_latency_ms: float
-
-
 class OpsMonitoringAlertData(BaseModel):
     """Alerte opérationnelle."""
 
@@ -86,28 +72,6 @@ class OpsMonitoringOperationalSummaryData(BaseModel):
     privacy_failures_total: int
     b2b_auth_failures_total: int
     alerts: list[OpsMonitoringAlertData]
-
-
-class OpsMonitoringPersonaKpisItem(BaseModel):
-    """KPIs pour un profil persona spécifique."""
-
-    persona_profile_code: str
-    messages_total: int
-    guidance_messages_total: int
-    out_of_scope_count: int
-    recovery_success_count: int
-    recovery_success_rate: float
-    llm_error_count: int
-    llm_error_rate: float
-    p95_latency_ms: float
-
-
-class OpsMonitoringPersonaKpisData(BaseModel):
-    """KPIs agrégés par profil persona."""
-
-    window: str
-    aggregation_scope: str
-    personas: list[OpsMonitoringPersonaKpisItem]
 
 
 class OpsMonitoringPricingKpisVariantItem(BaseModel):
@@ -155,7 +119,7 @@ class OpsMonitoringService:
     Service de monitoring opérationnel.
 
     Agrège les métriques de l'instance locale pour fournir des KPIs
-    de conversation, d'opérations et d'expérimentation tarifaire.
+    d'opérations et d'expérimentation tarifaire.
     """
 
     @staticmethod
@@ -183,59 +147,6 @@ class OpsMonitoringService:
             normalized_value = max(0, int(round(value)))
             totals[variant] = totals.get(variant, 0) + normalized_value
         return totals
-
-    @staticmethod
-    def get_conversation_kpis(*, window: str) -> OpsMonitoringKpisData:
-        """
-        Récupère les KPIs de conversation pour une fenêtre temporelle.
-
-        Args:
-            window: Fenêtre temporelle ("1h", "24h", "7d").
-
-        Returns:
-            KPIs de conversation avec messages, erreurs et latence.
-
-        Raises:
-            OpsMonitoringServiceError: Si la fenêtre est invalide.
-        """
-        selected_window = window.strip().lower()
-        if selected_window not in WINDOWS:
-            raise OpsMonitoringServiceError(
-                code="invalid_monitoring_window",
-                message="monitoring window is invalid",
-                details={"supported_windows": "1h,24h,7d"},
-            )
-
-        duration = WINDOWS[selected_window]
-        messages_total = int(get_counter_sum_in_window("conversation_messages_total", duration))
-        chat_messages_total = int(
-            get_counter_sum_in_window("conversation_chat_messages_total", duration)
-        )
-        out_of_scope_count = int(
-            get_counter_sum_in_window("conversation_out_of_scope_total", duration)
-        )
-        llm_error_count = int(get_counter_sum_in_window("conversation_llm_errors_total", duration))
-
-        out_of_scope_rate = (
-            out_of_scope_count / chat_messages_total if chat_messages_total > 0 else 0.0
-        )
-        llm_error_rate = (llm_error_count / messages_total) if messages_total > 0 else 0.0
-
-        chat_latency = get_duration_values_in_window("conversation_latency_seconds", duration)
-        guidance_latency = get_duration_values_in_window("guidance_latency_seconds", duration)
-        all_latency = chat_latency + guidance_latency
-        p95_latency_ms = _percentile(all_latency, 0.95) * 1000.0
-
-        return OpsMonitoringKpisData(
-            window=selected_window,
-            aggregation_scope="instance_local",
-            messages_total=messages_total,
-            out_of_scope_count=out_of_scope_count,
-            out_of_scope_rate=out_of_scope_rate,
-            llm_error_count=llm_error_count,
-            llm_error_rate=llm_error_rate,
-            p95_latency_ms=p95_latency_ms,
-        )
 
     @staticmethod
     def get_operational_summary(*, window: str) -> OpsMonitoringOperationalSummaryData:
@@ -315,139 +226,6 @@ class OpsMonitoringService:
             privacy_failures_total=privacy_failures_total,
             b2b_auth_failures_total=b2b_auth_failures_total,
             alerts=alerts,
-        )
-
-    @staticmethod
-    def get_persona_kpis(*, window: str) -> OpsMonitoringPersonaKpisData:
-        """
-        Récupère les KPIs agrégés par profil persona.
-
-        Args:
-            window: Fenêtre temporelle ("1h", "24h", "7d").
-
-        Returns:
-            KPIs par persona avec messages, erreurs et récupérations.
-        """
-        selected_window = window.strip().lower()
-        if selected_window not in WINDOWS:
-            raise OpsMonitoringServiceError(
-                code="invalid_monitoring_window",
-                message="monitoring window is invalid",
-                details={"supported_windows": "1h,24h,7d"},
-            )
-        duration = WINDOWS[selected_window]
-        messages_by_persona = get_counter_sums_by_prefix_in_window(
-            "conversation_messages_total|persona_profile=",
-            duration,
-        )
-        guidance_messages_by_persona = get_counter_sums_by_prefix_in_window(
-            "conversation_guidance_messages_total|persona_profile=",
-            duration,
-        )
-        llm_errors_by_persona = get_counter_sums_by_prefix_in_window(
-            "conversation_llm_errors_total|persona_profile=",
-            duration,
-        )
-        chat_out_of_scope_by_persona = get_counter_sums_by_prefix_in_window(
-            "conversation_out_of_scope_total|persona_profile=",
-            duration,
-        )
-        guidance_out_of_scope_by_persona = get_counter_sums_by_prefix_in_window(
-            "guidance_out_of_scope_total|persona_profile=",
-            duration,
-        )
-        chat_recovery_success_by_persona = get_counter_sums_by_prefix_in_window(
-            "conversation_recovery_success_total|persona_profile=",
-            duration,
-        )
-        guidance_recovery_success_by_persona = get_counter_sums_by_prefix_in_window(
-            "guidance_recovery_success_total|persona_profile=",
-            duration,
-        )
-        chat_latency_by_persona = get_duration_values_by_prefix_in_window(
-            "conversation_latency_seconds|persona_profile=",
-            duration,
-        )
-        guidance_latency_by_persona = get_duration_values_by_prefix_in_window(
-            "guidance_latency_seconds|persona_profile=",
-            duration,
-        )
-
-        persona_codes = set()
-        for metric_name in messages_by_persona:
-            persona_codes.add(metric_name.split("persona_profile=", 1)[1])
-        for metric_name in guidance_messages_by_persona:
-            persona_codes.add(metric_name.split("persona_profile=", 1)[1])
-        for metric_name in llm_errors_by_persona:
-            persona_codes.add(metric_name.split("persona_profile=", 1)[1])
-        for metric_name in chat_out_of_scope_by_persona:
-            persona_codes.add(metric_name.split("persona_profile=", 1)[1])
-        for metric_name in guidance_out_of_scope_by_persona:
-            persona_codes.add(metric_name.split("persona_profile=", 1)[1])
-        for metric_name in chat_recovery_success_by_persona:
-            persona_codes.add(metric_name.split("persona_profile=", 1)[1])
-        for metric_name in guidance_recovery_success_by_persona:
-            persona_codes.add(metric_name.split("persona_profile=", 1)[1])
-        for metric_name in chat_latency_by_persona:
-            persona_codes.add(metric_name.split("persona_profile=", 1)[1])
-        for metric_name in guidance_latency_by_persona:
-            persona_codes.add(metric_name.split("persona_profile=", 1)[1])
-
-        items: list[OpsMonitoringPersonaKpisItem] = []
-        for persona_code in sorted(persona_codes):
-            messages_metric = f"conversation_messages_total|persona_profile={persona_code}"
-            guidance_metric = f"conversation_guidance_messages_total|persona_profile={persona_code}"
-            errors_metric = f"conversation_llm_errors_total|persona_profile={persona_code}"
-            chat_out_scope_metric = (
-                f"conversation_out_of_scope_total|persona_profile={persona_code}"
-            )
-            guidance_out_scope_metric = (
-                f"guidance_out_of_scope_total|persona_profile={persona_code}"
-            )
-            chat_recovery_success_metric = (
-                f"conversation_recovery_success_total|persona_profile={persona_code}"
-            )
-            guidance_recovery_success_metric = (
-                f"guidance_recovery_success_total|persona_profile={persona_code}"
-            )
-            chat_latency_metric = f"conversation_latency_seconds|persona_profile={persona_code}"
-            guidance_latency_metric = f"guidance_latency_seconds|persona_profile={persona_code}"
-            messages_total = int(messages_by_persona.get(messages_metric, 0.0))
-            guidance_messages_total = int(guidance_messages_by_persona.get(guidance_metric, 0.0))
-            llm_error_count = int(llm_errors_by_persona.get(errors_metric, 0.0))
-            out_of_scope_count = int(
-                chat_out_of_scope_by_persona.get(chat_out_scope_metric, 0.0)
-                + guidance_out_of_scope_by_persona.get(guidance_out_scope_metric, 0.0)
-            )
-            recovery_success_count = int(
-                chat_recovery_success_by_persona.get(chat_recovery_success_metric, 0.0)
-                + guidance_recovery_success_by_persona.get(guidance_recovery_success_metric, 0.0)
-            )
-            all_latency_values = chat_latency_by_persona.get(
-                chat_latency_metric, []
-            ) + guidance_latency_by_persona.get(guidance_latency_metric, [])
-            llm_error_rate = (llm_error_count / messages_total) if messages_total > 0 else 0.0
-            recovery_success_rate = (
-                recovery_success_count / out_of_scope_count if out_of_scope_count > 0 else 0.0
-            )
-            items.append(
-                OpsMonitoringPersonaKpisItem(
-                    persona_profile_code=persona_code,
-                    messages_total=messages_total,
-                    guidance_messages_total=guidance_messages_total,
-                    out_of_scope_count=out_of_scope_count,
-                    recovery_success_count=recovery_success_count,
-                    recovery_success_rate=recovery_success_rate,
-                    llm_error_count=llm_error_count,
-                    llm_error_rate=llm_error_rate,
-                    p95_latency_ms=_percentile(all_latency_values, 0.95) * 1000.0,
-                )
-            )
-
-        return OpsMonitoringPersonaKpisData(
-            window=selected_window,
-            aggregation_scope="instance_local",
-            personas=items,
         )
 
     @staticmethod

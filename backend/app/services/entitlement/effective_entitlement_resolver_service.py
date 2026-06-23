@@ -447,8 +447,6 @@ class EffectiveEntitlementResolverService:
 
         _BENEFIT_KEY_MAP: dict[str, str] = {
             "horoscope_daily": "upgrade.horoscope_daily.full_access",
-            "natal_chart_long": "upgrade.natal_chart_long.full_interpretation",
-            "astrologer_chat": "upgrade.astrologer_chat.unlimited_messages",
         }
 
         for f_code, access in snapshot.entitlements.items():
@@ -508,16 +506,12 @@ class EffectiveEntitlementResolverService:
     def _get_cta_variant(feature_code: str) -> str:
         """Mapping de la variante de CTA par feature (Story 64.4)."""
         return {
-            "astrologer_chat": "banner",
             "horoscope_daily": "inline",
-            "natal_chart_long": "inline",
         }.get(feature_code, "inline")
 
     @staticmethod
     def _get_hint_priority(feature_code: str) -> int:
         """Priorité d'affichage des hints (plus petit = plus prioritaire)."""
         return {
-            "astrologer_chat": 10,
             "horoscope_daily": 20,
-            "natal_chart_long": 30,
         }.get(feature_code, 100)

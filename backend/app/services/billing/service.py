@@ -45,7 +45,7 @@ settings = billing_config.settings
 class BillingService:
     """Facade fine d orchestration pour le domaine billing."""
 
-    BILLING_QUOTA_FEATURE = "astrologer_chat"
+    BILLING_QUOTA_FEATURE = "horoscope_daily"
     _BILLING_QUOTA_FEATURE = BILLING_QUOTA_FEATURE
 
     @staticmethod

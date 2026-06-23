@@ -8,7 +8,7 @@ import type { ReactNode } from "react"
  * unique "admin" (Epic 65) vers des profils granulaires (Epic 66+) :
  * - admin_business : focus KPIs, billing, exports
  * - admin_support  : focus users, tickets, modération
- * - admin_ops      : focus prompts, configurations, logs
+ * - admin_ops      : focus configurations, logs
  * - super_admin    : tous les droits
  */
 
@@ -16,7 +16,7 @@ export interface AdminPermissions {
   /** Liste des codes de sections autorisées dans le menu latéral */
   allowedSections: string[]
   /** Vérifie si l'utilisateur peut modifier un domaine spécifique */
-  canEdit: (domain: "entitlements" | "prompts" | "content" | "users" | "billing" | "settings") => boolean
+  canEdit: (domain: "entitlements" | "content" | "users" | "billing" | "settings") => boolean
   /** Vérifie si l'utilisateur peut effectuer des exports de données sensibles */
   canExport: boolean
 }
@@ -29,8 +29,6 @@ export const ALL_ADMIN_SECTIONS = [
   "dashboard",
   "users",
   "entitlements",
-  "ai-generations",
-  "prompts",
   "content",
   "billing",
   "logs",

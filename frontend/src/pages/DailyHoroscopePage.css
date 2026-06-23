@@ -134,6 +134,24 @@
   background: none;
 }
 
+.daily-page-state__lead {
+  margin: 0;
+}
+
+.daily-page-state__json {
+  overflow: auto;
+  max-height: 520px;
+  margin: 18px 0 0;
+  padding: 16px;
+  border: 1px solid var(--premium-card-border);
+  border-radius: var(--radius-md);
+  background: var(--premium-card-bg);
+  color: var(--text-main);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-relaxed);
+  white-space: pre-wrap;
+}
+
 @media (max-width: 768px) {
   .daily-layout {
     --layout-padding-inline: 22px;

@@ -1,5 +1,4 @@
 import { QueryClient } from '@tanstack/react-query';
-import { getDailyPredictionQueryOptions } from '../api/useDailyPrediction';
 import { getBirthDataQueryOptions } from '../api/useBirthData';
 
 /**
@@ -10,7 +9,6 @@ export async function prefetchDailyHoroscope(queryClient: QueryClient, token: st
   if (!token) return;
 
   await Promise.allSettled([
-    queryClient.prefetchQuery(getDailyPredictionQueryOptions(token)),
     queryClient.prefetchQuery(getBirthDataQueryOptions(token)),
   ]);
 }

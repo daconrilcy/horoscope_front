@@ -1,7 +1,7 @@
 // Regroupe les sections lourdes du profil astrologue pour garder la route composeuse.
 import type { ReactNode } from "react"
 import type { LucideIcon } from "lucide-react"
-import { ArrowRight, Heart, MessageSquare, Sparkles, Star } from "lucide-react"
+import { ArrowRight, Heart, Sparkles, Star } from "lucide-react"
 
 import type { AstrologerProfile } from "@api/astrologers"
 import { Button } from "@ui"
@@ -60,12 +60,8 @@ type AstrologerProfileFinalCtaProps = {
   trustItems: AstrologerProfileTrustItem[]
   isPrimary?: boolean
   labels: {
-    session: string
-    chat: string
     natal: string
   }
-  onConsultation: () => void
-  onChat: () => void
   onNatal: () => void
 }
 
@@ -253,8 +249,6 @@ export function AstrologerProfileFinalCta({
   trustItems,
   isPrimary = true,
   labels,
-  onConsultation,
-  onChat,
   onNatal,
 }: AstrologerProfileFinalCtaProps) {
   return (
@@ -266,10 +260,10 @@ export function AstrologerProfileFinalCta({
         size="lg"
         variant={isPrimary ? "primary" : "secondary"}
         className={`premium-cta ${isPrimary ? "premium-cta--primary" : "premium-cta--soft"}`}
-        onClick={onConsultation}
+        onClick={onNatal}
         rightIcon={<ArrowRight size={20} />}
       >
-        {labels.session}
+        {labels.natal}
       </Button>
       <div className="profile-final-cta__trust">
         {trustItems.map((item) => {
@@ -281,15 +275,6 @@ export function AstrologerProfileFinalCta({
             </span>
           )
         })}
-      </div>
-      <div className="cta-group cta-group--secondary">
-        <Button size="lg" variant="secondary" className="premium-cta" onClick={onChat} leftIcon={<MessageSquare size={18} />}>
-          {labels.chat}
-        </Button>
-
-        <Button size="lg" variant="secondary" onClick={onNatal} leftIcon={<Sparkles size={18} />}>
-          {labels.natal}
-        </Button>
       </div>
     </section>
   )

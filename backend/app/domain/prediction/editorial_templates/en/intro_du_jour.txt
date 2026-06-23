@@ -1,2 +1,0 @@
-Your day on {date_local} is looking {overall_tone_label}.
-Your strong points: {top3_labels}.

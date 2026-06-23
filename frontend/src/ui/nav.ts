@@ -7,7 +7,6 @@ import {
   CalendarDays,
   MessageCircle,
   Star,
-  Layers,
   Users,
   Shield,
   FileText,
@@ -26,9 +25,7 @@ export interface NavItem {
 export const navItems: NavItem[] = [
   // Consumer Base
   { key: 'today', label: 'Aujourd\'hui', icon: CalendarDays, path: '/dashboard', showOnMobile: true },
-  { key: 'chat', label: 'Chat', icon: MessageCircle, path: '/chat', showOnMobile: true },
   { key: 'natal', label: 'Thème', icon: Star, path: '/natal', showOnMobile: true },
-  { key: 'consultations', label: 'Consultations', icon: Layers, path: '/consultations', showOnMobile: true },
   { key: 'astrologers', label: 'Astrologues', icon: Users, path: '/astrologers', showOnMobile: false },
   
   // Support / Ops
@@ -40,7 +37,6 @@ export const navItems: NavItem[] = [
   
   // Enterprise
   { key: 'ent_api', label: 'API', icon: Shield, path: '/enterprise/credentials', roles: ['enterprise_admin'], showOnMobile: false },
-  { key: 'ent_astro', label: 'Astrologie', icon: Star, path: '/enterprise/astrology', roles: ['enterprise_admin'], showOnMobile: false },
   { key: 'ent_usage', label: 'Usage', icon: FileText, path: '/enterprise/usage', roles: ['enterprise_admin'], showOnMobile: false },
   { key: 'ent_editorial', label: 'Éditorial', icon: FileText, path: '/enterprise/editorial', roles: ['enterprise_admin'], showOnMobile: false },
   { key: 'ent_billing', label: 'Facturation', icon: FileText, path: '/enterprise/billing', roles: ['enterprise_admin'], showOnMobile: false },

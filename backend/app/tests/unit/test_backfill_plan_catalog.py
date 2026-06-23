@@ -22,7 +22,7 @@ from scripts.backfill_plan_catalog_from_legacy import (
     backfill_b2b_plans,
     backfill_b2c_plans,
     ensure_b2b_feature,
-    ensure_b2c_chat_feature,
+    ensure_b2c_horoscope_feature,
 )
 
 
@@ -64,7 +64,7 @@ def test_backfill_b2c_creates_plans_and_quotas(db_session: Session):
         .join(FeatureCatalogModel)
         .where(
             PlanFeatureBindingModel.plan_id == plan.id,
-            FeatureCatalogModel.feature_code == "astrologer_chat",
+            FeatureCatalogModel.feature_code == "horoscope_daily",
         )
     ).scalar_one_or_none()
     assert binding is not None
@@ -106,7 +106,7 @@ def test_backfill_b2c_disabled_when_limit_is_zero(db_session: Session):
         .join(FeatureCatalogModel)
         .where(
             PlanFeatureBindingModel.plan_id == plan.id,
-            FeatureCatalogModel.feature_code == "astrologer_chat",
+            FeatureCatalogModel.feature_code == "horoscope_daily",
         )
     ).scalar_one_or_none()
     assert binding.access_mode == AccessMode.DISABLED
@@ -203,15 +203,15 @@ def test_backfill_updates_manual_plans_and_bindings(db_session: Session):
     db_session.add(manual_plan)
     db_session.flush()
 
-    chat_feat = FeatureCatalogModel(
-        feature_code="astrologer_chat", feature_name="Chat", is_metered=True
+    horoscope_feature = FeatureCatalogModel(
+        feature_code="horoscope_daily", feature_name="Horoscope", is_metered=True
     )
-    db_session.add(chat_feat)
+    db_session.add(horoscope_feature)
     db_session.flush()
 
     manual_binding = PlanFeatureBindingModel(
         plan_id=manual_plan.id,
-        feature_id=chat_feat.id,
+        feature_id=horoscope_feature.id,
         access_mode=AccessMode.UNLIMITED,  # Manual says unlimited
         source_origin="manual",
     )
@@ -312,16 +312,16 @@ def test_backfill_collision_on_binding_logs_warning_without_overwriting(
     db_session.add(plan)
     db_session.flush()
 
-    chat_feat = FeatureCatalogModel(
-        feature_code="astrologer_chat", feature_name="Chat", is_metered=True
+    horoscope_feature = FeatureCatalogModel(
+        feature_code="horoscope_daily", feature_name="Horoscope", is_metered=True
     )
-    db_session.add(chat_feat)
+    db_session.add(horoscope_feature)
     db_session.flush()
 
     # Binding avec une origine tierce (non manual, non migrated_from_billing_plan)
     existing_binding = PlanFeatureBindingModel(
         plan_id=plan.id,
-        feature_id=chat_feat.id,
+        feature_id=horoscope_feature.id,
         access_mode=AccessMode.UNLIMITED,
         source_origin=non_overridable_origin,
     )
@@ -386,7 +386,7 @@ def test_backfill_non_mapped_columns_absent_from_canonical(db_session: Session):
     assert not hasattr(plans[0], "monthly_price_cents")
     assert not hasattr(plans[0], "currency")
 
-    # Exactement 1 binding (astrologer_chat) et 1 quota (messages/day)
+    # Exactement 1 binding (horoscope_daily) et 1 quota (messages/day)
     bindings = db_session.execute(select(PlanFeatureBindingModel)).scalars().all()
     assert len(bindings) == 1
 
@@ -511,10 +511,10 @@ def test_backfill_idempotence_tracks_unchanged_counters(db_session: Session):
     assert report2.quotas_unchanged == 1
 
 
-def test_ensure_b2c_chat_feature_reuses_seeded_feature_without_duplicate(db_session: Session):
+def test_ensure_b2c_horoscope_feature_reuses_seeded_feature_without_duplicate(db_session: Session):
     seeded_feature = FeatureCatalogModel(
-        feature_code="astrologer_chat",
-        feature_name="Astrologer Chat",
+        feature_code="horoscope_daily",
+        feature_name="Horoscope",
         description="Seeded canonical feature",
         is_metered=True,
         is_active=True,
@@ -522,13 +522,13 @@ def test_ensure_b2c_chat_feature_reuses_seeded_feature_without_duplicate(db_sess
     db_session.add(seeded_feature)
     db_session.commit()
 
-    feature = ensure_b2c_chat_feature(db_session)
+    feature = ensure_b2c_horoscope_feature(db_session)
     db_session.commit()
 
     assert feature.id == seeded_feature.id
     features = (
         db_session.execute(
-            select(FeatureCatalogModel).where(FeatureCatalogModel.feature_code == "astrologer_chat")
+            select(FeatureCatalogModel).where(FeatureCatalogModel.feature_code == "horoscope_daily")
         )
         .scalars()
         .all()

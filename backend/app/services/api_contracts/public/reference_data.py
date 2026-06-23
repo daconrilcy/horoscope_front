@@ -11,13 +11,6 @@ class ResponseMeta(BaseModel):
     request_id: str
 
 
-class CloneReferenceVersionPayload(BaseModel):
-    """Contrat Pydantic exposé par l'API."""
-
-    source_version: str
-    new_version: str
-
-
 class LanguageData(BaseModel):
     """Langue disponible pour la localisation de l'interface."""
 

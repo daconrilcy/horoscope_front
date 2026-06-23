@@ -90,7 +90,7 @@ const ENTITLEMENTS_ME = {
     data: {
       features: [
         {
-          feature_code: "astrologer_chat",
+          feature_code: "horoscope_daily",
           final_access: true,
           reason: "canonical_binding",
           usage_states: [

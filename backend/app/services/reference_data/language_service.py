@@ -5,7 +5,7 @@ from __future__ import annotations
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
-from app.infra.db.models.reference import LanguageModel
+from app.infra.db.models.language import LanguageModel
 
 
 class ReferenceLanguageServiceError(Exception):

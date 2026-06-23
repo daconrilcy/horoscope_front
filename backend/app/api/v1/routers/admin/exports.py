@@ -1,13 +1,11 @@
-"""Routeur d exports admin avec consommation canonique LLM normalisee."""
+"""Routeur d exports admin pour les donnees applicatives."""
 
 from __future__ import annotations
 
-import json
 import logging
 from typing import Any
 
 from fastapi import APIRouter, Depends, Request
-from fastapi.responses import StreamingResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -20,9 +18,7 @@ from app.infra.db.models.user import UserModel
 from app.infra.db.session import get_db_session
 from app.services.api_contracts.admin.exports import (
     AdminExportRequest,
-    AdminGenerationExportRequest,
 )
-from app.services.llm_observability.consumption_service import LlmCanonicalConsumptionService
 from app.services.ops.admin_exports import _record_export_audit
 
 logger = logging.getLogger(__name__)
@@ -87,64 +83,6 @@ def export_users(
         "stripe_customer_id",
     ]
     return generate_csv_response(rows, fieldnames, "users_export.csv")
-
-
-@router.post("/generations")
-def export_generations(
-    request: Request,
-    payload: AdminGenerationExportRequest,
-    current_user: AuthenticatedUser = Depends(require_admin_user),
-    db: Session = Depends(get_db_session),
-) -> Any:
-    request_id = resolve_request_id(request)
-    rows = [
-        row.model_dump(mode="json")
-        for row in LlmCanonicalConsumptionService.get_export_rows(
-            db,
-            from_utc=payload.period.start if payload.period else None,
-            to_utc=payload.period.end if payload.period else None,
-        )
-    ]
-
-    # 1. Audit
-    _record_export_audit(
-        db,
-        request_id,
-        current_user,
-        "generations",
-        len(rows),
-        payload.model_dump(mode="json"),
-    )
-
-    # 2. Return File
-    if payload.format == "json":
-        return StreamingResponse(
-            iter([json.dumps(rows, indent=2)]),
-            media_type="application/json",
-            headers={"Content-Disposition": "attachment; filename=generations_export.json"},
-        )
-
-    fieldnames = [
-        "id",
-        "created_at",
-        "feature",
-        "subfeature",
-        "subscription_plan",
-        "executed_provider",
-        "active_snapshot_version",
-        "taxonomy_scope",
-        "model",
-        "status",
-        "tokens_prompt",
-        "tokens_completion",
-        "latency_ms",
-        "request_id",
-    ]
-    return generate_csv_response(
-        rows,
-        fieldnames,
-        "generations_export.csv",
-    )
 
 
 @router.post("/billing")

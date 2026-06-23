@@ -100,7 +100,7 @@ def test_http_error_catalog_is_unique_and_valid() -> None:
     ("code", "expected_status"),
     [
         ("b2b_api_access_denied", 403),
-        ("weekly_generation_failed", 422),
+        ("birth_profile_date_incomplete", 422),
         ("enterprise_account_inactive", 422),
         ("alert_event_not_retryable", 409),
         ("token_expired", 401),

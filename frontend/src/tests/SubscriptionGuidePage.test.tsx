@@ -5,8 +5,8 @@ import { createMemoryRouter, RouterProvider } from "react-router-dom"
 
 import { setAccessToken } from "../utils/authToken"
 import { ThemeProvider } from "../state/ThemeProvider"
-import { routes } from "../app/routes"
 import { routerFutureFlags, routerProviderFutureFlags } from "./test-utils"
+import { SubscriptionGuidePage } from "../pages/SubscriptionGuidePage"
 
 const AUTH_ME_USER = {
   ok: true,
@@ -81,39 +81,17 @@ const PLANS_OK = {
         processing_priority: "low",
         features: [
           {
-            feature_code: "natal_chart_short",
+            feature_code: "natal_astral",
             feature_name: "Thème natal",
             is_enabled: true,
             access_mode: "unlimited",
             quotas: [],
           },
           {
-            feature_code: "natal_chart_long",
-            feature_name: "Thème natal (long)",
-            is_enabled: false,
-            access_mode: "disabled",
-            quotas: [],
-          },
-          {
-            feature_code: "astrologer_chat",
-            feature_name: "Chat astrologique",
+            feature_code: "horoscope_daily",
+            feature_name: "Horoscope quotidien",
             is_enabled: true,
-            access_mode: "quota",
-            quotas: [
-              {
-                quota_key: "messages",
-                quota_limit: 1,
-                period_unit: "week",
-                period_value: 1,
-                reset_mode: "calendar",
-              },
-            ],
-          },
-          {
-            feature_code: "thematic_consultation",
-            feature_name: "Consultations thématiques",
-            is_enabled: false,
-            access_mode: "disabled",
+            access_mode: "unlimited",
             quotas: [],
           },
         ],
@@ -127,14 +105,14 @@ const PLANS_OK = {
         processing_priority: "medium",
         features: [
           {
-            feature_code: "natal_chart_short",
+            feature_code: "natal_astral",
             feature_name: "Thème natal",
             is_enabled: true,
             access_mode: "unlimited",
             quotas: [],
           },
           {
-            feature_code: "natal_chart_long",
+            feature_code: "natal_astral_full",
             feature_name: "Interprétation complète du thème natal",
             is_enabled: true,
             access_mode: "quota",
@@ -149,34 +127,11 @@ const PLANS_OK = {
             ],
           },
           {
-            feature_code: "astrologer_chat",
-            feature_name: "Chat astrologique",
+            feature_code: "horoscope_daily",
+            feature_name: "Horoscope quotidien",
             is_enabled: true,
-            access_mode: "quota",
-            quotas: [
-              {
-                quota_key: "tokens",
-                quota_limit: 200000,
-                period_unit: "month",
-                period_value: 1,
-                reset_mode: "calendar",
-              },
-            ],
-          },
-          {
-            feature_code: "thematic_consultation",
-            feature_name: "Consultations thématiques",
-            is_enabled: true,
-            access_mode: "quota",
-            quotas: [
-              {
-                quota_key: "tokens",
-                quota_limit: 20000,
-                period_unit: "week",
-                period_value: 1,
-                reset_mode: "calendar",
-              },
-            ],
+            access_mode: "unlimited",
+            quotas: [],
           },
         ],
       },
@@ -189,29 +144,22 @@ const PLANS_OK = {
         processing_priority: "high",
         features: [
           {
-            feature_code: "natal_chart_short",
+            feature_code: "natal_astral",
             feature_name: "Thème natal",
             is_enabled: true,
             access_mode: "unlimited",
             quotas: [],
           },
           {
-            feature_code: "natal_chart_long",
+            feature_code: "natal_astral_full",
             feature_name: "Thème natal (long)",
             is_enabled: true,
             access_mode: "unlimited",
             quotas: [],
           },
           {
-            feature_code: "astrologer_chat",
-            feature_name: "Chat astrologique",
-            is_enabled: true,
-            access_mode: "unlimited",
-            quotas: [],
-          },
-          {
-            feature_code: "thematic_consultation",
-            feature_name: "Consultations thématiques",
+            feature_code: "horoscope_daily",
+            feature_name: "Horoscope quotidien",
             is_enabled: true,
             access_mode: "unlimited",
             quotas: [],
@@ -229,6 +177,8 @@ const NOT_FOUND = {
   json: async () => ({ error: { code: "not_found", message: "not found" } }),
 }
 
+let activeQueryClient: QueryClient | null = null
+
 describe("SubscriptionGuidePage", () => {
   beforeEach(() => {
     localStorage.setItem("lang", "fr")
@@ -237,6 +187,8 @@ describe("SubscriptionGuidePage", () => {
 
   afterEach(() => {
     cleanup()
+    activeQueryClient?.clear()
+    activeQueryClient = null
     vi.unstubAllGlobals()
     localStorage.clear()
   })
@@ -253,74 +205,31 @@ describe("SubscriptionGuidePage", () => {
 
     renderSubscriptionGuidePage()
 
-    await waitFor(() => {
-      expect(screen.getByText("Choisissez l’expérience astrologique qui vous correspond")).toBeInTheDocument()
-      expect(
-        screen.getByText(/Notre approche de l’astrologie ne se limite pas à des réponses automatiques/),
-      ).toBeInTheDocument()
-      expect(screen.getByRole("link", { name: "Gérer mon abonnement" })).toHaveAttribute("href", "/settings/subscription")
-      expect(screen.getByRole("link", { name: "Comparer les offres" })).toHaveAttribute("href", "#subscription-plans")
-      expect(screen.getByText("Repères rapides")).toBeInTheDocument()
-      expect(screen.getByText("Votre plan actuel : Basic")).toBeInTheDocument()
-      expect(screen.getByText("À partir de 0 €")).toBeInTheDocument()
+    expect(await screen.findByText("Choisissez l’expérience astrologique qui vous correspond")).toBeInTheDocument()
+    expect(screen.getByText(/Notre approche de l’astrologie ne se limite pas à des réponses automatiques/)).toBeInTheDocument()
+    expect(screen.getByRole("link", { name: "Gérer mon abonnement" })).toHaveAttribute("href", "/settings/subscription")
+    expect(screen.getByRole("link", { name: "Comparer les offres" })).toHaveAttribute("href", "#subscription-plans")
+    expect(screen.getByText("Repères rapides")).toBeInTheDocument()
+    expect(screen.getByText("Votre plan actuel : Basic")).toBeInTheDocument()
 
-      const main = screen.getByRole("main")
+    const main = document.querySelector(".page-layout__main") as HTMLElement
+    expect(main).not.toBeNull()
+    expect(within(main).getByText("Free")).toBeInTheDocument()
+    expect(within(main).getByText("Basic")).toBeInTheDocument()
+    expect(within(main).getByText("Premium")).toBeInTheDocument()
+    const basicCard = within(main).getByText("Basic").closest(".subscription-plan-card")
+    expect(basicCard).not.toBeNull()
+    expect(basicCard).toHaveClass("subscription-plan-card--featured")
+    expect(within(main).getByText("Horoscope quotidien inclus")).toBeInTheDocument()
+    expect(within(main).getByText("Horoscope quotidien complet")).toBeInTheDocument()
 
-      expect(within(main).getByText("Free")).toBeInTheDocument()
-      expect(within(main).getByText("Basic")).toBeInTheDocument()
-      expect(within(main).getByText("Premium")).toBeInTheDocument()
-
-      expect(within(main).getByText("Découverte")).toBeInTheDocument()
-      expect(within(main).getByText("Usage régulier")).toBeInTheDocument()
-      expect(within(main).getByText("Expérience complète")).toBeInTheDocument()
-      expect(within(main).getByText("Pour explorer l’essentiel, en toute simplicité.")).toBeInTheDocument()
-      expect(within(main).getByText("Votre compagnon astrologique du quotidien.")).toBeInTheDocument()
-      expect(within(main).getByText("La version la plus fluide, la plus profonde, la plus généreuse.")).toBeInTheDocument()
-
-      expect(within(main).getByText("Traitement standard")).toBeInTheDocument()
-      expect(within(main).getByText("Traitement prioritaire")).toBeInTheDocument()
-      expect(within(main).getByText("Traitement haute priorité")).toBeInTheDocument()
-
-      expect(within(main).getByText("Votre plan actuel")).toBeInTheDocument()
-      const basicCard = within(main).getByText("Basic").closest(".subscription-plan-card")
-      expect(basicCard).not.toBeNull()
-      expect(basicCard).toHaveClass("subscription-plan-card--featured")
-      expect(within(basicCard as HTMLElement).queryByText("Le plus choisi")).not.toBeInTheDocument()
-      expect(within(main).getAllByText("Horoscope du jour enrichi")).toHaveLength(2)
-      expect(within(main).getByText("1 message de chat par semaine")).toBeInTheDocument()
-      expect(within(main).getByText("Chat astrologique inclus")).toBeInTheDocument()
-      expect(within(main).getByText("Chat astrologique complet")).toBeInTheDocument()
-      expect(within(main).getByText("Pour découvrir")).toBeInTheDocument()
-      expect(within(main).getByText("Pour un usage quotidien")).toBeInTheDocument()
-      expect(within(main).getByText("Pour une expérience complète")).toBeInTheDocument()
-      const detailToggles = within(main).getAllByText("Explorer les détails")
-      expect(detailToggles).toHaveLength(3)
-      detailToggles.forEach((toggle) => {
-        fireEvent.click(toggle)
-      })
-
-      expect(within(main).getAllByText("Thème natal")).toHaveLength(3)
-      expect(within(main).getAllByText("Interprétation complète du thème natal")).toHaveLength(3)
-      expect(within(main).getAllByText("1 interprétations incluses")).toHaveLength(1)
-      expect(within(main).getAllByText("Inclus")).toHaveLength(6)
-      expect(within(main).queryByText(/20.?000 tokens \/ semaine/)).not.toBeInTheDocument()
-      expect(within(main).queryByText(/50.?000 tokens \/ mois/)).not.toBeInTheDocument()
-      expect(within(main).getAllByText("Chat astrologique")).toHaveLength(3)
-      expect(within(main).getAllByText("Non inclus")).toHaveLength(2)
-
-      expect(within(main).getByText("0 €")).toBeInTheDocument()
-      expect(within(main).getByText("9 €")).toBeInTheDocument()
-      expect(within(main).getByText("29 €")).toBeInTheDocument()
-
-      const upgradeCtas = within(main).getAllByRole("link", { name: "Passer à ce plan" })
-      expect(upgradeCtas).toHaveLength(2)
-      expect(upgradeCtas[0]).toHaveAttribute("href", "/settings/subscription")
-      expect(within(main).queryByRole("link", { name: "Votre plan actuel" })).not.toBeInTheDocument()
-
-      expect(within(main).getByText("Comment choisir")).toBeInTheDocument()
-      expect(within(main).getByText("Comment fonctionnent les tokens ?")).toBeInTheDocument()
-      expect(within(main).getByText("Vous pouvez changer à tout moment")).toBeInTheDocument()
+    const detailToggles = within(main).getAllByText("Explorer les détails")
+    expect(detailToggles).toHaveLength(3)
+    detailToggles.forEach((toggle) => {
+      fireEvent.click(toggle)
     })
+    expect(within(main).getByText("Comment choisir")).toBeInTheDocument()
+    expect(within(main).getByText("Comment fonctionnent les tokens ?")).toBeInTheDocument()
   })
 
   it("identifie correctement le plan free comme plan actuel", async () => {
@@ -335,13 +244,13 @@ describe("SubscriptionGuidePage", () => {
 
     renderSubscriptionGuidePage()
 
-    await waitFor(() => {
-      const main = screen.getByRole("main")
-      const freeCard = within(main).getByText("Free").closest(".subscription-plan-card")
-      expect(freeCard).not.toBeNull()
-      expect(within(freeCard as HTMLElement).getByText("Votre plan actuel")).toBeInTheDocument()
-      expect(within(freeCard as HTMLElement).queryByRole("link", { name: "Passer à ce plan" })).not.toBeInTheDocument()
-    })
+    expect(await screen.findByText("Votre plan actuel : Free")).toBeInTheDocument()
+    const main = document.querySelector(".page-layout__main") as HTMLElement
+    expect(main).not.toBeNull()
+    const freeCard = within(main).getByText("Free").closest(".subscription-plan-card")
+    expect(freeCard).not.toBeNull()
+    expect(within(freeCard as HTMLElement).getByText("Votre plan actuel")).toBeInTheDocument()
+    expect(within(freeCard as HTMLElement).queryByRole("link", { name: "Passer à ce plan" })).not.toBeInTheDocument()
   })
 
   it("affiche l'état d'erreur en cas d'échec de l'API", async () => {
@@ -394,11 +303,24 @@ function renderSubscriptionGuidePage() {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   })
+  activeQueryClient = queryClient
 
-  const router = createMemoryRouter(routes, {
+  const router = createMemoryRouter(
+    [
+      {
+        path: "/help/subscriptions",
+        element: <SubscriptionGuidePage />,
+      },
+      {
+        path: "/settings/subscription",
+        element: <div>Subscription settings</div>,
+      },
+    ],
+    {
     initialEntries: ["/help/subscriptions"],
     future: routerFutureFlags,
-  })
+    },
+  )
 
   return {
     ...render(

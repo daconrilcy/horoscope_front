@@ -20,7 +20,6 @@ def test_healthcheck_healthy() -> None:
     assert data["status"] in ["healthy", "degraded"]
     assert "services" in data
     assert "db" in data["services"]
-    assert "redis" in data["services"]
     assert response.headers.get("X-Request-Id")
     counters = get_counter_sums_by_prefix_in_window("http_requests_total|", timedelta(hours=1))
     assert sum(counters.values()) >= 1.0
@@ -33,15 +32,6 @@ def test_healthcheck_db_ok() -> None:
     data = response.json()
 
     assert data["services"]["db"]["status"] == "ok"
-
-
-def test_healthcheck_returns_redis_status() -> None:
-    """Test that Redis check returns a valid status."""
-    client = TestClient(app)
-    response = client.get("/health")
-    data = response.json()
-
-    assert data["services"]["redis"]["status"] in ["ok", "error"]
 
 
 def test_unmatched_routes_use_low_cardinality_metric_label() -> None:

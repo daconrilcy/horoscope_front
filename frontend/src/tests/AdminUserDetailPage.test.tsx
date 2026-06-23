@@ -64,19 +64,19 @@ describe("AdminUserDetailPage", () => {
             },
             quotas: [
               {
-                feature_code: "astrologer_chat",
+                feature_code: "horoscope_daily",
                 used: 120,
                 limit: 500,
                 period: "1 day",
               },
               {
-                feature_code: "astrologer_chat",
+                feature_code: "horoscope_daily",
                 used: 11235,
                 limit: 50000,
                 period: "1 week",
               },
               {
-                feature_code: "astrologer_chat",
+                feature_code: "horoscope_daily",
                 used: 25234,
                 limit: 200000,
                 period: "1 month",
@@ -97,7 +97,7 @@ describe("AdminUserDetailPage", () => {
       expect(screen.getByText("1 month")).toBeInTheDocument()
     })
 
-    expect(screen.getAllByText("astrologer_chat")).toHaveLength(3)
+    expect(screen.getAllByText("horoscope_daily")).toHaveLength(3)
     expect(screen.getByText("120 / 500")).toBeInTheDocument()
     expect(screen.getByText("11235 / 50000")).toBeInTheDocument()
     expect(screen.getByText("25234 / 200000")).toBeInTheDocument()

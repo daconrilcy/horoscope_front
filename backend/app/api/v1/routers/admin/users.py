@@ -6,7 +6,7 @@ import logging
 from typing import Any
 
 from fastapi import APIRouter, Body, Depends, Query, Request
-from sqlalchemy import case, func, or_, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.auth import AuthenticatedUser, require_admin_user
@@ -15,8 +15,6 @@ from app.core.datetime_provider import datetime_provider
 from app.core.request_id import resolve_request_id
 from app.infra.db.models.audit_event import AuditEventModel
 from app.infra.db.models.billing import UserSubscriptionModel
-from app.infra.db.models.chat_conversation import ChatConversationModel
-from app.infra.db.models.chat_message import ChatMessageModel
 from app.infra.db.models.product_entitlements import (
     FeatureUsageCounterModel,
 )
@@ -24,10 +22,6 @@ from app.infra.db.models.stripe_billing import StripeBillingProfileModel
 from app.infra.db.models.support_incident import SupportIncidentModel
 from app.infra.db.models.token_usage_log import UserTokenUsageLogModel
 from app.infra.db.models.user import UserModel
-from app.infra.db.models.user_natal_interpretation import (
-    InterpretationLevel,
-    UserNatalInterpretationModel,
-)
 from app.infra.db.session import get_db_session
 from app.services.api_contracts.admin.users import (
     AdminUserDetailResponse,
@@ -135,41 +129,6 @@ def get_user_detail(
         ).where(UserTokenUsageLogModel.user_id == user_id)
     ).one()
 
-    messages_count = (
-        db.scalar(
-            select(func.count(ChatMessageModel.id))
-            .join(
-                ChatConversationModel, ChatConversationModel.id == ChatMessageModel.conversation_id
-            )
-            .where(ChatConversationModel.user_id == user_id)
-        )
-        or 0
-    )
-
-    natal_counts = db.execute(
-        select(
-            func.count(UserNatalInterpretationModel.id),
-            func.coalesce(
-                func.sum(
-                    case(
-                        (UserNatalInterpretationModel.level == InterpretationLevel.SHORT, 1),
-                        else_=0,
-                    )
-                ),
-                0,
-            ),
-            func.coalesce(
-                func.sum(
-                    case(
-                        (UserNatalInterpretationModel.level == InterpretationLevel.COMPLETE, 1),
-                        else_=0,
-                    )
-                ),
-                0,
-            ),
-        ).where(UserNatalInterpretationModel.user_id == user_id)
-    ).one()
-
     # Alternative: Recent audit events (10)
     audit_events = db.scalars(
         select(AuditEventModel)
@@ -211,13 +170,8 @@ def get_user_detail(
                 "total_tokens": int(token_totals[0] or 0),
                 "tokens_in": int(token_totals[1] or 0),
                 "tokens_out": int(token_totals[2] or 0),
-                "messages_count": int(messages_count),
-                "natal_charts_total": int(natal_counts[0] or 0),
-                "natal_charts_short": int(natal_counts[1] or 0),
-                "natal_charts_complete": int(natal_counts[2] or 0),
             },
             "quotas": quotas_data,
-            "recent_llm_logs": [],
             "recent_tickets": [
                 {"id": t.id, "title": t.title, "status": t.status, "created_at": t.created_at}
                 for t in tickets

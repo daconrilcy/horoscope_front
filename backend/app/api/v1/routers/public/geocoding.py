@@ -41,14 +41,6 @@ from app.services.geocoding_service import (
 
 logger = logging.getLogger(__name__)
 
-try:
-    from timezonefinder import TimezoneFinder as _TimezoneFinder
-
-    _TF: _TimezoneFinder | None = _TimezoneFinder()
-except Exception:
-    logger.warning("timezonefinder not available — reverse geocoding timezone resolution disabled")
-    _TF = None
-
 router = APIRouter(prefix="/v1/geocoding", tags=["geocoding"])
 
 
@@ -312,14 +304,6 @@ def reverse_geocode(
             details=err.details,
         )
 
-    # Resolution timezone IANA via timezonefinder (singleton initialisé au démarrage du module)
-    timezone_iana: str | None = None
-    if _TF is not None:
-        try:
-            timezone_iana = _TF.timezone_at(lng=payload.lon, lat=payload.lat)
-        except Exception:
-            logger.exception("timezone_resolution_failed_in_reverse")
-
     return {
         "data": {
             "display_name": result.display_name,
@@ -327,7 +311,7 @@ def reverse_geocode(
             "country": result.address.country,
             "lat": result.lat,
             "lon": result.lon,
-            "timezone_iana": timezone_iana,
+            "timezone_iana": None,
         },
         "meta": {"request_id": request_id},
     }

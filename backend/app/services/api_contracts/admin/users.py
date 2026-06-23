@@ -38,16 +38,6 @@ class AdminUserQuota(BaseModel):
     period: str
 
 
-class AdminUserLlmLog(BaseModel):
-    """Contrat Pydantic exposé par l'API."""
-
-    id: str
-    use_case: str
-    timestamp: datetime
-    status: str
-    tokens_total: int
-
-
 class AdminUserSupportTicket(BaseModel):
     """Contrat Pydantic exposé par l'API."""
 
@@ -72,10 +62,6 @@ class AdminUserActivitySummary(BaseModel):
     total_tokens: int
     tokens_in: int
     tokens_out: int
-    messages_count: int
-    natal_charts_total: int
-    natal_charts_short: int
-    natal_charts_complete: int
 
 
 class AdminUserDetail(BaseModel):
@@ -100,7 +86,6 @@ class AdminUserDetail(BaseModel):
     # Related data summaries
     activity_summary: AdminUserActivitySummary
     quotas: list[AdminUserQuota]
-    recent_llm_logs: list[AdminUserLlmLog]
     recent_tickets: list[AdminUserSupportTicket]
     recent_audit_events: list[AdminUserAuditEvent]
 

@@ -5,15 +5,27 @@ import { getAccessTokenAuthHeader } from "../utils/authToken"
 
 export type MonitoringWindow = "1h" | "24h" | "7d"
 
-export type OpsMonitoringKpis = {
+export type OpsMonitoringAlert = {
+  code: string
+  severity: string
+  status: string
+  message: string
+  context: Record<string, number | string>
+}
+
+export type OpsMonitoringOperationalSummary = {
   window: MonitoringWindow
   aggregation_scope: "instance_local"
-  messages_total: number
-  out_of_scope_count: number
-  out_of_scope_rate: number
-  llm_error_count: number
-  llm_error_rate: number
+  requests_total: number
+  errors_4xx_total: number
+  errors_5xx_total: number
+  error_5xx_rate: number
+  availability_percent: number
   p95_latency_ms: number
+  quota_exceeded_total: number
+  privacy_failures_total: number
+  b2b_auth_failures_total: number
+  alerts: OpsMonitoringAlert[]
 }
 
 export class OpsMonitoringApiError extends Error {
@@ -37,9 +49,9 @@ export class OpsMonitoringApiError extends Error {
   }
 }
 
-async function getConversationKpis(window: MonitoringWindow): Promise<OpsMonitoringKpis> {
+async function getOperationalSummary(window: MonitoringWindow): Promise<OpsMonitoringOperationalSummary> {
   const params = new URLSearchParams({ window })
-  const response = await apiFetch(`/v1/ops/monitoring/conversation-kpis?${params.toString()}`, {
+  const response = await apiFetch(`/v1/ops/monitoring/operational-summary?${params.toString()}`, {
     method: "GET",
     headers: getAccessTokenAuthHeader(),
   })
@@ -47,7 +59,7 @@ async function getConversationKpis(window: MonitoringWindow): Promise<OpsMonitor
     const error = await parseApiErrorDetails<Record<string, string>>(response, {})
     throw new OpsMonitoringApiError(error.code, error.message, response.status, error.details, error.requestId)
   }
-  const payload = (await response.json()) as { data: OpsMonitoringKpis }
+  const payload = (await response.json()) as { data: OpsMonitoringOperationalSummary }
   return payload.data
 }
 
@@ -55,7 +67,7 @@ export function useOpsMonitoring(windowMinutes: number, enabled = true) {
   const window: MonitoringWindow = windowMinutes >= 1440 ? "24h" : windowMinutes >= 60 ? "1h" : "1h" // Simplified mapping
   return useQuery({
     queryKey: ["ops-monitoring-kpis", window],
-    queryFn: () => getConversationKpis(window),
+    queryFn: () => getOperationalSummary(window),
     enabled,
   })
 }
