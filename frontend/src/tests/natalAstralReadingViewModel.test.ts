@@ -131,6 +131,21 @@ describe("buildNatalInterpretationViewModel", () => {
       { label: "Ascendant", value: "Scorpion", detail: "Maison I - Identité" },
       { label: "Descendant", value: "Taureau", detail: "Maison VII - Relations" },
     ])
+    expect(viewModel?.calculationReading?.summaryCards.map((card) => card.title)).toEqual([
+      "Soleil en Capricorne",
+      "Lune en Poissons",
+      "Ascendant en Scorpion",
+    ])
+    expect(viewModel?.calculationReading?.lifeAreas[0]).toMatchObject({
+      rank: "Tres marque",
+      title: "Maison II - Valeurs",
+    })
+    expect(viewModel?.calculationReading?.aspects[0]).toMatchObject({
+      badge: "Tension",
+      title: "Jupiter en tension avec Uranus",
+    })
+    expect(JSON.stringify(viewModel?.calculationReading)).not.toContain("Very high")
+    expect(JSON.stringify(viewModel?.calculationReading)).not.toContain("Resources")
   })
 
   it("lit les faits natals depuis calculation.llm_payload quand le calcul Astral est enveloppe", () => {
@@ -175,6 +190,7 @@ describe("buildNatalInterpretationViewModel", () => {
                   object: "Mercury",
                   sign: "Capricorn",
                   house: { number: 3, theme: "Communication" },
+                  motion: "Retrograde motion",
                 },
               ],
             },
@@ -205,8 +221,20 @@ describe("buildNatalInterpretationViewModel", () => {
     expect(viewModel?.calculationFacts?.groups[2]?.items[0]).toEqual({
       label: "Mercure",
       value: "Capricorne",
-      detail: "Maison III - Communication",
+      detail: "Maison III - Communication - retrograde apparent",
     })
+    expect(viewModel?.calculationReading?.axes.map((axis) => axis.title)).toEqual([
+      "Ascendant en Scorpion",
+      "Descendant en Taureau",
+      "Milieu du Ciel en Lion",
+    ])
+    expect(viewModel?.calculationReading?.otherForces[0]).toMatchObject({
+      title: "Mercure en Capricorne",
+      functionLabel: "Communication",
+      lifeArea: "Maison III - Communication",
+    })
+    expect(viewModel?.calculationFacts?.groups[2]?.items[0]?.detail).not.toContain("Retrograde motion")
+    expect(viewModel?.calculationFacts?.groups[2]?.items[0]?.detail).toContain("retrograde apparent")
   })
 
   it("marque une lecture simplifiee sans heure comme partielle", () => {
@@ -232,6 +260,78 @@ describe("buildNatalInterpretationViewModel", () => {
     expect(viewModel?.completeness).toBe("partial")
     expect(viewModel?.label).toBe("basic")
     expect(viewModel?.isPartial).toBe(true)
+  })
+
+  it("rend un aspect textuel brut avec vocabulaire public lisible", () => {
+    const job: AstralJobResponse = {
+      run_id: "run-text-aspect",
+      status: "completed",
+      result: {
+        calculation: {
+          dynamics: {
+            major_aspects: [
+              {
+                aspect: "Mars trine Uranus",
+                orb_degrees: 0.2,
+                quality: "Flow",
+                phase: "Separating",
+              },
+            ],
+          },
+        },
+        reading: {
+          status: "success",
+          reading: {
+            summary: { title: "Lecture aspect" },
+            chapters: [],
+          },
+        },
+      },
+    }
+
+    const viewModel = buildNatalInterpretationViewModel(job, "basic")
+
+    expect(viewModel?.calculationReading?.aspects[0]).toMatchObject({
+      badge: "Fluidite",
+      title: "Mars en harmonie avec Uranus",
+      details: [
+        { label: "Aspect", value: "Trigone" },
+        { label: "Planetes", value: "Mars et Uranus" },
+        { label: "Orbe", value: "0.20°" },
+        { label: "Phase", value: "Separant" },
+      ],
+    })
+    expect(JSON.stringify(viewModel?.calculationReading)).not.toContain("Mars trine Uranus")
+    expect(JSON.stringify(viewModel?.calculationReading)).not.toContain("Flow")
+    expect(JSON.stringify(viewModel?.calculationReading)).not.toContain("Separating")
+  })
+
+  it("deduit aussi les luminaires depuis un aspect textuel brut", () => {
+    const job: AstralJobResponse = {
+      run_id: "run-luminary-aspect",
+      status: "completed",
+      result: {
+        calculation: {
+          dynamics: {
+            major_aspects: [{ aspect: "Sun trine Moon", quality: "Flow" }],
+          },
+        },
+        reading: {
+          status: "success",
+          reading: {
+            summary: { title: "Lecture luminaires" },
+            chapters: [],
+          },
+        },
+      },
+    }
+
+    const viewModel = buildNatalInterpretationViewModel(job, "basic")
+
+    expect(viewModel?.calculationReading?.aspects[0]).toMatchObject({
+      badge: "Fluidite",
+      title: "Soleil en harmonie avec Lune",
+    })
   })
 
   it("remonte une erreur interne failed proprement", () => {

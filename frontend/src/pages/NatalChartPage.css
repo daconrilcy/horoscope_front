@@ -713,6 +713,218 @@
   gap: 20px;
 }
 
+.natal-reading-pedagogy,
+.natal-reading-block {
+  display: grid;
+  gap: 18px;
+}
+
+.natal-reading-pedagogy {
+  gap: 24px;
+}
+
+.natal-summary,
+.natal-reading-block,
+.natal-raw-data {
+  padding: 20px;
+  border: 1px solid var(--premium-glass-border);
+  border-radius: var(--premium-radius-card);
+  background: var(--premium-glass-surface-1);
+}
+
+.natal-summary h2,
+.natal-reading-block h3 {
+  margin: 0;
+  color: var(--premium-text-strong);
+  line-height: var(--type-label-line-height);
+}
+
+.natal-summary h2 {
+  font-size: var(--font-size-lg);
+}
+
+.natal-reading-block h3 {
+  font-size: var(--font-size-md);
+}
+
+.natal-reading-block__intro {
+  margin: 0;
+  max-width: 840px;
+  color: var(--premium-text-main);
+  line-height: var(--line-height-prose);
+}
+
+.natal-summary__cards,
+.natal-axis-grid,
+.natal-planet-list,
+.natal-aspect-card-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+}
+
+.natal-summary-card,
+.natal-pillar,
+.natal-axis-card,
+.natal-life-area-card,
+.natal-planet-card,
+.natal-aspect-card {
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--premium-glass-border-soft);
+  border-radius: var(--radius-lg);
+  background: var(--premium-glass-surface-2);
+}
+
+.natal-summary-card {
+  display: grid;
+  gap: 8px;
+}
+
+.natal-summary-card__label,
+.natal-axis-card__label,
+.natal-life-area-card__badge,
+.natal-aspect-card__badge {
+  color: var(--premium-text-meta);
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--letter-spacing-wide-label);
+  text-transform: uppercase;
+}
+
+.natal-summary-card strong,
+.natal-pillar h4,
+.natal-axis-card h4,
+.natal-life-area-card h4,
+.natal-planet-card h4,
+.natal-aspect-card h4 {
+  margin: 0;
+  color: var(--premium-text-strong);
+  font-size: var(--font-size-md);
+  line-height: var(--type-label-line-height);
+}
+
+.natal-summary-card p,
+.natal-pillar p,
+.natal-axis-card p,
+.natal-life-area-card p,
+.natal-planet-card p,
+.natal-aspect-card p {
+  margin: 0;
+  color: var(--premium-text-main);
+  line-height: var(--line-height-copy-loose);
+}
+
+.natal-pillars,
+.natal-life-area-list {
+  display: grid;
+  gap: 14px;
+}
+
+.natal-pillar {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 14px;
+}
+
+.natal-pillar > div,
+.natal-axis-card,
+.natal-planet-card,
+.natal-aspect-card {
+  display: grid;
+  gap: 10px;
+}
+
+.natal-pillar__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--premium-accent-purple-strong) 12%, transparent);
+  color: var(--premium-accent-purple-strong);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+}
+
+.natal-life-area-card__header,
+.natal-aspect-card__header {
+  display: grid;
+  gap: 8px;
+}
+
+.natal-life-area-card__badge,
+.natal-aspect-card__badge {
+  width: fit-content;
+  padding: 6px 10px;
+  border: 1px solid var(--premium-glass-border-soft);
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--premium-accent-purple-strong) 10%, transparent);
+  color: var(--premium-accent-purple-strong);
+}
+
+.natal-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.natal-tags span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--premium-glass-border-soft);
+  border-radius: var(--radius-full);
+  background: var(--premium-glass-surface-1);
+  color: var(--premium-text-main);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+}
+
+.natal-technical-details,
+.natal-raw-data {
+  color: var(--premium-text-main);
+}
+
+.natal-technical-details summary,
+.natal-raw-data summary {
+  color: var(--premium-text-strong);
+  cursor: pointer;
+  font-weight: var(--font-weight-bold);
+}
+
+.natal-technical-details dl {
+  display: grid;
+  gap: 10px;
+  margin: 12px 0 0;
+}
+
+.natal-technical-details dl > div {
+  display: grid;
+  grid-template-columns: minmax(90px, 0.4fr) minmax(0, 1fr);
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--premium-glass-border-soft);
+  border-radius: var(--radius-md);
+  background: var(--premium-glass-surface-1);
+}
+
+.natal-technical-details dt {
+  color: var(--premium-text-meta);
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--letter-spacing-wide-label);
+  text-transform: uppercase;
+}
+
+.natal-technical-details dd {
+  margin: 0;
+  color: var(--premium-text-strong);
+  font-size: var(--font-size-sm);
+}
+
 .natal-reading__header {
   display: grid;
   gap: 8px;
@@ -784,6 +996,13 @@
 }
 
 .natal-reading-facts__group h3 {
+  margin: 0;
+  font-size: var(--font-size-md);
+  line-height: var(--type-label-line-height);
+  color: var(--premium-text-strong);
+}
+
+.natal-reading-facts__group h4 {
   margin: 0;
   font-size: var(--font-size-md);
   line-height: var(--type-label-line-height);
@@ -984,6 +1203,11 @@
   }
 
   .natal-aspect-meta {
+    grid-template-columns: 1fr;
+  }
+
+  .natal-pillar,
+  .natal-technical-details dl > div {
     grid-template-columns: 1fr;
   }
 }

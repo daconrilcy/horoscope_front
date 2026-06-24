@@ -255,18 +255,29 @@ describe("NatalChartPage", () => {
     renderNatalChartPage()
 
     expect(await screen.findByRole("heading", { name: "Lecture natale publique" })).toBeVisible()
-    expect(screen.getByRole("heading", { name: "Base du calcul natal" })).toBeVisible()
+    expect(screen.getByRole("heading", { name: "Les grands reperes de votre carte" })).toBeVisible()
+    expect(screen.getByRole("heading", { name: "Vos 3 grands piliers astrologiques" })).toBeVisible()
+    expect(screen.getByRole("heading", { name: "Les grands axes de votre vie" })).toBeVisible()
+    expect(screen.getByRole("heading", { name: "Domaines de vie les plus marques" })).toBeVisible()
+    expect(screen.getByRole("heading", { name: "Autres forces importantes du theme" })).toBeVisible()
+    expect(screen.getByRole("heading", { name: "Dynamiques fortes entre les planetes" })).toBeVisible()
+    expect(screen.getByText("Details techniques du calcul")).toBeVisible()
     expect(screen.queryByText("Données de calcul Astral")).not.toBeInTheDocument()
     const renderedText = document.body.textContent ?? ""
-    expect(renderedText.indexOf("Base du calcul natal")).toBeLessThan(
+    expect(renderedText.indexOf("Les grands reperes de votre carte")).toBeLessThan(
       renderedText.indexOf("Lecture natale publique"),
     )
-    expect(screen.getByRole("region", { name: "Repères principaux" })).toHaveTextContent("Soleil")
-    expect(screen.getByRole("region", { name: "Repères principaux" })).toHaveTextContent("Ascendant")
-    expect(screen.getByRole("region", { name: "Repères principaux" })).toHaveTextContent("Descendant")
-    expect(screen.getByRole("region", { name: "Maisons" })).toHaveTextContent("Maison II")
-    expect(screen.getByRole("region", { name: "Planètes notables" })).toHaveTextContent("Mercure")
-    expect(screen.getByRole("region", { name: "Aspects notables" })).toHaveTextContent("Jupiter - Uranus")
+    expect(screen.getByRole("region", { name: "Vos 3 grands piliers astrologiques" })).toHaveTextContent("Soleil")
+    expect(screen.getByRole("region", { name: "Vos 3 grands piliers astrologiques" })).toHaveTextContent("Ascendant")
+    expect(screen.getByRole("region", { name: "Les grands axes de votre vie" })).toHaveTextContent("Descendant")
+    expect(screen.getByRole("region", { name: "Domaines de vie les plus marques" })).toHaveTextContent("Maison II")
+    expect(screen.getByRole("region", { name: "Domaines de vie les plus marques" })).toHaveTextContent("Tres marque")
+    expect(screen.getByRole("region", { name: "Autres forces importantes du theme" })).toHaveTextContent("Mercure")
+    expect(screen.getByRole("region", { name: "Dynamiques fortes entre les planetes" })).toHaveTextContent(
+      "Jupiter en tension avec Uranus",
+    )
+    expect(renderedText).not.toContain("Very high")
+    expect(renderedText).not.toContain("Resources")
     expect(screen.getByText("Une synthese claire du theme.")).toBeVisible()
     expect(screen.getByText("basic")).toBeVisible()
     expect(screen.getByRole("heading", { name: "Identite" })).toBeVisible()

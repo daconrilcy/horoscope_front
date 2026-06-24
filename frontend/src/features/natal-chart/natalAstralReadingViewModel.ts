@@ -33,6 +33,58 @@ export type NatalCalculationFactsViewModel = {
   sourceLabel: string
 }
 
+export type NatalReadingSummaryCardViewModel = {
+  label: string
+  title: string
+  description: string
+}
+
+export type NatalReadingPillarViewModel = {
+  code: "sun" | "moon" | "ascendant"
+  icon: string
+  title: string
+  description: string
+  lifeArea: string | null
+}
+
+export type NatalReadingAxisViewModel = {
+  code: "ascendant" | "descendant" | "midheaven" | "imum_coeli"
+  label: string
+  title: string
+  description: string
+}
+
+export type NatalReadingLifeAreaViewModel = {
+  rank: string
+  title: string
+  description: string
+  details: string[]
+}
+
+export type NatalReadingOtherForceViewModel = {
+  title: string
+  functionLabel: string
+  description: string
+  lifeArea: string | null
+}
+
+export type NatalReadingAspectViewModel = {
+  badge: string
+  title: string
+  description: string
+  details: Array<{ label: string; value: string }>
+}
+
+export type NatalCalculationReadingViewModel = {
+  summaryCards: NatalReadingSummaryCardViewModel[]
+  pillars: NatalReadingPillarViewModel[]
+  axes: NatalReadingAxisViewModel[]
+  lifeAreas: NatalReadingLifeAreaViewModel[]
+  otherForces: NatalReadingOtherForceViewModel[]
+  aspects: NatalReadingAspectViewModel[]
+  technicalGroups: NatalCalculationFactGroupViewModel[]
+}
+
 export type NatalInterpretationViewModel = {
   status: NatalReadingStatus
   title: string
@@ -43,6 +95,7 @@ export type NatalInterpretationViewModel = {
   completeness: NatalReadingCompleteness
   isPartial: boolean
   chapters: NatalReadingChapterViewModel[]
+  calculationReading: NatalCalculationReadingViewModel | null
   calculationFacts: NatalCalculationFactsViewModel | null
   disclaimer: string | null
   error: {
@@ -70,8 +123,16 @@ const NOTABLE_PLACEMENT_ORDER = [
   "neptune",
   "pluto",
 ] as const
+const PUBLIC_ASPECT_OBJECT_ORDER = [
+  "sun",
+  "moon",
+  ...NOTABLE_PLACEMENT_ORDER,
+  "north_node",
+  "south_node",
+] as const
 const MAX_NOTABLE_PLACEMENTS = 6
 const MAX_MAJOR_ASPECTS = 5
+const TECHNICAL_DETAIL_SEPARATOR = " - "
 const PUBLIC_OBJECT_LABELS: Record<string, string> = {
   ascendant: "Ascendant",
   descendant: "Descendant",
@@ -79,6 +140,94 @@ const PUBLIC_OBJECT_LABELS: Record<string, string> = {
   mc: "Milieu du Ciel",
   imum_coeli: "Fond du Ciel",
   ic: "Fond du Ciel",
+}
+
+const SUMMARY_LABELS: Record<"sun" | "moon" | "ascendant", string> = {
+  sun: "Identite profonde",
+  moon: "Vie emotionnelle",
+  ascendant: "Image exterieure",
+}
+
+const PILLAR_COPY: Record<"sun" | "moon" | "ascendant", { icon: string; description: string }> = {
+  sun: {
+    icon: "☉",
+    description: "Ce repere decrit votre identite, votre volonte et votre maniere de vous construire.",
+  },
+  moon: {
+    icon: "☽",
+    description: "Ce repere decrit vos besoins emotionnels, vos reflexes intimes et votre securite interieure.",
+  },
+  ascendant: {
+    icon: "ASC",
+    description: "Ce repere decrit votre maniere d'entrer en relation avec le monde et l'image donnee au premier abord.",
+  },
+}
+
+const AXIS_COPY: Record<NatalReadingAxisViewModel["code"], { label: string; description: string }> = {
+  ascendant: {
+    label: "Moi face au monde",
+    description: "La maniere spontanee dont vous vous presentez aux autres.",
+  },
+  descendant: {
+    label: "Moi face aux autres",
+    description: "Le type de relation et d'equilibre que vous recherchez dans le lien.",
+  },
+  midheaven: {
+    label: "Direction professionnelle",
+    description: "La trajectoire visible, l'ambition et la place sociale que le theme met en avant.",
+  },
+  imum_coeli: {
+    label: "Base intime",
+    description: "Le socle personnel, les racines et le besoin de securite dans la sphere privee.",
+  },
+}
+
+const FORCE_COPY: Record<string, { functionLabel: string; description: string }> = {
+  mercury: {
+    functionLabel: "Communication",
+    description: "Ce repere nuance la pensee, la parole, les apprentissages et les echanges.",
+  },
+  venus: {
+    functionLabel: "Attachement et valeurs",
+    description: "Ce repere nuance les valeurs, l'affectif, le confort recherche et la maniere d'aimer.",
+  },
+  mars: {
+    functionLabel: "Action",
+    description: "Ce repere nuance l'energie d'action, le desir, l'affirmation et la maniere d'avancer.",
+  },
+  jupiter: {
+    functionLabel: "Expansion",
+    description: "Ce repere nuance la confiance, l'ouverture, l'apprentissage et la croissance.",
+  },
+  saturn: {
+    functionLabel: "Structure",
+    description: "Ce repere nuance la responsabilite, les limites, la discipline et la construction dans le temps.",
+  },
+  uranus: {
+    functionLabel: "Originalite",
+    description: "Ce repere nuance l'independance, l'innovation, les ruptures et le besoin de liberte.",
+  },
+  neptune: {
+    functionLabel: "Imaginaire",
+    description: "Ce repere nuance l'intuition, l'inspiration, l'ideal et la sensibilite aux ambiances.",
+  },
+  pluto: {
+    functionLabel: "Transformation",
+    description: "Ce repere nuance l'intensite, les mutations profondes et la capacite de regeneration.",
+  },
+}
+
+const HOUSE_THEME_LABELS: Record<string, string> = {
+  career: "Carriere",
+  home: "Foyer",
+  resources: "Valeurs",
+  relationships: "Relations",
+  transformation: "Transformation",
+  communication: "Communication",
+  creativity: "Creativite",
+  community: "Communaute",
+  philosophy: "Philosophie",
+  unconscious: "Inconscient",
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -131,7 +280,7 @@ function formatObject(value: unknown): string | null {
 
 function joinDetails(values: Array<string | null>): string | null {
   const details = values.filter((item): item is string => Boolean(item))
-  return details.length > 0 ? details.join(" - ") : null
+  return details.length > 0 ? details.join(TECHNICAL_DETAIL_SEPARATOR) : null
 }
 
 function objectCodeFromLabel(value: unknown): string | null {
@@ -193,6 +342,114 @@ function confidenceLabel(value: unknown): string | null {
   if (text === "medium") return "Confiance moyenne"
   if (text === "low") return "Confiance limitee"
   return asText(value)
+}
+
+function normalizeImportance(value: unknown): string | null {
+  const text = asText(value)?.toLowerCase()
+  if (!text) return null
+  if (text === "very high" || text === "very_high" || text === "major") return "Tres marque"
+  if (text === "high" || text === "strong") return "Marque"
+  if (text === "medium" || text === "moderate") return "Present"
+  if (text === "low" || text === "secondary") return "Secondaire"
+  return asText(value)
+}
+
+function normalizeMotion(value: unknown): string | null {
+  const text = asText(value)?.toLowerCase()
+  if (!text) return null
+  if (text.includes("retrograde")) return "retrograde apparent"
+  if (text.includes("direct")) return "direct"
+  return asText(value)
+}
+
+function normalizeAspectQuality(value: unknown, aspectLabel: string | null): string | null {
+  const text = asText(value)?.toLowerCase()
+  if (text === "flow" || text === "harmony" || text === "harmonious") return "Fluidite"
+  if (text === "tension" || text === "challenge" || text === "challenging") return "Tension"
+  if (text === "intensity" || text === "intense") return "Intensite"
+  if (text === "neutral") return "Neutre"
+
+  const normalizedAspect = aspectLabel?.toLowerCase()
+  if (normalizedAspect === "trigone" || normalizedAspect === "sextile") return "Fluidite"
+  if (normalizedAspect === "carre" || normalizedAspect === "opposition") return "Tension"
+  if (normalizedAspect === "conjonction") return "Intensite"
+  return asText(value)
+}
+
+function normalizeAspectPhase(value: unknown): string | null {
+  const text = asText(value)?.toLowerCase()
+  if (!text) return null
+  if (text === "separating" || text === "separant") return "Separant"
+  if (text === "applying" || text === "appliquant") return "Appliquant"
+  return asText(value)
+}
+
+function inferAspectCode(value: string | null): string | null {
+  if (!value) return null
+  const text = value.toLowerCase()
+  const knownCodes = [
+    "conjunction",
+    "sextile",
+    "square",
+    "trine",
+    "opposition",
+    "semisextile",
+    "quincunx",
+    "semisquare",
+    "sesquiquadrate",
+  ]
+  return knownCodes.find((code) => text.includes(code)) ?? null
+}
+
+function inferAspectObjects(value: string | null): string[] {
+  if (!value) return []
+  const normalizedText = normalizeCode(value)
+  return PUBLIC_ASPECT_OBJECT_ORDER
+    .filter((code) => normalizedText.includes(code))
+    .map((code) => formatObject(code))
+    .filter((object): object is string => Boolean(object))
+    .slice(0, 2)
+}
+
+function formatPlacementTitle(objectLabel: string, sign: string): string {
+  return `${objectLabel} en ${sign}`
+}
+
+function houseTitle(number: number, theme: unknown): string {
+  const translatedHouse = translateHouse(number, "fr")
+  const themeLabel = asText(theme)
+  if (!themeLabel) return translatedHouse
+  const normalizedTheme = normalizeCode(themeLabel)
+  const translatedTheme = HOUSE_THEME_LABELS[normalizedTheme]
+  if (translatedTheme) return `${translatedHouse.split(" - ")[0] ?? translatedHouse} - ${translatedTheme}`
+  const housePrefix = translatedHouse.split(" - ")[0] ?? translatedHouse
+  return `${housePrefix} - ${themeLabel}`
+}
+
+function shortLifeAreaDescription(title: string): string {
+  return `${title} ressort comme un domaine de vie important dans les donnees de calcul disponibles.`
+}
+
+function aspectTitle(objects: string[], aspectLabel: string, quality: string | null): string {
+  const [first, second] = objects
+  if (!first || !second) return aspectLabel
+  if (quality === "Fluidite") return `${first} en harmonie avec ${second}`
+  if (quality === "Tension") return `${first} en tension avec ${second}`
+  if (aspectLabel.toLowerCase() === "conjonction") return `${first} conjoint a ${second}`
+  return `${first} en relation avec ${second}`
+}
+
+function aspectDescription(quality: string | null): string {
+  if (quality === "Fluidite") {
+    return "Cette dynamique indique une relation plus fluide entre les fonctions planetaires concernees."
+  }
+  if (quality === "Tension") {
+    return "Cette dynamique indique une tension constructive a integrer entre les fonctions planetaires concernees."
+  }
+  if (quality === "Intensite") {
+    return "Cette dynamique indique une relation forte qui concentre les fonctions planetaires concernees."
+  }
+  return "Cette dynamique decrit une relation notable entre deux fonctions planetaires du theme."
 }
 
 function splitParagraphs(value: unknown): string[] {
@@ -387,7 +644,7 @@ function buildNotablePlacementFacts(projection: Record<string, unknown>): NatalC
       detail: joinDetails([
         formatHouse(asRecord(placement.house)?.number),
         formatDegree(placement.longitude_deg),
-        asText(placement.motion)?.toLowerCase().includes("retrograde") ? "retrograde" : null,
+        normalizeMotion(placement.motion),
       ]),
     }
   })
@@ -421,8 +678,8 @@ function buildHouseFacts(source: Record<string, unknown>, projection: Record<str
       if (!item || number === null) return null
       return {
         label: translateHouse(number, "fr"),
-        value: asText(item.theme) ?? "Maison dominante",
-        detail: asText(item.importance),
+        value: "Domaine dominant",
+        detail: normalizeImportance(item.importance),
       }
     })
     .filter((item): item is NatalCalculationFactItemViewModel => Boolean(item))
@@ -447,22 +704,249 @@ function buildAspectFacts(source: Record<string, unknown>, projection: Record<st
             formatObject(item.planet_b ?? item.target_object_code),
           ].filter((object): object is string => Boolean(object))
       const directAspect = asText(item.aspect)
-      const aspectCode = asText(item.aspect_code ?? item.type)
+      const inferredObjects = objects.length >= 2 ? objects : inferAspectObjects(directAspect)
+      const aspectCode = asText(item.aspect_code ?? item.type) ?? inferAspectCode(directAspect)
       const aspectLabel = aspectCode ? translateAspect(aspectCode, "fr") : directAspect
-      if (!aspectLabel || objects.length < 2) return null
+      if (!aspectLabel || inferredObjects.length < 2) return null
 
       return {
         label: aspectLabel,
-        value: objects.slice(0, 2).join(" - "),
+        value: inferredObjects.slice(0, 2).join(" - "),
         detail: joinDetails([
           formatDegree(item.orb ?? item.orb_degrees),
-          asText(item.quality),
-          asText(item.phase),
+          normalizeAspectQuality(item.quality, aspectLabel),
+          normalizeAspectPhase(item.phase),
         ]),
       }
     })
     .filter((item): item is NatalCalculationFactItemViewModel => Boolean(item))
     .slice(0, MAX_MAJOR_ASPECTS)
+}
+
+function readPlacementFromContainers(
+  projection: Record<string, unknown>,
+  code: string,
+): Record<string, unknown> | null {
+  const coreIdentity = asRecord(projection.core_identity)
+  const angles = asRecord(projection.angles)
+  const directCore = asRecord(coreIdentity?.[code])
+  const placement = asRecord(directCore?.placement) ?? directCore
+  if (placement) return placement
+
+  if (code === "midheaven") {
+    return asRecord(angles?.midheaven) ?? asRecord(angles?.mc)
+  }
+  if (code === "imum_coeli") {
+    return asRecord(angles?.imum_coeli) ?? asRecord(angles?.ic)
+  }
+  return asRecord(angles?.[code])
+}
+
+function placementHouseText(placement: Record<string, unknown>): string | null {
+  return formatHouse(asRecord(placement.house)?.number ?? placement.house)
+}
+
+function readPublicPlacement(
+  projection: Record<string, unknown>,
+  code: string,
+): { code: string; label: string; sign: string; house: string | null; houseNumber: number | null } | null {
+  const placement = readPlacementFromContainers(projection, code)
+  const sign = formatSign(placement?.sign)
+  const label = formatObject(code)
+  if (!placement || !sign || !label) return null
+  const houseValue = asRecord(placement.house)?.number ?? placement.house
+  return {
+    code,
+    label,
+    sign,
+    house: placementHouseText(placement),
+    houseNumber: asNumber(houseValue),
+  }
+}
+
+function buildSummaryCards(projection: Record<string, unknown>): NatalReadingSummaryCardViewModel[] {
+  return (["sun", "moon", "ascendant"] as const)
+    .map((code) => {
+      const placement = readPublicPlacement(projection, code)
+      if (!placement) return null
+      return {
+        label: SUMMARY_LABELS[code],
+        title: formatPlacementTitle(placement.label, placement.sign),
+        description: PILLAR_COPY[code].description,
+      }
+    })
+    .filter((item): item is NatalReadingSummaryCardViewModel => Boolean(item))
+}
+
+function buildPillars(projection: Record<string, unknown>): NatalReadingPillarViewModel[] {
+  return (["sun", "moon", "ascendant"] as const)
+    .map((code) => {
+      const placement = readPublicPlacement(projection, code)
+      if (!placement) return null
+      return {
+        code,
+        icon: PILLAR_COPY[code].icon,
+        title: formatPlacementTitle(placement.label, placement.sign),
+        description: PILLAR_COPY[code].description,
+        lifeArea: placement.house ? `Domaine principal : ${placement.house}` : null,
+      }
+    })
+    .filter((item): item is NatalReadingPillarViewModel => Boolean(item))
+}
+
+function buildAxes(projection: Record<string, unknown>): NatalReadingAxisViewModel[] {
+  const axisCodes: NatalReadingAxisViewModel["code"][] = [
+    "ascendant",
+    "descendant",
+    "midheaven",
+    "imum_coeli",
+  ]
+  return axisCodes
+    .map((code) => {
+      const placement = readPublicPlacement(projection, code)
+      if (!placement) return null
+      const copy = AXIS_COPY[code]
+      return {
+        code,
+        label: copy.label,
+        title: formatPlacementTitle(placement.label, placement.sign),
+        description: copy.description,
+      }
+    })
+    .filter((item): item is NatalReadingAxisViewModel => Boolean(item))
+}
+
+function allPlacementsForHouseDetails(projection: Record<string, unknown>, houseNumber: number): string[] {
+  const coreCodes = ["sun", "moon", "ascendant", "descendant", "midheaven", "imum_coeli"]
+  const coreDetails = coreCodes
+    .map((code) => readPublicPlacement(projection, code))
+    .filter((item): item is NonNullable<ReturnType<typeof readPublicPlacement>> => Boolean(item))
+    .filter((placement) => placement.houseNumber === houseNumber)
+    .map((placement) => `${placement.label} en ${translateHouse(houseNumber, "fr").split(" - ")[0]}`)
+
+  const placementDetails = flattenProjectionPlacements(projection)
+    .map((placement) => {
+      const code = objectCodeFromLabel(placement.object)
+      const number = asNumber(asRecord(placement.house)?.number)
+      const label = code ? formatObject(code) : null
+      if (!label || number !== houseNumber) return null
+      return `${label} en ${translateHouse(houseNumber, "fr").split(" - ")[0]}`
+    })
+    .filter((item): item is string => Boolean(item))
+
+  return Array.from(new Set([...coreDetails, ...placementDetails])).slice(0, 6)
+}
+
+function buildLifeAreas(projection: Record<string, unknown>): NatalReadingLifeAreaViewModel[] {
+  const dominantThemes = asRecord(projection.dominant_themes)
+  const dominantHouses = Array.isArray(dominantThemes?.houses) ? dominantThemes.houses : []
+  return dominantHouses
+    .map((house) => {
+      const item = asRecord(house)
+      const number = asNumber(item?.number ?? item?.house_number)
+      if (!item || number === null) return null
+      const title = houseTitle(number, item.theme)
+      return {
+        rank: normalizeImportance(item.importance) ?? "Marque",
+        title,
+        description: shortLifeAreaDescription(title),
+        details: allPlacementsForHouseDetails(projection, number),
+      }
+    })
+    .filter((item): item is NatalReadingLifeAreaViewModel => Boolean(item))
+}
+
+function buildOtherForces(projection: Record<string, unknown>): NatalReadingOtherForceViewModel[] {
+  const placements = flattenProjectionPlacements(projection)
+  const byObject = new Map<string, Record<string, unknown>>()
+  for (const placement of placements) {
+    const code = objectCodeFromLabel(placement.object)
+    if (code && FORCE_COPY[code] && !byObject.has(code)) byObject.set(code, placement)
+  }
+
+  return NOTABLE_PLACEMENT_ORDER.map((code) => {
+    const placement = byObject.get(code)
+    const sign = formatSign(placement?.sign)
+    const label = formatObject(code)
+    if (!placement || !sign || !label) return null
+    const copy = FORCE_COPY[code]
+    return {
+      title: formatPlacementTitle(label, sign),
+      functionLabel: copy.functionLabel,
+      description: copy.description,
+      lifeArea: placementHouseText(placement),
+    }
+  })
+    .filter((item): item is NatalReadingOtherForceViewModel => Boolean(item))
+    .slice(0, MAX_NOTABLE_PLACEMENTS)
+}
+
+function buildReadingAspects(projection: Record<string, unknown>): NatalReadingAspectViewModel[] {
+  const dynamics = asRecord(projection.dynamics)
+  const sourceAspects = Array.isArray(projection.aspects)
+    ? projection.aspects
+    : Array.isArray(dynamics?.major_aspects)
+      ? dynamics.major_aspects
+      : []
+
+  return sourceAspects
+    .map((aspect) => {
+      const item = asRecord(aspect)
+      if (!item) return null
+      const objects = Array.isArray(item.objects)
+        ? item.objects.map(formatObject).filter((object): object is string => Boolean(object))
+        : [
+            formatObject(item.planet_a ?? item.source_object_code),
+            formatObject(item.planet_b ?? item.target_object_code),
+          ].filter((object): object is string => Boolean(object))
+      const directAspect = asText(item.aspect)
+      const inferredObjects = objects.length >= 2 ? objects : inferAspectObjects(directAspect)
+      const aspectCode = asText(item.aspect_code ?? item.type) ?? inferAspectCode(directAspect)
+      const aspectLabel = aspectCode ? translateAspect(aspectCode, "fr") : directAspect
+      if (!aspectLabel || inferredObjects.length < 2) return null
+      const quality = normalizeAspectQuality(item.quality, aspectLabel)
+      const orb = formatDegree(item.orb ?? item.orb_degrees)
+      const phase = normalizeAspectPhase(item.phase)
+      const details = [
+        { label: "Aspect", value: aspectLabel },
+        { label: "Planetes", value: inferredObjects.slice(0, 2).join(" et ") },
+        orb ? { label: "Orbe", value: orb } : null,
+        phase ? { label: "Phase", value: phase } : null,
+      ].filter((detail): detail is { label: string; value: string } => Boolean(detail))
+
+      return {
+        badge: quality ?? "Dynamique",
+        title: aspectTitle(inferredObjects, aspectLabel, quality),
+        description: aspectDescription(quality),
+        details,
+      }
+    })
+    .filter((item): item is NatalReadingAspectViewModel => Boolean(item))
+    .slice(0, MAX_MAJOR_ASPECTS)
+}
+
+function buildCalculationReading(
+  result: Record<string, unknown>,
+  technicalGroups: NatalCalculationFactGroupViewModel[],
+): NatalCalculationReadingViewModel | null {
+  const projection = resolveCalculationProjection(result)
+  const reading: NatalCalculationReadingViewModel = {
+    summaryCards: buildSummaryCards(projection),
+    pillars: buildPillars(projection),
+    axes: buildAxes(projection),
+    lifeAreas: buildLifeAreas(projection),
+    otherForces: buildOtherForces(projection),
+    aspects: buildReadingAspects(projection),
+    technicalGroups,
+  }
+  const hasPublicSections =
+    reading.summaryCards.length > 0 ||
+    reading.pillars.length > 0 ||
+    reading.axes.length > 0 ||
+    reading.lifeAreas.length > 0 ||
+    reading.otherForces.length > 0 ||
+    reading.aspects.length > 0
+  return hasPublicSections || technicalGroups.length > 0 ? reading : null
 }
 
 function resolveCalculationProjection(result: Record<string, unknown>): Record<string, unknown> {
@@ -506,6 +990,7 @@ function emptyViewModel(
   metadata: ReadingMetadata,
   message: string,
   calculationFacts: NatalCalculationFactsViewModel | null = null,
+  calculationReading: NatalCalculationReadingViewModel | null = null,
 ): NatalInterpretationViewModel {
   const isPartial = metadata.variant === "simplified" || metadata.completeness === "partial"
   return {
@@ -518,6 +1003,7 @@ function emptyViewModel(
     completeness: metadata.completeness,
     isPartial,
     chapters: [],
+    calculationReading,
     calculationFacts,
     disclaimer: null,
     error: null,
@@ -534,6 +1020,7 @@ export function buildNatalInterpretationViewModel(
 
   const metadata = extractMetadata(job, fallbackPlan)
   const calculationFacts = buildCalculationFacts(result)
+  const calculationReading = buildCalculationReading(result, calculationFacts?.groups ?? [])
   const readingResponse = resolveReadingContainer(result)
   if (!readingResponse) {
     if (typeof result.reading === "string") {
@@ -548,6 +1035,7 @@ export function buildNatalInterpretationViewModel(
         completeness: metadata.completeness,
         isPartial,
         chapters: [],
+        calculationReading,
         calculationFacts,
         disclaimer: null,
         error: null,
@@ -557,6 +1045,7 @@ export function buildNatalInterpretationViewModel(
       metadata,
       "La lecture est disponible mais sa forme publique n'est pas reconnue.",
       calculationFacts,
+      calculationReading,
     )
   }
 
@@ -573,6 +1062,7 @@ export function buildNatalInterpretationViewModel(
       completeness: metadata.completeness,
       isPartial,
       chapters: [],
+      calculationReading,
       calculationFacts,
       disclaimer: null,
       error: resolveError(readingResponse),
@@ -585,6 +1075,7 @@ export function buildNatalInterpretationViewModel(
       metadata,
       "La lecture est disponible mais ne contient pas de texte public.",
       calculationFacts,
+      calculationReading,
     )
   }
 
@@ -603,6 +1094,7 @@ export function buildNatalInterpretationViewModel(
     completeness: metadata.completeness,
     isPartial,
     chapters,
+    calculationReading,
     calculationFacts,
     disclaimer: asText(legal?.disclaimer),
     error: null,
