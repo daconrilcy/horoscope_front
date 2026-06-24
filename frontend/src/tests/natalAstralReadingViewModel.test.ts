@@ -217,6 +217,62 @@ describe("buildNatalInterpretationViewModel", () => {
         "Emphase maison ressources",
       ],
     })
+    expect(reading?.explanations).toEqual([
+      {
+        kindLabel: "Placement",
+        title: "Soleil en Capricorne maison 2",
+        explanation: "Explication Astral du Soleil fournie par le moteur externe.",
+        expressionPrimary: "Maison 2",
+      },
+      {
+        kindLabel: "Placement",
+        title: "Lune en Poissons maison 4",
+        explanation: "Explication Astral de la Lune fournie par le moteur externe.",
+        expressionPrimary: "Maison 4",
+      },
+      {
+        kindLabel: "Angle",
+        title: "Ascendant en Scorpion maison 1",
+        explanation: "Explication Astral de l'Ascendant fournie par le moteur externe.",
+        expressionPrimary: "Maison 1",
+      },
+      {
+        kindLabel: "Axe",
+        title: "Axe maison : soi et relation",
+        explanation: "Explication Astral de l'axe relationnel fournie par le moteur externe.",
+        expressionPrimary: null,
+      },
+      {
+        kindLabel: "Domaine dominant",
+        title: "Emphase maison ressources",
+        explanation: "Explication Astral du domaine dominant fournie par le moteur externe.",
+        expressionPrimary: "resources",
+      },
+      {
+        kindLabel: "Placement",
+        title: "Mercure en Capricorne maison 3",
+        explanation: "Explication Astral de Mercure fournie par le moteur externe.",
+        expressionPrimary: "Maison 3",
+      },
+      {
+        kindLabel: "Placement",
+        title: "Vénus en Taureau maison 10",
+        explanation: "Explication Astral de Vénus fournie par le moteur externe.",
+        expressionPrimary: "Maison 10",
+      },
+      {
+        kindLabel: "Placement",
+        title: "Mars en Verseau maison 8",
+        explanation: "Explication Astral de Mars fournie par le moteur externe.",
+        expressionPrimary: "Maison 8",
+      },
+      {
+        kindLabel: "Aspect",
+        title: "Mars en harmonie avec Uranus",
+        explanation: "Explication Astral de l'aspect Mars Uranus fournie par le moteur externe.",
+        expressionPrimary: "Fluidité",
+      },
+    ])
     expect(reading?.pillars.map((pillar) => pillar.description)).toEqual([
       "Explication Astral du Soleil fournie par le moteur externe.",
       "Explication Astral de la Lune fournie par le moteur externe.",
@@ -347,6 +403,14 @@ describe("buildNatalInterpretationViewModel", () => {
     const serialized = JSON.stringify(viewModel?.calculationReading)
 
     expect(viewModel?.calculationReading?.explanationStatus).toBe("partial")
+    expect(viewModel?.calculationReading?.explanations).toEqual([
+      {
+        kindLabel: "Placement",
+        title: "Soleil en Gémeaux maison 9",
+        explanation: "Explication partielle du Soleil.",
+        expressionPrimary: "Maison 9",
+      },
+    ])
     expect(viewModel?.calculationReading?.pillars).toEqual([
       {
         code: "sun",

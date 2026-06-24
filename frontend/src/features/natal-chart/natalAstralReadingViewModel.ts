@@ -39,6 +39,13 @@ export type NatalReadingSummaryViewModel = {
   highlights: string[]
 }
 
+export type NatalReadingExplanationViewModel = {
+  kindLabel: string
+  title: string
+  explanation: string
+  expressionPrimary: string | null
+}
+
 export type NatalReadingPillarViewModel = {
   code: "sun" | "moon" | "ascendant"
   icon: string
@@ -79,6 +86,7 @@ export type NatalCalculationReadingViewModel = {
   explanationStatus: NatalExplanationStatus
   explanationLanguageCode: string | null
   summary: NatalReadingSummaryViewModel | null
+  explanations: NatalReadingExplanationViewModel[]
   pillars: NatalReadingPillarViewModel[]
   axes: NatalReadingAxisViewModel[]
   lifeAreas: NatalReadingLifeAreaViewModel[]
@@ -696,6 +704,24 @@ function buildSummaryFromExplanations(items: NatalExplanationItem[]): NatalReadi
   return highlights.length > 0 ? { text: null, highlights: highlights.slice(0, MAX_SUMMARY_HIGHLIGHTS) } : null
 }
 
+function explanationKindLabel(item: NatalExplanationItem): string {
+  if (item.kindCode === "placement") return "Placement"
+  if (item.kindCode === "angle") return "Angle"
+  if (item.kindCode === "house_axis") return "Axe"
+  if (item.kindCode === "house_emphasis") return "Domaine dominant"
+  if (item.kindCode === "aspect") return "Aspect"
+  return "Explication"
+}
+
+function buildExplanationsFromItems(items: NatalExplanationItem[]): NatalReadingExplanationViewModel[] {
+  return items.map((item) => ({
+    kindLabel: explanationKindLabel(item),
+    title: item.title,
+    explanation: item.explanation,
+    expressionPrimary: item.expressionPrimary,
+  }))
+}
+
 function buildPillarsFromExplanations(items: NatalExplanationItem[]): NatalReadingPillarViewModel[] {
   return (["sun", "moon", "ascendant"] as const)
     .map((code) => {
@@ -769,6 +795,7 @@ function buildCalculationReading(
     explanationStatus: explanations.status,
     explanationLanguageCode: explanations.languageCode,
     summary: buildSummaryFromExplanations(publicItems),
+    explanations: buildExplanationsFromItems(publicItems),
     pillars: buildPillarsFromExplanations(publicItems),
     axes: buildAxesFromExplanations(publicItems),
     lifeAreas: buildLifeAreasFromExplanations(publicItems),

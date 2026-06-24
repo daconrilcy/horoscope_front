@@ -5,6 +5,7 @@ import type {
   NatalCalculationReadingViewModel,
   NatalReadingAspectViewModel,
   NatalReadingAxisViewModel,
+  NatalReadingExplanationViewModel,
   NatalReadingLifeAreaViewModel,
   NatalReadingOtherForceViewModel,
   NatalReadingPillarViewModel,
@@ -28,6 +29,33 @@ function NatalSummary({ summary }: { summary: NatalReadingSummaryViewModel }) {
       <div className="natal-summary__highlights">
         {summary.highlights.map((highlight) => (
           <span key={highlight}>{highlight}</span>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+function NatalExplanations({ explanations }: { explanations: NatalReadingExplanationViewModel[] }) {
+  if (explanations.length === 0) return null
+  return (
+    <section className="natal-reading-block" aria-labelledby="natal-explanations-title">
+      <div>
+        <h3 id="natal-explanations-title">Explications du calcul</h3>
+        <p className="natal-reading-block__intro">
+          Les elements ci-dessous reprennent les explications publiques du moteur Astral, sans les identifiants
+          techniques internes.
+        </p>
+      </div>
+      <div className="natal-explanation-list">
+        {explanations.map((item) => (
+          <article className="natal-explanation-card" key={`${item.kindLabel}-${item.title}`}>
+            <span className="natal-explanation-card__kind">{item.kindLabel}</span>
+            <h4>{item.title}</h4>
+            <p>{item.explanation}</p>
+            {item.expressionPrimary ? (
+              <p className="natal-muted">Expression principale : {item.expressionPrimary}</p>
+            ) : null}
+          </article>
         ))}
       </div>
     </section>
@@ -183,6 +211,7 @@ function NatalRawCalculationDetails({ reading }: { reading: NatalCalculationRead
 function NatalCalculationReading({ reading }: { reading: NatalCalculationReadingViewModel }) {
   const hasPublicSections =
     reading.summary !== null ||
+    reading.explanations.length > 0 ||
     reading.pillars.length > 0 ||
     reading.axes.length > 0 ||
     reading.lifeAreas.length > 0 ||
@@ -194,6 +223,7 @@ function NatalCalculationReading({ reading }: { reading: NatalCalculationReading
   return (
     <div className="natal-reading-pedagogy">
       {reading.summary ? <NatalSummary summary={reading.summary} /> : null}
+      <NatalExplanations explanations={reading.explanations} />
       <NatalPillars pillars={reading.pillars} />
       <NatalAxes axes={reading.axes} />
       <NatalLifeAreas lifeAreas={reading.lifeAreas} />

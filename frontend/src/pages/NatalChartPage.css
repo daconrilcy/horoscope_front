@@ -762,11 +762,18 @@
   gap: 14px;
 }
 
+.natal-explanation-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 14px;
+}
+
 .natal-pillar,
 .natal-axis-card,
 .natal-life-area-card,
 .natal-planet-card,
-.natal-aspect-card {
+.natal-aspect-card,
+.natal-explanation-card {
   min-width: 0;
   padding: 16px;
   border: 1px solid var(--premium-glass-border-soft);
@@ -811,7 +818,8 @@
 
 .natal-axis-card__label,
 .natal-life-area-card__badge,
-.natal-aspect-card__badge {
+.natal-aspect-card__badge,
+.natal-explanation-card__kind {
   color: var(--premium-text-meta);
   font-size: var(--font-size-2xs);
   font-weight: var(--font-weight-bold);

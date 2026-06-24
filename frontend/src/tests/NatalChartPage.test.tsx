@@ -317,6 +317,9 @@ describe("NatalChartPage", () => {
 
     expect(await screen.findByRole("heading", { name: "Lecture natale publique" })).toBeVisible()
     expect(screen.getByRole("heading", { name: "Ce qui ressort globalement" })).toBeVisible()
+    const explanationsRegion = screen.getByRole("region", { name: "Explications du calcul" })
+    expect(explanationsRegion).toBeVisible()
+    expect(explanationsRegion).toHaveTextContent("Explication externe du Soleil.")
     expect(screen.getByRole("heading", { name: "Les 3 reperes essentiels" })).toBeVisible()
     expect(screen.getByRole("heading", { name: "Les grands equilibres du theme" })).toBeVisible()
     expect(screen.getByRole("heading", { name: "Le domaine de vie dominant" })).toBeVisible()

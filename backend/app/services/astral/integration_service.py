@@ -237,6 +237,7 @@ class AstralIntegrationService:
         """Delegue le proxy Mercure au client Astral unique."""
         topic = self.mercure_topic(tenant_id=tenant_id, run_id=run_id)
         return self._client.stream_mercure_events(
+            run_id=run_id,
             topic=topic,
             is_disconnected=is_disconnected,
         )
@@ -585,11 +586,17 @@ class AstralIntegrationService:
 
     @staticmethod
     def _is_reusable_natal_response(response: dict[str, Any]) -> bool:
-        """Réutilise uniquement les thèmes terminés avec une lecture publique."""
+        """Réutilise uniquement les thèmes terminés avec lecture et explications publiques."""
         if response.get("status") != "completed":
             return False
         result = response.get("result")
         if not isinstance(result, dict):
+            return False
+        explanations = result.get("explanations")
+        if not isinstance(explanations, dict):
+            return False
+        explanation_items = explanations.get("items")
+        if not isinstance(explanation_items, list) or not explanation_items:
             return False
         reading_response = result.get("reading")
         if isinstance(reading_response, str):

@@ -43,6 +43,18 @@ class FakeAstralClient:
             "status": "completed",
             "service_code": payload["service_code"],
             "result": {
+                "explanations": {
+                    "status": "complete",
+                    "language_code": "fr",
+                    "items": [
+                        {
+                            "fact_id": "placement:sun:taurus:house:10",
+                            "kind_code": "placement",
+                            "title": "Soleil en Taureau maison 10",
+                            "explanation": "Explication publique du Soleil.",
+                        }
+                    ],
+                },
                 "reading": {
                     "status": "success",
                     "reading": {
@@ -317,6 +329,54 @@ async def test_limited_theme_cache_ignores_current_location_changes(
     assert cached["cached"] is True
     assert cached["run_id"] == completed["run_id"]
     assert len(fake_client.submitted_payloads) == 1
+
+
+@pytest.mark.asyncio
+async def test_limited_theme_without_explanations_is_not_reused(
+    db_session: Session,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Un ancien thème sans bloc d'explications force une nouvelle génération."""
+    fake_client = FakeAstralClient()
+    monkeypatch.setattr(
+        AstralIntegrationService,
+        "_resolve_user_plan",
+        staticmethod(lambda *_: "basic"),
+    )
+    service = AstralIntegrationService(client=fake_client)  # type: ignore[arg-type]
+
+    completed = await _generate_completed_theme(
+        service,
+        db_session,
+        plan="basic",
+        client_request_id="legacy-without-explanations",
+    )
+    model = db_session.scalar(
+        select(UserAstralNatalThemeModel).where(
+            UserAstralNatalThemeModel.run_id == completed["run_id"]
+        )
+    )
+    assert model is not None
+    legacy_payload = dict(model.response_payload)
+    legacy_result = dict(legacy_payload["result"])
+    legacy_result.pop("explanations", None)
+    legacy_payload["result"] = legacy_result
+    model.response_payload = legacy_payload
+    db_session.commit()
+
+    regenerated = await service.submit_job(
+        db=db_session,
+        user=_user(),
+        command=AstralJobCommand(
+            product="natal_full",
+            plan="basic",
+            client_request_id="regenerate-after-missing-explanations",
+        ),
+    )
+
+    assert regenerated.get("cached") is None
+    assert regenerated["run_id"] != completed["run_id"]
+    assert len(fake_client.submitted_payloads) == 2
 
 
 @pytest.mark.asyncio
