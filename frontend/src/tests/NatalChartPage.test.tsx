@@ -255,27 +255,42 @@ describe("NatalChartPage", () => {
     renderNatalChartPage()
 
     expect(await screen.findByRole("heading", { name: "Lecture natale publique" })).toBeVisible()
-    expect(screen.getByRole("heading", { name: "Les grands reperes de votre carte" })).toBeVisible()
-    expect(screen.getByRole("heading", { name: "Vos 3 grands piliers astrologiques" })).toBeVisible()
-    expect(screen.getByRole("heading", { name: "Les grands axes de votre vie" })).toBeVisible()
-    expect(screen.getByRole("heading", { name: "Domaines de vie les plus marques" })).toBeVisible()
-    expect(screen.getByRole("heading", { name: "Autres forces importantes du theme" })).toBeVisible()
-    expect(screen.getByRole("heading", { name: "Dynamiques fortes entre les planetes" })).toBeVisible()
+    expect(screen.getByRole("heading", { name: "Ce qui ressort globalement" })).toBeVisible()
+    expect(screen.getByRole("heading", { name: "Les 3 reperes essentiels" })).toBeVisible()
+    expect(screen.getByRole("heading", { name: "Les grands equilibres du theme" })).toBeVisible()
+    expect(screen.getByRole("heading", { name: "Le domaine de vie dominant" })).toBeVisible()
+    expect(screen.getByRole("heading", { name: "Forces complementaires" })).toBeVisible()
+    expect(screen.getByRole("heading", { name: "Dynamique principale" })).toBeVisible()
     expect(screen.getByText("Details techniques du calcul")).toBeVisible()
     expect(screen.queryByText("Données de calcul Astral")).not.toBeInTheDocument()
     const renderedText = document.body.textContent ?? ""
-    expect(renderedText.indexOf("Les grands reperes de votre carte")).toBeLessThan(
+    expect(renderedText.indexOf("Ce qui ressort globalement")).toBeLessThan(
       renderedText.indexOf("Lecture natale publique"),
     )
-    expect(screen.getByRole("region", { name: "Vos 3 grands piliers astrologiques" })).toHaveTextContent("Soleil")
-    expect(screen.getByRole("region", { name: "Vos 3 grands piliers astrologiques" })).toHaveTextContent("Ascendant")
-    expect(screen.getByRole("region", { name: "Les grands axes de votre vie" })).toHaveTextContent("Descendant")
-    expect(screen.getByRole("region", { name: "Domaines de vie les plus marques" })).toHaveTextContent("Maison II")
-    expect(screen.getByRole("region", { name: "Domaines de vie les plus marques" })).toHaveTextContent("Tres marque")
-    expect(screen.getByRole("region", { name: "Autres forces importantes du theme" })).toHaveTextContent("Mercure")
-    expect(screen.getByRole("region", { name: "Dynamiques fortes entre les planetes" })).toHaveTextContent(
+    expect(screen.queryByRole("heading", { name: "Vos 3 grands piliers astrologiques" })).not.toBeInTheDocument()
+    expect(screen.queryByRole("heading", { name: "Les grands axes de votre vie" })).not.toBeInTheDocument()
+    expect(screen.queryByRole("heading", { name: "Domaines de vie les plus marques" })).not.toBeInTheDocument()
+    expect(screen.queryByRole("heading", { name: "Autres forces importantes du theme" })).not.toBeInTheDocument()
+    expect(screen.queryByRole("heading", { name: "Dynamiques fortes entre les planetes" })).not.toBeInTheDocument()
+    expect(screen.getByRole("region", { name: "Les 3 reperes essentiels" })).toHaveTextContent("Soleil")
+    expect(screen.getByRole("region", { name: "Les 3 reperes essentiels" })).toHaveTextContent("Ascendant")
+    expect(screen.getByRole("region", { name: "Les grands equilibres du theme" })).toHaveTextContent(
+      "Scorpion / Taureau",
+    )
+    expect(screen.getByRole("region", { name: "Les grands equilibres du theme" })).not.toHaveTextContent(
+      "Ascendant en Scorpion",
+    )
+    expect(screen.getByRole("region", { name: "Le domaine de vie dominant" })).toHaveTextContent("Maison II")
+    expect(screen.getByRole("region", { name: "Le domaine de vie dominant" })).toHaveTextContent("Tres marque")
+    expect(screen.getByRole("region", { name: "Le domaine de vie dominant" })).not.toHaveTextContent(
+      "Soleil en Maison II",
+    )
+    expect(screen.getByRole("region", { name: "Forces complementaires" })).toHaveTextContent("Mercure")
+    expect(screen.getByRole("region", { name: "Dynamique principale" })).toHaveTextContent(
       "Jupiter en tension avec Uranus",
     )
+    expect(renderedText).not.toContain("Ce repere decrit")
+    expect(renderedText).not.toContain("Ce repere nuance")
     expect(renderedText).not.toContain("Very high")
     expect(renderedText).not.toContain("Resources")
     expect(screen.getByText("Une synthese claire du theme.")).toBeVisible()

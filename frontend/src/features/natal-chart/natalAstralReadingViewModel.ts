@@ -1,6 +1,6 @@
 // Normalisation des contrats d'interpretation natale Astral pour l'affichage public.
 import type { AstralJobResponse, AstralPlan } from "../../api/astral"
-import { translateAspect, translateHouse, translatePlanet, translateSign } from "../../i18n/astrology"
+import { normalizeSignCode, translateAspect, translateHouse, translatePlanet, translateSign } from "../../i18n/astrology"
 import { normalizeDisplayText } from "../../utils/strings"
 
 export type NatalReadingTier = "free" | "basic" | "premium" | "unknown"
@@ -33,10 +33,9 @@ export type NatalCalculationFactsViewModel = {
   sourceLabel: string
 }
 
-export type NatalReadingSummaryCardViewModel = {
-  label: string
-  title: string
-  description: string
+export type NatalReadingSummaryViewModel = {
+  text: string
+  highlights: string[]
 }
 
 export type NatalReadingPillarViewModel = {
@@ -48,7 +47,7 @@ export type NatalReadingPillarViewModel = {
 }
 
 export type NatalReadingAxisViewModel = {
-  code: "ascendant" | "descendant" | "midheaven" | "imum_coeli"
+  code: "relationship_axis" | "public_private_axis"
   label: string
   title: string
   description: string
@@ -76,7 +75,7 @@ export type NatalReadingAspectViewModel = {
 }
 
 export type NatalCalculationReadingViewModel = {
-  summaryCards: NatalReadingSummaryCardViewModel[]
+  summary: NatalReadingSummaryViewModel | null
   pillars: NatalReadingPillarViewModel[]
   axes: NatalReadingAxisViewModel[]
   lifeAreas: NatalReadingLifeAreaViewModel[]
@@ -132,6 +131,7 @@ const PUBLIC_ASPECT_OBJECT_ORDER = [
 ] as const
 const MAX_NOTABLE_PLACEMENTS = 6
 const MAX_MAJOR_ASPECTS = 5
+const MAX_PUBLIC_READING_ASPECTS = 1
 const TECHNICAL_DETAIL_SEPARATOR = " - "
 const PUBLIC_OBJECT_LABELS: Record<string, string> = {
   ascendant: "Ascendant",
@@ -142,78 +142,53 @@ const PUBLIC_OBJECT_LABELS: Record<string, string> = {
   ic: "Fond du Ciel",
 }
 
-const SUMMARY_LABELS: Record<"sun" | "moon" | "ascendant", string> = {
-  sun: "Identite profonde",
-  moon: "Vie emotionnelle",
-  ascendant: "Image exterieure",
-}
-
 const PILLAR_COPY: Record<"sun" | "moon" | "ascendant", { icon: string; description: string }> = {
   sun: {
     icon: "☉",
-    description: "Ce repere decrit votre identite, votre volonte et votre maniere de vous construire.",
+    description: "Une identite {signTone}, qui cherche a se construire dans {houseContext}.",
   },
   moon: {
     icon: "☽",
-    description: "Ce repere decrit vos besoins emotionnels, vos reflexes intimes et votre securite interieure.",
+    description: "Une vie interieure {signTone}, avec des besoins emotionnels qui s'expriment dans {houseContext}.",
   },
   ascendant: {
     icon: "ASC",
-    description: "Ce repere decrit votre maniere d'entrer en relation avec le monde et l'image donnee au premier abord.",
-  },
-}
-
-const AXIS_COPY: Record<NatalReadingAxisViewModel["code"], { label: string; description: string }> = {
-  ascendant: {
-    label: "Moi face au monde",
-    description: "La maniere spontanee dont vous vous presentez aux autres.",
-  },
-  descendant: {
-    label: "Moi face aux autres",
-    description: "Le type de relation et d'equilibre que vous recherchez dans le lien.",
-  },
-  midheaven: {
-    label: "Direction professionnelle",
-    description: "La trajectoire visible, l'ambition et la place sociale que le theme met en avant.",
-  },
-  imum_coeli: {
-    label: "Base intime",
-    description: "Le socle personnel, les racines et le besoin de securite dans la sphere privee.",
+    description: "Une maniere d'aborder le monde {signTone}, visible dans la premiere impression donnee.",
   },
 }
 
 const FORCE_COPY: Record<string, { functionLabel: string; description: string }> = {
   mercury: {
     functionLabel: "Communication",
-    description: "Ce repere nuance la pensee, la parole, les apprentissages et les echanges.",
+    description: "{object} en {sign} indique une pensee {signTone}, qui peut s'exprimer dans {houseContext}.",
   },
   venus: {
-    functionLabel: "Attachement et valeurs",
-    description: "Ce repere nuance les valeurs, l'affectif, le confort recherche et la maniere d'aimer.",
+    functionLabel: "Valeurs et attachement",
+    description: "{object} en {sign} indique une maniere d'aimer et de choisir {signTone}, visible dans {houseContext}.",
   },
   mars: {
     functionLabel: "Action",
-    description: "Ce repere nuance l'energie d'action, le desir, l'affirmation et la maniere d'avancer.",
+    description: "{object} en {sign} indique une energie d'action {signTone}, mobilisee dans {houseContext}.",
   },
   jupiter: {
     functionLabel: "Expansion",
-    description: "Ce repere nuance la confiance, l'ouverture, l'apprentissage et la croissance.",
+    description: "{object} en {sign} indique une croissance {signTone}, qui peut se developper dans {houseContext}.",
   },
   saturn: {
     functionLabel: "Structure",
-    description: "Ce repere nuance la responsabilite, les limites, la discipline et la construction dans le temps.",
+    description: "{object} en {sign} indique une construction {signTone}, qui demande de la maturite dans {houseContext}.",
   },
   uranus: {
     functionLabel: "Originalite",
-    description: "Ce repere nuance l'independance, l'innovation, les ruptures et le besoin de liberte.",
+    description: "{object} en {sign} indique une originalite {signTone}, qui bouscule les habitudes dans {houseContext}.",
   },
   neptune: {
     functionLabel: "Imaginaire",
-    description: "Ce repere nuance l'intuition, l'inspiration, l'ideal et la sensibilite aux ambiances.",
+    description: "{object} en {sign} indique une sensibilite {signTone}, qui inspire {houseContext}.",
   },
   pluto: {
     functionLabel: "Transformation",
-    description: "Ce repere nuance l'intensite, les mutations profondes et la capacite de regeneration.",
+    description: "{object} en {sign} indique une intensite {signTone}, qui transforme {houseContext}.",
   },
 }
 
@@ -228,6 +203,36 @@ const HOUSE_THEME_LABELS: Record<string, string> = {
   community: "Communaute",
   philosophy: "Philosophie",
   unconscious: "Inconscient",
+}
+
+const HOUSE_CONTEXT_LABELS: Record<number, string> = {
+  1: "l'identite et l'image personnelle",
+  2: "les valeurs, la securite et les ressources",
+  3: "la communication et les apprentissages",
+  4: "le foyer, les racines et la vie intime",
+  5: "la creativite et l'expression personnelle",
+  6: "les routines, le travail quotidien et l'hygiene de vie",
+  7: "les relations et les engagements",
+  8: "les transformations et les ressources partagees",
+  9: "la vision du monde et les apprentissages profonds",
+  10: "la carriere, l'ambition et la place sociale",
+  11: "les groupes, les projets collectifs et la communaute",
+  12: "la vie interieure, le retrait et l'inconscient",
+}
+
+const SIGN_TONE_LABELS: Record<string, string> = {
+  aries: "directe, volontaire et reactive",
+  taurus: "stable, concrete et patiente",
+  gemini: "curieuse, mobile et adaptable",
+  cancer: "sensible, prudente et protectrice",
+  leo: "expressive, fiere et creative",
+  virgo: "precise, utile et attentive aux details",
+  libra: "relationnelle, harmonieuse et attentive a l'equilibre",
+  scorpio: "intense, profonde et selective",
+  sagittarius: "ouverte, franche et orientee vers l'exploration",
+  capricorn: "structuree, responsable et exigeante",
+  aquarius: "independante, originale et tournee vers les idees",
+  pisces: "intuitive, permeable et imaginative",
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -415,6 +420,30 @@ function formatPlacementTitle(objectLabel: string, sign: string): string {
   return `${objectLabel} en ${sign}`
 }
 
+function signTone(value: string): string {
+  const code = normalizeSignCode(value) ?? normalizeCode(value)
+  return SIGN_TONE_LABELS[code] ?? `marquee par le ${value}`
+}
+
+function houseContext(houseNumber: number | null): string {
+  return houseNumber ? (HOUSE_CONTEXT_LABELS[houseNumber] ?? "ce domaine de vie") : "le theme"
+}
+
+function compactHouseLabel(house: string | null): string | null {
+  return house?.split(" - ")[0] ?? null
+}
+
+function fillTemplate(
+  template: string,
+  values: { object?: string; sign?: string; signTone: string; houseContext: string },
+): string {
+  return template
+    .replace("{object}", values.object ?? "")
+    .replace("{sign}", values.sign ?? "")
+    .replace("{signTone}", values.signTone)
+    .replace("{houseContext}", values.houseContext)
+}
+
 function houseTitle(number: number, theme: unknown): string {
   const translatedHouse = translateHouse(number, "fr")
   const themeLabel = asText(theme)
@@ -426,8 +455,9 @@ function houseTitle(number: number, theme: unknown): string {
   return `${housePrefix} - ${themeLabel}`
 }
 
-function shortLifeAreaDescription(title: string): string {
-  return `${title} ressort comme un domaine de vie important dans les donnees de calcul disponibles.`
+function shortLifeAreaDescription(title: string, detailCount: number): string {
+  const countText = detailCount > 1 ? "plusieurs elements importants" : "un element important"
+  return `${title} ressort fortement parce que ${countText} du theme s'y concentre. Cette zone indique ou l'energie principale cherche a se rendre visible.`
 }
 
 function aspectTitle(objects: string[], aspectLabel: string, quality: string | null): string {
@@ -441,15 +471,15 @@ function aspectTitle(objects: string[], aspectLabel: string, quality: string | n
 
 function aspectDescription(quality: string | null): string {
   if (quality === "Fluidite") {
-    return "Cette dynamique indique une relation plus fluide entre les fonctions planetaires concernees."
+    return "Cette dynamique facilite l'action rapide, l'inventivite et la capacite a sortir des cadres habituels."
   }
   if (quality === "Tension") {
-    return "Cette dynamique indique une tension constructive a integrer entre les fonctions planetaires concernees."
+    return "Cette dynamique cree une tension a transformer en action consciente, surtout quand deux besoins tirent dans des directions differentes."
   }
   if (quality === "Intensite") {
-    return "Cette dynamique indique une relation forte qui concentre les fonctions planetaires concernees."
+    return "Cette dynamique concentre fortement l'energie des planetes concernees et rend leur interaction difficile a ignorer."
   }
-  return "Cette dynamique decrit une relation notable entre deux fonctions planetaires du theme."
+  return "Cette dynamique relie deux fonctions importantes du theme et montre une maniere particuliere d'agir ou de reagir."
 }
 
 function splitParagraphs(value: unknown): string[] {
@@ -764,18 +794,28 @@ function readPublicPlacement(
   }
 }
 
-function buildSummaryCards(projection: Record<string, unknown>): NatalReadingSummaryCardViewModel[] {
-  return (["sun", "moon", "ascendant"] as const)
-    .map((code) => {
-      const placement = readPublicPlacement(projection, code)
-      if (!placement) return null
-      return {
-        label: SUMMARY_LABELS[code],
-        title: formatPlacementTitle(placement.label, placement.sign),
-        description: PILLAR_COPY[code].description,
-      }
-    })
-    .filter((item): item is NatalReadingSummaryCardViewModel => Boolean(item))
+function buildSummary(
+  projection: Record<string, unknown>,
+  lifeAreas: NatalReadingLifeAreaViewModel[],
+): NatalReadingSummaryViewModel | null {
+  const sun = readPublicPlacement(projection, "sun")
+  const moon = readPublicPlacement(projection, "moon")
+  const ascendant = readPublicPlacement(projection, "ascendant")
+  const dominantArea = lifeAreas[0]
+  const highlights = [sun, moon, ascendant]
+    .filter((item): item is NonNullable<ReturnType<typeof readPublicPlacement>> => Boolean(item))
+    .map((placement) => formatPlacementTitle(placement.label, placement.sign))
+
+  if (dominantArea) highlights.push(`${dominantArea.title} ${dominantArea.rank.toLowerCase()}`)
+  if (highlights.length === 0) return null
+
+  const toneSource = sun ?? moon ?? ascendant
+  const tone = toneSource ? signTone(toneSource.sign) : "coherente"
+  const focus = dominantArea ? `, avec un accent net sur ${dominantArea.title}` : ""
+  return {
+    text: `Ce theme met en avant une dynamique ${tone}${focus}.`,
+    highlights,
+  }
 }
 
 function buildPillars(projection: Record<string, unknown>): NatalReadingPillarViewModel[] {
@@ -787,33 +827,42 @@ function buildPillars(projection: Record<string, unknown>): NatalReadingPillarVi
         code,
         icon: PILLAR_COPY[code].icon,
         title: formatPlacementTitle(placement.label, placement.sign),
-        description: PILLAR_COPY[code].description,
-        lifeArea: placement.house ? `Domaine principal : ${placement.house}` : null,
+        description: fillTemplate(PILLAR_COPY[code].description, {
+          signTone: signTone(placement.sign),
+          houseContext: houseContext(placement.houseNumber),
+        }),
+        lifeArea: placement.house ? `Expression principale : ${placement.house}` : null,
       }
     })
     .filter((item): item is NatalReadingPillarViewModel => Boolean(item))
 }
 
 function buildAxes(projection: Record<string, unknown>): NatalReadingAxisViewModel[] {
-  const axisCodes: NatalReadingAxisViewModel["code"][] = [
-    "ascendant",
-    "descendant",
-    "midheaven",
-    "imum_coeli",
-  ]
-  return axisCodes
-    .map((code) => {
-      const placement = readPublicPlacement(projection, code)
-      if (!placement) return null
-      const copy = AXIS_COPY[code]
-      return {
-        code,
-        label: copy.label,
-        title: formatPlacementTitle(placement.label, placement.sign),
-        description: copy.description,
-      }
+  const ascendant = readPublicPlacement(projection, "ascendant")
+  const descendant = readPublicPlacement(projection, "descendant")
+  const imumCoeli = readPublicPlacement(projection, "imum_coeli")
+  const midheaven = readPublicPlacement(projection, "midheaven")
+  const axes: NatalReadingAxisViewModel[] = []
+
+  if (ascendant && descendant) {
+    axes.push({
+      code: "relationship_axis",
+      label: "Soi / Relations",
+      title: `${ascendant.sign} / ${descendant.sign}`,
+      description: `Cet axe relie une presentation ${signTone(ascendant.sign)} a une recherche relationnelle ${signTone(descendant.sign)}.`,
     })
-    .filter((item): item is NatalReadingAxisViewModel => Boolean(item))
+  }
+
+  if (imumCoeli && midheaven) {
+    axes.push({
+      code: "public_private_axis",
+      label: "Vie intime / Vie publique",
+      title: `${imumCoeli.sign} / ${midheaven.sign}`,
+      description: `Cet axe relie un socle intime ${signTone(imumCoeli.sign)} a une trajectoire publique ${signTone(midheaven.sign)}.`,
+    })
+  }
+
+  return axes
 }
 
 function allPlacementsForHouseDetails(projection: Record<string, unknown>, houseNumber: number): string[] {
@@ -822,7 +871,7 @@ function allPlacementsForHouseDetails(projection: Record<string, unknown>, house
     .map((code) => readPublicPlacement(projection, code))
     .filter((item): item is NonNullable<ReturnType<typeof readPublicPlacement>> => Boolean(item))
     .filter((placement) => placement.houseNumber === houseNumber)
-    .map((placement) => `${placement.label} en ${translateHouse(houseNumber, "fr").split(" - ")[0]}`)
+    .map((placement) => placement.label)
 
   const placementDetails = flattenProjectionPlacements(projection)
     .map((placement) => {
@@ -830,7 +879,7 @@ function allPlacementsForHouseDetails(projection: Record<string, unknown>, house
       const number = asNumber(asRecord(placement.house)?.number)
       const label = code ? formatObject(code) : null
       if (!label || number !== houseNumber) return null
-      return `${label} en ${translateHouse(houseNumber, "fr").split(" - ")[0]}`
+      return label
     })
     .filter((item): item is string => Boolean(item))
 
@@ -846,11 +895,12 @@ function buildLifeAreas(projection: Record<string, unknown>): NatalReadingLifeAr
       const number = asNumber(item?.number ?? item?.house_number)
       if (!item || number === null) return null
       const title = houseTitle(number, item.theme)
+      const details = allPlacementsForHouseDetails(projection, number)
       return {
         rank: normalizeImportance(item.importance) ?? "Marque",
         title,
-        description: shortLifeAreaDescription(title),
-        details: allPlacementsForHouseDetails(projection, number),
+        description: shortLifeAreaDescription(title, details.length),
+        details,
       }
     })
     .filter((item): item is NatalReadingLifeAreaViewModel => Boolean(item))
@@ -873,8 +923,13 @@ function buildOtherForces(projection: Record<string, unknown>): NatalReadingOthe
     return {
       title: formatPlacementTitle(label, sign),
       functionLabel: copy.functionLabel,
-      description: copy.description,
-      lifeArea: placementHouseText(placement),
+      description: fillTemplate(copy.description, {
+        object: label,
+        sign,
+        signTone: signTone(sign),
+        houseContext: houseContext(asNumber(asRecord(placement.house)?.number)),
+      }),
+      lifeArea: compactHouseLabel(placementHouseText(placement)),
     }
   })
     .filter((item): item is NatalReadingOtherForceViewModel => Boolean(item))
@@ -922,7 +977,7 @@ function buildReadingAspects(projection: Record<string, unknown>): NatalReadingA
       }
     })
     .filter((item): item is NatalReadingAspectViewModel => Boolean(item))
-    .slice(0, MAX_MAJOR_ASPECTS)
+    .slice(0, MAX_PUBLIC_READING_ASPECTS)
 }
 
 function buildCalculationReading(
@@ -930,17 +985,18 @@ function buildCalculationReading(
   technicalGroups: NatalCalculationFactGroupViewModel[],
 ): NatalCalculationReadingViewModel | null {
   const projection = resolveCalculationProjection(result)
+  const lifeAreas = buildLifeAreas(projection)
   const reading: NatalCalculationReadingViewModel = {
-    summaryCards: buildSummaryCards(projection),
+    summary: buildSummary(projection, lifeAreas),
     pillars: buildPillars(projection),
     axes: buildAxes(projection),
-    lifeAreas: buildLifeAreas(projection),
+    lifeAreas,
     otherForces: buildOtherForces(projection),
     aspects: buildReadingAspects(projection),
     technicalGroups,
   }
   const hasPublicSections =
-    reading.summaryCards.length > 0 ||
+    reading.summary !== null ||
     reading.pillars.length > 0 ||
     reading.axes.length > 0 ||
     reading.lifeAreas.length > 0 ||

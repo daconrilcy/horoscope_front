@@ -8,7 +8,7 @@ import type {
   NatalReadingLifeAreaViewModel,
   NatalReadingOtherForceViewModel,
   NatalReadingPillarViewModel,
-  NatalReadingSummaryCardViewModel,
+  NatalReadingSummaryViewModel,
   NatalInterpretationViewModel,
 } from "./natalAstralReadingViewModel"
 
@@ -19,19 +19,15 @@ type NatalAstralReadingProps = {
 const PUBLIC_READING_ERROR_MESSAGE =
   "La lecture Astral n'a pas pu etre generee pour le moment. Veuillez reessayer plus tard."
 
-function NatalSummary({ cards }: { cards: NatalReadingSummaryCardViewModel[] }) {
-  if (cards.length === 0) return null
+function NatalSummary({ summary }: { summary: NatalReadingSummaryViewModel }) {
   return (
     <section className="natal-summary" aria-labelledby="natal-summary-title">
-      <p className="natal-section-eyebrow">Synthese rapide</p>
-      <h2 id="natal-summary-title">Les grands reperes de votre carte</h2>
-      <div className="natal-summary__cards">
-        {cards.map((card) => (
-          <article className="natal-summary-card" key={`${card.label}-${card.title}`}>
-            <span className="natal-summary-card__label">{card.label}</span>
-            <strong>{card.title}</strong>
-            <p>{card.description}</p>
-          </article>
+      <p className="natal-section-eyebrow">Vue d'ensemble</p>
+      <h2 id="natal-summary-title">Ce qui ressort globalement</h2>
+      <p className="natal-summary__text">{summary.text}</p>
+      <div className="natal-summary__highlights">
+        {summary.highlights.map((highlight) => (
+          <span key={highlight}>{highlight}</span>
         ))}
       </div>
     </section>
@@ -42,7 +38,7 @@ function NatalPillars({ pillars }: { pillars: NatalReadingPillarViewModel[] }) {
   if (pillars.length === 0) return null
   return (
     <section className="natal-reading-block" aria-labelledby="natal-pillars-title">
-      <h3 id="natal-pillars-title">Vos 3 grands piliers astrologiques</h3>
+      <h3 id="natal-pillars-title">Les 3 reperes essentiels</h3>
       <p className="natal-reading-block__intro">
         Ces trois elements donnent une premiere lecture simple de votre theme : identite, vie interieure et maniere
         d'entrer en relation avec l'exterieur.
@@ -67,9 +63,9 @@ function NatalAxes({ axes }: { axes: NatalReadingAxisViewModel[] }) {
   if (axes.length === 0) return null
   return (
     <section className="natal-reading-block" aria-labelledby="natal-axes-title">
-      <h3 id="natal-axes-title">Les grands axes de votre vie</h3>
+      <h3 id="natal-axes-title">Les grands equilibres du theme</h3>
       <p className="natal-reading-block__intro">
-        Ces quatre reperes decrivent l'equilibre entre vie personnelle, relations, foyer et direction professionnelle.
+        Les axes montrent les grands contrastes du theme : soi et les autres, vie privee et trajectoire publique.
       </p>
       <div className="natal-axis-grid">
         {axes.map((axis) => (
@@ -88,7 +84,7 @@ function NatalLifeAreas({ lifeAreas }: { lifeAreas: NatalReadingLifeAreaViewMode
   if (lifeAreas.length === 0) return null
   return (
     <section className="natal-reading-block" aria-labelledby="natal-life-areas-title">
-      <h3 id="natal-life-areas-title">Domaines de vie les plus marques</h3>
+      <h3 id="natal-life-areas-title">Le domaine de vie dominant</h3>
       <p className="natal-reading-block__intro">
         Les maisons montrent les zones de vie ou les energies du theme s'expriment le plus fortement.
       </p>
@@ -118,9 +114,9 @@ function NatalOtherForces({ otherForces }: { otherForces: NatalReadingOtherForce
   if (otherForces.length === 0) return null
   return (
     <section className="natal-reading-block" aria-labelledby="natal-other-forces-title">
-      <h3 id="natal-other-forces-title">Autres forces importantes du theme</h3>
+      <h3 id="natal-other-forces-title">Forces complementaires</h3>
       <p className="natal-reading-block__intro">
-        Ces planetes ajoutent des nuances importantes a la personnalite et aux comportements.
+        Ces planetes precisent la maniere de penser, d'aimer, d'agir et de s'affirmer.
       </p>
       <div className="natal-planet-list">
         {otherForces.map((force) => (
@@ -129,7 +125,7 @@ function NatalOtherForces({ otherForces }: { otherForces: NatalReadingOtherForce
             <p>
               <strong>{force.functionLabel} :</strong> {force.description}
             </p>
-            {force.lifeArea ? <p>Expression principale : {force.lifeArea}</p> : null}
+            {force.lifeArea ? <p className="natal-muted">Expression principale : {force.lifeArea}</p> : null}
           </article>
         ))}
       </div>
@@ -141,10 +137,9 @@ function NatalAspectDynamics({ aspects }: { aspects: NatalReadingAspectViewModel
   if (aspects.length === 0) return null
   return (
     <section className="natal-reading-block" aria-labelledby="natal-aspects-title">
-      <h3 id="natal-aspects-title">Dynamiques fortes entre les planetes</h3>
+      <h3 id="natal-aspects-title">Dynamique principale</h3>
       <p className="natal-reading-block__intro">
-        Les aspects decrivent les relations entre les planetes : certaines creent de la fluidite, d'autres de la
-        tension ou de l'intensite.
+        Cette dynamique relie plusieurs fonctions du theme et montre une facon particuliere d'agir ou de reagir.
       </p>
       <div className="natal-aspect-card-list">
         {aspects.map((aspect) => (
@@ -202,7 +197,7 @@ function NatalRawCalculationDetails({ reading }: { reading: NatalCalculationRead
 function NatalCalculationReading({ reading }: { reading: NatalCalculationReadingViewModel }) {
   return (
     <div className="natal-reading-pedagogy">
-      <NatalSummary cards={reading.summaryCards} />
+      {reading.summary ? <NatalSummary summary={reading.summary} /> : null}
       <NatalPillars pillars={reading.pillars} />
       <NatalAxes axes={reading.axes} />
       <NatalLifeAreas lifeAreas={reading.lifeAreas} />

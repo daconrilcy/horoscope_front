@@ -131,11 +131,17 @@ describe("buildNatalInterpretationViewModel", () => {
       { label: "Ascendant", value: "Scorpion", detail: "Maison I - Identité" },
       { label: "Descendant", value: "Taureau", detail: "Maison VII - Relations" },
     ])
-    expect(viewModel?.calculationReading?.summaryCards.map((card) => card.title)).toEqual([
+    expect(viewModel?.calculationReading?.summary?.highlights).toEqual([
       "Soleil en Capricorne",
       "Lune en Poissons",
       "Ascendant en Scorpion",
+      "Maison II - Valeurs tres marque",
     ])
+    expect(viewModel?.calculationReading?.summary?.text).toBe(
+      "Ce theme met en avant une dynamique structuree, responsable et exigeante, avec un accent net sur Maison II - Valeurs.",
+    )
+    expect(JSON.stringify(viewModel?.calculationReading)).not.toContain("Ce repere decrit")
+    expect(JSON.stringify(viewModel?.calculationReading)).not.toContain("Ce repere nuance")
     expect(viewModel?.calculationReading?.lifeAreas[0]).toMatchObject({
       rank: "Tres marque",
       title: "Maison II - Valeurs",
@@ -223,15 +229,12 @@ describe("buildNatalInterpretationViewModel", () => {
       value: "Capricorne",
       detail: "Maison III - Communication - retrograde apparent",
     })
-    expect(viewModel?.calculationReading?.axes.map((axis) => axis.title)).toEqual([
-      "Ascendant en Scorpion",
-      "Descendant en Taureau",
-      "Milieu du Ciel en Lion",
-    ])
+    expect(viewModel?.calculationReading?.axes.map((axis) => axis.title)).toEqual(["Scorpion / Taureau"])
+    expect(JSON.stringify(viewModel?.calculationReading?.axes)).not.toContain("Ascendant en Scorpion")
     expect(viewModel?.calculationReading?.otherForces[0]).toMatchObject({
       title: "Mercure en Capricorne",
       functionLabel: "Communication",
-      lifeArea: "Maison III - Communication",
+      lifeArea: "Maison III",
     })
     expect(viewModel?.calculationFacts?.groups[2]?.items[0]?.detail).not.toContain("Retrograde motion")
     expect(viewModel?.calculationFacts?.groups[2]?.items[0]?.detail).toContain("retrograde apparent")
