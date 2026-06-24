@@ -337,6 +337,79 @@ describe("buildNatalInterpretationViewModel", () => {
     })
   })
 
+  it("borne les forces complementaires aux fonctions penser aimer agir", () => {
+    const job: AstralJobResponse = {
+      run_id: "run-complementary-forces",
+      status: "completed",
+      result: {
+        calculation: {
+          placements: {
+            supporting: [
+              { object: "Mercury", sign: "Aries", house: { number: 10 } },
+              { object: "Venus", sign: "Taurus", house: { number: 10 } },
+              { object: "Mars", sign: "Aquarius", house: { number: 8 } },
+              { object: "Jupiter", sign: "Gemini", house: { number: 11 } },
+              { object: "Saturn", sign: "Capricorn", house: { number: 6 } },
+            ],
+          },
+        },
+        reading: {
+          status: "success",
+          reading: {
+            summary: { title: "Lecture forces" },
+            chapters: [],
+          },
+        },
+      },
+    }
+
+    const viewModel = buildNatalInterpretationViewModel(job, "basic")
+
+    expect(viewModel?.calculationReading?.otherForces.map((force) => force.title)).toEqual([
+      "Mercure en Bélier",
+      "Vénus en Taureau",
+      "Mars en Verseau",
+    ])
+    expect(viewModel?.calculationFacts?.groups.flatMap((group) => group.items.map((item) => item.label))).toEqual([
+      "Mercure",
+      "Vénus",
+      "Mars",
+      "Jupiter",
+      "Saturne",
+    ])
+  })
+
+  it("garde une description fluide generique hors aspect Mars Uranus", () => {
+    const job: AstralJobResponse = {
+      run_id: "run-generic-flow-aspect",
+      status: "completed",
+      result: {
+        calculation: {
+          dynamics: {
+            major_aspects: [{ aspect: "Venus trine Neptune", quality: "Flow" }],
+          },
+        },
+        reading: {
+          status: "success",
+          reading: {
+            summary: { title: "Lecture aspect generique" },
+            chapters: [],
+          },
+        },
+      },
+    }
+
+    const viewModel = buildNatalInterpretationViewModel(job, "basic")
+    const aspect = viewModel?.calculationReading?.aspects[0]
+
+    expect(aspect).toMatchObject({
+      badge: "Fluidite",
+      title: "Vénus en harmonie avec Neptune",
+    })
+    expect(aspect?.description).toContain("cooperation entre les planetes concernees")
+    expect(aspect?.description).not.toContain("action rapide")
+  })
+
   it("remonte une erreur interne failed proprement", () => {
     const job: AstralJobResponse = {
       run_id: "run-failed",

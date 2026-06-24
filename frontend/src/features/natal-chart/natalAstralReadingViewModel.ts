@@ -122,6 +122,7 @@ const NOTABLE_PLACEMENT_ORDER = [
   "neptune",
   "pluto",
 ] as const
+const COMPLEMENTARY_FORCE_ORDER = ["mercury", "venus", "mars"] as const
 const PUBLIC_ASPECT_OBJECT_ORDER = [
   "sun",
   "moon",
@@ -469,9 +470,12 @@ function aspectTitle(objects: string[], aspectLabel: string, quality: string | n
   return `${first} en relation avec ${second}`
 }
 
-function aspectDescription(quality: string | null): string {
+function aspectDescription(quality: string | null, objects: string[]): string {
   if (quality === "Fluidite") {
-    return "Cette dynamique facilite l'action rapide, l'inventivite et la capacite a sortir des cadres habituels."
+    if (objects.includes("Mars") && objects.includes("Uranus")) {
+      return "Cette dynamique facilite l'action rapide, l'inventivite et la capacite a sortir des cadres habituels."
+    }
+    return "Cette dynamique facilite la cooperation entre les planetes concernees et rend leur expression plus naturelle."
   }
   if (quality === "Tension") {
     return "Cette dynamique cree une tension a transformer en action consciente, surtout quand deux besoins tirent dans des directions differentes."
@@ -914,7 +918,7 @@ function buildOtherForces(projection: Record<string, unknown>): NatalReadingOthe
     if (code && FORCE_COPY[code] && !byObject.has(code)) byObject.set(code, placement)
   }
 
-  return NOTABLE_PLACEMENT_ORDER.map((code) => {
+  return COMPLEMENTARY_FORCE_ORDER.map((code) => {
     const placement = byObject.get(code)
     const sign = formatSign(placement?.sign)
     const label = formatObject(code)
@@ -972,7 +976,7 @@ function buildReadingAspects(projection: Record<string, unknown>): NatalReadingA
       return {
         badge: quality ?? "Dynamique",
         title: aspectTitle(inferredObjects, aspectLabel, quality),
-        description: aspectDescription(quality),
+        description: aspectDescription(quality, inferredObjects),
         details,
       }
     })
