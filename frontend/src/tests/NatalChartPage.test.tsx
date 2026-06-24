@@ -212,6 +212,67 @@ describe("NatalChartPage", () => {
               ],
             },
           },
+          explanations: {
+            status: "complete",
+            language_code: "fr",
+            items: [
+              {
+                fact_id: "placement:sun:capricorn:house:2",
+                kind_code: "placement",
+                title: "Soleil en Capricorne maison 2",
+                explanation: "Explication externe du Soleil.",
+                expression_primary: "Maison 2",
+                source: "generated",
+              },
+              {
+                fact_id: "placement:moon:pisces:house:4",
+                kind_code: "placement",
+                title: "Lune en Poissons maison 4",
+                explanation: "Explication externe de la Lune.",
+                expression_primary: "Maison 4",
+                source: "generated",
+              },
+              {
+                fact_id: "placement:ascendant:scorpio:house:1",
+                kind_code: "angle",
+                title: "Ascendant en Scorpion maison 1",
+                explanation: "Explication externe de l'Ascendant.",
+                expression_primary: "Maison 1",
+                source: "generated",
+              },
+              {
+                fact_id: "house_axis:self_relationship",
+                kind_code: "house_axis",
+                title: "Axe maison : soi et relation",
+                explanation: "Explication externe de l'axe relationnel.",
+                source: "generated",
+              },
+              {
+                fact_id: "house_emphasis:house:2",
+                kind_code: "house_emphasis",
+                title: "Emphase maison ressources",
+                explanation: "Explication externe du domaine dominant.",
+                expression_primary: "resources",
+                source: "generated",
+              },
+              {
+                fact_id: "placement:mercury:capricorn:house:3",
+                kind_code: "placement",
+                title: "Mercure en Capricorne maison 3",
+                explanation: "Explication externe de Mercure.",
+                expression_primary: "Maison 3",
+                source: "generated",
+              },
+              {
+                fact_id: "aspect:jupiter:opposition:uranus",
+                kind_code: "aspect",
+                title: "Jupiter en tension avec Uranus",
+                explanation: "Explication externe de l'aspect Jupiter Uranus.",
+                expression_primary: "Tension",
+                source: "generated",
+              },
+            ],
+          },
           reading: {
             status: "success",
             run_id: "generation-run-1",
@@ -274,14 +335,20 @@ describe("NatalChartPage", () => {
     expect(screen.queryByRole("heading", { name: "Dynamiques fortes entre les planetes" })).not.toBeInTheDocument()
     expect(screen.getByRole("region", { name: "Les 3 reperes essentiels" })).toHaveTextContent("Soleil")
     expect(screen.getByRole("region", { name: "Les 3 reperes essentiels" })).toHaveTextContent("Ascendant")
+    expect(screen.getByRole("region", { name: "Les 3 reperes essentiels" })).toHaveTextContent(
+      "Explication externe du Soleil.",
+    )
     expect(screen.getByRole("region", { name: "Les grands equilibres du theme" })).toHaveTextContent(
-      "Scorpion / Taureau",
+      "Axe maison : soi et relation",
     )
     expect(screen.getByRole("region", { name: "Les grands equilibres du theme" })).not.toHaveTextContent(
       "Ascendant en Scorpion",
     )
-    expect(screen.getByRole("region", { name: "Le domaine de vie dominant" })).toHaveTextContent("Maison II")
-    expect(screen.getByRole("region", { name: "Le domaine de vie dominant" })).toHaveTextContent("Tres marque")
+    expect(screen.getByRole("region", { name: "Le domaine de vie dominant" })).toHaveTextContent(
+      "Emphase maison ressources",
+    )
+    expect(screen.getByRole("region", { name: "Le domaine de vie dominant" })).toHaveTextContent("Domaine dominant")
+    expect(screen.getByRole("region", { name: "Le domaine de vie dominant" })).not.toHaveTextContent("resources")
     expect(screen.getByRole("region", { name: "Le domaine de vie dominant" })).not.toHaveTextContent(
       "Soleil en Maison II",
     )
@@ -289,10 +356,16 @@ describe("NatalChartPage", () => {
     expect(screen.getByRole("region", { name: "Dynamique principale" })).toHaveTextContent(
       "Jupiter en tension avec Uranus",
     )
+    expect(screen.getByRole("region", { name: "Dynamique principale" })).toHaveTextContent(
+      "Explication externe de l'aspect Jupiter Uranus.",
+    )
     expect(renderedText).not.toContain("Ce repere decrit")
     expect(renderedText).not.toContain("Ce repere nuance")
+    expect(renderedText).not.toContain("Ce theme met en avant")
+    expect(renderedText).not.toContain("cooperation entre les planetes")
     expect(renderedText).not.toContain("Very high")
-    expect(renderedText).not.toContain("Resources")
+    expect(renderedText).not.toContain("placement:sun")
+    expect(renderedText).not.toContain("generated")
     expect(screen.getByText("Une synthese claire du theme.")).toBeVisible()
     expect(screen.getByText("basic")).toBeVisible()
     expect(screen.getByRole("heading", { name: "Identite" })).toBeVisible()
@@ -303,6 +376,9 @@ describe("NatalChartPage", () => {
     expect(screen.getByRole("alert")).toHaveTextContent(/Theme partiel : certaines donnees de naissance/i)
     expect(screen.queryByText(/completude partielle/i)).not.toBeInTheDocument()
     expect(screen.queryByLabelText("Resultat Astral")).not.toBeInTheDocument()
+    expect(renderedText.indexOf("Details techniques du calcul")).toBeGreaterThan(
+      renderedText.indexOf("Lecture symbolique et non medicale."),
+    )
   })
 
   it("conserve le resultat de polling quand un evenement SSE completed est minimal", async () => {
