@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 from collections.abc import AsyncIterator, Awaitable, Callable
@@ -12,6 +13,11 @@ from typing import Any
 import httpx
 
 logger = logging.getLogger(__name__)
+TERMINAL_JOB_STATUSES = frozenset(
+    {"completed", "failed", "safety_rejected", "cancelled", "expired"}
+)
+MERCURE_FALLBACK_POLL_INTERVAL_SECONDS = 2.0
+MERCURE_FALLBACK_MAX_POLLS = 150
 
 
 class AstralClientError(Exception):
@@ -85,6 +91,7 @@ class AstralClient:
     async def stream_mercure_events(
         self,
         *,
+        run_id: str,
         topic: str,
         is_disconnected: Callable[[], Awaitable[bool]],
     ) -> AsyncIterator[bytes]:
@@ -95,7 +102,7 @@ class AstralClient:
                     "GET",
                     self.mercure_url,
                     params={"topic": topic},
-                    headers=self._headers(accept="text/event-stream"),
+                    headers={"Accept": "text/event-stream"},
                 ) as response:
                     response.raise_for_status()
                     async for chunk in response.aiter_bytes():
@@ -104,20 +111,60 @@ class AstralClient:
                         yield chunk
         except httpx.HTTPError as error:
             logger.warning(
-                "astral_mercure_stream_failed mercure_url=%s topic=%s error=%s",
+                "astral_mercure_stream_failed_falling_back_to_polling "
+                "mercure_url=%s topic=%s run_id=%s error=%s",
                 self.mercure_url,
                 topic,
+                run_id,
                 str(error),
                 exc_info=True,
             )
-            payload = json.dumps(
-                {
-                    "code": "astral_mercure_unavailable",
-                    "message": str(error),
-                },
-                ensure_ascii=False,
-            )
-            yield f"event: error\ndata: {payload}\n\n".encode("utf-8")
+            async for chunk in self._poll_job_events(
+                run_id=run_id,
+                is_disconnected=is_disconnected,
+            ):
+                yield chunk
+
+    async def _poll_job_events(
+        self,
+        *,
+        run_id: str,
+        is_disconnected: Callable[[], Awaitable[bool]],
+    ) -> AsyncIterator[bytes]:
+        """Emet des evenements SSE par polling quand Mercure est indisponible."""
+        for attempt in range(MERCURE_FALLBACK_MAX_POLLS):
+            if await is_disconnected():
+                return
+            try:
+                status = await self.get_job_status(run_id)
+            except AstralClientError as error:
+                yield self._sse_event(
+                    "error",
+                    {
+                        "code": error.code,
+                        "message": error.message,
+                        "details": error.details,
+                    },
+                )
+                return
+            yield self._sse_event("message", status)
+            if status.get("status") in TERMINAL_JOB_STATUSES:
+                return
+            if attempt + 1 < MERCURE_FALLBACK_MAX_POLLS:
+                await asyncio.sleep(MERCURE_FALLBACK_POLL_INTERVAL_SECONDS)
+
+        payload = {
+            "code": "astral_mercure_fallback_timeout",
+            "message": "Astral job polling fallback timed out",
+            "run_id": run_id,
+        }
+        yield self._sse_event("error", payload)
+
+    @staticmethod
+    def _sse_event(event: str, payload: dict[str, Any]) -> bytes:
+        """Encode un evenement SSE JSON compatible avec le parser frontend."""
+        data = json.dumps(payload, ensure_ascii=False)
+        return f"event: {event}\ndata: {data}\n\n".encode("utf-8")
 
     async def _post_json(
         self,

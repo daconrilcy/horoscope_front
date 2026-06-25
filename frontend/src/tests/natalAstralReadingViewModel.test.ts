@@ -1,8 +1,107 @@
-// Verifie la normalisation publique des contrats Astral natals.
+// Vérifie la normalisation publique des contrats Astral natals.
 import { describe, expect, it } from "vitest"
 
-import { buildNatalInterpretationViewModel } from "../features/natal-chart/natalAstralReadingViewModel"
 import type { AstralJobResponse } from "../api/astral"
+import { buildNatalInterpretationViewModel } from "../features/natal-chart/natalAstralReadingViewModel"
+
+const completeExplanations = {
+  status: "complete",
+  language_code: "fr",
+  items: [
+    {
+      fact_id: "placement:sun:capricorn:house:2",
+      kind_code: "placement",
+      title: "Soleil en Capricorne maison 2",
+      explanation: "Explication Astral du Soleil fournie par le moteur externe.",
+      expression_primary: "Maison 2",
+      source: "generated",
+    },
+    {
+      fact_id: "placement:moon:pisces:house:4",
+      kind_code: "placement",
+      title: "Lune en Poissons maison 4",
+      explanation: "Explication Astral de la Lune fournie par le moteur externe.",
+      expression_primary: "Maison 4",
+      source: "generated",
+    },
+    {
+      fact_id: "placement:ascendant:scorpio:house:1",
+      kind_code: "angle",
+      title: "Ascendant en Scorpion maison 1",
+      explanation: "Explication Astral de l'Ascendant fournie par le moteur externe.",
+      expression_primary: "Maison 1",
+      source: "generated",
+    },
+    {
+      fact_id: "house_axis:self_relationship",
+      kind_code: "house_axis",
+      title: "Axe maison : soi et relation",
+      explanation: "Explication Astral de l'axe relationnel fournie par le moteur externe.",
+      source: "generated",
+    },
+    {
+      fact_id: "house_emphasis:house:2",
+      kind_code: "house_emphasis",
+      title: "Emphase maison ressources",
+      explanation: "Explication Astral du domaine dominant fournie par le moteur externe.",
+      expression_primary: "resources",
+      source: "generated",
+    },
+    {
+      fact_id: "placement:mercury:capricorn:house:3",
+      kind_code: "placement",
+      title: "Mercure en Capricorne maison 3",
+      explanation: "Explication Astral de Mercure fournie par le moteur externe.",
+      expression_primary: "Maison 3",
+      source: "generated",
+    },
+    {
+      fact_id: "placement:venus:taurus:house:10",
+      kind_code: "placement",
+      title: "Vénus en Taureau maison 10",
+      explanation: "Explication Astral de Vénus fournie par le moteur externe.",
+      expression_primary: "Maison 10",
+      source: "generated",
+    },
+    {
+      fact_id: "placement:mars:aquarius:house:8",
+      kind_code: "placement",
+      title: "Mars en Verseau maison 8",
+      explanation: "Explication Astral de Mars fournie par le moteur externe.",
+      expression_primary: "Maison 8",
+      source: "generated",
+    },
+    {
+      fact_id: "aspect:mars:trine:uranus",
+      kind_code: "aspect",
+      title: "Mars en harmonie avec Uranus",
+      explanation: "Explication Astral de l'aspect Mars Uranus fournie par le moteur externe.",
+      expression_primary: "Fluidité",
+      source: "generated",
+    },
+  ],
+}
+
+function baseSuccessfulJob(result: Record<string, unknown>): AstralJobResponse {
+  return {
+    run_id: "run-test",
+    status: "completed",
+    result: {
+      reading: {
+        status: "success",
+        reading: {
+          summary: {
+            title: "Lecture natale",
+            short_text: "Synthese publique.",
+          },
+          chapters: [],
+          legal: { disclaimer: "Lecture symbolique." },
+        },
+      },
+      ...result,
+    },
+  }
+}
 
 describe("buildNatalInterpretationViewModel", () => {
   it("normalise une enveloppe async V1 complete", () => {
@@ -51,27 +150,265 @@ describe("buildNatalInterpretationViewModel", () => {
     expect(JSON.stringify(viewModel)).not.toContain("signal:moon:balance")
   })
 
-  it("normalise une enveloppe gateway V2 premium", () => {
-    const job: AstralJobResponse = {
-      run_id: "run-v2",
-      status: "completed",
-      result: {
-        metadata: {
-          product_code: "natal_full_premium",
-          tier: "premium",
-          variant: "full",
+  it("construit la lecture pedagogique uniquement depuis les explications Astral", () => {
+    const job = baseSuccessfulJob({
+      metadata: {
+        product_code: "natal_full_premium",
+        tier: "premium",
+        variant: "full",
+      },
+      quality: {
+        reading_completeness: "completed",
+      },
+      calculation: {
+        core_identity: {
+          sun: {
+            placement: {
+              object: "Sun",
+              sign: "Capricorn",
+              house: { number: 2, theme: "Resources" },
+              longitude_deg: 281.4543,
+            },
+          },
+          moon: {
+            placement: {
+              object: "Moon",
+              sign: "Pisces",
+              house: { number: 4, theme: "Home" },
+              longitude_deg: 341.7641,
+            },
+          },
         },
-        quality: {
-          reading_completeness: "completed",
+        angles: {
+          ascendant: { sign: "Scorpio", house: 1 },
+          descendant: { sign: "Taurus", house: 7 },
         },
-        calculation: {
+        dominant_themes: {
+          houses: [{ number: 2, theme: "Resources", importance: "Very high" }],
+        },
+        dynamics: {
+          major_aspects: [
+            {
+              aspect: "Jupiter opposition Uranus",
+              objects: ["Jupiter", "Uranus"],
+              orb_degrees: 0.76,
+              quality: "Tension",
+            },
+          ],
+        },
+      },
+      explanations: completeExplanations,
+    })
+
+    const viewModel = buildNatalInterpretationViewModel(job)
+    const reading = viewModel?.calculationReading
+
+    expect(viewModel?.tier).toBe("premium")
+    expect(viewModel?.variant).toBe("full")
+    expect(viewModel?.isPartial).toBe(false)
+    expect(reading?.explanationStatus).toBe("complete")
+    expect(reading?.explanationLanguageCode).toBe("fr")
+    expect(reading?.summary).toEqual({
+      text: null,
+      highlights: [
+        "Soleil en Capricorne maison 2",
+        "Lune en Poissons maison 4",
+        "Ascendant en Scorpion maison 1",
+        "Emphase maison : Ressources",
+      ],
+    })
+    expect(reading?.explanations).toEqual([
+      {
+        kindLabel: "Placement",
+        title: "Soleil en Capricorne maison 2",
+        explanation: "Explication Astral du Soleil fournie par le moteur externe.",
+        expressionPrimary: "Maison 2",
+      },
+      {
+        kindLabel: "Placement",
+        title: "Lune en Poissons maison 4",
+        explanation: "Explication Astral de la Lune fournie par le moteur externe.",
+        expressionPrimary: "Maison 4",
+      },
+      {
+        kindLabel: "Angle",
+        title: "Ascendant en Scorpion maison 1",
+        explanation: "Explication Astral de l'Ascendant fournie par le moteur externe.",
+        expressionPrimary: "Maison 1",
+      },
+      {
+        kindLabel: "Axe",
+        title: "Axe maison : soi / relation",
+        explanation: "Explication Astral de l'axe relationnel fournie par le moteur externe.",
+        expressionPrimary: null,
+      },
+      {
+        kindLabel: "Domaine dominant",
+        title: "Emphase maison : Ressources",
+        explanation: "Explication Astral du domaine dominant fournie par le moteur externe.",
+        expressionPrimary: "Ressources",
+      },
+      {
+        kindLabel: "Placement",
+        title: "Mercure en Capricorne maison 3",
+        explanation: "Explication Astral de Mercure fournie par le moteur externe.",
+        expressionPrimary: "Maison 3",
+      },
+      {
+        kindLabel: "Placement",
+        title: "Vénus en Taureau maison 10",
+        explanation: "Explication Astral de Vénus fournie par le moteur externe.",
+        expressionPrimary: "Maison 10",
+      },
+      {
+        kindLabel: "Placement",
+        title: "Mars en Verseau maison 8",
+        explanation: "Explication Astral de Mars fournie par le moteur externe.",
+        expressionPrimary: "Maison 8",
+      },
+      {
+        kindLabel: "Aspect",
+        title: "Mars en harmonie avec Uranus",
+        explanation: "Explication Astral de l'aspect Mars Uranus fournie par le moteur externe.",
+        expressionPrimary: "Fluidité",
+      },
+    ])
+    expect(reading?.pillars.map((pillar) => pillar.description)).toEqual([
+      "Explication Astral du Soleil fournie par le moteur externe.",
+      "Explication Astral de la Lune fournie par le moteur externe.",
+      "Explication Astral de l'Ascendant fournie par le moteur externe.",
+    ])
+    expect(reading?.axes[0]).toMatchObject({
+      code: "axis-0",
+      title: "Axe maison : soi / relation",
+      description: "Explication Astral de l'axe relationnel fournie par le moteur externe.",
+    })
+    expect(reading?.lifeAreas[0]).toMatchObject({
+      rank: "Domaine dominant",
+      title: "Emphase maison : Ressources",
+      description: "Explication Astral du domaine dominant fournie par le moteur externe.",
+    })
+    expect(reading?.lifeAreas[0]?.details).toEqual([])
+    expect(reading?.otherForces.map((force) => force.description)).toEqual([
+      "Explication Astral de Mercure fournie par le moteur externe.",
+      "Explication Astral de Vénus fournie par le moteur externe.",
+      "Explication Astral de Mars fournie par le moteur externe.",
+    ])
+    expect(reading?.aspects[0]).toMatchObject({
+      badge: "Fluidité",
+      title: "Mars en harmonie avec Uranus",
+      description: "Explication Astral de l'aspect Mars Uranus fournie par le moteur externe.",
+    })
+    expect(JSON.stringify(reading)).not.toContain("generated")
+    expect(JSON.stringify(reading)).not.toContain("placement:sun")
+    expect(JSON.stringify(reading)).not.toContain("Ce theme met en avant")
+    expect(JSON.stringify(reading)).not.toContain("cooperation entre les planetes")
+  })
+
+  it("normalise les titres bruts Astral en francais quand le payload expose des codes anglais", () => {
+    const job = baseSuccessfulJob({
+      explanations: {
+        status: "complete",
+        language_code: "fr",
+        items: [
+          {
+            fact_id: "placement:sun:taurus:house:10",
+            kind_code: "placement",
+            title: "Sun en taurus maison 10",
+            explanation: "Le Soleil en Taureau en maison 10 indique une orientation stable et pratique vers la carrière et la réputation publique.",
+            expression_primary: "Maison 10",
+          },
+          {
+            fact_id: "placement:moon:capricorn:house:6",
+            kind_code: "placement",
+            title: "Moon en capricorn maison 6",
+            explanation: "La Lune en Capricorne en maison 6 signale une approche émotionnelle réservée et structurée vis-à-vis du travail quotidien et de la santé.",
+            expression_primary: "Maison 6",
+          },
+          {
+            fact_id: "placement:ascendant:cancer:house:1",
+            kind_code: "angle",
+            title: "Ascendant en cancer maison 1",
+            explanation: "L’Ascendant en Cancer en maison 1 met l’accent sur une apparence sensible et protectrice dans l’expression personnelle.",
+            expression_primary: "Maison 1",
+          },
+          {
+            fact_id: "house_axis:private_public",
+            kind_code: "house_axis",
+            title: "Axe maison : private_public",
+            explanation: "L'axe privé–public met en contraste les domaines de la vie intimement personnels et ceux exposés socialement ou professionnellement.",
+          },
+          {
+            fact_id: "house_axis:control_surrender",
+            kind_code: "house_axis",
+            title: "Axe maison : control_surrender",
+            explanation: "L’axe maison contrôle‑abandon oppose les dynamiques de structuration et de lâcher‑prise entre les maisons concernées.",
+          },
+          {
+            fact_id: "house_axis:self_relationship",
+            kind_code: "house_axis",
+            title: "Axe maison : self_relationship",
+            explanation: "L'axe soi–relation souligne la dynamique entre l'affirmation de soi et la qualité des interactions avec autrui.",
+          },
+          {
+            fact_id: "house_emphasis:house:10",
+            kind_code: "house_emphasis",
+            title: "Emphase maison career",
+            explanation: "L’emphase sur la maison 10 souligne une focalisation thématique sur la carrière, la réputation et les objectifs publics.",
+            expression_primary: "career",
+          },
+        ],
+      },
+    })
+
+    const viewModel = buildNatalInterpretationViewModel(job)
+    const reading = viewModel?.calculationReading
+
+    expect(reading?.explanations.map((item) => item.title)).toEqual([
+      "Soleil en Taureau maison 10",
+      "Lune en Capricorne maison 6",
+      "Ascendant en Cancer maison 1",
+      "Axe maison : privé/public",
+      "Axe maison : contrôle / lâcher-prise",
+      "Axe maison : soi / relation",
+      "Emphase maison : Carrière",
+    ])
+    expect(reading?.explanations.map((item) => item.expressionPrimary)).toEqual([
+      "Maison 10",
+      "Maison 6",
+      "Maison 1",
+      null,
+      null,
+      null,
+      "Carrière",
+    ])
+    expect(reading?.summary?.highlights).toEqual([
+      "Soleil en Taureau maison 10",
+      "Lune en Capricorne maison 6",
+      "Ascendant en Cancer maison 1",
+      "Emphase maison : Carrière",
+    ])
+    expect(JSON.stringify(reading)).not.toContain("private_public")
+    expect(JSON.stringify(reading)).not.toContain("control_surrender")
+    expect(JSON.stringify(reading)).not.toContain("self_relationship")
+    expect(JSON.stringify(reading)).not.toContain("career")
+  })
+
+  it("garde les faits de calcul en details techniques sans creer de lecture pedagogique fallback", () => {
+    const job = baseSuccessfulJob({
+      calculation: {
+        response_contract_version: "astro_engine_response_v1",
+        calculation_result: {
+          status: "completed",
+          chart_calculation_id: "chart-1",
+        },
+        llm_payload: {
           core_identity: {
             sun: {
               placement: {
                 object: "Sun",
                 sign: "Capricorn",
                 house: { number: 2, theme: "Resources" },
-                longitude_deg: 281.4543,
               },
             },
             moon: {
@@ -79,133 +416,144 @@ describe("buildNatalInterpretationViewModel", () => {
                 object: "Moon",
                 sign: "Pisces",
                 house: { number: 4, theme: "Home" },
-                longitude_deg: 341.7641,
               },
+            },
+            ascendant: {
+              sign: "Scorpio",
             },
           },
           angles: {
-            ascendant: { sign: "Scorpio", house: 1 },
             descendant: { sign: "Taurus", house: 7 },
+            midheaven: { sign: "Leo", house: 10 },
+          },
+          placements: {
+            supporting: [
+              {
+                object: "Mercury",
+                sign: "Capricorn",
+                house: { number: 3, theme: "Communication" },
+                motion: "Retrograde motion",
+              },
+            ],
           },
           dominant_themes: {
             houses: [{ number: 2, theme: "Resources", importance: "Very high" }],
           },
-          dynamics: {
-            major_aspects: [
-              {
-                aspect: "Jupiter opposition Uranus",
-                objects: ["Jupiter", "Uranus"],
-                orb_degrees: 0.76,
-                quality: "Tension",
-              },
-            ],
-          },
-        },
-        reading: {
-          status: "success",
-          reading: {
-            summary: {
-              title: "Lecture premium",
-              short_text: "Lecture approfondie.",
-            },
-            chapters: [],
-          },
         },
       },
-    }
-
-    const viewModel = buildNatalInterpretationViewModel(job)
-
-    expect(viewModel?.tier).toBe("premium")
-    expect(viewModel?.variant).toBe("full")
-    expect(viewModel?.label).toBe("premium")
-    expect(viewModel?.isPartial).toBe(false)
-    expect(viewModel?.calculationFacts?.groups.map((group) => group.title)).toEqual([
-      "Repères principaux",
-      "Maisons",
-      "Aspects notables",
-    ])
-    expect(viewModel?.calculationFacts?.groups[0]?.items).toEqual([
-      { label: "Soleil", value: "Capricorne", detail: "Maison II - Valeurs - 281.45°" },
-      { label: "Lune", value: "Poissons", detail: "Maison IV - Foyer - 341.76°" },
-      { label: "Ascendant", value: "Scorpion", detail: "Maison I - Identité" },
-      { label: "Descendant", value: "Taureau", detail: "Maison VII - Relations" },
-    ])
-  })
-
-  it("lit les faits natals depuis calculation.llm_payload quand le calcul Astral est enveloppe", () => {
-    const job: AstralJobResponse = {
-      run_id: "run-real-shape",
-      status: "completed",
-      service_code: "natal_basic",
-      result: {
-        calculation: {
-          response_contract_version: "astro_engine_response_v1",
-          calculation_result: {
-            status: "completed",
-            chart_calculation_id: "chart-1",
-          },
-          llm_payload: {
-            core_identity: {
-              sun: {
-                placement: {
-                  object: "Sun",
-                  sign: "Capricorn",
-                  house: { number: 2, theme: "Resources" },
-                },
-              },
-              moon: {
-                placement: {
-                  object: "Moon",
-                  sign: "Pisces",
-                  house: { number: 4, theme: "Home" },
-                },
-              },
-              ascendant: {
-                sign: "Scorpio",
-              },
-            },
-            angles: {
-              descendant: { sign: "Taurus", house: 7 },
-              midheaven: { sign: "Leo", house: 10 },
-            },
-            placements: {
-              supporting: [
-                {
-                  object: "Mercury",
-                  sign: "Capricorn",
-                  house: { number: 3, theme: "Communication" },
-                },
-              ],
-            },
-            dominant_themes: {
-              houses: [{ number: 2, theme: "Resources", importance: "Very high" }],
-            },
-          },
-        },
-        reading: {
-          status: "success",
-          reading: {
-            summary: { title: "Lecture basic" },
-            chapters: [],
-          },
-        },
-      },
-    }
+    })
 
     const viewModel = buildNatalInterpretationViewModel(job, "basic")
+    const reading = viewModel?.calculationReading
 
     expect(viewModel?.calculationFacts?.groups[0]?.items).toEqual([
-      { label: "Soleil", value: "Capricorne", detail: "Maison II - Valeurs" },
-      { label: "Lune", value: "Poissons", detail: "Maison IV - Foyer" },
+      { label: "Soleil", value: "Capricorne", detail: "Maison II · Valeurs" },
+      { label: "Lune", value: "Poissons", detail: "Maison IV · Foyer" },
       { label: "Ascendant", value: "Scorpion", detail: null },
-      { label: "Descendant", value: "Taureau", detail: "Maison VII - Relations" },
-      { label: "Milieu du Ciel", value: "Lion", detail: "Maison X - Carrière" },
+      { label: "Descendant", value: "Taureau", detail: "Maison VII · Relations" },
+      { label: "Milieu du Ciel", value: "Lion", detail: "Maison X · Carrière" },
     ])
     expect(viewModel?.calculationFacts?.groups[2]?.items[0]).toEqual({
       label: "Mercure",
       value: "Capricorne",
-      detail: "Maison III - Communication",
+      detail: "Maison III · Communication · Mouvement rétrograde apparent",
+    })
+    expect(reading?.summary).toBeNull()
+    expect(reading?.pillars).toEqual([])
+    expect(reading?.axes).toEqual([])
+    expect(reading?.lifeAreas).toEqual([])
+    expect(reading?.otherForces).toEqual([])
+    expect(reading?.aspects).toEqual([])
+    expect(reading?.technicalGroups.length).toBeGreaterThan(0)
+    expect(viewModel?.calculationFacts?.groups[2]?.items[0]?.detail).not.toContain("Retrograde motion")
+    expect(viewModel?.calculationFacts?.groups[2]?.items[0]?.detail).toContain("Mouvement rétrograde apparent")
+  })
+
+  it("rend une lecture partielle avec seulement les explications disponibles", () => {
+    const job = baseSuccessfulJob({
+      explanations: {
+        status: "partial",
+        language_code: "fr",
+        missing_fact_ids: ["placement:ascendant:unknown"],
+        errors: ["missing birth time"],
+        items: [
+          {
+            fact_id: "placement:sun:gemini:house:9",
+            kind_code: "placement",
+            title: "Soleil en Gémeaux maison 9",
+            explanation: "Explication partielle du Soleil.",
+            expression_primary: "Maison 9",
+          },
+        ],
+      },
+    })
+
+    const viewModel = buildNatalInterpretationViewModel(job, "basic")
+    const serialized = JSON.stringify(viewModel?.calculationReading)
+
+    expect(viewModel?.calculationReading?.explanationStatus).toBe("partial")
+    expect(viewModel?.calculationReading?.explanations).toEqual([
+      {
+        kindLabel: "Placement",
+        title: "Soleil en Gémeaux maison 9",
+        explanation: "Explication partielle du Soleil.",
+        expressionPrimary: "Maison 9",
+      },
+    ])
+    expect(viewModel?.calculationReading?.pillars).toEqual([
+      {
+        code: "sun",
+        icon: "☉",
+        title: "Soleil en Gémeaux maison 9",
+        description: "Explication partielle du Soleil.",
+        lifeArea: "Expression principale : Maison 9",
+      },
+    ])
+    expect(viewModel?.calculationReading?.pillars.map((pillar) => pillar.code)).not.toContain("ascendant")
+    expect(serialized).not.toContain("placement:ascendant")
+    expect(serialized).not.toContain("missing birth time")
+  })
+
+  it("ignore les explications indisponibles et n'invente pas de contenu public", () => {
+    const job = baseSuccessfulJob({
+      calculation: {
+        dynamics: {
+          major_aspects: [
+            {
+              aspect: "Mars trine Uranus",
+              orb_degrees: 0.2,
+              quality: "Flow",
+              phase: "Separating",
+            },
+          ],
+        },
+      },
+      explanations: {
+        status: "unavailable",
+        language_code: "fr",
+        items: [
+          {
+            fact_id: "aspect:mars:trine:uranus",
+            kind_code: "aspect",
+            title: "Mars Uranus",
+            explanation: "Cette explication ne doit pas etre rendue.",
+          },
+        ],
+      },
+    })
+
+    const viewModel = buildNatalInterpretationViewModel(job, "basic")
+    const reading = viewModel?.calculationReading
+
+    expect(reading?.explanationStatus).toBe("unavailable")
+    expect(reading?.summary).toBeNull()
+    expect(reading?.aspects).toEqual([])
+    expect(JSON.stringify(reading)).not.toContain("Cette explication ne doit pas etre rendue")
+    expect(JSON.stringify(reading)).not.toContain("action rapide")
+    expect(viewModel?.calculationFacts?.groups[0]?.items[0]).toMatchObject({
+      label: "Trigone",
+      value: "Mars ↔ Uranus",
+      detail: "Orbe : 0.20° · Nature : Fluidité · Phase : Séparant",
     })
   })
 

@@ -7,6 +7,7 @@ export type NatalReadingTier = "free" | "basic" | "premium" | "unknown"
 export type NatalReadingVariant = "full" | "simplified" | "unknown"
 export type NatalReadingCompleteness = "completed" | "partial" | "unknown"
 export type NatalReadingStatus = "success" | "empty" | "failed" | "safety_rejected"
+export type NatalExplanationStatus = "complete" | "partial" | "unavailable" | "unknown"
 
 export type NatalReadingChapterViewModel = {
   code: string | null
@@ -33,6 +34,67 @@ export type NatalCalculationFactsViewModel = {
   sourceLabel: string
 }
 
+export type NatalReadingSummaryViewModel = {
+  text: string | null
+  highlights: string[]
+}
+
+export type NatalReadingExplanationViewModel = {
+  kindLabel: string
+  title: string
+  explanation: string
+  expressionPrimary: string | null
+}
+
+export type NatalReadingPillarViewModel = {
+  code: "sun" | "moon" | "ascendant"
+  icon: string
+  title: string
+  description: string
+  lifeArea: string | null
+}
+
+export type NatalReadingAxisViewModel = {
+  code: string
+  label: string
+  title: string
+  description: string
+}
+
+export type NatalReadingLifeAreaViewModel = {
+  rank: string
+  title: string
+  description: string
+  details: string[]
+}
+
+export type NatalReadingOtherForceViewModel = {
+  title: string
+  functionLabel: string
+  description: string
+  lifeArea: string | null
+}
+
+export type NatalReadingAspectViewModel = {
+  badge: string
+  title: string
+  description: string
+  details: Array<{ label: string; value: string }>
+}
+
+export type NatalCalculationReadingViewModel = {
+  explanationStatus: NatalExplanationStatus
+  explanationLanguageCode: string | null
+  summary: NatalReadingSummaryViewModel | null
+  explanations: NatalReadingExplanationViewModel[]
+  pillars: NatalReadingPillarViewModel[]
+  axes: NatalReadingAxisViewModel[]
+  lifeAreas: NatalReadingLifeAreaViewModel[]
+  otherForces: NatalReadingOtherForceViewModel[]
+  aspects: NatalReadingAspectViewModel[]
+  technicalGroups: NatalCalculationFactGroupViewModel[]
+}
+
 export type NatalInterpretationViewModel = {
   status: NatalReadingStatus
   title: string
@@ -43,6 +105,7 @@ export type NatalInterpretationViewModel = {
   completeness: NatalReadingCompleteness
   isPartial: boolean
   chapters: NatalReadingChapterViewModel[]
+  calculationReading: NatalCalculationReadingViewModel | null
   calculationFacts: NatalCalculationFactsViewModel | null
   disclaimer: string | null
   error: {
@@ -58,6 +121,20 @@ type ReadingMetadata = {
   completeness: NatalReadingCompleteness
 }
 
+type NatalExplanationItem = {
+  kindCode: string
+  title: string
+  explanation: string
+  expressionPrimary: string | null
+  searchableId: string
+}
+
+type NatalExplanations = {
+  status: NatalExplanationStatus
+  languageCode: string | null
+  items: NatalExplanationItem[]
+}
+
 const DEFAULT_ERROR_MESSAGE = "La lecture Astral n'a pas pu etre affichee."
 const CORE_OBJECT_ORDER = ["sun", "moon", "ascendant", "descendant", "midheaven", "mc"] as const
 const NOTABLE_PLACEMENT_ORDER = [
@@ -70,8 +147,19 @@ const NOTABLE_PLACEMENT_ORDER = [
   "neptune",
   "pluto",
 ] as const
+const COMPLEMENTARY_FORCE_ORDER = ["mercury", "venus", "mars"] as const
+const PUBLIC_ASPECT_OBJECT_ORDER = [
+  "sun",
+  "moon",
+  ...NOTABLE_PLACEMENT_ORDER,
+  "north_node",
+  "south_node",
+] as const
 const MAX_NOTABLE_PLACEMENTS = 6
 const MAX_MAJOR_ASPECTS = 5
+const MAX_PUBLIC_READING_ASPECTS = 1
+const TECHNICAL_DETAIL_SEPARATOR = " · "
+const MAX_SUMMARY_HIGHLIGHTS = 4
 const PUBLIC_OBJECT_LABELS: Record<string, string> = {
   ascendant: "Ascendant",
   descendant: "Descendant",
@@ -79,6 +167,41 @@ const PUBLIC_OBJECT_LABELS: Record<string, string> = {
   mc: "Milieu du Ciel",
   imum_coeli: "Fond du Ciel",
   ic: "Fond du Ciel",
+}
+
+const HOUSE_AXIS_LABELS: Record<string, string> = {
+  private_public: "privé/public",
+  control_surrender: "contrôle / lâcher-prise",
+  self_relationship: "soi / relation",
+}
+
+const HOUSE_EMPHASIS_LABELS: Record<string, string> = {
+  career: "Carrière",
+  resources: "Ressources",
+  relationships: "Relations",
+  home: "Foyer",
+  identity: "Identité",
+  communication: "Communication",
+  transformation: "Transformation",
+  community: "Communauté",
+  philosophy: "Philosophie",
+  creativity: "Créativité",
+  unconscious: "Inconscient",
+  values: "Valeurs",
+  routines: "Routines",
+  lifestyle_hygiene: "Hygiène de vie",
+}
+
+const PILLAR_PRESENTATION: Record<"sun" | "moon" | "ascendant", { icon: string }> = {
+  sun: { icon: "☉" },
+  moon: { icon: "☽" },
+  ascendant: { icon: "ASC" },
+}
+
+const COMPLEMENTARY_FORCE_LABELS: Record<string, string> = {
+  mercury: "Communication",
+  venus: "Valeurs et attachement",
+  mars: "Action",
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -129,9 +252,21 @@ function formatObject(value: unknown): string | null {
   return PUBLIC_OBJECT_LABELS[code] ?? translatePlanet(code, "fr")
 }
 
+function formatHouseShort(value: unknown): string | null {
+  const text = asText(value)
+  const number = asNumber(value) ?? (text && Number.isFinite(Number(text)) ? Number(text) : null)
+  return number === null ? null : `Maison ${number}`
+}
+
+function formatTechnicalDetailText(value: string): string {
+  return value.replace(/\s-\s/g, TECHNICAL_DETAIL_SEPARATOR)
+}
+
 function joinDetails(values: Array<string | null>): string | null {
-  const details = values.filter((item): item is string => Boolean(item))
-  return details.length > 0 ? details.join(" - ") : null
+  const details = values
+    .filter((item): item is string => Boolean(item))
+    .map(formatTechnicalDetailText)
+  return details.length > 0 ? details.join(TECHNICAL_DETAIL_SEPARATOR) : null
 }
 
 function objectCodeFromLabel(value: unknown): string | null {
@@ -193,6 +328,201 @@ function confidenceLabel(value: unknown): string | null {
   if (text === "medium") return "Confiance moyenne"
   if (text === "low") return "Confiance limitee"
   return asText(value)
+}
+
+function normalizeImportance(value: unknown): string | null {
+  const text = asText(value)?.toLowerCase()
+  if (!text) return null
+  if (text === "very high" || text === "very_high" || text === "major") return "Tres marque"
+  if (text === "high" || text === "strong") return "Marque"
+  if (text === "medium" || text === "moderate") return "Present"
+  if (text === "low" || text === "secondary") return "Secondaire"
+  return asText(value)
+}
+
+function normalizeMotion(value: unknown): string | null {
+  const text = asText(value)?.toLowerCase()
+  if (!text) return null
+  if (text.includes("retrograde")) return "Mouvement rétrograde apparent"
+  if (text.includes("direct")) return "Mouvement direct"
+  return asText(value)
+}
+
+function normalizeAspectQuality(value: unknown, aspectLabel: string | null): string | null {
+  const text = asText(value)?.toLowerCase()
+  if (text === "flow" || text === "harmony" || text === "harmonious") return "Fluidité"
+  if (text === "tension" || text === "challenge" || text === "challenging") return "Tension"
+  if (text === "intensity" || text === "intense") return "Intensité"
+  if (text === "neutral") return "Neutre"
+
+  const normalizedAspect = aspectLabel?.toLowerCase()
+  if (normalizedAspect === "trigone" || normalizedAspect === "sextile") return "Fluidité"
+  if (normalizedAspect === "carre" || normalizedAspect === "opposition") return "Tension"
+  if (normalizedAspect === "conjonction") return "Intensité"
+  return asText(value)
+}
+
+function normalizeAspectPhase(value: unknown): string | null {
+  const text = asText(value)?.toLowerCase()
+  if (!text) return null
+  if (text === "separating" || text === "separant") return "Séparant"
+  if (text === "applying" || text === "appliquant") return "Appliquant"
+  return asText(value)
+}
+
+function inferAspectCode(value: string | null): string | null {
+  if (!value) return null
+  const text = value.toLowerCase()
+  const knownCodes = [
+    "conjunction",
+    "sextile",
+    "square",
+    "trine",
+    "opposition",
+    "semisextile",
+    "quincunx",
+    "semisquare",
+    "sesquiquadrate",
+  ]
+  return knownCodes.find((code) => text.includes(code)) ?? null
+}
+
+function inferAspectObjects(value: string | null): string[] {
+  if (!value) return []
+  const normalizedText = normalizeCode(value)
+  return PUBLIC_ASPECT_OBJECT_ORDER
+    .filter((code) => normalizedText.includes(code))
+    .map((code) => formatObject(code))
+    .filter((object): object is string => Boolean(object))
+    .slice(0, 2)
+}
+
+function explanationFactParts(factId: string): string[] {
+  return factId.split(":").map((part) => normalizeCode(part))
+}
+
+function normalizeHouseAxisLabel(code: string | null): string | null {
+  if (!code) return null
+  return HOUSE_AXIS_LABELS[code] ?? code.replace(/_/g, " ")
+}
+
+function normalizeHouseEmphasisLabel(code: string | null): string | null {
+  if (!code) return null
+  return HOUSE_EMPHASIS_LABELS[code] ?? code.replace(/_/g, " ")
+}
+
+function normalizeExpressionPrimary(value: unknown): string | null {
+  const text = asText(value)
+  if (!text) return null
+  const code = normalizeCode(text)
+  return HOUSE_EMPHASIS_LABELS[code] ?? text
+}
+
+function buildExplanationTitle(item: {
+  kindCode: string
+  title: string
+  searchableId: string
+  expressionPrimary: string | null
+}): string {
+  const parts = explanationFactParts(item.searchableId)
+
+  if (item.kindCode === "placement" && parts.length >= 5) {
+    const object = formatObject(parts[1])
+    const sign = formatSign(parts[2])
+    const house = formatHouseShort(parts[4])
+    if (object && sign && house) {
+      return `${object} en ${sign} ${house.toLowerCase()}`
+    }
+  }
+
+  if (item.kindCode === "angle" && parts.length >= 5) {
+    const object = formatObject(parts[1])
+    const sign = formatSign(parts[2])
+    const house = formatHouseShort(parts[4])
+    if (object && sign && house) {
+      return `${object} en ${sign} ${house.toLowerCase()}`
+    }
+  }
+
+  if (item.kindCode === "house_axis" && parts.length >= 2) {
+    const axisLabel = normalizeHouseAxisLabel(parts[1])
+    if (axisLabel) return `Axe maison : ${axisLabel}`
+  }
+
+  if (item.kindCode === "house_emphasis" && parts.length >= 3) {
+    const emphasisLabel = normalizeExpressionPrimary(item.expressionPrimary) ?? normalizeHouseEmphasisLabel(parts[2])
+    if (emphasisLabel) return `Emphase maison : ${emphasisLabel}`
+  }
+
+  return item.title
+}
+
+function normalizeExplanationStatus(value: unknown): NatalExplanationStatus {
+  const text = asText(value)?.toLowerCase()
+  if (text === "complete" || text === "partial" || text === "unavailable") return text
+  return "unknown"
+}
+
+function normalizeExplanationItem(value: unknown): NatalExplanationItem | null {
+  const item = asRecord(value)
+  if (!item) return null
+  const factId = asText(item.fact_id)
+  const kindCode = asText(item.kind_code)
+  const title = asText(item.title)
+  const explanation = asText(item.explanation)
+  if (!factId || !kindCode || !title || !explanation) return null
+  const searchableId = normalizeCode(factId)
+  const normalizedKindCode = normalizeCode(kindCode)
+  const expressionPrimary = normalizeExpressionPrimary(item.expression_primary)
+  return {
+    kindCode: normalizedKindCode,
+    title: buildExplanationTitle({
+      kindCode: normalizedKindCode,
+      title,
+      searchableId,
+      expressionPrimary,
+    }),
+    explanation,
+    expressionPrimary,
+    searchableId,
+  }
+}
+
+function readNatalExplanations(result: Record<string, unknown>): NatalExplanations {
+  const explanations = asRecord(result.explanations)
+  const items = Array.isArray(explanations?.items)
+    ? explanations.items.map(normalizeExplanationItem).filter((item): item is NatalExplanationItem => Boolean(item))
+    : []
+  return {
+    status: normalizeExplanationStatus(explanations?.status),
+    languageCode: asText(explanations?.language_code),
+    items,
+  }
+}
+
+function explanationMatchesObject(item: NatalExplanationItem, objectCode: string): boolean {
+  const normalizedObject = normalizeCode(objectCode)
+  return item.searchableId.split(":").includes(normalizedObject)
+}
+
+function firstExplanationForObject(items: NatalExplanationItem[], objectCode: string): NatalExplanationItem | null {
+  return items.find((item) => explanationMatchesObject(item, objectCode)) ?? null
+}
+
+function isAxisExplanation(item: NatalExplanationItem): boolean {
+  return item.kindCode.includes("axis")
+}
+
+function isAspectExplanation(item: NatalExplanationItem): boolean {
+  return item.kindCode === "aspect" || item.searchableId.startsWith("aspect:")
+}
+
+function isHouseEmphasisExplanation(item: NatalExplanationItem): boolean {
+  return item.kindCode === "house_emphasis" || item.searchableId.startsWith("house_emphasis:")
+}
+
+function expressionDetail(value: string | null): string | null {
+  return value ? `Expression principale : ${value}` : null
 }
 
 function splitParagraphs(value: unknown): string[] {
@@ -326,10 +656,11 @@ function buildCoreFacts(projection: Record<string, unknown>): NatalCalculationFa
       const angle = asRecord(angles[code])
       const sign = formatSign(angle?.sign)
       if (!angle || !sign) continue
+      const houseDetail = formatHouse(angle.house)
       items.push({
         label,
         value: sign,
-        detail: formatHouse(angle.house),
+        detail: houseDetail ? formatTechnicalDetailText(houseDetail) : null,
       })
     }
   }
@@ -352,8 +683,8 @@ function buildLegacyPlacementFacts(source: Record<string, unknown>): NatalCalcul
         value: sign,
         detail: joinDetails([
           formatHouse(item.house_number ?? item.house),
+          item.is_retrograde === true ? "Mouvement rétrograde apparent" : null,
           formatDegree(item.longitude ?? item.longitude_deg),
-          item.is_retrograde === true ? "retrograde" : null,
         ]),
       }
     })
@@ -386,8 +717,8 @@ function buildNotablePlacementFacts(projection: Record<string, unknown>): NatalC
       value: sign,
       detail: joinDetails([
         formatHouse(asRecord(placement.house)?.number),
+        normalizeMotion(placement.motion),
         formatDegree(placement.longitude_deg),
-        asText(placement.motion)?.toLowerCase().includes("retrograde") ? "retrograde" : null,
       ]),
     }
   })
@@ -403,7 +734,7 @@ function buildHouseFacts(source: Record<string, unknown>, projection: Record<str
       const number = asNumber(item?.number ?? item?.house_number)
       if (!item || number === null) return null
       return {
-        label: translateHouse(number, "fr"),
+        label: formatTechnicalDetailText(translateHouse(number, "fr")),
         value: formatSign(item.sign ?? item.sign_code) ?? formatDegree(item.cusp_longitude) ?? "Disponible",
         detail: formatDegree(item.cusp_longitude ?? item.longitude_deg),
       }
@@ -420,9 +751,9 @@ function buildHouseFacts(source: Record<string, unknown>, projection: Record<str
       const number = asNumber(item?.number ?? item?.house_number)
       if (!item || number === null) return null
       return {
-        label: translateHouse(number, "fr"),
-        value: asText(item.theme) ?? "Maison dominante",
-        detail: asText(item.importance),
+        label: formatTechnicalDetailText(translateHouse(number, "fr")),
+        value: "Domaine dominant",
+        detail: normalizeImportance(item.importance),
       }
     })
     .filter((item): item is NatalCalculationFactItemViewModel => Boolean(item))
@@ -447,22 +778,147 @@ function buildAspectFacts(source: Record<string, unknown>, projection: Record<st
             formatObject(item.planet_b ?? item.target_object_code),
           ].filter((object): object is string => Boolean(object))
       const directAspect = asText(item.aspect)
-      const aspectCode = asText(item.aspect_code ?? item.type)
+      const inferredObjects = objects.length >= 2 ? objects : inferAspectObjects(directAspect)
+      const aspectCode = asText(item.aspect_code ?? item.type) ?? inferAspectCode(directAspect)
       const aspectLabel = aspectCode ? translateAspect(aspectCode, "fr") : directAspect
-      if (!aspectLabel || objects.length < 2) return null
+      if (!aspectLabel || inferredObjects.length < 2) return null
 
       return {
         label: aspectLabel,
-        value: objects.slice(0, 2).join(" - "),
+        value: inferredObjects.slice(0, 2).join(" ↔ "),
         detail: joinDetails([
-          formatDegree(item.orb ?? item.orb_degrees),
-          asText(item.quality),
-          asText(item.phase),
+          formatDegree(item.orb ?? item.orb_degrees)
+            ? `Orbe : ${formatDegree(item.orb ?? item.orb_degrees)}`
+            : null,
+          normalizeAspectQuality(item.quality, aspectLabel)
+            ? `Nature : ${normalizeAspectQuality(item.quality, aspectLabel)}`
+            : null,
+          normalizeAspectPhase(item.phase) ? `Phase : ${normalizeAspectPhase(item.phase)}` : null,
         ]),
       }
     })
     .filter((item): item is NatalCalculationFactItemViewModel => Boolean(item))
     .slice(0, MAX_MAJOR_ASPECTS)
+}
+
+function buildSummaryFromExplanations(items: NatalExplanationItem[]): NatalReadingSummaryViewModel | null {
+  const highlights = [
+    firstExplanationForObject(items, "sun")?.title,
+    firstExplanationForObject(items, "moon")?.title,
+    firstExplanationForObject(items, "ascendant")?.title,
+    items.find(isHouseEmphasisExplanation)?.title,
+  ].filter((item): item is string => Boolean(item))
+
+  return highlights.length > 0 ? { text: null, highlights: highlights.slice(0, MAX_SUMMARY_HIGHLIGHTS) } : null
+}
+
+function explanationKindLabel(item: NatalExplanationItem): string {
+  if (item.kindCode === "placement") return "Placement"
+  if (item.kindCode === "angle") return "Angle"
+  if (item.kindCode === "house_axis") return "Axe"
+  if (item.kindCode === "house_emphasis") return "Domaine dominant"
+  if (item.kindCode === "aspect") return "Aspect"
+  return "Explication"
+}
+
+function buildExplanationsFromItems(items: NatalExplanationItem[]): NatalReadingExplanationViewModel[] {
+  return items.map((item) => ({
+    kindLabel: explanationKindLabel(item),
+    title: item.title,
+    explanation: item.explanation,
+    expressionPrimary: item.expressionPrimary,
+  }))
+}
+
+function buildPillarsFromExplanations(items: NatalExplanationItem[]): NatalReadingPillarViewModel[] {
+  return (["sun", "moon", "ascendant"] as const)
+    .map((code) => {
+      const item = firstExplanationForObject(items, code)
+      if (!item) return null
+      return {
+        code,
+        icon: PILLAR_PRESENTATION[code].icon,
+        title: item.title,
+        description: item.explanation,
+        lifeArea: expressionDetail(item.expressionPrimary),
+      }
+    })
+    .filter((item): item is NatalReadingPillarViewModel => Boolean(item))
+}
+
+function buildAxesFromExplanations(items: NatalExplanationItem[]): NatalReadingAxisViewModel[] {
+  return items
+    .filter(isAxisExplanation)
+    .map((item, index) => ({
+      code: `axis-${index}`,
+      label: "Axe",
+      title: item.title,
+      description: item.explanation,
+    }))
+}
+
+function buildLifeAreasFromExplanations(items: NatalExplanationItem[]): NatalReadingLifeAreaViewModel[] {
+  return items
+    .filter(isHouseEmphasisExplanation)
+    .map((item) => ({
+      rank: "Domaine dominant",
+      title: item.title,
+      description: item.explanation,
+      details: [],
+    }))
+}
+
+function buildOtherForcesFromExplanations(items: NatalExplanationItem[]): NatalReadingOtherForceViewModel[] {
+  return COMPLEMENTARY_FORCE_ORDER.map((code) => {
+    const item = firstExplanationForObject(items, code)
+    if (!item) return null
+    return {
+      title: item.title,
+      functionLabel: COMPLEMENTARY_FORCE_LABELS[code],
+      description: item.explanation,
+      lifeArea: item.expressionPrimary,
+    }
+  }).filter((item): item is NatalReadingOtherForceViewModel => Boolean(item))
+}
+
+function buildReadingAspectsFromExplanations(items: NatalExplanationItem[]): NatalReadingAspectViewModel[] {
+  return items
+    .filter(isAspectExplanation)
+    .map((item) => ({
+      badge: item.expressionPrimary ?? "Dynamique",
+      title: item.title,
+      description: item.explanation,
+      details: [],
+    }))
+    .slice(0, MAX_PUBLIC_READING_ASPECTS)
+}
+
+function buildCalculationReading(
+  result: Record<string, unknown>,
+  technicalGroups: NatalCalculationFactGroupViewModel[],
+): NatalCalculationReadingViewModel | null {
+  const explanations = readNatalExplanations(result)
+  const publicItems = explanations.status === "unavailable" ? [] : explanations.items
+  const reading: NatalCalculationReadingViewModel = {
+    explanationStatus: explanations.status,
+    explanationLanguageCode: explanations.languageCode,
+    summary: buildSummaryFromExplanations(publicItems),
+    explanations: buildExplanationsFromItems(publicItems),
+    pillars: buildPillarsFromExplanations(publicItems),
+    axes: buildAxesFromExplanations(publicItems),
+    lifeAreas: buildLifeAreasFromExplanations(publicItems),
+    otherForces: buildOtherForcesFromExplanations(publicItems),
+    aspects: buildReadingAspectsFromExplanations(publicItems),
+    technicalGroups,
+  }
+  const hasPublicSections =
+    reading.summary !== null ||
+    reading.pillars.length > 0 ||
+    reading.axes.length > 0 ||
+    reading.lifeAreas.length > 0 ||
+    reading.otherForces.length > 0 ||
+    reading.aspects.length > 0
+  return hasPublicSections || technicalGroups.length > 0 ? reading : null
 }
 
 function resolveCalculationProjection(result: Record<string, unknown>): Record<string, unknown> {
@@ -506,6 +962,7 @@ function emptyViewModel(
   metadata: ReadingMetadata,
   message: string,
   calculationFacts: NatalCalculationFactsViewModel | null = null,
+  calculationReading: NatalCalculationReadingViewModel | null = null,
 ): NatalInterpretationViewModel {
   const isPartial = metadata.variant === "simplified" || metadata.completeness === "partial"
   return {
@@ -518,6 +975,7 @@ function emptyViewModel(
     completeness: metadata.completeness,
     isPartial,
     chapters: [],
+    calculationReading,
     calculationFacts,
     disclaimer: null,
     error: null,
@@ -534,6 +992,7 @@ export function buildNatalInterpretationViewModel(
 
   const metadata = extractMetadata(job, fallbackPlan)
   const calculationFacts = buildCalculationFacts(result)
+  const calculationReading = buildCalculationReading(result, calculationFacts?.groups ?? [])
   const readingResponse = resolveReadingContainer(result)
   if (!readingResponse) {
     if (typeof result.reading === "string") {
@@ -548,6 +1007,7 @@ export function buildNatalInterpretationViewModel(
         completeness: metadata.completeness,
         isPartial,
         chapters: [],
+        calculationReading,
         calculationFacts,
         disclaimer: null,
         error: null,
@@ -557,6 +1017,7 @@ export function buildNatalInterpretationViewModel(
       metadata,
       "La lecture est disponible mais sa forme publique n'est pas reconnue.",
       calculationFacts,
+      calculationReading,
     )
   }
 
@@ -573,6 +1034,7 @@ export function buildNatalInterpretationViewModel(
       completeness: metadata.completeness,
       isPartial,
       chapters: [],
+      calculationReading,
       calculationFacts,
       disclaimer: null,
       error: resolveError(readingResponse),
@@ -585,6 +1047,7 @@ export function buildNatalInterpretationViewModel(
       metadata,
       "La lecture est disponible mais ne contient pas de texte public.",
       calculationFacts,
+      calculationReading,
     )
   }
 
@@ -603,6 +1066,7 @@ export function buildNatalInterpretationViewModel(
     completeness: metadata.completeness,
     isPartial,
     chapters,
+    calculationReading,
     calculationFacts,
     disclaimer: asText(legal?.disclaimer),
     error: null,

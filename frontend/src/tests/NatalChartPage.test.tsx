@@ -1,6 +1,6 @@
 // Vérifie que la page thème natal ne boucle pas après un échec Astral.
 import { QueryClient, QueryClientProvider, useMutation } from "@tanstack/react-query"
-import { cleanup, render, screen, waitFor } from "@testing-library/react"
+import { cleanup, render, screen, waitFor, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { MemoryRouter } from "react-router-dom"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
@@ -196,6 +196,13 @@ describe("NatalChartPage", () => {
                   longitude_deg: 295.4488,
                   motion: "Retrograde motion",
                 },
+                {
+                  object: "Venus",
+                  sign: "Taurus",
+                  house: { number: 10, theme: "Career" },
+                  longitude_deg: 42.12,
+                  motion: "Direct",
+                },
               ],
             },
             dominant_themes: {
@@ -211,6 +218,81 @@ describe("NatalChartPage", () => {
                 },
               ],
             },
+          },
+          explanations: {
+            status: "complete",
+            language_code: "fr",
+            items: [
+              {
+                fact_id: "placement:sun:capricorn:house:2",
+                kind_code: "placement",
+                title: "Sun en taurus maison 10",
+                explanation: "Explication externe du Soleil.",
+                expression_primary: "Maison 10",
+                source: "generated",
+              },
+              {
+                fact_id: "placement:moon:pisces:house:4",
+                kind_code: "placement",
+                title: "Moon en capricorn maison 6",
+                explanation: "Explication externe de la Lune.",
+                expression_primary: "Maison 6",
+                source: "generated",
+              },
+              {
+                fact_id: "placement:ascendant:scorpio:house:1",
+                kind_code: "angle",
+                title: "Ascendant en cancer maison 1",
+                explanation: "Explication externe de l'Ascendant.",
+                expression_primary: "Maison 1",
+                source: "generated",
+              },
+              {
+                fact_id: "house_axis:private_public",
+                kind_code: "house_axis",
+                title: "Axe maison : private_public",
+                explanation: "Explication externe de l'axe relationnel.",
+                source: "generated",
+              },
+              {
+                fact_id: "house_axis:control_surrender",
+                kind_code: "house_axis",
+                title: "Axe maison : control_surrender",
+                explanation: "Explication externe de l'axe de contrôle.",
+                source: "generated",
+              },
+              {
+                fact_id: "house_axis:self_relationship",
+                kind_code: "house_axis",
+                title: "Axe maison : self_relationship",
+                explanation: "Explication externe de l'axe relationnel.",
+                source: "generated",
+              },
+              {
+                fact_id: "house_emphasis:house:2",
+                kind_code: "house_emphasis",
+                title: "Emphase maison career",
+                explanation: "Explication externe du domaine dominant.",
+                expression_primary: "career",
+                source: "generated",
+              },
+              {
+                fact_id: "placement:mercury:capricorn:house:3",
+                kind_code: "placement",
+                title: "Mercure en Capricorne maison 3",
+                explanation: "Explication externe de Mercure.",
+                expression_primary: "Maison 3",
+                source: "generated",
+              },
+              {
+                fact_id: "aspect:jupiter:opposition:uranus",
+                kind_code: "aspect",
+                title: "Jupiter en tension avec Uranus",
+                explanation: "Explication externe de l'aspect Jupiter Uranus.",
+                expression_primary: "Tension",
+                source: "generated",
+              },
+            ],
           },
           reading: {
             status: "success",
@@ -255,18 +337,90 @@ describe("NatalChartPage", () => {
     renderNatalChartPage()
 
     expect(await screen.findByRole("heading", { name: "Lecture natale publique" })).toBeVisible()
-    expect(screen.getByRole("heading", { name: "Base du calcul natal" })).toBeVisible()
+    expect(screen.getByRole("heading", { name: "Ce qui ressort globalement" })).toBeVisible()
+    const explanationsRegion = screen.getByRole("region", { name: "Explications du calcul" })
+    expect(explanationsRegion).toBeVisible()
+    expect(explanationsRegion).toHaveTextContent("Explication externe du Soleil.")
+    expect(screen.getByRole("heading", { name: "Les 3 reperes essentiels" })).toBeVisible()
+    expect(screen.getByRole("heading", { name: "Les grands equilibres du theme" })).toBeVisible()
+    expect(screen.getByRole("heading", { name: "Le domaine de vie dominant" })).toBeVisible()
+    expect(screen.getByRole("heading", { name: "Forces complementaires" })).toBeVisible()
+    expect(screen.getByRole("heading", { name: "Dynamique principale" })).toBeVisible()
+    expect(screen.getByText("Détails techniques du calcul")).toBeVisible()
+    expect(
+      screen.getByText("Les positions, maisons et aspects utilisés pour produire cette lecture."),
+    ).toBeVisible()
     expect(screen.queryByText("Données de calcul Astral")).not.toBeInTheDocument()
+    const rawDetails = screen.getByText("Détails techniques du calcul").closest("details")
+    expect(rawDetails).not.toBeNull()
+    const rawDetailsQueries = within(rawDetails as HTMLElement)
+    const rawDetailsText = rawDetails?.textContent ?? ""
+    expect(rawDetailsQueries.getByRole("heading", { name: "Repères principaux" })).toBeVisible()
+    expect(rawDetailsQueries.getByRole("heading", { name: "Dominante du thème" })).toBeVisible()
+    expect(rawDetailsQueries.getByRole("heading", { name: "Planètes notables" })).toBeVisible()
+    expect(rawDetailsQueries.getByRole("heading", { name: "Aspects notables" })).toBeVisible()
+    expect(rawDetailsQueries.getByText("Base du calcul")).toBeVisible()
+    expect(rawDetailsText).toContain("Maison X · Carrière · Mouvement direct")
+    expect(rawDetailsText).toContain("Jupiter ↔ Uranus")
+    expect(rawDetailsQueries.getByText("Orbe : 0.76° · Nature : Tension")).toBeVisible()
+    expect(rawDetailsText.indexOf("Repères principaux")).toBeLessThan(
+      rawDetailsText.indexOf("Dominante du thème"),
+    )
+    expect(rawDetailsText.indexOf("Dominante du thème")).toBeLessThan(
+      rawDetailsText.indexOf("Planètes notables"),
+    )
+    expect(rawDetailsText.indexOf("Planètes notables")).toBeLessThan(
+      rawDetailsText.indexOf("Aspects notables"),
+    )
     const renderedText = document.body.textContent ?? ""
-    expect(renderedText.indexOf("Base du calcul natal")).toBeLessThan(
+    expect(renderedText.indexOf("Ce qui ressort globalement")).toBeLessThan(
       renderedText.indexOf("Lecture natale publique"),
     )
-    expect(screen.getByRole("region", { name: "Repères principaux" })).toHaveTextContent("Soleil")
-    expect(screen.getByRole("region", { name: "Repères principaux" })).toHaveTextContent("Ascendant")
-    expect(screen.getByRole("region", { name: "Repères principaux" })).toHaveTextContent("Descendant")
-    expect(screen.getByRole("region", { name: "Maisons" })).toHaveTextContent("Maison II")
-    expect(screen.getByRole("region", { name: "Planètes notables" })).toHaveTextContent("Mercure")
-    expect(screen.getByRole("region", { name: "Aspects notables" })).toHaveTextContent("Jupiter - Uranus")
+    expect(screen.queryByRole("heading", { name: "Vos 3 grands piliers astrologiques" })).not.toBeInTheDocument()
+    expect(screen.queryByRole("heading", { name: "Les grands axes de votre vie" })).not.toBeInTheDocument()
+    expect(screen.queryByRole("heading", { name: "Domaines de vie les plus marques" })).not.toBeInTheDocument()
+    expect(screen.queryByRole("heading", { name: "Autres forces importantes du theme" })).not.toBeInTheDocument()
+    expect(screen.queryByRole("heading", { name: "Dynamiques fortes entre les planetes" })).not.toBeInTheDocument()
+    expect(screen.getByRole("region", { name: "Les 3 reperes essentiels" })).toHaveTextContent("Soleil")
+    expect(screen.getByRole("region", { name: "Les 3 reperes essentiels" })).toHaveTextContent("Ascendant")
+    expect(screen.getByRole("region", { name: "Les 3 reperes essentiels" })).toHaveTextContent(
+      "Explication externe du Soleil.",
+    )
+    expect(screen.getByRole("region", { name: "Les grands equilibres du theme" })).toHaveTextContent(
+      "Axe maison : privé/public",
+    )
+    expect(screen.getByRole("region", { name: "Les grands equilibres du theme" })).not.toHaveTextContent(
+      "Ascendant en Scorpion",
+    )
+    expect(screen.getByRole("region", { name: "Les grands equilibres du theme" })).toHaveTextContent(
+      "Axe maison : contrôle / lâcher-prise",
+    )
+    expect(screen.getByRole("region", { name: "Les grands equilibres du theme" })).toHaveTextContent(
+      "Axe maison : soi / relation",
+    )
+    expect(screen.getByRole("region", { name: "Le domaine de vie dominant" })).toHaveTextContent(
+      "Emphase maison : Carrière",
+    )
+    expect(screen.getByRole("region", { name: "Le domaine de vie dominant" })).toHaveTextContent("Domaine dominant")
+    expect(screen.getByRole("region", { name: "Le domaine de vie dominant" })).not.toHaveTextContent("career")
+    expect(screen.getByRole("region", { name: "Forces complementaires" })).toHaveTextContent("Mercure")
+    expect(screen.getByRole("region", { name: "Dynamique principale" })).toHaveTextContent(
+      "Jupiter en tension avec Uranus",
+    )
+    expect(screen.getByRole("region", { name: "Dynamique principale" })).toHaveTextContent(
+      "Explication externe de l'aspect Jupiter Uranus.",
+    )
+    expect(renderedText).not.toContain("Ce repere decrit")
+    expect(renderedText).not.toContain("Ce repere nuance")
+    expect(renderedText).not.toContain("Ce theme met en avant")
+    expect(renderedText).not.toContain("cooperation entre les planetes")
+    expect(renderedText).not.toContain("Very high")
+    expect(renderedText).not.toContain("placement:sun")
+    expect(renderedText).not.toContain("generated")
+    expect(renderedText).not.toContain("private_public")
+    expect(renderedText).not.toContain("control_surrender")
+    expect(renderedText).not.toContain("self_relationship")
+    expect(renderedText).not.toContain("career")
     expect(screen.getByText("Une synthese claire du theme.")).toBeVisible()
     expect(screen.getByText("basic")).toBeVisible()
     expect(screen.getByRole("heading", { name: "Identite" })).toBeVisible()
@@ -277,6 +431,9 @@ describe("NatalChartPage", () => {
     expect(screen.getByRole("alert")).toHaveTextContent(/Theme partiel : certaines donnees de naissance/i)
     expect(screen.queryByText(/completude partielle/i)).not.toBeInTheDocument()
     expect(screen.queryByLabelText("Resultat Astral")).not.toBeInTheDocument()
+    expect(renderedText.indexOf("Détails techniques du calcul")).toBeGreaterThan(
+      renderedText.indexOf("Lecture symbolique et non medicale."),
+    )
   })
 
   it("conserve le resultat de polling quand un evenement SSE completed est minimal", async () => {
@@ -321,6 +478,62 @@ describe("NatalChartPage", () => {
 
     expect(await screen.findByRole("heading", { name: "Lecture conservee" })).toBeVisible()
     expect(screen.getByText("Le polling garde le texte public.")).toBeVisible()
+  })
+
+  it("classe les placements fallback comme reperes complementaires sans les presenter comme axes", async () => {
+    mockUseAstralJobStatus.mockReturnValue({
+      data: {
+        run_id: "run-natal-legacy-facts",
+        status: "completed",
+        service_code: "natal_basic",
+        result: {
+          calculation: {
+            planet_positions: [
+              {
+                planet_code: "sun",
+                sign_code: "taurus",
+                house_number: 10,
+                longitude: 42.1,
+              },
+              {
+                planet_code: "moon",
+                sign_code: "capricorn",
+                house_number: 6,
+                longitude: 282.2,
+              },
+              {
+                planet_code: "mercury",
+                sign_code: "aries",
+                house_number: 10,
+                longitude: 14.3,
+              },
+            ],
+          },
+          reading: {
+            status: "success",
+            reading: {
+              summary: {
+                title: "Lecture avec faits fallback",
+              },
+              chapters: [],
+              legal: { disclaimer: "Lecture symbolique." },
+            },
+          },
+        },
+      },
+      isError: false,
+      isPending: false,
+    })
+
+    renderNatalChartPage()
+
+    expect(await screen.findByText("Détails techniques du calcul")).toBeVisible()
+    const rawDetails = screen.getByText("Détails techniques du calcul").closest("details")
+    expect(rawDetails).not.toBeNull()
+    const rawDetailsQueries = within(rawDetails as HTMLElement)
+
+    expect(rawDetailsQueries.queryByLabelText("Axes principaux")).not.toBeInTheDocument()
+    expect(rawDetailsQueries.getByLabelText("Repères complémentaires")).toHaveTextContent("Mercure")
   })
 
   it("traite safety_rejected comme un statut terminal explicite", async () => {
