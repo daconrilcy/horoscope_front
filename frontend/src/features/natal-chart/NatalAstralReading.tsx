@@ -4,6 +4,7 @@ import { Link } from "react-router-dom"
 import type {
   NatalCalculationFactsViewModel,
   NatalInterpretationViewModel,
+  NatalReadingChapterViewModel,
 } from "./natalAstralReadingViewModel"
 
 type NatalAstralReadingProps = {
@@ -59,6 +60,39 @@ function NatalCalculationFacts({ facts }: { facts: NatalCalculationFactsViewMode
   )
 }
 
+function NatalChapterCard({ chapter, itemKey }: { chapter: NatalReadingChapterViewModel; itemKey: string }) {
+  return (
+    <section className="natal-reading__chapter">
+      <div className="natal-reading__chapter-head">
+        <h3>{chapter.title}</h3>
+        {chapter.confidenceLabel ? (
+          <span className="natal-reading__confidence">{chapter.confidenceLabel}</span>
+        ) : null}
+      </div>
+      {chapter.paragraphs.length > 0 ? (
+        <div className="natal-reading__chapter-body">
+          {chapter.paragraphs.map((paragraph, paragraphIndex) => (
+            <p key={`${itemKey}-paragraph-${paragraphIndex}`}>{paragraph}</p>
+          ))}
+        </div>
+      ) : null}
+      {chapter.astroBasis.length > 0 ? (
+        <div className="natal-reading__basis" aria-label={`Repères utilisés pour ${chapter.title}`}>
+          <span>Repères utilisés</span>
+          <ul>
+            {chapter.astroBasis.map((basis, basisIndex) => (
+              <li key={`${itemKey}-basis-${basisIndex}`}>{basis}</li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+      {chapter.safetyFlags.length > 0 ? (
+        <p className="natal-reading__safety">Note de prudence : {chapter.safetyFlags.join(", ")}</p>
+      ) : null}
+    </section>
+  )
+}
+
 /** Affiche la lecture Astral sans exposer les champs techniques du moteur externe. */
 export function NatalAstralReading({ reading }: NatalAstralReadingProps) {
   if (reading.status === "failed" || reading.status === "safety_rejected") {
@@ -101,39 +135,34 @@ export function NatalAstralReading({ reading }: NatalAstralReadingProps) {
       {reading.chapters.length > 0 ? (
         <div className="natal-reading__chapters">
           {reading.chapters.map((chapter, index) => (
-            <section className="natal-reading__chapter" key={`${chapter.code ?? chapter.title}-${index}`}>
-              <div className="natal-reading__chapter-head">
-                <h3>{chapter.title}</h3>
-                {chapter.confidenceLabel ? (
-                  <span className="natal-reading__confidence">{chapter.confidenceLabel}</span>
-                ) : null}
-              </div>
-              {chapter.paragraphs.length > 0 ? (
-                <div className="natal-reading__chapter-body">
-                  {chapter.paragraphs.map((paragraph, paragraphIndex) => (
-                    <p key={`${chapter.code ?? chapter.title}-paragraph-${paragraphIndex}`}>{paragraph}</p>
-                  ))}
-                </div>
-              ) : null}
-              {chapter.astroBasis.length > 0 ? (
-                <div className="natal-reading__basis" aria-label={`Repères utilisés pour ${chapter.title}`}>
-                  <span>Repères utilisés</span>
-                  <ul>
-                    {chapter.astroBasis.map((basis, basisIndex) => (
-                      <li key={`${chapter.code ?? chapter.title}-basis-${basisIndex}`}>{basis}</li>
-                    ))}
-                  </ul>
-                </div>
-              ) : null}
-              {chapter.safetyFlags.length > 0 ? (
-                <p className="natal-reading__safety">Note de prudence : {chapter.safetyFlags.join(", ")}</p>
-              ) : null}
-            </section>
+            <NatalChapterCard
+              chapter={chapter}
+              itemKey={`chapter-${chapter.code ?? chapter.title}-${index}`}
+              key={`${chapter.code ?? chapter.title}-${index}`}
+            />
           ))}
         </div>
-      ) : (
+      ) : reading.explanations.length === 0 ? (
         <p className="natal-card__lead">La lecture est disponible mais ne contient pas encore de chapitres publics.</p>
-      )}
+      ) : null}
+
+      {reading.explanations.length > 0 ? (
+        <section className="natal-reading-explanations" aria-labelledby="natal-reading-explanations-title">
+          <div className="natal-reading-explanations__header">
+            <span className="natal-section-eyebrow">Repères calculés</span>
+            <h2 id="natal-reading-explanations-title">Explications du moteur Astral</h2>
+          </div>
+          <div className="natal-reading-explanations__grid">
+            {reading.explanations.map((chapter, index) => (
+              <NatalChapterCard
+                chapter={chapter}
+                itemKey={`explanation-${chapter.code ?? chapter.title}-${index}`}
+                key={`explanation-${chapter.code ?? chapter.title}-${index}`}
+              />
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       {reading.disclaimer ? <p className="natal-reading__disclaimer">{reading.disclaimer}</p> : null}
     </article>

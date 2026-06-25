@@ -826,6 +826,58 @@
   gap: 16px;
 }
 
+.natal-reading-explanations {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid color-mix(in srgb, var(--premium-accent-purple-strong) 22%, var(--premium-glass-border-soft));
+  border-radius: var(--premium-radius-card);
+  background: color-mix(in srgb, var(--premium-accent-purple-strong) 6%, var(--premium-glass-surface-1));
+}
+
+.natal-reading-explanations__header {
+  display: grid;
+  gap: 6px;
+}
+
+.natal-reading-explanations__header h2 {
+  margin: 0;
+  color: var(--premium-text-strong);
+  font-size: var(--font-size-lg);
+  line-height: var(--type-label-line-height);
+}
+
+.natal-reading-explanations__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.natal-reading-explanations .natal-reading__chapter {
+  gap: 10px;
+  padding: 14px;
+  border-color: var(--premium-glass-border-soft);
+  background: var(--premium-glass-surface-2);
+}
+
+.natal-reading-explanations .natal-reading__chapter-head {
+  gap: 10px;
+}
+
+.natal-reading-explanations .natal-reading__chapter-head h3 {
+  font-size: var(--font-size-sm);
+}
+
+.natal-reading-explanations .natal-reading__chapter-body {
+  max-width: none;
+  gap: 8px;
+}
+
+.natal-reading-explanations .natal-reading__chapter-body p {
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-relaxed);
+}
+
 .natal-reading-facts {
   display: grid;
   gap: 14px;

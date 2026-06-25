@@ -215,6 +215,384 @@ describe("buildNatalInterpretationViewModel", () => {
     expect(viewModel?.highlightFacts.map((fact) => fact.label)).toEqual(["Soleil", "Lune", "Ascendant"])
   })
 
+  it("conserve les explications Astral quand les chapitres utilisent des champs texte alternatifs", () => {
+    const job: AstralJobResponse = {
+      run_id: "run-explanations",
+      status: "completed",
+      service_code: "natal_basic",
+      result: {
+        reading: {
+          status: "success",
+          reading: {
+            summary: { title: "Lecture Astral" },
+            sections: [
+              {
+                code: "identity",
+                title: "Identité",
+                body: "",
+                explanation: "Explication fournie par le moteur Astral.",
+                confidence: "medium",
+                public_evidence: [
+                  {
+                    label: "Soleil en Balance",
+                    meaning: "Expression orientée vers l'équilibre.",
+                  },
+                ],
+              },
+              {
+                title: "Ressources",
+                narrative: "Narratif Astral conservé dans la lecture publique.",
+              },
+            ],
+          },
+        },
+      },
+    }
+
+    const viewModel = buildNatalInterpretationViewModel(job, "basic")
+
+    expect(viewModel?.chapters.map((chapter) => chapter.paragraphs[0])).toEqual([
+      "Explication fournie par le moteur Astral.",
+      "Narratif Astral conservé dans la lecture publique.",
+    ])
+    expect(viewModel?.chapters[0]?.astroBasis).toEqual([
+      "Soleil en Balance: Expression orientée vers l'équilibre.",
+    ])
+  })
+
+  it("lit les sections quand Astral renvoie un tableau chapters vide", () => {
+    const job: AstralJobResponse = {
+      run_id: "run-sections-after-empty-chapters",
+      status: "completed",
+      service_code: "natal_basic",
+      result: {
+        reading: {
+          status: "success",
+          reading: {
+            summary: { title: "Lecture Astral" },
+            chapters: [],
+            sections: [
+              {
+                title: "Section Astral",
+                narrative: "Section publique récupérée malgré chapters vide.",
+              },
+            ],
+          },
+        },
+      },
+    }
+
+    const viewModel = buildNatalInterpretationViewModel(job, "basic")
+
+    expect(viewModel?.chapters[0]?.title).toBe("Section Astral")
+    expect(viewModel?.chapters[0]?.paragraphs).toEqual([
+      "Section publique récupérée malgré chapters vide.",
+    ])
+  })
+
+  it("lit les sections quand Astral renvoie un tableau chapters non vide mais sans texte", () => {
+    const job: AstralJobResponse = {
+      run_id: "run-sections-after-empty-chapter-body",
+      status: "completed",
+      service_code: "natal_basic",
+      result: {
+        reading: {
+          status: "success",
+          reading: {
+            summary: { title: "Lecture Astral" },
+            chapters: [{ title: "Chapitre vide", body: "" }],
+            sections: [
+              {
+                title: "Section Astral",
+                explanation: "Section publique prioritaire quand chapters est vide de texte.",
+              },
+            ],
+          },
+        },
+      },
+    }
+
+    const viewModel = buildNatalInterpretationViewModel(job, "basic")
+
+    expect(viewModel?.chapters[0]?.title).toBe("Section Astral")
+    expect(viewModel?.chapters[0]?.paragraphs).toEqual([
+      "Section publique prioritaire quand chapters est vide de texte.",
+    ])
+  })
+
+  it("affiche les explications top-level result.explanations du moteur Astral", () => {
+    const job: AstralJobResponse = {
+      run_id: "run-result-explanations",
+      status: "completed",
+      service_code: "natal_basic",
+      result: {
+        summary: {
+          title: "Lecture Astral externe",
+          short_text: "Résumé issu du moteur externe.",
+        },
+        explanations: {
+          items: [
+            {
+              explanation: "Explication top-level fournie par result.explanations.items.",
+              expression_primary: "Maison 10",
+              fact_id: "placement:sun:taurus:house:10",
+              kind_code: "placement",
+              source: "cache",
+              title: "Sun en taurus maison 10",
+            },
+            {
+              explanation: "Deuxième explication top-level conservée.",
+              expression_primary: "Maison 6",
+              fact_id: "placement:moon:capricorn:house:6",
+              kind_code: "placement",
+              source: "cache",
+              title: "Moon en capricorn maison 6",
+            },
+          ],
+          language_code: "fr",
+          status: "complete",
+        },
+      },
+    }
+
+    const viewModel = buildNatalInterpretationViewModel(job, "basic")
+
+    expect(viewModel?.title).toBe("Lecture Astral externe")
+    expect(viewModel?.shortText).toBe("Résumé issu du moteur externe.")
+    expect(viewModel?.chapters.map((chapter) => chapter.paragraphs[0])).toEqual([
+      "Explication top-level fournie par result.explanations.items.",
+      "Deuxième explication top-level conservée.",
+    ])
+    expect(viewModel?.chapters.map((chapter) => chapter.title)).toEqual([
+      "Sun en taurus maison 10",
+      "Moon en capricorn maison 6",
+    ])
+    expect(JSON.stringify(viewModel)).not.toContain("placement:sun:taurus:house:10")
+    expect(JSON.stringify(viewModel)).not.toContain("cache")
+  })
+
+  it("separe result.explanations quand l'enveloppe reading ne contient qu'un resume", () => {
+    const job: AstralJobResponse = {
+      run_id: "run-result-explanations-fallback",
+      status: "completed",
+      service_code: "natal_basic",
+      result: {
+        reading: {
+          status: "success",
+          reading: {
+            summary: {
+              title: "Résumé seul",
+              short_text: "Synthèse courte sans chapitre.",
+            },
+            chapters: [],
+          },
+        },
+        explanations: {
+          identity: "Explication de secours depuis result.explanations.",
+        },
+      },
+    }
+
+    const viewModel = buildNatalInterpretationViewModel(job, "basic")
+
+    expect(viewModel?.chapters).toEqual([])
+    expect(viewModel?.explanations[0]?.title).toBe("identity")
+    expect(viewModel?.explanations[0]?.paragraphs).toEqual([
+      "Explication de secours depuis result.explanations.",
+    ])
+  })
+
+  it("separe result.explanations.items des chapitres Astral deja presents", () => {
+    const job: AstralJobResponse = {
+      run_id: "run-result-explanations-with-chapters",
+      status: "completed",
+      service_code: "natal_basic",
+      result: {
+        reading: {
+          status: "success",
+          reading: {
+            summary: {
+              title: "Lecture structurée",
+              short_text: "Résumé structuré.",
+            },
+            chapters: [
+              {
+                code: "identity",
+                title: "Identité structurée",
+                body: "Chapitre narratif principal.",
+                astro_basis: [{ fact_id: "hidden", label: "Ascendant en Cancer" }],
+              },
+            ],
+          },
+        },
+        explanations: {
+          items: [
+            {
+              explanation: "Le Soleil en Taureau en maison 10 indique une orientation stable.",
+              expression_primary: "Maison 10",
+              fact_id: "placement:sun:taurus:house:10",
+              kind_code: "placement",
+              source: "cache",
+              title: "Sun en taurus maison 10",
+            },
+          ],
+          language_code: "fr",
+          status: "complete",
+        },
+      },
+    }
+
+    const viewModel = buildNatalInterpretationViewModel(job, "basic")
+
+    expect(viewModel?.chapters.map((chapter) => chapter.title)).toEqual(["Identité structurée"])
+    expect(viewModel?.chapters.map((chapter) => chapter.paragraphs[0])).toEqual(["Chapitre narratif principal."])
+    expect(viewModel?.explanations.map((chapter) => chapter.title)).toEqual(["Sun en taurus maison 10"])
+    expect(viewModel?.explanations.map((chapter) => chapter.paragraphs[0])).toEqual([
+      "Le Soleil en Taureau en maison 10 indique une orientation stable.",
+    ])
+    expect(viewModel?.chapters[0]?.astroBasis).toEqual(["Ascendant en Cancer"])
+    expect(JSON.stringify(viewModel)).not.toContain("placement:sun:taurus:house:10")
+    expect(JSON.stringify(viewModel)).not.toContain("cache")
+  })
+
+  it("normalise l'ancien payload public Basic V2 du moteur Astral", () => {
+    const job: AstralJobResponse = {
+      run_id: "run-basic-v2",
+      status: "completed",
+      service_code: "natal_basic",
+      result: {
+        basic_natal_interpretation_v2: {
+          interpretation: {
+            title: "Lecture Basic publique",
+            summary: "Résumé Basic public.",
+            introduction: "Introduction lisible fournie par Astral.",
+            themes: [
+              {
+                title: "Identité relationnelle",
+                narrative: "Narratif de thème fourni par Astral.",
+                public_evidence: [{ label: "Lune en Taureau" }],
+              },
+            ],
+            conclusion: "Conclusion lisible fournie par Astral.",
+          },
+          disclaimers: ["Lecture symbolique."],
+        },
+      },
+    }
+
+    const viewModel = buildNatalInterpretationViewModel(job, "basic")
+
+    expect(viewModel?.status).toBe("success")
+    expect(viewModel?.title).toBe("Lecture Basic publique")
+    expect(viewModel?.shortText).toBe("Résumé Basic public.")
+    expect(viewModel?.chapters.map((chapter) => chapter.title)).toEqual([
+      "Introduction",
+      "Identité relationnelle",
+      "Conclusion",
+    ])
+    expect(viewModel?.chapters.map((chapter) => chapter.paragraphs[0])).toEqual([
+      "Introduction lisible fournie par Astral.",
+      "Narratif de thème fourni par Astral.",
+      "Conclusion lisible fournie par Astral.",
+    ])
+    expect(viewModel?.chapters[1]?.astroBasis).toEqual(["Lune en Taureau"])
+    expect(viewModel?.disclaimer).toBe("Lecture symbolique.")
+  })
+
+  it("retrouve l'ancien payload Basic V2 quand il est imbrique dans reading", () => {
+    const job: AstralJobResponse = {
+      run_id: "run-basic-v2-nested",
+      status: "completed",
+      service_code: "natal_basic",
+      result: {
+        reading: {
+          status: "success",
+          reading: {
+            basic_natal_interpretation_v2: {
+              interpretation: {
+                title: "Lecture Basic imbriquée",
+                introduction: "Introduction Basic imbriquée fournie par Astral.",
+                themes: [],
+              },
+            },
+          },
+        },
+      },
+    }
+
+    const viewModel = buildNatalInterpretationViewModel(job, "basic")
+
+    expect(viewModel?.title).toBe("Lecture Basic imbriquée")
+    expect(viewModel?.chapters[0]?.paragraphs).toEqual([
+      "Introduction Basic imbriquée fournie par Astral.",
+    ])
+  })
+
+  it("utilise le payload Basic V2 quand l'enveloppe reading voisine ne contient pas de texte", () => {
+    const job: AstralJobResponse = {
+      run_id: "run-basic-v2-fallback",
+      status: "completed",
+      service_code: "natal_basic",
+      result: {
+        reading: {
+          status: "success",
+          reading: {
+            summary: { title: "Lecture vide" },
+            chapters: [],
+          },
+        },
+        basic_natal_interpretation_v2: {
+          interpretation: {
+            title: "Lecture Basic publique",
+            introduction: "Texte public de secours fourni par Astral.",
+            themes: [],
+          },
+        },
+      },
+    }
+
+    const viewModel = buildNatalInterpretationViewModel(job, "basic")
+
+    expect(viewModel?.title).toBe("Lecture Basic publique")
+    expect(viewModel?.chapters[0]?.paragraphs).toEqual([
+      "Texte public de secours fourni par Astral.",
+    ])
+  })
+
+  it("utilise le payload Basic V2 quand l'enveloppe reading ne contient qu'un resume", () => {
+    const job: AstralJobResponse = {
+      run_id: "run-basic-v2-summary-only",
+      status: "completed",
+      service_code: "natal_basic",
+      result: {
+        reading: {
+          status: "success",
+          reading: {
+            summary: {
+              title: "Résumé seul",
+              short_text: "Synthèse courte sans chapitre.",
+            },
+            chapters: [],
+          },
+        },
+        basic_natal_interpretation_v2: {
+          interpretation: {
+            title: "Lecture Basic complète",
+            introduction: "Explication complète fournie par le moteur externe.",
+            themes: [],
+          },
+        },
+      },
+    }
+
+    const viewModel = buildNatalInterpretationViewModel(job, "basic")
+
+    expect(viewModel?.title).toBe("Lecture Basic complète")
+    expect(viewModel?.chapters[0]?.paragraphs).toEqual([
+      "Explication complète fournie par le moteur externe.",
+    ])
+  })
+
   it("marque une lecture simplifiee sans heure comme partielle", () => {
     const job: AstralJobResponse = {
       run_id: "run-simplified",

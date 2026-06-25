@@ -45,6 +45,7 @@ export type NatalInterpretationViewModel = {
   completeness: NatalReadingCompleteness
   isPartial: boolean
   chapters: NatalReadingChapterViewModel[]
+  explanations: NatalReadingChapterViewModel[]
   calculationFacts: NatalCalculationFactsViewModel | null
   highlightFacts: NatalHighlightFactViewModel[]
   disclaimer: string | null
@@ -208,6 +209,100 @@ function splitParagraphs(value: unknown): string[] {
     .filter(Boolean)
 }
 
+function firstText(...values: unknown[]): string | null {
+  for (const value of values) {
+    const text = asText(value)
+    if (text) return text
+  }
+  return null
+}
+
+function chapterParagraphs(chapter: Record<string, unknown>): string[] {
+  const directParagraphs = asTextArray(chapter.paragraphs)
+  if (directParagraphs.length > 0) return directParagraphs
+
+  return splitParagraphs(
+    firstText(
+      chapter.body,
+      chapter.explanation,
+      chapter.narrative,
+      chapter.text,
+      chapter.content,
+      chapter.summary,
+      chapter.interpretation,
+    ),
+  )
+}
+
+function evidenceLabels(value: unknown): string[] {
+  if (!Array.isArray(value)) return []
+  return value
+    .map((item) => {
+      const record = asRecord(item)
+      if (!record) return asText(item)
+      const label = asText(record.label)
+      const meaning = asText(record.meaning)
+      if (label && meaning) return `${label}: ${meaning}`
+      return label ?? meaning
+    })
+    .filter((item): item is string => Boolean(item))
+}
+
+function resolveChapterItems(reading: Record<string, unknown>): unknown[] {
+  const candidates = [reading.chapters, reading.sections, reading.themes, reading.explanations]
+  for (const candidate of candidates) {
+    if (
+      Array.isArray(candidate) &&
+      candidate.some((item) => {
+        const record = asRecord(item)
+        return record ? chapterParagraphs(record).length > 0 : false
+      })
+    ) {
+      return candidate
+    }
+  }
+
+  for (const candidate of candidates) {
+    if (Array.isArray(candidate) && candidate.length > 0) return candidate
+  }
+  return []
+}
+
+function explanationItems(value: unknown): Record<string, unknown>[] {
+  const text = asText(value)
+  if (text) return [{ title: "Explications", body: text }]
+
+  if (Array.isArray(value)) {
+    return value.map(asRecord).filter((item): item is Record<string, unknown> => Boolean(item))
+  }
+
+  const record = asRecord(value)
+  if (!record) return []
+  if (Array.isArray(record.items)) {
+    return explanationItems(record.items)
+  }
+
+  if (Array.isArray(record.chapters) || Array.isArray(record.sections) || Array.isArray(record.themes)) {
+    return resolveChapterItems(record).map(asRecord).filter((item): item is Record<string, unknown> => Boolean(item))
+  }
+
+  if (Array.isArray(record.explanations)) {
+    return explanationItems(record.explanations)
+  }
+
+  if (chapterParagraphs(record).length > 0) {
+    return [record]
+  }
+
+  return Object.entries(record)
+    .filter(([key]) => key !== "language_code" && key !== "status")
+    .map<Record<string, unknown> | null>(([key, entry]) => {
+      const entryText = asText(entry)
+      return entryText ? { title: key, body: entryText } : null
+    })
+    .filter((item): item is Record<string, unknown> => Boolean(item))
+}
+
 function metadataFromProductCode(productCode: string | null): Partial<ReadingMetadata> {
   if (!productCode) return {}
   const tier = productCode.includes("premium")
@@ -266,22 +361,106 @@ function resolveError(readingResponse: Record<string, unknown> | null): NatalInt
 }
 
 function buildChapters(reading: Record<string, unknown>): NatalReadingChapterViewModel[] {
-  const chapters = Array.isArray(reading.chapters) ? reading.chapters : []
+  const chapters = resolveChapterItems(reading)
   return chapters
     .map((chapter, index) => {
       const chapterRecord = asRecord(chapter)
       if (!chapterRecord) return null
-      const paragraphs = splitParagraphs(chapterRecord.body)
+      const paragraphs = chapterParagraphs(chapterRecord)
       return {
         code: asText(chapterRecord.code),
         title: asText(chapterRecord.title) ?? `Chapitre ${index + 1}`,
         paragraphs,
         confidenceLabel: confidenceLabel(chapterRecord.confidence),
-        astroBasis: asAstroBasisLabels(chapterRecord.astro_basis),
+        astroBasis: [
+          ...asAstroBasisLabels(chapterRecord.astro_basis),
+          ...evidenceLabels(chapterRecord.public_evidence),
+        ],
         safetyFlags: asTextArray(chapterRecord.safety_flags),
       }
     })
     .filter((chapter): chapter is NatalReadingChapterViewModel => Boolean(chapter))
+}
+
+function findLegacyBasicPayload(result: Record<string, unknown>): Record<string, unknown> | null {
+  const reading = asRecord(result.reading)
+  const nestedReading = asRecord(reading?.reading)
+  return (
+    asRecord(result.basic_natal_interpretation_v2) ??
+    asRecord(reading?.basic_natal_interpretation_v2) ??
+    asRecord(nestedReading?.basic_natal_interpretation_v2)
+  )
+}
+
+function resultExplanationsContainer(result: Record<string, unknown>): Record<string, unknown> | null {
+  const explanations = explanationItems(result.explanations)
+  if (explanations.length === 0) return null
+
+  const summary = asRecord(result.summary)
+  return {
+    summary: {
+      title: asText(summary?.title) ?? asText(result.title) ?? "Lecture natale",
+      short_text: asText(summary?.short_text) ?? asText(summary?.text) ?? asText(result.short_text),
+    },
+    chapters: explanations,
+  }
+}
+
+function explanationChapters(reading: Record<string, unknown> | null): NatalReadingChapterViewModel[] {
+  return reading ? buildChapters(reading) : []
+}
+
+function legacyBasicReading(result: Record<string, unknown>): Record<string, unknown> | null {
+  const payload = findLegacyBasicPayload(result)
+  const interpretation = asRecord(payload?.interpretation)
+  if (!payload || !interpretation) return null
+
+  const chapters: Record<string, unknown>[] = []
+  const introduction = asText(interpretation.introduction)
+  if (introduction) {
+    chapters.push({
+      code: "introduction",
+      title: "Introduction",
+      body: introduction,
+      public_evidence: interpretation.public_evidence ?? payload.public_evidence,
+    })
+  }
+
+  const themes = Array.isArray(interpretation.themes) ? interpretation.themes : []
+  for (const theme of themes) {
+    const themeRecord = asRecord(theme)
+    if (!themeRecord) continue
+    chapters.push({
+      code: asText(themeRecord.code),
+      title: asText(themeRecord.title) ?? "Thème",
+      narrative: themeRecord.narrative,
+      public_evidence: themeRecord.public_evidence,
+    })
+  }
+
+  const conclusion = asText(interpretation.conclusion)
+  if (conclusion) {
+    chapters.push({
+      code: "conclusion",
+      title: "Conclusion",
+      body: conclusion,
+    })
+  }
+
+  return {
+    summary: {
+      title: interpretation.title,
+      short_text: interpretation.summary,
+    },
+    chapters,
+    legal: {
+      disclaimer: asTextArray(payload.disclaimers).join(" "),
+    },
+  }
+}
+
+function hasChapterText(reading: Record<string, unknown>): boolean {
+  return buildChapters(reading).some((chapter) => chapter.paragraphs.length > 0)
 }
 
 function readCorePlacement(source: Record<string, unknown>, code: string): NatalCalculationFactItemViewModel | null {
@@ -547,9 +726,39 @@ function emptyViewModel(
     completeness: metadata.completeness,
     isPartial,
     chapters: [],
+    explanations: [],
     calculationFacts,
     highlightFacts: buildHighlightFacts(calculationFacts),
     disclaimer: null,
+    error: null,
+  }
+}
+
+function successViewModel(
+  reading: Record<string, unknown>,
+  metadata: ReadingMetadata,
+  calculationFacts: NatalCalculationFactsViewModel | null,
+  explanations: NatalReadingChapterViewModel[] = [],
+): NatalInterpretationViewModel {
+  const summary = asRecord(reading.summary)
+  const legal = asRecord(reading.legal)
+  const chapters = buildChapters(reading)
+  const isPartial = metadata.variant === "simplified" || metadata.completeness === "partial"
+
+  return {
+    status: "success",
+    title: asText(summary?.title) ?? "Lecture natale",
+    shortText: asText(summary?.short_text),
+    tier: metadata.tier,
+    variant: metadata.variant,
+    label: labelForReading(metadata.tier),
+    completeness: metadata.completeness,
+    isPartial,
+    chapters,
+    explanations,
+    calculationFacts,
+    highlightFacts: buildHighlightFacts(calculationFacts),
+    disclaimer: asText(legal?.disclaimer),
     error: null,
   }
 }
@@ -564,8 +773,18 @@ export function buildNatalInterpretationViewModel(
 
   const metadata = extractMetadata(job, fallbackPlan)
   const calculationFacts = buildCalculationFacts(result)
+  const explanationsReading = resultExplanationsContainer(result)
+  const legacyReading = legacyBasicReading(result)
   const readingResponse = resolveReadingContainer(result)
   if (!readingResponse) {
+    if (explanationsReading) {
+      return successViewModel(explanationsReading, metadata, calculationFacts)
+    }
+
+    if (legacyReading) {
+      return successViewModel(legacyReading, metadata, calculationFacts)
+    }
+
     if (typeof result.reading === "string") {
       const isPartial = metadata.variant === "simplified" || metadata.completeness === "partial"
       return {
@@ -578,6 +797,7 @@ export function buildNatalInterpretationViewModel(
         completeness: metadata.completeness,
         isPartial,
         chapters: [],
+        explanations: [],
         calculationFacts,
         highlightFacts: buildHighlightFacts(calculationFacts),
         disclaimer: null,
@@ -604,6 +824,7 @@ export function buildNatalInterpretationViewModel(
       completeness: metadata.completeness,
       isPartial,
       chapters: [],
+      explanations: [],
       calculationFacts,
       highlightFacts: buildHighlightFacts(calculationFacts),
       disclaimer: null,
@@ -613,6 +834,14 @@ export function buildNatalInterpretationViewModel(
 
   const reading = asRecord(readingResponse.reading)
   if (!reading) {
+    if (explanationsReading) {
+      return successViewModel(explanationsReading, metadata, calculationFacts)
+    }
+
+    if (legacyReading) {
+      return successViewModel(legacyReading, metadata, calculationFacts)
+    }
+
     return emptyViewModel(
       metadata,
       "La lecture est disponible mais ne contient pas de texte public.",
@@ -620,24 +849,9 @@ export function buildNatalInterpretationViewModel(
     )
   }
 
-  const summary = asRecord(reading.summary)
-  const legal = asRecord(reading.legal)
-  const chapters = buildChapters(reading)
-  const isPartial = metadata.variant === "simplified" || metadata.completeness === "partial"
-
-  return {
-    status: "success",
-    title: asText(summary?.title) ?? "Lecture natale",
-    shortText: asText(summary?.short_text),
-    tier: metadata.tier,
-    variant: metadata.variant,
-    label: labelForReading(metadata.tier),
-    completeness: metadata.completeness,
-    isPartial,
-    chapters,
-    calculationFacts,
-    highlightFacts: buildHighlightFacts(calculationFacts),
-    disclaimer: asText(legal?.disclaimer),
-    error: null,
+  if (!hasChapterText(reading) && hasChapterText(legacyReading ?? {}) && legacyReading) {
+    return successViewModel(legacyReading, metadata, calculationFacts)
   }
+
+  return successViewModel(reading, metadata, calculationFacts, explanationChapters(explanationsReading))
 }

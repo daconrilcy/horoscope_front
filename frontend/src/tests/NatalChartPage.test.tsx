@@ -230,7 +230,7 @@ describe("NatalChartPage", () => {
                 {
                   code: "identity",
                   title: "Identite",
-                  body: "Votre lecture met l'accent sur une dynamique personnelle stable.",
+                  body: "Chapitre narratif principal conserve.",
                   confidence: "medium",
                   astro_basis: ["Soleil en Cancer", "Lune en Balance"],
                 },
@@ -248,6 +248,20 @@ describe("NatalChartPage", () => {
                 used_provider: "fake",
               },
             },
+          },
+          explanations: {
+            items: [
+              {
+                explanation: "Votre lecture met l'accent sur une dynamique personnelle stable.",
+                expression_primary: "Maison 10",
+                fact_id: "placement:sun:taurus:house:10",
+                kind_code: "placement",
+                source: "cache",
+                title: "Sun en taurus maison 10",
+              },
+            ],
+            language_code: "fr",
+            status: "complete",
           },
         },
       },
@@ -276,11 +290,16 @@ describe("NatalChartPage", () => {
     expect(screen.getByText("Une synthese claire du theme.")).toBeVisible()
     expect(screen.getByText("basic")).toBeVisible()
     expect(screen.getByRole("heading", { name: "Identite" })).toBeVisible()
-    expect(screen.getByText(/dynamique personnelle stable/i)).toBeVisible()
+    expect(screen.getByText(/Chapitre narratif principal conserve/i)).toBeVisible()
     expect(screen.getByText("Confiance moyenne")).toBeVisible()
     expect(screen.getByText("Repères utilisés")).toBeVisible()
     expect(screen.getByText("Soleil en Cancer")).toBeVisible()
     expect(screen.getByText("Lune en Balance")).toBeVisible()
+    const explanationsSection = screen.getByRole("region", { name: "Explications du moteur Astral" })
+    expect(explanationsSection).toHaveTextContent("Sun en taurus maison 10")
+    expect(explanationsSection).toHaveTextContent(/dynamique personnelle stable/i)
+    expect(screen.queryByText("placement:sun:taurus:house:10")).not.toBeInTheDocument()
+    expect(screen.queryByText("cache")).not.toBeInTheDocument()
     expect(screen.getByText("Comment lire ton thème natal")).toBeVisible()
     expect(screen.getByRole("alert")).toHaveTextContent(/Thème partiel : certaines données de naissance/i)
     expect(screen.queryByText(/completude partielle/i)).not.toBeInTheDocument()
@@ -329,6 +348,47 @@ describe("NatalChartPage", () => {
 
     expect(await screen.findByRole("heading", { name: "Lecture conservee" })).toBeVisible()
     expect(screen.getByText("Le polling garde le texte public.")).toBeVisible()
+  })
+
+  it("affiche les explications dediees sans message de chapitres manquants", async () => {
+    mockUseAstralJobStatus.mockReturnValue({
+      data: {
+        run_id: "run-natal-explanations-only",
+        status: "completed",
+        service_code: "natal_basic",
+        result: {
+          reading: {
+            status: "success",
+            reading: {
+              summary: {
+                title: "Lecture avec repères",
+                short_text: "Résumé sans chapitre narratif.",
+              },
+              chapters: [],
+            },
+          },
+          explanations: {
+            items: [
+              {
+                explanation: "Le Soleil en Taureau en maison 10 indique une orientation stable.",
+                title: "Sun en taurus maison 10",
+              },
+            ],
+            language_code: "fr",
+            status: "complete",
+          },
+        },
+      },
+      isError: false,
+      isPending: false,
+    })
+
+    renderNatalChartPage()
+
+    expect(await screen.findByRole("heading", { name: "Lecture avec repères" })).toBeVisible()
+    const explanationsSection = screen.getByRole("region", { name: "Explications du moteur Astral" })
+    expect(explanationsSection).toHaveTextContent("Sun en taurus maison 10")
+    expect(screen.queryByText(/ne contient pas encore de chapitres publics/i)).not.toBeInTheDocument()
   })
 
   it("traite safety_rejected comme un statut terminal explicite", async () => {
