@@ -122,7 +122,10 @@ export function NatalChartPage() {
         {natalReading?.highlightFacts.length ? (
           <div className="natal-page-portrait" aria-label="Portrait astral">
             <div className="natal-page-portrait__copy">
-              <span className="natal-section-eyebrow">Portrait astral</span>
+              <div className="natal-page-portrait__head">
+                <span className="natal-section-eyebrow">Portrait astral</span>
+                <span className="natal-badge natal-badge--report-status">{natalReading.label}</span>
+              </div>
               <p>{natalReading.shortText ?? NATAL_PAGE_CONTEXT}</p>
             </div>
             <div className="natal-page-portrait__facts" aria-label="Marqueurs clés du portrait astral">
@@ -137,7 +140,6 @@ export function NatalChartPage() {
                 </span>
               ))}
             </div>
-            <span className="natal-badge natal-badge--report-status">{natalReading.label}</span>
           </div>
         ) : null}
       </header>

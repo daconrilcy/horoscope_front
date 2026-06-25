@@ -40,8 +40,8 @@
 /* Header Re-styling */
 .natal-page-header {
   display: grid;
-  gap: 10px;
-  margin-bottom: 28px;
+  gap: 8px;
+  margin-bottom: 20px;
 }
 
 .natal-page-header__top {
@@ -74,52 +74,67 @@
   max-width: 760px;
   margin: 0;
   font-size: var(--font-size-md);
-  line-height: var(--line-height-copy-loose);
+  line-height: var(--line-height-relaxed);
   color: var(--premium-text-main);
 }
 
 .natal-page-portrait {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 18px 20px;
+  gap: 12px;
   align-items: start;
-  max-width: 980px;
-  margin-top: 10px;
-  padding: 18px;
+  max-width: 920px;
+  margin-top: 6px;
+  padding: 14px;
   border: 1px solid var(--premium-glass-border);
-  border-radius: var(--premium-radius-panel);
+  border-radius: var(--premium-radius-card);
   background: linear-gradient(135deg, var(--premium-glass-surface-1) 0%, var(--premium-glass-surface-2) 100%);
   box-shadow: var(--premium-inner-light);
 }
 
 .natal-page-portrait__copy {
   display: grid;
-  gap: 4px;
+  gap: 6px;
   min-width: 0;
 }
 
+.natal-page-portrait__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+}
+
+.natal-page-portrait__head .natal-section-eyebrow {
+  margin-bottom: 0;
+}
+
 .natal-page-portrait__copy p {
-  max-width: 68ch;
+  display: -webkit-box;
+  max-width: 76ch;
   margin: 0;
+  overflow: hidden;
   color: var(--premium-text-main);
   font-size: var(--font-size-sm);
-  line-height: var(--line-height-copy-loose);
+  line-height: var(--line-height-relaxed);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .natal-page-portrait__facts {
-  grid-column: 1 / -1;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
+  gap: 8px;
 }
 
 .natal-page-portrait__fact {
   display: grid;
   align-content: start;
-  gap: 4px;
+  gap: 3px;
   min-width: 0;
-  min-height: 74px;
-  padding: 12px;
+  width: 100%;
+  min-height: 62px;
+  padding: 9px 10px;
 }
 
 .natal-page-portrait__label,
@@ -138,7 +153,7 @@
 
 .natal-page-portrait__fact strong {
   color: var(--premium-accent-purple-strong);
-  font-size: var(--font-size-md);
+  font-size: var(--font-size-sm);
   line-height: var(--type-label-line-height);
 }
 
@@ -216,14 +231,14 @@
   -webkit-backdrop-filter: blur(24px) saturate(160%);
   border: 1px solid var(--premium-glass-border);
   border-radius: var(--premium-radius-card);
-  padding: 24px;
-  box-shadow:var(--shadow-card);
+  padding: 20px;
+  box-shadow: var(--premium-inner-light);
   transition: transform var(--duration-normal) var(--easing-default), box-shadow var(--duration-normal) var(--easing-default);
 }
 
 .natal-card:hover {
-  transform: translateY(-2px);
-  box-shadow:var(--shadow-card);
+  transform: translateY(-1px);
+  box-shadow: var(--premium-inner-light);
 }
 
 .natal-card h2 {
@@ -611,8 +626,8 @@
 }
 
 .natal-badge--report-status {
-  min-height: 26px;
-  padding: 0 10px;
+  min-height: 22px;
+  padding: 0 8px;
   background: color-mix(in srgb, var(--premium-text-strong) 5%, var(--premium-glass-surface-2));
   color: var(--premium-text-meta);
   font-size: var(--font-size-2xs);
@@ -623,8 +638,9 @@
 
 .natal-badge--confidence {
   flex-shrink: 0;
-  min-height: 26px;
-  padding: 0 10px;
+  width: fit-content;
+  min-height: 24px;
+  padding: 0 9px;
   border-color: color-mix(in srgb, var(--premium-accent-purple-strong) 22%, var(--premium-glass-border-soft));
   background: color-mix(in srgb, var(--premium-accent-purple-strong) 10%, transparent);
   color: var(--premium-accent-purple-strong);
@@ -635,29 +651,31 @@
 }
 
 .natal-badge--astro-data {
-  min-height: 28px;
-  padding: 0 10px;
-  border-radius: var(--radius-lg);
+  min-height: 26px;
+  padding: 0 9px;
+  border-radius: var(--radius-md);
   border-color: color-mix(in srgb, var(--premium-accent-purple-strong) 14%, var(--premium-glass-border-soft));
   background: color-mix(in srgb, var(--premium-accent-purple-strong) 7%, var(--premium-glass-surface-2));
   color: var(--premium-text-strong);
 }
 
 .natal-badge--fact-detail {
-  min-height: 24px;
+  min-height: 23px;
   padding: 0 8px;
-  background: color-mix(in srgb, var(--color-token-rgb-255-255-255) 58%, transparent);
+  border-color: color-mix(in srgb, var(--color-token-rgb-255-255-255) 42%, transparent);
+  background: color-mix(in srgb, var(--color-token-rgb-255-255-255) 64%, transparent);
   color: var(--premium-text-meta);
   font-size: var(--font-size-2xs);
 }
 
 .natal-badge--basis {
-  min-height: 22px;
-  padding: 0 8px;
-  border-color: color-mix(in srgb, var(--premium-accent-purple-strong) 12%, var(--premium-glass-border-soft));
-  background: transparent;
-  color: color-mix(in srgb, var(--premium-accent-purple-strong) 80%, var(--premium-text-main) 20%);
+  min-height: 20px;
+  padding: 0 7px;
+  border-color: color-mix(in srgb, var(--premium-text-meta) 18%, transparent);
+  background: color-mix(in srgb, var(--color-token-rgb-255-255-255) 34%, transparent);
+  color: var(--premium-text-meta);
   font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-semibold);
 }
 
 .natal-page-portrait__facts .natal-page-portrait__fact {
@@ -869,7 +887,7 @@
 
 .natal-reading {
   display: grid;
-  gap: 20px;
+  gap: 16px;
 }
 
 .natal-reading__header {
@@ -902,7 +920,7 @@
 
 .natal-reading__chapters {
   display: grid;
-  gap: 16px;
+  gap: 12px;
 }
 
 .natal-reading-explanations {
@@ -933,6 +951,7 @@
 }
 
 .natal-reading-explanations .natal-reading__chapter {
+  grid-template-columns: 1fr;
   gap: 10px;
   padding: 14px;
   border-color: var(--premium-glass-border-soft);
@@ -959,10 +978,10 @@
 
 .natal-reading-facts {
   display: grid;
-  gap: 16px;
-  padding: 20px;
+  gap: 14px;
+  padding: 18px;
   border: 1px solid var(--premium-glass-border);
-  border-radius: var(--premium-radius-panel);
+  border-radius: var(--premium-radius-card);
   background: var(--premium-glass-surface-1);
   box-shadow: var(--premium-inner-light);
 }
@@ -982,34 +1001,40 @@
 .natal-reading-facts__grid {
   display: grid;
   align-items: start;
-  grid-template-columns: minmax(0, 1.35fr) minmax(180px, 0.75fr) minmax(180px, 0.75fr);
+  grid-template-columns: minmax(0, 1.3fr) minmax(260px, 0.7fr);
   gap: 12px;
 }
 
 .natal-reading-facts__group {
   display: grid;
   align-content: start;
-  gap: 10px;
+  gap: 9px;
   min-width: 0;
-  padding: 12px;
+  min-height: 0;
+  padding: 11px;
   border: 1px solid var(--premium-glass-border-soft);
   border-radius: var(--radius-md);
   background: color-mix(in srgb, var(--color-token-rgb-255-255-255) 34%, transparent);
 }
 
+.natal-reading-facts__group:not(.natal-reading-facts__group--primary) {
+  grid-column: 2;
+}
+
 .natal-reading-facts__group--primary {
-  grid-row: span 2;
-  padding: 16px;
+  grid-column: 1;
+  grid-row: 1 / span 3;
+  padding: 14px;
   background: color-mix(in srgb, var(--premium-accent-purple-strong) 6%, var(--premium-glass-surface-2));
 }
 
 .natal-reading-facts__group--primary .natal-reading-facts__list {
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px 12px;
+  gap: 8px;
 }
 
 .natal-reading-facts__group--primary .natal-reading-facts__item {
-  padding: 10px;
+  padding: 9px;
   border: 1px solid var(--premium-glass-border-soft);
   border-radius: var(--radius-md);
   background: color-mix(in srgb, var(--color-token-rgb-255-255-255) 36%, transparent);
@@ -1027,8 +1052,8 @@
   align-items: center;
   justify-content: center;
   flex: 0 0 auto;
-  width: 30px;
-  height: 30px;
+  width: 28px;
+  height: 28px;
   border-radius: var(--radius-full);
   background: color-mix(in srgb, var(--premium-accent-purple-strong) 10%, var(--premium-glass-surface-2));
   border: 1px solid color-mix(in srgb, var(--premium-accent-purple-strong) 12%, var(--premium-glass-border-soft));
@@ -1044,7 +1069,7 @@
 
 .natal-reading-facts__list {
   display: grid;
-  gap: 7px;
+  gap: 6px;
   margin: 0;
 }
 
@@ -1052,7 +1077,7 @@
   display: grid;
   gap: 4px;
   min-width: 0;
-  padding-bottom: 8px;
+  padding-bottom: 7px;
   border-bottom: 1px solid var(--premium-glass-border-soft);
 }
 
@@ -1090,18 +1115,29 @@
 
 .natal-reading__chapter {
   display: grid;
-  gap: 14px;
-  padding: 20px;
+  grid-template-columns: minmax(0, 1fr) minmax(190px, 0.34fr);
+  gap: 18px;
+  align-items: start;
+  padding: 18px;
   border: 1px solid var(--premium-glass-border-soft);
-  border-radius: var(--premium-radius-panel);
+  border-radius: var(--premium-radius-card);
   background: color-mix(in srgb, var(--color-token-rgb-255-255-255) 30%, var(--premium-glass-surface-2));
+}
+
+.natal-reading__chapter--no-meta {
+  grid-template-columns: 1fr;
+}
+
+.natal-reading__chapter-main {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
 }
 
 .natal-reading__chapter-head {
   display: flex;
   align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
+  gap: 12px;
 }
 
 .natal-reading__chapter-title {
@@ -1121,17 +1157,23 @@
 
 .natal-reading__chapter-excerpt {
   margin: 0;
-  max-width: 62ch;
   color: color-mix(in srgb, var(--premium-text-strong) 82%, var(--premium-accent-purple-strong) 18%) !important;
   font-size: var(--font-size-md);
   font-weight: var(--font-weight-semibold);
-  line-height: var(--line-height-copy-loose);
+  line-height: var(--line-height-relaxed);
 }
 
 .natal-reading__chapter-body {
   display: grid;
+  gap: 8px;
+  max-width: 82ch;
+}
+
+.natal-reading__chapter-meta {
+  display: grid;
   gap: 10px;
-  max-width: 72ch;
+  min-width: 0;
+  justify-items: start;
 }
 
 .natal-reading__precision-note {
@@ -1157,7 +1199,8 @@
 
 .natal-reading__basis {
   display: grid;
-  gap: 8px;
+  gap: 7px;
+  width: 100%;
   padding-top: 10px;
   border-top: 1px solid var(--premium-glass-border-soft);
 }
@@ -1174,7 +1217,7 @@
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 5px;
   margin: 0;
 }
 
@@ -1197,44 +1240,57 @@
 /* Responsive */
 @media (max-width: 768px) {
   .page-layout.natal-page-container .page-layout__main {
-    padding: 12px 12px calc(150px + env(safe-area-inset-bottom));
+    padding: 10px 10px calc(120px + env(safe-area-inset-bottom));
   }
   
   .natal-page-header__title {
-    font-size: var(--font-size-2xl);
-    line-height: var(--line-height-display-relaxed);
+    font-size: var(--font-size-xl);
+    line-height: var(--type-section-title-line-height);
   }
 
   .natal-page-header {
-    gap: 8px;
-    margin-bottom: 16px;
+    gap: 6px;
+    margin-bottom: 12px;
   }
 
   .natal-page-header__context {
     font-size: var(--font-size-sm);
+    line-height: var(--line-height-normal);
   }
 
   .natal-page-portrait {
     grid-template-columns: 1fr;
-    gap: 12px;
+    gap: 9px;
     margin-top: 4px;
-    padding: 14px;
+    padding: 11px;
+    border-radius: var(--radius-lg);
+  }
+
+  .natal-page-portrait__copy {
+    gap: 5px;
+  }
+
+  .natal-page-portrait__copy p {
+    font-size: var(--font-size-xs);
+    line-height: var(--line-height-normal);
+    -webkit-line-clamp: 3;
   }
 
   .natal-page-portrait__facts {
-    grid-template-columns: 1fr;
-    gap: 8px;
+    grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+    gap: 6px;
   }
 
   .natal-page-portrait__fact {
-    min-height: 0;
-    padding: 10px;
+    min-height: 56px;
+    padding: 8px;
   }
 
   .natal-card,
   .natal-reading-facts,
   .natal-reading__chapter {
-    padding: 14px;
+    padding: 12px;
+    border-radius: var(--radius-lg);
   }
 
   .natal-page-header__actions {
@@ -1245,10 +1301,9 @@
     flex-wrap: wrap;
   }
 
-  .natal-reading__summary,
-  .natal-reading__chapter-head {
+  .natal-reading__summary {
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
   }
 
   .natal-grid {
@@ -1274,8 +1329,13 @@
 
   .natal-reading-facts__group,
   .natal-reading-facts__group--primary {
+    grid-column: auto;
     grid-row: auto;
-    padding: 12px;
+    padding: 10px;
+  }
+
+  .natal-reading-facts__group:not(.natal-reading-facts__group--primary) {
+    grid-column: auto;
   }
 
   .natal-reading-facts__group--primary .natal-reading-facts__list {
@@ -1300,8 +1360,29 @@
     gap: 10px;
   }
 
+  .natal-reading__chapter {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .natal-reading__chapter-main {
+    gap: 8px;
+  }
+
+  .natal-reading__chapter-body {
+    max-width: none;
+  }
+
+  .natal-reading__chapter-meta {
+    gap: 8px;
+  }
+
   .natal-reading__chapter-head h3,
   .natal-reading__chapter-excerpt {
     font-size: var(--font-size-md);
+  }
+
+  .natal-reading__basis {
+    padding-top: 8px;
   }
 }

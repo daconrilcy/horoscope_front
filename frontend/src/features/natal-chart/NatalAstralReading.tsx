@@ -104,40 +104,48 @@ function NatalCalculationFacts({ facts }: { facts: NatalCalculationFactsViewMode
 function NatalChapterCard({ chapter, itemKey }: { chapter: NatalReadingChapterViewModel; itemKey: string }) {
   const excerpt = chapterExcerpt(chapter)
   const bodyParagraphs = chapterBodyParagraphs(chapter, excerpt)
+  const hasMeta = Boolean(chapter.confidenceLabel) || chapter.astroBasis.length > 0 || chapter.safetyFlags.length > 0
+  const chapterClassName = hasMeta ? "natal-reading__chapter" : "natal-reading__chapter natal-reading__chapter--no-meta"
 
   return (
-    <section className="natal-reading__chapter">
-      <div className="natal-reading__chapter-head">
-        <div className="natal-reading__chapter-title">
-          <span className="natal-section-eyebrow">Lecture guidée</span>
-          <h3>{chapter.title}</h3>
+    <section className={chapterClassName}>
+      <div className="natal-reading__chapter-main">
+        <div className="natal-reading__chapter-head">
+          <div className="natal-reading__chapter-title">
+            <span className="natal-section-eyebrow">Lecture guidée</span>
+            <h3>{chapter.title}</h3>
+          </div>
         </div>
-        {chapter.confidenceLabel ? (
-          <span className="natal-badge natal-badge--confidence">{chapter.confidenceLabel}</span>
+        {excerpt ? <p className="natal-reading__chapter-excerpt">{excerpt}</p> : null}
+        {bodyParagraphs.length > 0 ? (
+          <div className="natal-reading__chapter-body">
+            {bodyParagraphs.map((paragraph, paragraphIndex) => (
+              <p key={`${itemKey}-paragraph-${paragraphIndex}`}>{paragraph}</p>
+            ))}
+          </div>
         ) : null}
       </div>
-      {excerpt ? <p className="natal-reading__chapter-excerpt">{excerpt}</p> : null}
-      {bodyParagraphs.length > 0 ? (
-        <div className="natal-reading__chapter-body">
-          {bodyParagraphs.map((paragraph, paragraphIndex) => (
-            <p key={`${itemKey}-paragraph-${paragraphIndex}`}>{paragraph}</p>
-          ))}
-        </div>
-      ) : null}
-      {chapter.astroBasis.length > 0 ? (
-        <div className="natal-reading__basis" aria-label={`Repères utilisés pour ${chapter.title}`}>
-          <span>Repères utilisés</span>
-          <ul>
-            {chapter.astroBasis.map((basis, basisIndex) => (
-              <li className="natal-badge natal-badge--basis" key={`${itemKey}-basis-${basisIndex}`}>
-                {basis}
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
-      {chapter.safetyFlags.length > 0 ? (
-        <p className="natal-reading__safety">Note de prudence : {chapter.safetyFlags.join(", ")}</p>
+      {hasMeta ? (
+        <aside className="natal-reading__chapter-meta" aria-label={`Qualité et repères pour ${chapter.title}`}>
+          {chapter.confidenceLabel ? (
+            <span className="natal-badge natal-badge--confidence">{chapter.confidenceLabel}</span>
+          ) : null}
+          {chapter.astroBasis.length > 0 ? (
+            <div className="natal-reading__basis" aria-label={`Repères utilisés pour ${chapter.title}`}>
+              <span>Repères utilisés</span>
+              <ul>
+                {chapter.astroBasis.map((basis, basisIndex) => (
+                  <li className="natal-badge natal-badge--basis" key={`${itemKey}-basis-${basisIndex}`}>
+                    {basis}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+          {chapter.safetyFlags.length > 0 ? (
+            <p className="natal-reading__safety">Note de prudence : {chapter.safetyFlags.join(", ")}</p>
+          ) : null}
+        </aside>
       ) : null}
     </section>
   )

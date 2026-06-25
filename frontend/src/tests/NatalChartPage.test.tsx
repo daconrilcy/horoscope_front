@@ -398,6 +398,43 @@ describe("NatalChartPage", () => {
     expect(screen.queryByText(/ne contient pas encore de chapitres publics/i)).not.toBeInTheDocument()
   })
 
+  it("replie un chapitre sans meta en une seule colonne", async () => {
+    mockUseAstralJobStatus.mockReturnValue({
+      data: {
+        run_id: "run-natal-no-meta",
+        status: "completed",
+        service_code: "natal_basic",
+        result: {
+          reading: {
+            status: "success",
+            reading: {
+              summary: {
+                title: "Lecture sans repères",
+                short_text: "Résumé minimal.",
+              },
+              chapters: [
+                {
+                  code: "minimal",
+                  title: "Chapitre minimal",
+                  body: "Contenu narratif sans métadonnees.",
+                },
+              ],
+            },
+          },
+        },
+      },
+      isError: false,
+      isPending: false,
+    })
+
+    const { container } = renderNatalChartPage()
+
+    expect(await screen.findByRole("heading", { name: "Lecture sans repères" })).toBeVisible()
+    const chapter = container.querySelector(".natal-reading__chapter")
+    expect(chapter).toHaveClass("natal-reading__chapter--no-meta")
+    expect(screen.queryByLabelText(/Qualité et repères pour Chapitre minimal/i)).not.toBeInTheDocument()
+  })
+
   it("traite safety_rejected comme un statut terminal explicite", async () => {
     mockUseAstralJobStatus.mockReturnValue({
       data: {
