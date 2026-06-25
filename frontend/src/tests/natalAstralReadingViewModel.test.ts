@@ -214,7 +214,7 @@ describe("buildNatalInterpretationViewModel", () => {
         "Soleil en Capricorne maison 2",
         "Lune en Poissons maison 4",
         "Ascendant en Scorpion maison 1",
-        "Emphase maison ressources",
+        "Emphase maison : Ressources",
       ],
     })
     expect(reading?.explanations).toEqual([
@@ -238,15 +238,15 @@ describe("buildNatalInterpretationViewModel", () => {
       },
       {
         kindLabel: "Axe",
-        title: "Axe maison : soi et relation",
+        title: "Axe maison : soi / relation",
         explanation: "Explication Astral de l'axe relationnel fournie par le moteur externe.",
         expressionPrimary: null,
       },
       {
         kindLabel: "Domaine dominant",
-        title: "Emphase maison ressources",
+        title: "Emphase maison : Ressources",
         explanation: "Explication Astral du domaine dominant fournie par le moteur externe.",
-        expressionPrimary: "resources",
+        expressionPrimary: "Ressources",
       },
       {
         kindLabel: "Placement",
@@ -280,12 +280,12 @@ describe("buildNatalInterpretationViewModel", () => {
     ])
     expect(reading?.axes[0]).toMatchObject({
       code: "axis-0",
-      title: "Axe maison : soi et relation",
+      title: "Axe maison : soi / relation",
       description: "Explication Astral de l'axe relationnel fournie par le moteur externe.",
     })
     expect(reading?.lifeAreas[0]).toMatchObject({
       rank: "Domaine dominant",
-      title: "Emphase maison ressources",
+      title: "Emphase maison : Ressources",
       description: "Explication Astral du domaine dominant fournie par le moteur externe.",
     })
     expect(reading?.lifeAreas[0]?.details).toEqual([])
@@ -303,6 +303,95 @@ describe("buildNatalInterpretationViewModel", () => {
     expect(JSON.stringify(reading)).not.toContain("placement:sun")
     expect(JSON.stringify(reading)).not.toContain("Ce theme met en avant")
     expect(JSON.stringify(reading)).not.toContain("cooperation entre les planetes")
+  })
+
+  it("normalise les titres bruts Astral en francais quand le payload expose des codes anglais", () => {
+    const job = baseSuccessfulJob({
+      explanations: {
+        status: "complete",
+        language_code: "fr",
+        items: [
+          {
+            fact_id: "placement:sun:taurus:house:10",
+            kind_code: "placement",
+            title: "Sun en taurus maison 10",
+            explanation: "Le Soleil en Taureau en maison 10 indique une orientation stable et pratique vers la carrière et la réputation publique.",
+            expression_primary: "Maison 10",
+          },
+          {
+            fact_id: "placement:moon:capricorn:house:6",
+            kind_code: "placement",
+            title: "Moon en capricorn maison 6",
+            explanation: "La Lune en Capricorne en maison 6 signale une approche émotionnelle réservée et structurée vis-à-vis du travail quotidien et de la santé.",
+            expression_primary: "Maison 6",
+          },
+          {
+            fact_id: "placement:ascendant:cancer:house:1",
+            kind_code: "angle",
+            title: "Ascendant en cancer maison 1",
+            explanation: "L’Ascendant en Cancer en maison 1 met l’accent sur une apparence sensible et protectrice dans l’expression personnelle.",
+            expression_primary: "Maison 1",
+          },
+          {
+            fact_id: "house_axis:private_public",
+            kind_code: "house_axis",
+            title: "Axe maison : private_public",
+            explanation: "L'axe privé–public met en contraste les domaines de la vie intimement personnels et ceux exposés socialement ou professionnellement.",
+          },
+          {
+            fact_id: "house_axis:control_surrender",
+            kind_code: "house_axis",
+            title: "Axe maison : control_surrender",
+            explanation: "L’axe maison contrôle‑abandon oppose les dynamiques de structuration et de lâcher‑prise entre les maisons concernées.",
+          },
+          {
+            fact_id: "house_axis:self_relationship",
+            kind_code: "house_axis",
+            title: "Axe maison : self_relationship",
+            explanation: "L'axe soi–relation souligne la dynamique entre l'affirmation de soi et la qualité des interactions avec autrui.",
+          },
+          {
+            fact_id: "house_emphasis:house:10",
+            kind_code: "house_emphasis",
+            title: "Emphase maison career",
+            explanation: "L’emphase sur la maison 10 souligne une focalisation thématique sur la carrière, la réputation et les objectifs publics.",
+            expression_primary: "career",
+          },
+        ],
+      },
+    })
+
+    const viewModel = buildNatalInterpretationViewModel(job)
+    const reading = viewModel?.calculationReading
+
+    expect(reading?.explanations.map((item) => item.title)).toEqual([
+      "Soleil en Taureau maison 10",
+      "Lune en Capricorne maison 6",
+      "Ascendant en Cancer maison 1",
+      "Axe maison : privé/public",
+      "Axe maison : contrôle / lâcher-prise",
+      "Axe maison : soi / relation",
+      "Emphase maison : Carrière",
+    ])
+    expect(reading?.explanations.map((item) => item.expressionPrimary)).toEqual([
+      "Maison 10",
+      "Maison 6",
+      "Maison 1",
+      null,
+      null,
+      null,
+      "Carrière",
+    ])
+    expect(reading?.summary?.highlights).toEqual([
+      "Soleil en Taureau maison 10",
+      "Lune en Capricorne maison 6",
+      "Ascendant en Cancer maison 1",
+      "Emphase maison : Carrière",
+    ])
+    expect(JSON.stringify(reading)).not.toContain("private_public")
+    expect(JSON.stringify(reading)).not.toContain("control_surrender")
+    expect(JSON.stringify(reading)).not.toContain("self_relationship")
+    expect(JSON.stringify(reading)).not.toContain("career")
   })
 
   it("garde les faits de calcul en details techniques sans creer de lecture pedagogique fallback", () => {

@@ -169,6 +169,29 @@ const PUBLIC_OBJECT_LABELS: Record<string, string> = {
   ic: "Fond du Ciel",
 }
 
+const HOUSE_AXIS_LABELS: Record<string, string> = {
+  private_public: "privé/public",
+  control_surrender: "contrôle / lâcher-prise",
+  self_relationship: "soi / relation",
+}
+
+const HOUSE_EMPHASIS_LABELS: Record<string, string> = {
+  career: "Carrière",
+  resources: "Ressources",
+  relationships: "Relations",
+  home: "Foyer",
+  identity: "Identité",
+  communication: "Communication",
+  transformation: "Transformation",
+  community: "Communauté",
+  philosophy: "Philosophie",
+  creativity: "Créativité",
+  unconscious: "Inconscient",
+  values: "Valeurs",
+  routines: "Routines",
+  lifestyle_hygiene: "Hygiène de vie",
+}
+
 const PILLAR_PRESENTATION: Record<"sun" | "moon" | "ascendant", { icon: string }> = {
   sun: { icon: "☉" },
   moon: { icon: "☽" },
@@ -227,6 +250,12 @@ function formatObject(value: unknown): string | null {
   if (!object) return null
   const code = normalizeCode(object)
   return PUBLIC_OBJECT_LABELS[code] ?? translatePlanet(code, "fr")
+}
+
+function formatHouseShort(value: unknown): string | null {
+  const text = asText(value)
+  const number = asNumber(value) ?? (text && Number.isFinite(Number(text)) ? Number(text) : null)
+  return number === null ? null : `Maison ${number}`
 }
 
 function joinDetails(values: Array<string | null>): string | null {
@@ -362,6 +391,66 @@ function inferAspectObjects(value: string | null): string[] {
     .slice(0, 2)
 }
 
+function explanationFactParts(factId: string): string[] {
+  return factId.split(":").map((part) => normalizeCode(part))
+}
+
+function normalizeHouseAxisLabel(code: string | null): string | null {
+  if (!code) return null
+  return HOUSE_AXIS_LABELS[code] ?? code.replace(/_/g, " ")
+}
+
+function normalizeHouseEmphasisLabel(code: string | null): string | null {
+  if (!code) return null
+  return HOUSE_EMPHASIS_LABELS[code] ?? code.replace(/_/g, " ")
+}
+
+function normalizeExpressionPrimary(value: unknown): string | null {
+  const text = asText(value)
+  if (!text) return null
+  const code = normalizeCode(text)
+  return HOUSE_EMPHASIS_LABELS[code] ?? text
+}
+
+function buildExplanationTitle(item: {
+  kindCode: string
+  title: string
+  searchableId: string
+  expressionPrimary: string | null
+}): string {
+  const parts = explanationFactParts(item.searchableId)
+
+  if (item.kindCode === "placement" && parts.length >= 5) {
+    const object = formatObject(parts[1])
+    const sign = formatSign(parts[2])
+    const house = formatHouseShort(parts[4])
+    if (object && sign && house) {
+      return `${object} en ${sign} ${house.toLowerCase()}`
+    }
+  }
+
+  if (item.kindCode === "angle" && parts.length >= 5) {
+    const object = formatObject(parts[1])
+    const sign = formatSign(parts[2])
+    const house = formatHouseShort(parts[4])
+    if (object && sign && house) {
+      return `${object} en ${sign} ${house.toLowerCase()}`
+    }
+  }
+
+  if (item.kindCode === "house_axis" && parts.length >= 2) {
+    const axisLabel = normalizeHouseAxisLabel(parts[1])
+    if (axisLabel) return `Axe maison : ${axisLabel}`
+  }
+
+  if (item.kindCode === "house_emphasis" && parts.length >= 3) {
+    const emphasisLabel = normalizeExpressionPrimary(item.expressionPrimary) ?? normalizeHouseEmphasisLabel(parts[2])
+    if (emphasisLabel) return `Emphase maison : ${emphasisLabel}`
+  }
+
+  return item.title
+}
+
 function normalizeExplanationStatus(value: unknown): NatalExplanationStatus {
   const text = asText(value)?.toLowerCase()
   if (text === "complete" || text === "partial" || text === "unavailable") return text
@@ -376,12 +465,20 @@ function normalizeExplanationItem(value: unknown): NatalExplanationItem | null {
   const title = asText(item.title)
   const explanation = asText(item.explanation)
   if (!factId || !kindCode || !title || !explanation) return null
+  const searchableId = normalizeCode(factId)
+  const normalizedKindCode = normalizeCode(kindCode)
+  const expressionPrimary = normalizeExpressionPrimary(item.expression_primary)
   return {
-    kindCode: normalizeCode(kindCode),
-    title,
+    kindCode: normalizedKindCode,
+    title: buildExplanationTitle({
+      kindCode: normalizedKindCode,
+      title,
+      searchableId,
+      expressionPrimary,
+    }),
     explanation,
-    expressionPrimary: asText(item.expression_primary),
-    searchableId: normalizeCode(factId),
+    expressionPrimary,
+    searchableId,
   }
 }
 
