@@ -29,6 +29,7 @@ function NatalCalculationFacts({ facts }: { facts: NatalCalculationFactsViewMode
   return (
     <section className="natal-reading-facts" aria-labelledby="natal-reading-facts-title">
       <div className="natal-reading-facts__header">
+        <span className="natal-section-eyebrow">{facts.sourceLabel}</span>
         <h2 id="natal-reading-facts-title">Base du calcul natal</h2>
       </div>
       <div className="natal-reading-facts__grid">
@@ -81,7 +82,9 @@ function NatalChapterCard({ chapter, itemKey }: { chapter: NatalReadingChapterVi
           <span>Repères utilisés</span>
           <ul>
             {chapter.astroBasis.map((basis, basisIndex) => (
-              <li key={`${itemKey}-basis-${basisIndex}`}>{basis}</li>
+              <li className="natal-chip natal-chip--basis natal-chip--compact" key={`${itemKey}-basis-${basisIndex}`}>
+                {basis}
+              </li>
             ))}
           </ul>
         </div>

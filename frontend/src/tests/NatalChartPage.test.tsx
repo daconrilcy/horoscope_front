@@ -273,7 +273,7 @@ describe("NatalChartPage", () => {
 
     expect(await screen.findByRole("heading", { name: "Lecture natale publique" })).toBeVisible()
     expect(screen.getByRole("heading", { name: "Base du calcul natal" })).toBeVisible()
-    expect(screen.queryByText("Données de calcul Astral")).not.toBeInTheDocument()
+    expect(screen.getByText("Données de calcul Astral")).toBeVisible()
     const renderedText = document.body.textContent ?? ""
     expect(renderedText.indexOf("Base du calcul natal")).toBeLessThan(
       renderedText.indexOf("Lecture natale publique"),
