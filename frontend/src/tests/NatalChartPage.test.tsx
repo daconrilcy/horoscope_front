@@ -108,6 +108,7 @@ describe("NatalChartPage", () => {
 
     expect(screen.getByRole("heading", { name: "Votre thème natal" })).toBeVisible()
     expect(screen.getByText(/Une synthèse structurée de vos marqueurs personnels/i)).toBeVisible()
+    expect(screen.getByText("Comment lire ton thème natal")).toBeVisible()
     expect(await screen.findByRole("button", { name: "Lancer le thème natal" })).toBeEnabled()
     expect(mockSubmitAstralJob).not.toHaveBeenCalled()
   })
@@ -280,6 +281,7 @@ describe("NatalChartPage", () => {
     expect(screen.getByText("Repères utilisés")).toBeVisible()
     expect(screen.getByText("Soleil en Cancer")).toBeVisible()
     expect(screen.getByText("Lune en Balance")).toBeVisible()
+    expect(screen.getByText("Comment lire ton thème natal")).toBeVisible()
     expect(screen.getByRole("alert")).toHaveTextContent(/Thème partiel : certaines données de naissance/i)
     expect(screen.queryByText(/completude partielle/i)).not.toBeInTheDocument()
     expect(screen.queryByLabelText("Resultat Astral")).not.toBeInTheDocument()

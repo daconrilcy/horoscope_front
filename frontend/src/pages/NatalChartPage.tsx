@@ -15,6 +15,8 @@ import {
 } from "../api/astral"
 import { NatalAstralReading } from "../features/natal-chart/NatalAstralReading"
 import { buildNatalInterpretationViewModel } from "../features/natal-chart/natalAstralReadingViewModel"
+import { NatalChartGuide } from "../components/NatalChartGuide"
+import { useAstrologyLabels } from "../i18n/astrology"
 import { useEntitlementsSnapshot } from "../hooks/useEntitlementSnapshot"
 import { hasUsableAccessToken, useAccessTokenSnapshot } from "../utils/authToken"
 import "./NatalChartPage.css"
@@ -50,6 +52,7 @@ function mergeAstralJobState(
 
 export function NatalChartPage() {
   const accessToken = useAccessTokenSnapshot()
+  const { lang } = useAstrologyLabels()
   const [searchParams, setSearchParams] = useSearchParams()
   const initialRunId = searchParams.get("runId")
   const hasValidSession = hasUsableAccessToken(accessToken)
@@ -178,6 +181,8 @@ export function NatalChartPage() {
           </button>
         )}
       </div>
+
+      <NatalChartGuide lang={lang} missingBirthTime={Boolean(natalReading?.isPartial)} />
     </PageLayout>
   )
 }

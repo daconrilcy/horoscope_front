@@ -601,6 +601,7 @@
 
 /* Natal Chart Guide Premium Styling */
 .natal-chart-guide {
+  margin-top: 24px;
   background: var(--premium-glass-surface-2);
   border: 1px solid var(--premium-glass-border-soft);
   border-radius: var(--premium-radius-card);
