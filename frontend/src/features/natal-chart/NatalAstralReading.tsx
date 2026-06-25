@@ -1,5 +1,7 @@
 // Composant public d'affichage de l'interprétation natale Astral normalisée.
 import { Link } from "react-router-dom"
+import { Home, Sparkles, Sun, Triangle } from "lucide-react"
+import type { LucideIcon } from "lucide-react"
 
 import type {
   NatalCalculationFactsViewModel,
@@ -9,20 +11,55 @@ import type {
 
 type NatalAstralReadingProps = {
   reading: NatalInterpretationViewModel
+  showSummary?: boolean
 }
 
 const PUBLIC_READING_ERROR_MESSAGE =
   "La lecture Astral n'a pas pu être générée pour le moment. Veuillez réessayer plus tard."
 
-const GROUP_MARKERS: Record<string, string> = {
-  "Repères principaux": "☉",
-  Maisons: "⌂",
-  "Planètes notables": "✦",
-  "Aspects notables": "△",
+const GROUP_MARKERS: Record<string, LucideIcon> = {
+  "Repères principaux": Sun,
+  Maisons: Home,
+  "Planètes notables": Sparkles,
+  "Aspects notables": Triangle,
 }
 
-function markerForGroup(title: string): string {
-  return GROUP_MARKERS[title] ?? "✧"
+function markerForGroup(title: string): LucideIcon {
+  return GROUP_MARKERS[title] ?? Sparkles
+}
+
+function groupClassName(title: string): string {
+  const modifier = title === "Repères principaux" ? " natal-reading-facts__group--primary" : ""
+  return `natal-reading-facts__group${modifier}`
+}
+
+function chapterExcerpt(chapter: NatalReadingChapterViewModel): string | null {
+  const firstParagraph = chapter.paragraphs[0]?.trim()
+  if (!firstParagraph) return null
+
+  const firstSentence = firstParagraph.match(/^(.+?[.!?])(?:\s|$)/)?.[1]
+  if (firstSentence && firstSentence.length <= 190) return firstSentence
+  if (firstParagraph.length <= 190) return firstParagraph
+  return `${firstParagraph.slice(0, 187).trim()}...`
+}
+
+function chapterBodyParagraphs(chapter: NatalReadingChapterViewModel, excerpt: string | null): string[] {
+  if (!excerpt) return chapter.paragraphs
+
+  const [firstParagraph, ...remainingParagraphs] = chapter.paragraphs
+  const normalizedFirstParagraph = firstParagraph?.trim()
+  if (!normalizedFirstParagraph) return remainingParagraphs
+
+  if (normalizedFirstParagraph === excerpt) {
+    return remainingParagraphs.length > 0 ? remainingParagraphs : chapter.paragraphs
+  }
+
+  if (normalizedFirstParagraph.startsWith(excerpt)) {
+    const remainder = normalizedFirstParagraph.slice(excerpt.length).trim()
+    return remainder ? [remainder, ...remainingParagraphs] : remainingParagraphs
+  }
+
+  return chapter.paragraphs
 }
 
 function NatalCalculationFacts({ facts }: { facts: NatalCalculationFactsViewModel }) {
@@ -33,46 +70,56 @@ function NatalCalculationFacts({ facts }: { facts: NatalCalculationFactsViewMode
         <h2 id="natal-reading-facts-title">Base du calcul natal</h2>
       </div>
       <div className="natal-reading-facts__grid">
-        {facts.groups.map((group) => (
-          <section className="natal-reading-facts__group" key={group.title} aria-label={group.title}>
-            <div className="natal-reading-facts__group-head">
-              <span className="natal-reading-facts__marker" aria-hidden="true">
-                {markerForGroup(group.title)}
-              </span>
-              <h3>{group.title}</h3>
-            </div>
-            <dl className="natal-reading-facts__list">
-              {group.items.map((item) => (
-                <div className="natal-reading-facts__item" key={`${group.title}-${item.label}-${item.value}`}>
-                  <dt>{item.label}</dt>
-                  <dd>
-                    <span className="natal-chip natal-chip--value">
-                      <strong>{item.value}</strong>
-                    </span>
-                    {item.detail ? <span className="natal-chip natal-chip--detail">{item.detail}</span> : null}
-                  </dd>
-                </div>
-              ))}
-            </dl>
-          </section>
-        ))}
+        {facts.groups.map((group) => {
+          const Marker = markerForGroup(group.title)
+          return (
+            <section className={groupClassName(group.title)} key={group.title} aria-label={group.title}>
+              <div className="natal-reading-facts__group-head">
+                <span className="natal-reading-facts__marker" aria-hidden="true">
+                  <Marker size={16} strokeWidth={1.8} />
+                </span>
+                <h3>{group.title}</h3>
+              </div>
+              <dl className="natal-reading-facts__list">
+                {group.items.map((item) => (
+                  <div className="natal-reading-facts__item" key={`${group.title}-${item.label}-${item.value}`}>
+                    <dt>{item.label}</dt>
+                    <dd>
+                      <span className="natal-badge natal-badge--astro-data">
+                        <strong>{item.value}</strong>
+                      </span>
+                      {item.detail ? <span className="natal-badge natal-badge--fact-detail">{item.detail}</span> : null}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            </section>
+          )
+        })}
       </div>
     </section>
   )
 }
 
 function NatalChapterCard({ chapter, itemKey }: { chapter: NatalReadingChapterViewModel; itemKey: string }) {
+  const excerpt = chapterExcerpt(chapter)
+  const bodyParagraphs = chapterBodyParagraphs(chapter, excerpt)
+
   return (
     <section className="natal-reading__chapter">
       <div className="natal-reading__chapter-head">
-        <h3>{chapter.title}</h3>
+        <div className="natal-reading__chapter-title">
+          <span className="natal-section-eyebrow">Lecture guidée</span>
+          <h3>{chapter.title}</h3>
+        </div>
         {chapter.confidenceLabel ? (
-          <span className="natal-reading__confidence">{chapter.confidenceLabel}</span>
+          <span className="natal-badge natal-badge--confidence">{chapter.confidenceLabel}</span>
         ) : null}
       </div>
-      {chapter.paragraphs.length > 0 ? (
+      {excerpt ? <p className="natal-reading__chapter-excerpt">{excerpt}</p> : null}
+      {bodyParagraphs.length > 0 ? (
         <div className="natal-reading__chapter-body">
-          {chapter.paragraphs.map((paragraph, paragraphIndex) => (
+          {bodyParagraphs.map((paragraph, paragraphIndex) => (
             <p key={`${itemKey}-paragraph-${paragraphIndex}`}>{paragraph}</p>
           ))}
         </div>
@@ -82,7 +129,7 @@ function NatalChapterCard({ chapter, itemKey }: { chapter: NatalReadingChapterVi
           <span>Repères utilisés</span>
           <ul>
             {chapter.astroBasis.map((basis, basisIndex) => (
-              <li className="natal-chip natal-chip--basis natal-chip--compact" key={`${itemKey}-basis-${basisIndex}`}>
+              <li className="natal-badge natal-badge--basis" key={`${itemKey}-basis-${basisIndex}`}>
                 {basis}
               </li>
             ))}
@@ -97,7 +144,7 @@ function NatalChapterCard({ chapter, itemKey }: { chapter: NatalReadingChapterVi
 }
 
 /** Affiche la lecture Astral sans exposer les champs techniques du moteur externe. */
-export function NatalAstralReading({ reading }: NatalAstralReadingProps) {
+export function NatalAstralReading({ reading, showSummary = true }: NatalAstralReadingProps) {
   if (reading.status === "failed" || reading.status === "safety_rejected") {
     return (
       <article className="natal-reading natal-reading--error" aria-label="Erreur de lecture Astral">
@@ -123,9 +170,9 @@ export function NatalAstralReading({ reading }: NatalAstralReadingProps) {
         <span className="natal-section-eyebrow">Interprétation de votre thème natal</span>
         <div className="natal-reading__summary">
           <h2>{reading.title}</h2>
-          <span className="natal-reading__badge">{reading.label}</span>
+          <span className="natal-badge natal-badge--report-status">{reading.label}</span>
         </div>
-        {reading.shortText ? <p>{reading.shortText}</p> : null}
+        {showSummary && reading.shortText ? <p>{reading.shortText}</p> : null}
       </header>
 
       {reading.isPartial ? (

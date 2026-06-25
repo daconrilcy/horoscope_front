@@ -230,7 +230,7 @@ describe("NatalChartPage", () => {
                 {
                   code: "identity",
                   title: "Identite",
-                  body: "Chapitre narratif principal conserve.",
+                  body: "Chapitre narratif principal conserve. Suite analytique preservee.",
                   confidence: "medium",
                   astro_basis: ["Soleil en Cancer", "Lune en Balance"],
                 },
@@ -269,7 +269,7 @@ describe("NatalChartPage", () => {
       isPending: false,
     })
 
-    renderNatalChartPage()
+    const { container } = renderNatalChartPage()
 
     expect(await screen.findByRole("heading", { name: "Lecture natale publique" })).toBeVisible()
     expect(screen.getByRole("heading", { name: "Base du calcul natal" })).toBeVisible()
@@ -281,17 +281,24 @@ describe("NatalChartPage", () => {
     expect(screen.getByRole("region", { name: "Repères principaux" })).toHaveTextContent("Soleil")
     expect(screen.getByRole("region", { name: "Repères principaux" })).toHaveTextContent("Ascendant")
     expect(screen.getByRole("region", { name: "Repères principaux" })).toHaveTextContent("Descendant")
-    expect(screen.getByLabelText("Marqueurs clés")).toHaveTextContent("Soleil")
-    expect(screen.getByLabelText("Marqueurs clés")).toHaveTextContent("Lune")
-    expect(screen.getByLabelText("Marqueurs clés")).toHaveTextContent("Ascendant")
+    const portrait = screen.getByLabelText("Portrait astral")
+    expect(portrait).toHaveClass("natal-page-portrait")
+    expect(screen.getByLabelText("Marqueurs clés du portrait astral")).toHaveTextContent("Soleil")
+    expect(screen.getByLabelText("Marqueurs clés du portrait astral")).toHaveTextContent("Lune")
+    expect(screen.getByLabelText("Marqueurs clés du portrait astral")).toHaveTextContent("Ascendant")
+    expect(container.querySelector(".natal-reading-facts__group--primary")).toHaveTextContent("Repères principaux")
     expect(screen.getByRole("region", { name: "Maisons" })).toHaveTextContent("Maison II")
     expect(screen.getByRole("region", { name: "Planètes notables" })).toHaveTextContent("Mercure")
     expect(screen.getByRole("region", { name: "Aspects notables" })).toHaveTextContent("Jupiter - Uranus")
-    expect(screen.getByText("Une synthese claire du theme.")).toBeVisible()
-    expect(screen.getByText("basic")).toBeVisible()
+    expect(screen.getAllByText("Une synthese claire du theme.")).toHaveLength(1)
+    expect(container.querySelector(".natal-badge--report-status")).toHaveTextContent("basic")
     expect(screen.getByRole("heading", { name: "Identite" })).toBeVisible()
-    expect(screen.getByText(/Chapitre narratif principal conserve/i)).toBeVisible()
-    expect(screen.getByText("Confiance moyenne")).toBeVisible()
+    expect(screen.getByText("Chapitre narratif principal conserve.")).toHaveClass("natal-reading__chapter-excerpt")
+    expect(container.querySelector(".natal-reading__chapter-excerpt")).toHaveTextContent(
+      /Chapitre narratif principal conserve/i,
+    )
+    expect(screen.getByText("Suite analytique preservee.")).toBeVisible()
+    expect(screen.getByText("Confiance moyenne")).toHaveClass("natal-badge--confidence")
     expect(screen.getByText("Repères utilisés")).toBeVisible()
     expect(screen.getByText("Soleil en Cancer")).toBeVisible()
     expect(screen.getByText("Lune en Balance")).toBeVisible()

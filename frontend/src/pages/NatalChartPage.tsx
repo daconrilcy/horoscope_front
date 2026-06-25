@@ -120,14 +120,24 @@ export function NatalChartPage() {
         <h1 className="natal-page-header__title">Votre thème natal</h1>
         <p className="natal-page-header__context">{NATAL_PAGE_CONTEXT}</p>
         {natalReading?.highlightFacts.length ? (
-          <div className="natal-page-header__highlights" aria-label="Marqueurs clés">
-            {natalReading.highlightFacts.map((fact) => (
-              <span className="natal-chip natal-chip--header" key={`${fact.label}-${fact.value}-${fact.detail ?? ""}`}>
-                <span className="natal-chip__label">{fact.label}</span>
-                <strong>{fact.value}</strong>
-                {fact.detail ? <span className="natal-chip__detail">{fact.detail}</span> : null}
-              </span>
-            ))}
+          <div className="natal-page-portrait" aria-label="Portrait astral">
+            <div className="natal-page-portrait__copy">
+              <span className="natal-section-eyebrow">Portrait astral</span>
+              <p>{natalReading.shortText ?? NATAL_PAGE_CONTEXT}</p>
+            </div>
+            <div className="natal-page-portrait__facts" aria-label="Marqueurs clés du portrait astral">
+              {natalReading.highlightFacts.map((fact) => (
+                <span
+                  className="natal-page-portrait__fact natal-badge natal-badge--astro-data"
+                  key={`${fact.label}-${fact.value}-${fact.detail ?? ""}`}
+                >
+                  <span className="natal-page-portrait__label">{fact.label}</span>
+                  <strong>{fact.value}</strong>
+                  {fact.detail ? <span className="natal-page-portrait__detail">{fact.detail}</span> : null}
+                </span>
+              ))}
+            </div>
+            <span className="natal-badge natal-badge--report-status">{natalReading.label}</span>
           </div>
         ) : null}
       </header>
@@ -150,7 +160,7 @@ export function NatalChartPage() {
         ) : terminalJob?.status === "completed" ? (
           <>
             {natalReading ? (
-              <NatalAstralReading reading={natalReading} />
+              <NatalAstralReading reading={natalReading} showSummary={natalReading.highlightFacts.length === 0} />
             ) : (
               <p className="natal-card__lead">La lecture est indisponible pour ce job Astral.</p>
             )}
