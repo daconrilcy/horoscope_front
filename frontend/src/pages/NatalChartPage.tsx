@@ -1,4 +1,4 @@
-// Page theme natal: lancement unique du job Astral et reprise manuelle en cas d'echec.
+// Page thème natal: lancement unique du job Astral et reprise manuelle en cas d'échec.
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { Link, useSearchParams } from "react-router-dom"
 import { RefreshCw } from "lucide-react"
@@ -21,7 +21,9 @@ import "./NatalChartPage.css"
 
 const ASTRAL_TERMINAL_ERROR_STATUSES = new Set(["failed", "safety_rejected", "cancelled", "expired"])
 const PUBLIC_ASTRAL_JOB_ERROR_MESSAGE =
-  "Le service Astral n'a pas pu produire votre theme natal pour le moment. Veuillez reessayer plus tard."
+  "Le service Astral n'a pas pu produire votre thème natal pour le moment. Veuillez réessayer plus tard."
+const NATAL_PAGE_CONTEXT =
+  "Une synthèse structurée de vos marqueurs personnels, de leurs appuis et des tensions majeures de votre ciel de naissance."
 
 /** Derive le plan Astral a partir du code de variante expose par l'entitlement. */
 function resolvePlan(variantCode?: string | null): AstralPlan {
@@ -111,16 +113,28 @@ export function NatalChartPage() {
       <div className="natal-page-container__bg-halo" />
       <div className="natal-page-container__noise" />
       <header className="natal-page-header">
-        <span className="natal-page-header__meta">Theme natal Astral</span>
-        <h1 className="natal-page-header__title">Votre theme natal</h1>
+        <span className="natal-page-header__meta">Thème natal Astral</span>
+        <h1 className="natal-page-header__title">Votre thème natal</h1>
+        <p className="natal-page-header__context">{NATAL_PAGE_CONTEXT}</p>
+        {natalReading?.highlightFacts.length ? (
+          <div className="natal-page-header__highlights" aria-label="Marqueurs clés">
+            {natalReading.highlightFacts.map((fact) => (
+              <span className="natal-chip natal-chip--header" key={`${fact.label}-${fact.value}-${fact.detail ?? ""}`}>
+                <span className="natal-chip__label">{fact.label}</span>
+                <strong>{fact.value}</strong>
+                {fact.detail ? <span className="natal-chip__detail">{fact.detail}</span> : null}
+              </span>
+            ))}
+          </div>
+        ) : null}
       </header>
 
       <div className="natal-card">
         {submitJob.isError || jobStatus.isError ? (
           <div className="chat-error natal-card__error" role="alert">
-            <p>Le calcul Astral n'a pas pu etre lance ou recupere.</p>
+            <p>Le calcul Astral n'a pas pu être lancé ou récupéré.</p>
             <Link to="/profile" className="btn-link natal-card__secondary-link">
-              Verifier mon profil de naissance
+              Vérifier mon profil de naissance
             </Link>
           </div>
         ) : isWorking ? (
@@ -147,10 +161,10 @@ export function NatalChartPage() {
               onClick={requestNatalJob}
               disabled={!hasValidSession || submitJob.isPending}
             >
-              Relancer le theme natal
+              Relancer le thème natal
             </button>
             <Link to="/profile" className="btn-link natal-card__secondary-link">
-              Verifier mon profil de naissance
+              Vérifier mon profil de naissance
             </Link>
           </div>
         ) : (
@@ -160,7 +174,7 @@ export function NatalChartPage() {
             onClick={requestNatalJob}
             disabled={!hasValidSession}
           >
-            Lancer le theme natal
+            Lancer le thème natal
           </button>
         )}
       </div>

@@ -1,4 +1,4 @@
-// Composant public d'affichage de l'interpretation natale Astral normalisee.
+// Composant public d'affichage de l'interprétation natale Astral normalisée.
 import { Link } from "react-router-dom"
 
 import type {
@@ -11,7 +11,18 @@ type NatalAstralReadingProps = {
 }
 
 const PUBLIC_READING_ERROR_MESSAGE =
-  "La lecture Astral n'a pas pu etre generee pour le moment. Veuillez reessayer plus tard."
+  "La lecture Astral n'a pas pu être générée pour le moment. Veuillez réessayer plus tard."
+
+const GROUP_MARKERS: Record<string, string> = {
+  "Repères principaux": "☉",
+  Maisons: "⌂",
+  "Planètes notables": "✦",
+  "Aspects notables": "△",
+}
+
+function markerForGroup(title: string): string {
+  return GROUP_MARKERS[title] ?? "✧"
+}
 
 function NatalCalculationFacts({ facts }: { facts: NatalCalculationFactsViewModel }) {
   return (
@@ -22,14 +33,21 @@ function NatalCalculationFacts({ facts }: { facts: NatalCalculationFactsViewMode
       <div className="natal-reading-facts__grid">
         {facts.groups.map((group) => (
           <section className="natal-reading-facts__group" key={group.title} aria-label={group.title}>
-            <h3>{group.title}</h3>
+            <div className="natal-reading-facts__group-head">
+              <span className="natal-reading-facts__marker" aria-hidden="true">
+                {markerForGroup(group.title)}
+              </span>
+              <h3>{group.title}</h3>
+            </div>
             <dl className="natal-reading-facts__list">
               {group.items.map((item) => (
                 <div className="natal-reading-facts__item" key={`${group.title}-${item.label}-${item.value}`}>
                   <dt>{item.label}</dt>
                   <dd>
-                    <strong>{item.value}</strong>
-                    {item.detail ? <span>{item.detail}</span> : null}
+                    <span className="natal-chip natal-chip--value">
+                      <strong>{item.value}</strong>
+                    </span>
+                    {item.detail ? <span className="natal-chip natal-chip--detail">{item.detail}</span> : null}
                   </dd>
                 </div>
               ))}
@@ -53,7 +71,7 @@ export function NatalAstralReading({ reading }: NatalAstralReadingProps) {
         <div className="chat-error natal-card__error" role="alert">
           <p>{PUBLIC_READING_ERROR_MESSAGE}</p>
           <Link to="/profile" className="btn-link natal-card__secondary-link">
-            Verifier mon profil de naissance
+            Vérifier mon profil de naissance
           </Link>
         </div>
       </article>
@@ -75,8 +93,8 @@ export function NatalAstralReading({ reading }: NatalAstralReadingProps) {
 
       {reading.isPartial ? (
         <p className="natal-reading__precision-note natal-reading__partial-alert" role="alert">
-          Theme partiel : certaines donnees de naissance manquent ou ne sont pas assez fiables. L'ascendant, les
-          maisons et certains angles peuvent etre absents ou limites.
+          Thème partiel : certaines données de naissance manquent ou ne sont pas assez fiables. L'ascendant, les
+          maisons et certains angles peuvent être absents ou limités.
         </p>
       ) : null}
 
@@ -86,7 +104,9 @@ export function NatalAstralReading({ reading }: NatalAstralReadingProps) {
             <section className="natal-reading__chapter" key={`${chapter.code ?? chapter.title}-${index}`}>
               <div className="natal-reading__chapter-head">
                 <h3>{chapter.title}</h3>
-                {chapter.confidenceLabel ? <span>{chapter.confidenceLabel}</span> : null}
+                {chapter.confidenceLabel ? (
+                  <span className="natal-reading__confidence">{chapter.confidenceLabel}</span>
+                ) : null}
               </div>
               {chapter.paragraphs.length > 0 ? (
                 <div className="natal-reading__chapter-body">
@@ -96,8 +116,8 @@ export function NatalAstralReading({ reading }: NatalAstralReadingProps) {
                 </div>
               ) : null}
               {chapter.astroBasis.length > 0 ? (
-                <div className="natal-reading__basis" aria-label={`Reperes utilises pour ${chapter.title}`}>
-                  <span>Reperes utilises</span>
+                <div className="natal-reading__basis" aria-label={`Repères utilisés pour ${chapter.title}`}>
+                  <span>Repères utilisés</span>
                   <ul>
                     {chapter.astroBasis.map((basis, basisIndex) => (
                       <li key={`${chapter.code ?? chapter.title}-basis-${basisIndex}`}>{basis}</li>

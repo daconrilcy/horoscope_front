@@ -33,6 +33,8 @@ export type NatalCalculationFactsViewModel = {
   sourceLabel: string
 }
 
+export type NatalHighlightFactViewModel = NatalCalculationFactItemViewModel
+
 export type NatalInterpretationViewModel = {
   status: NatalReadingStatus
   title: string
@@ -44,6 +46,7 @@ export type NatalInterpretationViewModel = {
   isPartial: boolean
   chapters: NatalReadingChapterViewModel[]
   calculationFacts: NatalCalculationFactsViewModel | null
+  highlightFacts: NatalHighlightFactViewModel[]
   disclaimer: string | null
   error: {
     code: string | null
@@ -72,6 +75,7 @@ const NOTABLE_PLACEMENT_ORDER = [
 ] as const
 const MAX_NOTABLE_PLACEMENTS = 6
 const MAX_MAJOR_ASPECTS = 5
+const HIGHLIGHT_FACT_LABELS = ["Soleil", "Lune", "Ascendant"] as const
 const PUBLIC_OBJECT_LABELS: Record<string, string> = {
   ascendant: "Ascendant",
   descendant: "Descendant",
@@ -189,9 +193,9 @@ function labelForReading(tier: NatalReadingTier): string {
 
 function confidenceLabel(value: unknown): string | null {
   const text = asText(value)?.toLowerCase()
-  if (text === "high") return "Confiance elevee"
+  if (text === "high") return "Confiance élevée"
   if (text === "medium") return "Confiance moyenne"
-  if (text === "low") return "Confiance limitee"
+  if (text === "low") return "Confiance limitée"
   return asText(value)
 }
 
@@ -502,6 +506,31 @@ function buildCalculationFacts(result: Record<string, unknown>): NatalCalculatio
   return groups.length > 0 ? { groups, sourceLabel: "Données de calcul Astral" } : null
 }
 
+/** Sélectionne les marqueurs affichés en en-tête sans recalculer l'astrologie côté React. */
+function buildHighlightFacts(
+  calculationFacts: NatalCalculationFactsViewModel | null,
+): NatalHighlightFactViewModel[] {
+  if (!calculationFacts) return []
+
+  const mainGroup =
+    calculationFacts.groups.find((group) => group.title === "Repères principaux") ??
+    calculationFacts.groups[0]
+  const allItems = calculationFacts.groups.flatMap((group) => group.items)
+  const selected = new Map<string, NatalCalculationFactItemViewModel>()
+
+  for (const label of HIGHLIGHT_FACT_LABELS) {
+    const item = mainGroup?.items.find((candidate) => candidate.label === label)
+    if (item) selected.set(item.label, item)
+  }
+
+  for (const item of allItems) {
+    if (selected.size >= 3) break
+    if (!selected.has(item.label)) selected.set(item.label, item)
+  }
+
+  return Array.from(selected.values()).slice(0, 3)
+}
+
 function emptyViewModel(
   metadata: ReadingMetadata,
   message: string,
@@ -519,6 +548,7 @@ function emptyViewModel(
     isPartial,
     chapters: [],
     calculationFacts,
+    highlightFacts: buildHighlightFacts(calculationFacts),
     disclaimer: null,
     error: null,
   }
@@ -549,6 +579,7 @@ export function buildNatalInterpretationViewModel(
         isPartial,
         chapters: [],
         calculationFacts,
+        highlightFacts: buildHighlightFacts(calculationFacts),
         disclaimer: null,
         error: null,
       }
@@ -565,7 +596,7 @@ export function buildNatalInterpretationViewModel(
     const isPartial = metadata.variant === "simplified" || metadata.completeness === "partial"
     return {
       status: responseStatus,
-      title: responseStatus === "safety_rejected" ? "Lecture non generee" : "Lecture indisponible",
+      title: responseStatus === "safety_rejected" ? "Lecture non générée" : "Lecture indisponible",
       shortText: null,
       tier: metadata.tier,
       variant: metadata.variant,
@@ -574,6 +605,7 @@ export function buildNatalInterpretationViewModel(
       isPartial,
       chapters: [],
       calculationFacts,
+      highlightFacts: buildHighlightFacts(calculationFacts),
       disclaimer: null,
       error: resolveError(readingResponse),
     }
@@ -604,6 +636,7 @@ export function buildNatalInterpretationViewModel(
     isPartial,
     chapters,
     calculationFacts,
+    highlightFacts: buildHighlightFacts(calculationFacts),
     disclaimer: asText(legal?.disclaimer),
     error: null,
   }

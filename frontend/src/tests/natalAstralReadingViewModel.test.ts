@@ -45,7 +45,7 @@ describe("buildNatalInterpretationViewModel", () => {
     expect(viewModel?.status).toBe("success")
     expect(viewModel?.label).toBe("basic")
     expect(viewModel?.chapters[0]?.paragraphs).toEqual(["Premier paragraphe.", "Second paragraphe."])
-    expect(viewModel?.chapters[0]?.confidenceLabel).toBe("Confiance elevee")
+    expect(viewModel?.chapters[0]?.confidenceLabel).toBe("Confiance élevée")
     expect(viewModel?.chapters[0]?.astroBasis).toEqual(["Soleil en Lion", "Lune en Balance (appui)"])
     expect(viewModel?.disclaimer).toBe("Lecture symbolique.")
     expect(JSON.stringify(viewModel)).not.toContain("signal:moon:balance")
@@ -131,6 +131,11 @@ describe("buildNatalInterpretationViewModel", () => {
       { label: "Ascendant", value: "Scorpion", detail: "Maison I - Identité" },
       { label: "Descendant", value: "Taureau", detail: "Maison VII - Relations" },
     ])
+    expect(viewModel?.highlightFacts).toEqual([
+      { label: "Soleil", value: "Capricorne", detail: "Maison II - Valeurs - 281.45°" },
+      { label: "Lune", value: "Poissons", detail: "Maison IV - Foyer - 341.76°" },
+      { label: "Ascendant", value: "Scorpion", detail: "Maison I - Identité" },
+    ])
   })
 
   it("lit les faits natals depuis calculation.llm_payload quand le calcul Astral est enveloppe", () => {
@@ -207,6 +212,7 @@ describe("buildNatalInterpretationViewModel", () => {
       value: "Capricorne",
       detail: "Maison III - Communication",
     })
+    expect(viewModel?.highlightFacts.map((fact) => fact.label)).toEqual(["Soleil", "Lune", "Ascendant"])
   })
 
   it("marque une lecture simplifiee sans heure comme partielle", () => {

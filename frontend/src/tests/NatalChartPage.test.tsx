@@ -106,7 +106,9 @@ describe("NatalChartPage", () => {
   it("ne soumet pas automatiquement un job Astral au montage", async () => {
     renderNatalChartPage()
 
-    expect(await screen.findByRole("button", { name: "Lancer le theme natal" })).toBeEnabled()
+    expect(screen.getByRole("heading", { name: "Votre thème natal" })).toBeVisible()
+    expect(screen.getByText(/Une synthèse structurée de vos marqueurs personnels/i)).toBeVisible()
+    expect(await screen.findByRole("button", { name: "Lancer le thème natal" })).toBeEnabled()
     expect(mockSubmitAstralJob).not.toHaveBeenCalled()
   })
 
@@ -142,7 +144,7 @@ describe("NatalChartPage", () => {
 
     renderNatalChartPage()
 
-    await user.click(await screen.findByRole("button", { name: "Lancer le theme natal" }))
+    await user.click(await screen.findByRole("button", { name: "Lancer le thème natal" }))
 
     await waitFor(() => {
       expect(mockSubmitAstralJob).toHaveBeenCalledWith(
@@ -264,6 +266,9 @@ describe("NatalChartPage", () => {
     expect(screen.getByRole("region", { name: "Repères principaux" })).toHaveTextContent("Soleil")
     expect(screen.getByRole("region", { name: "Repères principaux" })).toHaveTextContent("Ascendant")
     expect(screen.getByRole("region", { name: "Repères principaux" })).toHaveTextContent("Descendant")
+    expect(screen.getByLabelText("Marqueurs clés")).toHaveTextContent("Soleil")
+    expect(screen.getByLabelText("Marqueurs clés")).toHaveTextContent("Lune")
+    expect(screen.getByLabelText("Marqueurs clés")).toHaveTextContent("Ascendant")
     expect(screen.getByRole("region", { name: "Maisons" })).toHaveTextContent("Maison II")
     expect(screen.getByRole("region", { name: "Planètes notables" })).toHaveTextContent("Mercure")
     expect(screen.getByRole("region", { name: "Aspects notables" })).toHaveTextContent("Jupiter - Uranus")
@@ -272,9 +277,10 @@ describe("NatalChartPage", () => {
     expect(screen.getByRole("heading", { name: "Identite" })).toBeVisible()
     expect(screen.getByText(/dynamique personnelle stable/i)).toBeVisible()
     expect(screen.getByText("Confiance moyenne")).toBeVisible()
+    expect(screen.getByText("Repères utilisés")).toBeVisible()
     expect(screen.getByText("Soleil en Cancer")).toBeVisible()
     expect(screen.getByText("Lune en Balance")).toBeVisible()
-    expect(screen.getByRole("alert")).toHaveTextContent(/Theme partiel : certaines donnees de naissance/i)
+    expect(screen.getByRole("alert")).toHaveTextContent(/Thème partiel : certaines données de naissance/i)
     expect(screen.queryByText(/completude partielle/i)).not.toBeInTheDocument()
     expect(screen.queryByLabelText("Resultat Astral")).not.toBeInTheDocument()
   })
@@ -338,11 +344,11 @@ describe("NatalChartPage", () => {
     renderNatalChartPage()
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
-      "Le service Astral n'a pas pu produire votre theme natal",
+      "Le service Astral n'a pas pu produire votre thème natal",
     )
     expect(screen.queryByText(/safety_rejected/i)).not.toBeInTheDocument()
-    expect(screen.queryByRole("button", { name: "Lancer le theme natal" })).not.toBeInTheDocument()
-    expect(screen.getByRole("button", { name: "Relancer le theme natal" })).toBeEnabled()
+    expect(screen.queryByRole("button", { name: "Lancer le thème natal" })).not.toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Relancer le thème natal" })).toBeEnabled()
   })
 
   it("permet de relancer un theme natal depuis un ancien run failed", async () => {
@@ -365,7 +371,7 @@ describe("NatalChartPage", () => {
 
     renderNatalChartPage(["/natal?runId=old-failed-run"])
 
-    await user.click(await screen.findByRole("button", { name: "Relancer le theme natal" }))
+    await user.click(await screen.findByRole("button", { name: "Relancer le thème natal" }))
 
     await waitFor(() => {
       expect(mockSubmitAstralJob).toHaveBeenCalledWith(
@@ -405,7 +411,7 @@ describe("NatalChartPage", () => {
     renderNatalChartPage()
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
-      "La lecture Astral n'a pas pu etre generee",
+      "La lecture Astral n'a pas pu être générée",
     )
     expect(screen.queryByText("Resultat Astral pret.")).not.toBeInTheDocument()
     expect(screen.queryByText("Code: SAFETY_REJECTED")).not.toBeInTheDocument()
