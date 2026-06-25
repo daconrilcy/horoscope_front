@@ -2,6 +2,8 @@
 import { Link } from "react-router-dom"
 
 import type {
+  NatalCalculationFactGroupViewModel,
+  NatalCalculationFactItemViewModel,
   NatalCalculationReadingViewModel,
   NatalReadingAspectViewModel,
   NatalReadingAxisViewModel,
@@ -19,6 +21,19 @@ type NatalAstralReadingProps = {
 
 const PUBLIC_READING_ERROR_MESSAGE =
   "La lecture Astral n'a pas pu etre generee pour le moment. Veuillez reessayer plus tard."
+const PRIMARY_TECHNICAL_FACT_LABELS = new Set(["Soleil", "Lune", "Ascendant"])
+const AXIS_TECHNICAL_FACT_LABELS = new Set(["Descendant", "Milieu du Ciel", "Fond du Ciel"])
+const TECHNICAL_FACT_SYMBOLS: Record<string, string> = {
+  Soleil: "☉",
+  Lune: "☽",
+  Ascendant: "ASC",
+}
+const TECHNICAL_GROUP_TITLES = {
+  main: "Repères principaux",
+  houses: "Maisons",
+  planets: "Planètes notables",
+  aspects: "Aspects notables",
+} as const
 
 function NatalSummary({ summary }: { summary: NatalReadingSummaryViewModel }) {
   return (
@@ -181,28 +196,190 @@ function NatalAspectDynamics({ aspects }: { aspects: NatalReadingAspectViewModel
   )
 }
 
+function findTechnicalGroup(
+  groups: NatalCalculationFactGroupViewModel[],
+  title: string,
+): NatalCalculationFactGroupViewModel | null {
+  return groups.find((group) => group.title === title) ?? null
+}
+
+function extractHouseRank(label: string): string {
+  return label.match(/Maison\s+([IVX]+)/i)?.[1] ?? label
+}
+
+function classifyAspectTone(detail: string | null): "flow" | "tension" | "intensity" | "neutral" {
+  const normalizedDetail = detail?.toLowerCase() ?? ""
+  if (normalizedDetail.includes("fluid")) return "flow"
+  if (normalizedDetail.includes("tension")) return "tension"
+  if (normalizedDetail.includes("intens")) return "intensity"
+  return "neutral"
+}
+
+function labelAspectTone(detail: string | null): string {
+  const tone = classifyAspectTone(detail)
+  if (tone === "flow") return "Ressource"
+  if (tone === "tension") return "Tension"
+  if (tone === "intensity") return "Intensité"
+  return "Relation"
+}
+
 function NatalRawCalculationDetails({ reading }: { reading: NatalCalculationReadingViewModel }) {
   if (reading.technicalGroups.length === 0) return null
+  const mainGroup = findTechnicalGroup(reading.technicalGroups, TECHNICAL_GROUP_TITLES.main)
+  const houseGroup = findTechnicalGroup(reading.technicalGroups, TECHNICAL_GROUP_TITLES.houses)
+  const planetGroup = findTechnicalGroup(reading.technicalGroups, TECHNICAL_GROUP_TITLES.planets)
+  const aspectGroup = findTechnicalGroup(reading.technicalGroups, TECHNICAL_GROUP_TITLES.aspects)
+  const primaryFacts = mainGroup?.items.filter((item) => PRIMARY_TECHNICAL_FACT_LABELS.has(item.label)) ?? []
+  const axisFacts = mainGroup?.items.filter((item) => AXIS_TECHNICAL_FACT_LABELS.has(item.label)) ?? []
+  const complementaryMainFacts =
+    mainGroup?.items.filter(
+      (item) => !PRIMARY_TECHNICAL_FACT_LABELS.has(item.label) && !AXIS_TECHNICAL_FACT_LABELS.has(item.label),
+    ) ?? []
+
   return (
-    <details className="natal-raw-data">
-      <summary>Details techniques du calcul</summary>
-      <div className="natal-reading-facts__grid">
-        {reading.technicalGroups.map((group) => (
-          <section className="natal-reading-facts__group" key={group.title} aria-label={group.title}>
-            <h4>{group.title}</h4>
-            <dl className="natal-reading-facts__list">
-              {group.items.map((item) => (
-                <div className="natal-reading-facts__item" key={`${group.title}-${item.label}-${item.value}`}>
-                  <dt>{item.label}</dt>
-                  <dd>
+    <details className="natal-raw-data" open>
+      <summary className="natal-raw-data__summary">
+        <span className="natal-raw-data__summary-icon" aria-hidden="true">
+          ▾
+        </span>
+        <span>
+          <strong>Détails techniques du calcul</strong>
+          <small>Les positions, maisons et aspects utilisés pour produire cette lecture.</small>
+        </span>
+      </summary>
+
+      <div className="natal-raw-data__body">
+        {mainGroup ? (
+          <section className="natal-technical-block natal-technical-block--main" aria-label={mainGroup.title}>
+            <header className="natal-technical-block__header">
+              <div>
+                <h4>{mainGroup.title}</h4>
+                <p>Les points structurants du thème natal.</p>
+              </div>
+              <span className="natal-raw-badge natal-raw-badge--primary">Base du calcul</span>
+            </header>
+
+            <div className="natal-raw-fact-list">
+              {primaryFacts.map((item) => (
+                <article className="natal-raw-fact natal-raw-fact--important" key={`${mainGroup.title}-${item.label}`}>
+                  <div className="natal-raw-fact__symbol">{TECHNICAL_FACT_SYMBOLS[item.label]}</div>
+                  <div className="natal-raw-fact__content">
+                    <span className="natal-raw-fact__label">{item.label}</span>
                     <strong>{item.value}</strong>
-                    {item.detail ? <span>{item.detail}</span> : null}
-                  </dd>
-                </div>
+                    {item.detail ? <small>{item.detail}</small> : null}
+                  </div>
+                </article>
               ))}
-            </dl>
+            </div>
+
+            {axisFacts.length > 0 ? (
+              <div className="natal-raw-axis-list" aria-label="Axes principaux">
+                {axisFacts.map((item) => (
+                  <article className="natal-raw-axis" key={`${mainGroup.title}-${item.label}-${item.value}`}>
+                    <span>{item.label}</span>
+                    <strong>{item.value}</strong>
+                    {item.detail ? <small>{item.detail}</small> : null}
+                  </article>
+                ))}
+              </div>
+            ) : null}
+
+            {complementaryMainFacts.length > 0 ? (
+              <div className="natal-raw-axis-list" aria-label="Repères complémentaires">
+                {complementaryMainFacts.map((item) => (
+                  <article className="natal-raw-axis" key={`${mainGroup.title}-${item.label}-${item.value}`}>
+                    <span>{item.label}</span>
+                    <strong>{item.value}</strong>
+                    {item.detail ? <small>{item.detail}</small> : null}
+                  </article>
+                ))}
+              </div>
+            ) : null}
           </section>
-        ))}
+        ) : null}
+
+        {houseGroup ? (
+          <section className="natal-technical-block natal-technical-block--dominance" aria-label={houseGroup.title}>
+            <header className="natal-technical-block__header">
+              <div>
+                <h4>Dominante du thème</h4>
+                <p>Zone de vie la plus représentée dans les facteurs calculés.</p>
+              </div>
+              {houseGroup.items[0]?.detail ? (
+                <span className="natal-raw-badge natal-raw-badge--strong">{houseGroup.items[0].detail}</span>
+              ) : null}
+            </header>
+
+            <div className="natal-raw-dominance-list">
+              {houseGroup.items.map((item) => (
+                <article className="natal-raw-dominance-card" key={`${houseGroup.title}-${item.label}-${item.value}`}>
+                  <div className="natal-raw-dominance-card__number">{extractHouseRank(item.label)}</div>
+                  <div>
+                    <strong>{item.label}</strong>
+                    <p>{item.value}</p>
+                    {item.detail ? <small>{item.detail}</small> : null}
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
+        ) : null}
+
+        {planetGroup ? (
+          <section className="natal-technical-block" aria-label={planetGroup.title}>
+            <header className="natal-technical-block__header">
+              <div>
+                <h4>{planetGroup.title}</h4>
+                <p>Éléments complémentaires qui renforcent ou nuancent les repères principaux.</p>
+              </div>
+            </header>
+
+            <div className="natal-raw-mini-grid">
+              {planetGroup.items.map((item) => (
+                <article className="natal-raw-mini-fact" key={`${planetGroup.title}-${item.label}-${item.value}`}>
+                  <span>{item.label}</span>
+                  <strong>{item.value}</strong>
+                  {item.detail ? <small>{item.detail}</small> : null}
+                </article>
+              ))}
+            </div>
+          </section>
+        ) : null}
+
+        {aspectGroup ? (
+          <section className="natal-technical-block natal-technical-block--aspects" aria-label={aspectGroup.title}>
+            <header className="natal-technical-block__header">
+              <div>
+                <h4>{aspectGroup.title}</h4>
+                <p>Relations géométriques fortes entre deux points du thème.</p>
+              </div>
+            </header>
+
+            <div className="natal-raw-aspect-list">
+              {aspectGroup.items.map((item: NatalCalculationFactItemViewModel) => {
+                const tone = classifyAspectTone(item.detail)
+                return (
+                  <article
+                    className={`natal-raw-aspect-card natal-raw-aspect-card--${tone}`}
+                    key={`${aspectGroup.title}-${item.label}-${item.value}`}
+                  >
+                    <div className="natal-raw-aspect-card__type">
+                      <span className="natal-raw-aspect-icon" aria-hidden="true">
+                        {tone === "flow" ? "△" : tone === "tension" ? "□" : "☌"}
+                      </span>
+                      <strong>{item.label}</strong>
+                    </div>
+                    <div className="natal-raw-aspect-card__content">
+                      <strong>{item.value}</strong>
+                      {item.detail ? <small>{item.detail}</small> : null}
+                    </div>
+                    <span className={`natal-raw-badge natal-raw-badge--${tone}`}>{labelAspectTone(item.detail)}</span>
+                  </article>
+                )
+              })}
+            </div>
+          </section>
+        ) : null}
       </div>
     </details>
   )

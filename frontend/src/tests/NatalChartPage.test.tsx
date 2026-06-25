@@ -1,6 +1,6 @@
 // Vérifie que la page thème natal ne boucle pas après un échec Astral.
 import { QueryClient, QueryClientProvider, useMutation } from "@tanstack/react-query"
-import { cleanup, render, screen, waitFor } from "@testing-library/react"
+import { cleanup, render, screen, waitFor, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { MemoryRouter } from "react-router-dom"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
@@ -196,6 +196,13 @@ describe("NatalChartPage", () => {
                   longitude_deg: 295.4488,
                   motion: "Retrograde motion",
                 },
+                {
+                  object: "Venus",
+                  sign: "Taurus",
+                  house: { number: 10, theme: "Career" },
+                  longitude_deg: 42.12,
+                  motion: "Direct",
+                },
               ],
             },
             dominant_themes: {
@@ -339,8 +346,32 @@ describe("NatalChartPage", () => {
     expect(screen.getByRole("heading", { name: "Le domaine de vie dominant" })).toBeVisible()
     expect(screen.getByRole("heading", { name: "Forces complementaires" })).toBeVisible()
     expect(screen.getByRole("heading", { name: "Dynamique principale" })).toBeVisible()
-    expect(screen.getByText("Details techniques du calcul")).toBeVisible()
+    expect(screen.getByText("Détails techniques du calcul")).toBeVisible()
+    expect(
+      screen.getByText("Les positions, maisons et aspects utilisés pour produire cette lecture."),
+    ).toBeVisible()
     expect(screen.queryByText("Données de calcul Astral")).not.toBeInTheDocument()
+    const rawDetails = screen.getByText("Détails techniques du calcul").closest("details")
+    expect(rawDetails).not.toBeNull()
+    const rawDetailsQueries = within(rawDetails as HTMLElement)
+    const rawDetailsText = rawDetails?.textContent ?? ""
+    expect(rawDetailsQueries.getByRole("heading", { name: "Repères principaux" })).toBeVisible()
+    expect(rawDetailsQueries.getByRole("heading", { name: "Dominante du thème" })).toBeVisible()
+    expect(rawDetailsQueries.getByRole("heading", { name: "Planètes notables" })).toBeVisible()
+    expect(rawDetailsQueries.getByRole("heading", { name: "Aspects notables" })).toBeVisible()
+    expect(rawDetailsQueries.getByText("Base du calcul")).toBeVisible()
+    expect(rawDetailsText).toContain("Maison X · Carrière · Mouvement direct")
+    expect(rawDetailsText).toContain("Jupiter ↔ Uranus")
+    expect(rawDetailsQueries.getByText("Orbe : 0.76° · Nature : Tension")).toBeVisible()
+    expect(rawDetailsText.indexOf("Repères principaux")).toBeLessThan(
+      rawDetailsText.indexOf("Dominante du thème"),
+    )
+    expect(rawDetailsText.indexOf("Dominante du thème")).toBeLessThan(
+      rawDetailsText.indexOf("Planètes notables"),
+    )
+    expect(rawDetailsText.indexOf("Planètes notables")).toBeLessThan(
+      rawDetailsText.indexOf("Aspects notables"),
+    )
     const renderedText = document.body.textContent ?? ""
     expect(renderedText.indexOf("Ce qui ressort globalement")).toBeLessThan(
       renderedText.indexOf("Lecture natale publique"),
@@ -400,7 +431,7 @@ describe("NatalChartPage", () => {
     expect(screen.getByRole("alert")).toHaveTextContent(/Theme partiel : certaines donnees de naissance/i)
     expect(screen.queryByText(/completude partielle/i)).not.toBeInTheDocument()
     expect(screen.queryByLabelText("Resultat Astral")).not.toBeInTheDocument()
-    expect(renderedText.indexOf("Details techniques du calcul")).toBeGreaterThan(
+    expect(renderedText.indexOf("Détails techniques du calcul")).toBeGreaterThan(
       renderedText.indexOf("Lecture symbolique et non medicale."),
     )
   })
@@ -447,6 +478,62 @@ describe("NatalChartPage", () => {
 
     expect(await screen.findByRole("heading", { name: "Lecture conservee" })).toBeVisible()
     expect(screen.getByText("Le polling garde le texte public.")).toBeVisible()
+  })
+
+  it("classe les placements fallback comme reperes complementaires sans les presenter comme axes", async () => {
+    mockUseAstralJobStatus.mockReturnValue({
+      data: {
+        run_id: "run-natal-legacy-facts",
+        status: "completed",
+        service_code: "natal_basic",
+        result: {
+          calculation: {
+            planet_positions: [
+              {
+                planet_code: "sun",
+                sign_code: "taurus",
+                house_number: 10,
+                longitude: 42.1,
+              },
+              {
+                planet_code: "moon",
+                sign_code: "capricorn",
+                house_number: 6,
+                longitude: 282.2,
+              },
+              {
+                planet_code: "mercury",
+                sign_code: "aries",
+                house_number: 10,
+                longitude: 14.3,
+              },
+            ],
+          },
+          reading: {
+            status: "success",
+            reading: {
+              summary: {
+                title: "Lecture avec faits fallback",
+              },
+              chapters: [],
+              legal: { disclaimer: "Lecture symbolique." },
+            },
+          },
+        },
+      },
+      isError: false,
+      isPending: false,
+    })
+
+    renderNatalChartPage()
+
+    expect(await screen.findByText("Détails techniques du calcul")).toBeVisible()
+    const rawDetails = screen.getByText("Détails techniques du calcul").closest("details")
+    expect(rawDetails).not.toBeNull()
+    const rawDetailsQueries = within(rawDetails as HTMLElement)
+
+    expect(rawDetailsQueries.queryByLabelText("Axes principaux")).not.toBeInTheDocument()
+    expect(rawDetailsQueries.getByLabelText("Repères complémentaires")).toHaveTextContent("Mercure")
   })
 
   it("traite safety_rejected comme un statut terminal explicite", async () => {

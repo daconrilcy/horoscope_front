@@ -158,7 +158,7 @@ const PUBLIC_ASPECT_OBJECT_ORDER = [
 const MAX_NOTABLE_PLACEMENTS = 6
 const MAX_MAJOR_ASPECTS = 5
 const MAX_PUBLIC_READING_ASPECTS = 1
-const TECHNICAL_DETAIL_SEPARATOR = " - "
+const TECHNICAL_DETAIL_SEPARATOR = " · "
 const MAX_SUMMARY_HIGHLIGHTS = 4
 const PUBLIC_OBJECT_LABELS: Record<string, string> = {
   ascendant: "Ascendant",
@@ -258,8 +258,14 @@ function formatHouseShort(value: unknown): string | null {
   return number === null ? null : `Maison ${number}`
 }
 
+function formatTechnicalDetailText(value: string): string {
+  return value.replace(/\s-\s/g, TECHNICAL_DETAIL_SEPARATOR)
+}
+
 function joinDetails(values: Array<string | null>): string | null {
-  const details = values.filter((item): item is string => Boolean(item))
+  const details = values
+    .filter((item): item is string => Boolean(item))
+    .map(formatTechnicalDetailText)
   return details.length > 0 ? details.join(TECHNICAL_DETAIL_SEPARATOR) : null
 }
 
@@ -337,29 +343,29 @@ function normalizeImportance(value: unknown): string | null {
 function normalizeMotion(value: unknown): string | null {
   const text = asText(value)?.toLowerCase()
   if (!text) return null
-  if (text.includes("retrograde")) return "retrograde apparent"
-  if (text.includes("direct")) return "direct"
+  if (text.includes("retrograde")) return "Mouvement rétrograde apparent"
+  if (text.includes("direct")) return "Mouvement direct"
   return asText(value)
 }
 
 function normalizeAspectQuality(value: unknown, aspectLabel: string | null): string | null {
   const text = asText(value)?.toLowerCase()
-  if (text === "flow" || text === "harmony" || text === "harmonious") return "Fluidite"
+  if (text === "flow" || text === "harmony" || text === "harmonious") return "Fluidité"
   if (text === "tension" || text === "challenge" || text === "challenging") return "Tension"
-  if (text === "intensity" || text === "intense") return "Intensite"
+  if (text === "intensity" || text === "intense") return "Intensité"
   if (text === "neutral") return "Neutre"
 
   const normalizedAspect = aspectLabel?.toLowerCase()
-  if (normalizedAspect === "trigone" || normalizedAspect === "sextile") return "Fluidite"
+  if (normalizedAspect === "trigone" || normalizedAspect === "sextile") return "Fluidité"
   if (normalizedAspect === "carre" || normalizedAspect === "opposition") return "Tension"
-  if (normalizedAspect === "conjonction") return "Intensite"
+  if (normalizedAspect === "conjonction") return "Intensité"
   return asText(value)
 }
 
 function normalizeAspectPhase(value: unknown): string | null {
   const text = asText(value)?.toLowerCase()
   if (!text) return null
-  if (text === "separating" || text === "separant") return "Separant"
+  if (text === "separating" || text === "separant") return "Séparant"
   if (text === "applying" || text === "appliquant") return "Appliquant"
   return asText(value)
 }
@@ -650,10 +656,11 @@ function buildCoreFacts(projection: Record<string, unknown>): NatalCalculationFa
       const angle = asRecord(angles[code])
       const sign = formatSign(angle?.sign)
       if (!angle || !sign) continue
+      const houseDetail = formatHouse(angle.house)
       items.push({
         label,
         value: sign,
-        detail: formatHouse(angle.house),
+        detail: houseDetail ? formatTechnicalDetailText(houseDetail) : null,
       })
     }
   }
@@ -676,8 +683,8 @@ function buildLegacyPlacementFacts(source: Record<string, unknown>): NatalCalcul
         value: sign,
         detail: joinDetails([
           formatHouse(item.house_number ?? item.house),
+          item.is_retrograde === true ? "Mouvement rétrograde apparent" : null,
           formatDegree(item.longitude ?? item.longitude_deg),
-          item.is_retrograde === true ? "retrograde" : null,
         ]),
       }
     })
@@ -710,8 +717,8 @@ function buildNotablePlacementFacts(projection: Record<string, unknown>): NatalC
       value: sign,
       detail: joinDetails([
         formatHouse(asRecord(placement.house)?.number),
-        formatDegree(placement.longitude_deg),
         normalizeMotion(placement.motion),
+        formatDegree(placement.longitude_deg),
       ]),
     }
   })
@@ -727,7 +734,7 @@ function buildHouseFacts(source: Record<string, unknown>, projection: Record<str
       const number = asNumber(item?.number ?? item?.house_number)
       if (!item || number === null) return null
       return {
-        label: translateHouse(number, "fr"),
+        label: formatTechnicalDetailText(translateHouse(number, "fr")),
         value: formatSign(item.sign ?? item.sign_code) ?? formatDegree(item.cusp_longitude) ?? "Disponible",
         detail: formatDegree(item.cusp_longitude ?? item.longitude_deg),
       }
@@ -744,7 +751,7 @@ function buildHouseFacts(source: Record<string, unknown>, projection: Record<str
       const number = asNumber(item?.number ?? item?.house_number)
       if (!item || number === null) return null
       return {
-        label: translateHouse(number, "fr"),
+        label: formatTechnicalDetailText(translateHouse(number, "fr")),
         value: "Domaine dominant",
         detail: normalizeImportance(item.importance),
       }
@@ -778,11 +785,15 @@ function buildAspectFacts(source: Record<string, unknown>, projection: Record<st
 
       return {
         label: aspectLabel,
-        value: inferredObjects.slice(0, 2).join(" - "),
+        value: inferredObjects.slice(0, 2).join(" ↔ "),
         detail: joinDetails([
-          formatDegree(item.orb ?? item.orb_degrees),
-          normalizeAspectQuality(item.quality, aspectLabel),
-          normalizeAspectPhase(item.phase),
+          formatDegree(item.orb ?? item.orb_degrees)
+            ? `Orbe : ${formatDegree(item.orb ?? item.orb_degrees)}`
+            : null,
+          normalizeAspectQuality(item.quality, aspectLabel)
+            ? `Nature : ${normalizeAspectQuality(item.quality, aspectLabel)}`
+            : null,
+          normalizeAspectPhase(item.phase) ? `Phase : ${normalizeAspectPhase(item.phase)}` : null,
         ]),
       }
     })

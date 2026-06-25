@@ -447,16 +447,16 @@ describe("buildNatalInterpretationViewModel", () => {
     const reading = viewModel?.calculationReading
 
     expect(viewModel?.calculationFacts?.groups[0]?.items).toEqual([
-      { label: "Soleil", value: "Capricorne", detail: "Maison II - Valeurs" },
-      { label: "Lune", value: "Poissons", detail: "Maison IV - Foyer" },
+      { label: "Soleil", value: "Capricorne", detail: "Maison II · Valeurs" },
+      { label: "Lune", value: "Poissons", detail: "Maison IV · Foyer" },
       { label: "Ascendant", value: "Scorpion", detail: null },
-      { label: "Descendant", value: "Taureau", detail: "Maison VII - Relations" },
-      { label: "Milieu du Ciel", value: "Lion", detail: "Maison X - Carrière" },
+      { label: "Descendant", value: "Taureau", detail: "Maison VII · Relations" },
+      { label: "Milieu du Ciel", value: "Lion", detail: "Maison X · Carrière" },
     ])
     expect(viewModel?.calculationFacts?.groups[2]?.items[0]).toEqual({
       label: "Mercure",
       value: "Capricorne",
-      detail: "Maison III - Communication - retrograde apparent",
+      detail: "Maison III · Communication · Mouvement rétrograde apparent",
     })
     expect(reading?.summary).toBeNull()
     expect(reading?.pillars).toEqual([])
@@ -466,7 +466,7 @@ describe("buildNatalInterpretationViewModel", () => {
     expect(reading?.aspects).toEqual([])
     expect(reading?.technicalGroups.length).toBeGreaterThan(0)
     expect(viewModel?.calculationFacts?.groups[2]?.items[0]?.detail).not.toContain("Retrograde motion")
-    expect(viewModel?.calculationFacts?.groups[2]?.items[0]?.detail).toContain("retrograde apparent")
+    expect(viewModel?.calculationFacts?.groups[2]?.items[0]?.detail).toContain("Mouvement rétrograde apparent")
   })
 
   it("rend une lecture partielle avec seulement les explications disponibles", () => {
@@ -552,8 +552,8 @@ describe("buildNatalInterpretationViewModel", () => {
     expect(JSON.stringify(reading)).not.toContain("action rapide")
     expect(viewModel?.calculationFacts?.groups[0]?.items[0]).toMatchObject({
       label: "Trigone",
-      value: "Mars - Uranus",
-      detail: "0.20° - Fluidite - Separant",
+      value: "Mars ↔ Uranus",
+      detail: "Orbe : 0.20° · Nature : Fluidité · Phase : Séparant",
     })
   })
 
