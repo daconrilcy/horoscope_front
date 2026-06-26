@@ -1406,7 +1406,7 @@
   }
 
   .page-layout.natal-page-container .page-layout__main {
-    padding: 10px var(--layout-padding-inline) calc(176px + env(safe-area-inset-bottom));
+    padding: 10px var(--layout-padding-inline) calc(128px + env(safe-area-inset-bottom) + var(--app-mobile-nav-inset));
   }
   
   .natal-page-header__title {
@@ -1437,8 +1437,8 @@
   }
 
   .natal-page-portrait__copy p {
-    font-size: var(--font-size-2xs);
-    line-height: var(--type-metadata-line-height);
+    font-size: var(--font-size-xs);
+    line-height: var(--line-height-normal);
     -webkit-line-clamp: 3;
   }
 
@@ -1452,24 +1452,28 @@
   }
 
   .natal-page-portrait__fact {
-    min-height: 42px;
-    padding: 6px 7px;
+    min-height: 44px;
+    padding: 7px 8px;
   }
 
   .natal-page-portrait__label,
   .natal-page-portrait__detail {
-    font-size: var(--font-size-3xs);
+    font-size: var(--font-size-2xs);
   }
 
   .natal-page-portrait__fact strong {
-    font-size: var(--font-size-2xs);
+    font-size: var(--font-size-xs);
   }
 
   .natal-card,
   .natal-reading-facts,
   .natal-reading__chapter {
-    padding: 11px;
+    padding: 12px;
     border-radius: var(--radius-lg);
+  }
+
+  .natal-card:hover {
+    transform: none;
   }
 
   .natal-page-header__actions {
@@ -1504,13 +1508,13 @@
   .natal-reading__header p,
   .natal-reading__safety,
   .natal-reading__disclaimer {
-    font-size: var(--font-size-xs);
-    line-height: var(--line-height-copy);
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-relaxed);
   }
 
   .natal-reading__chapter p {
-    font-size: var(--font-size-xs);
-    line-height: var(--line-height-relaxed);
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-copy-loose);
   }
 
   .natal-grid {
@@ -1587,7 +1591,7 @@
   }
 
   .natal-reading-facts__group h3 {
-    font-size: var(--font-size-xs);
+    font-size: var(--font-size-sm);
     line-height: var(--type-label-line-height);
   }
 
@@ -1605,11 +1609,11 @@
   }
 
   .natal-reading-facts__item strong {
-    font-size: var(--font-size-2xs);
+    font-size: var(--font-size-xs);
   }
 
   .natal-reading-facts__item span {
-    font-size: var(--font-size-3xs);
+    font-size: var(--font-size-2xs);
   }
 
   .natal-reading__chapters {
@@ -1626,9 +1630,9 @@
   }
 
   .natal-reading__progress li {
-    min-height: 20px;
-    padding: 2px 6px;
-    font-size: var(--font-size-3xs);
+    min-height: 26px;
+    padding: 4px 7px;
+    font-size: var(--font-size-2xs);
   }
 
   .natal-reading__chapter {
@@ -1644,20 +1648,15 @@
   .natal-reading__chapter-body {
     gap: 9px;
     max-width: none;
-    max-height: min(58vh, 520px);
-    padding-right: 2px;
-    overflow-y: auto;
-    overscroll-behavior: contain;
   }
 
   .natal-reading__chapter-meta {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 4px 5px;
+    display: grid;
+    align-items: start;
+    gap: 8px;
     width: 100%;
     box-sizing: border-box;
-    padding: 7px 0 0;
+    padding: 9px 0 0;
     border-left: none;
     border-top: 1px solid color-mix(in srgb, var(--premium-text-meta) 12%, transparent);
   }
@@ -1667,7 +1666,7 @@
   }
 
   .natal-reading__chapter-head h3 {
-    font-size: var(--font-size-md);
+    font-size: var(--font-size-lg);
     line-height: var(--type-label-line-height);
   }
 
@@ -1676,7 +1675,7 @@
     padding: 8px 9px;
     border-left-width: 2px;
     color: color-mix(in srgb, var(--premium-text-strong) 82%, var(--premium-text-main) 18%) !important;
-    font-size: var(--font-size-xs);
+    font-size: var(--font-size-sm);
     font-weight: var(--font-weight-medium);
     line-height: var(--line-height-relaxed);
   }
@@ -1686,14 +1685,14 @@
   }
 
   .natal-reading__chapter-toggle {
-    min-height: 28px;
-    padding: 0 10px;
-    font-size: var(--font-size-2xs);
+    min-height: 44px;
+    padding: 0 14px;
+    font-size: var(--font-size-xs);
   }
 
   .natal-reading__basis {
-    flex: 1 1 100%;
-    gap: 3px;
+    gap: 6px;
+    min-width: 0;
     padding-top: 0;
     border-top: none;
   }
@@ -1704,17 +1703,10 @@
   }
 
   .natal-reading__basis ul {
-    flex-wrap: nowrap;
-    gap: 3px;
+    flex-wrap: wrap;
+    gap: 5px;
     max-width: 100%;
-    overflow-x: auto;
-    overflow-y: hidden;
-    padding-bottom: 1px;
-    scrollbar-width: none;
-  }
-
-  .natal-reading__basis ul::-webkit-scrollbar {
-    display: none;
+    overflow: visible;
   }
 
   .natal-section-eyebrow {
@@ -1730,35 +1722,34 @@
   }
 
   .natal-badge--astro-data {
-    min-height: 22px;
-    padding: 0 7px;
+    min-height: 28px;
+    padding: 4px 8px;
     border-radius: var(--radius-control);
-    font-size: var(--font-size-3xs);
+    font-size: var(--font-size-2xs);
   }
 
   .natal-badge--fact-detail {
-    min-height: 20px;
-    padding: 0 6px;
-    font-size: var(--font-size-3xs);
+    min-height: 24px;
+    padding: 3px 7px;
+    font-size: var(--font-size-2xs);
   }
 
   .natal-reading__basis .natal-badge--basis {
     display: inline-flex;
     box-sizing: border-box;
-    flex: 0 0 auto;
-    height: calc(var(--font-size-3xs) + 4px);
-    min-height: 0;
-    max-width: none;
-    padding: 0 3px;
+    flex: 1 1 auto;
+    min-height: 24px;
+    max-width: 100%;
+    padding: 3px 6px;
     border-color: color-mix(in srgb, var(--premium-text-meta) 10%, transparent);
     background: color-mix(in srgb, var(--color-token-rgb-255-255-255) 10%, transparent);
     color: color-mix(in srgb, var(--premium-text-meta) 86%, var(--premium-text-main) 14%);
-    font-size: var(--font-size-3xs);
+    font-size: var(--font-size-2xs);
     font-weight: var(--font-weight-medium);
-    line-height: calc(var(--font-size-3xs) + 4px);
-    overflow: visible;
+    line-height: var(--line-height-normal);
+    overflow-wrap: anywhere;
     text-overflow: clip;
-    white-space: nowrap;
+    white-space: normal;
   }
 
   .natal-badge--confidence {
@@ -1775,8 +1766,8 @@
   }
 
   .natal-chart-guide__summary {
-    min-height: 38px;
-    padding: 9px 12px;
+    min-height: 44px;
+    padding: 10px 12px;
     font-size: var(--font-size-xs);
     line-height: var(--type-label-line-height);
   }
@@ -1787,7 +1778,11 @@
 
   .natal-chart-guide__content {
     padding: 0 12px 14px;
-    font-size: var(--font-size-2xs);
-    line-height: var(--line-height-copy-tight);
+    font-size: var(--font-size-xs);
+    line-height: var(--line-height-relaxed);
+  }
+
+  .natal-page-container .ni-action-btn {
+    min-height: 44px;
   }
 }
