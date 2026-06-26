@@ -112,8 +112,8 @@ function NatalChapterCard({ chapter, itemKey }: { chapter: NatalReadingChapterVi
       <div className="natal-reading__chapter-main">
         <div className="natal-reading__chapter-head">
           <div className="natal-reading__chapter-title">
-            <span className="natal-section-eyebrow">Lecture guidée</span>
             <h3>{chapter.title}</h3>
+            <span className="natal-section-eyebrow">Lecture guidée</span>
           </div>
         </div>
         {excerpt ? <p className="natal-reading__chapter-excerpt">{excerpt}</p> : null}

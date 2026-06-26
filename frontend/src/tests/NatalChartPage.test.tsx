@@ -286,6 +286,9 @@ describe("NatalChartPage", () => {
     expect(screen.getByLabelText("Marqueurs clés du portrait astral")).toHaveTextContent("Soleil")
     expect(screen.getByLabelText("Marqueurs clés du portrait astral")).toHaveTextContent("Lune")
     expect(screen.getByLabelText("Marqueurs clés du portrait astral")).toHaveTextContent("Ascendant")
+    expect(portrait.querySelector(".natal-page-portrait__title-block")).toHaveTextContent(
+      "Une synthese claire du theme.",
+    )
     expect(container.querySelector(".natal-reading-facts__group--primary")).toHaveTextContent("Repères principaux")
     expect(screen.getByRole("region", { name: "Maisons" })).toHaveTextContent("Maison II")
     expect(screen.getByRole("region", { name: "Planètes notables" })).toHaveTextContent("Mercure")
@@ -296,6 +299,11 @@ describe("NatalChartPage", () => {
     expect(screen.getByText("Chapitre narratif principal conserve.")).toHaveClass("natal-reading__chapter-excerpt")
     expect(container.querySelector(".natal-reading__chapter-excerpt")).toHaveTextContent(
       /Chapitre narratif principal conserve/i,
+    )
+    const chapterTitle = container.querySelector(".natal-reading__chapter-title")
+    expect(chapterTitle).toHaveTextContent("Identite")
+    expect((chapterTitle?.textContent ?? "").indexOf("Identite")).toBeLessThan(
+      (chapterTitle?.textContent ?? "").indexOf("Lecture guidée"),
     )
     expect(screen.getByText("Suite analytique preservee.")).toBeVisible()
     expect(screen.getByText("Confiance moyenne")).toHaveClass("natal-badge--confidence")

@@ -123,10 +123,12 @@ export function NatalChartPage() {
           <div className="natal-page-portrait" aria-label="Portrait astral">
             <div className="natal-page-portrait__copy">
               <div className="natal-page-portrait__head">
-                <span className="natal-section-eyebrow">Portrait astral</span>
+                <div className="natal-page-portrait__title-block">
+                  <span className="natal-section-eyebrow">Portrait astral</span>
+                  <p>{natalReading.shortText ?? NATAL_PAGE_CONTEXT}</p>
+                </div>
                 <span className="natal-badge natal-badge--report-status">{natalReading.label}</span>
               </div>
-              <p>{natalReading.shortText ?? NATAL_PAGE_CONTEXT}</p>
             </div>
             <div className="natal-page-portrait__facts" aria-label="Marqueurs clés du portrait astral">
               {natalReading.highlightFacts.map((fact) => (
