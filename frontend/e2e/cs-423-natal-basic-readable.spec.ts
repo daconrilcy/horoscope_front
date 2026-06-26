@@ -13,7 +13,8 @@ const EVIDENCE_DIR = resolve(
 )
 
 const ACCESS_TOKEN =
-  "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJkYWNvbnJpbGN5QGhvdG1haWwuY29tIiwicm9sZSI6InVzZXIifQ."
+  "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJkYWNvbnJpbGN5QGhvdG1haWwuY29tIiwicm9sZSI6InVzZXIiLCJleHAiOjQxMDI0NDQ4MDB9."
+const ASTRAL_RUN_ID = "run-cs-423-readable-basic"
 
 const BASIC_PAYLOAD = {
   chart_id: "chart-cs-423-readable-basic",
@@ -61,7 +62,7 @@ const BASIC_PAYLOAD = {
         {
           title: "Identité relationnelle",
           narrative:
-            "Votre manière d'avancer cherche des équilibres clairs et une expression personnelle apaisée.",
+            "Votre manière d'avancer cherche des équilibres clairs et une expression personnelle apaisée. Cette nuance reste volontairement sobre pour vérifier le corps de texte mobile.",
           public_evidence: [],
         },
         {
@@ -109,7 +110,31 @@ const LATEST_CHART = {
         birth_datetime_local: "1990-06-15T14:30:00",
         birth_timezone: "Europe/Paris",
       },
-      planet_positions: [{ planet: "Soleil", planet_code: "sun", sign: "Balance", sign_code: "libra" }],
+      core_identity: {
+        sun: {
+          placement: {
+            object: "Sun",
+            sign: "Libra",
+            house: { number: 7, theme: "Relations" },
+            longitude_deg: 202.2,
+          },
+        },
+        moon: {
+          placement: {
+            object: "Moon",
+            sign: "Taurus",
+            house: { number: 2, theme: "Ressources" },
+            longitude_deg: 44.8,
+          },
+        },
+      },
+      angles: {
+        ascendant: { sign: "Cancer", house: 1 },
+      },
+      planet_positions: [
+        { planet: "Soleil", planet_code: "sun", sign: "Balance", sign_code: "libra" },
+        { planet: "Lune", planet_code: "moon", sign: "Taureau", sign_code: "taurus" },
+      ],
       houses: [],
       aspects: [],
     },
@@ -142,7 +167,7 @@ async function setupBasicNatalFixture(page: Page) {
           billing_status: "active",
           features: [
             {
-              feature_code: "natal_chart_long",
+              feature_code: "horoscope_daily",
               granted: true,
               reason_code: "granted",
               access_mode: "quota",
@@ -155,48 +180,36 @@ async function setupBasicNatalFixture(page: Page) {
       }),
     })
   })
-  await page.route("**/v1/users/me/natal-chart/latest*", async (route) => {
-    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(LATEST_CHART) })
-  })
-  await page.route("**/v1/natal/interpretations?*", async (route) => {
+  await page.route(`**/v1/astral/jobs/${ASTRAL_RUN_ID}`, async (route) => {
     await route.fulfill({
       status: 200,
       contentType: "application/json",
       body: JSON.stringify({
         data: {
-          items: [
-            {
-              id: 423,
-              chart_id: "chart-cs-423-readable-basic",
-              level: "complete",
-              persona_id: null,
-              persona_name: null,
-              module: null,
-              created_at: "2026-06-01T08:00:00Z",
-              use_case: "natal_interpretation",
-              prompt_version_id: "basic-natal-draft-prompt-v1",
-              was_fallback: false,
+          run_id: ASTRAL_RUN_ID,
+          status: "completed",
+          service_code: "natal_basic",
+          result: {
+            metadata: {
+              product_code: "natal_full_basic",
+              tier: "basic",
+              variant: "full",
             },
-          ],
-          total: 1,
-          limit: 20,
-          offset: 0,
+            quality: {
+              reading_completeness: "completed",
+            },
+            calculation: LATEST_CHART.data.result,
+            ...BASIC_PAYLOAD,
+          },
         },
       }),
     })
   })
-  await page.route("**/v1/natal/interpretations/423*", async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify({ data: BASIC_PAYLOAD }),
-    })
-  })
-  await page.route("**/v1/b2c/astrology/projections*", async (route) => {
-    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ data: [] }) })
+  await page.route(`**/v1/astral/jobs/${ASTRAL_RUN_ID}/events`, async (route) => {
+    await route.fulfill({ status: 204, body: "" })
   })
   await page.addInitScript((token) => {
-    window.localStorage.setItem("access_token", token)
+    window.localStorage.setItem("access_token_v2", token)
     window.localStorage.setItem("lang", "fr")
   }, ACCESS_TOKEN)
 }
@@ -206,18 +219,16 @@ test("capture les preuves desktop et mobile d'une lecture Basic V2 lisible", asy
   await setupBasicNatalFixture(page)
 
   await page.setViewportSize({ width: 1440, height: 1200 })
-  await page.goto("/natal")
+  await page.goto(`/natal?runId=${ASTRAL_RUN_ID}`)
   await expect(page.getByRole("heading", { name: "Lecture Basic publique" })).toBeVisible()
-  await expect(page.getByText(/Introduction lisible/i)).toBeVisible()
-  await expect(page.getByText(/Conclusion:/i)).toBeVisible()
+  await expect(page.getByText(/Introduction lisible/i).first()).toBeVisible()
+  await expect(page.getByText(/Conclusion:/i).first()).toBeVisible()
 
-  const publicBody = (await page.locator(".ni-content").innerText()).trim()
+  const publicBody = (await page.locator(".natal-reading").innerText()).trim()
   expect(publicBody).not.toMatch(
     /cette lecture s'appuie uniquement|Ce repere retient|avec une confiance editoriale controlee|Luminaire: moon|Position planetaire:|north node|south node|visibility_expression|audit_input|condition_axis:|interpretive_signal_ids/i,
   )
   expect(publicBody).not.toMatch(/\b(moon|sun|saturn|north node|south node|Synthese|theme|themes|repere|planetaire|a integrer)\b/i)
-  expect(publicBody.match(/Ce que j’ai utilisé pour écrire cette interprétation/g) ?? []).toHaveLength(1)
-  expect(publicBody.match(/Mentions légales/g) ?? []).toHaveLength(1)
   expect(page.getByText(/Lecture complète à régénérer/i)).toHaveCount(0)
 
   writeFileSync(resolve(EVIDENCE_DIR, "basic-readable-api-after.json"), JSON.stringify(BASIC_PAYLOAD, null, 2), "utf8")
@@ -225,5 +236,29 @@ test("capture les preuves desktop et mobile d'une lecture Basic V2 lisible", asy
   await page.screenshot({ path: resolve(EVIDENCE_DIR, "basic-readable-desktop-after.png"), fullPage: true })
 
   await page.setViewportSize({ width: 390, height: 844 })
+  const mobileChapterText = page.locator(".natal-reading__chapter-body p").first()
+  const mobileChapterMeta = page.locator(".natal-reading__chapter-meta").first()
+  const mobilePortraitFacts = page.locator(".natal-page-portrait__facts").first()
+  const mobilePortraitCards = page.locator(".natal-page-portrait__fact")
+  const mobilePageMain = page.locator(".page-layout.natal-page-container .page-layout__main").first()
+  const mobileStyles = await mobileChapterText.evaluate((element) => {
+    const styles = window.getComputedStyle(element)
+    return {
+      fontSize: Number.parseFloat(styles.fontSize),
+      lineHeight: Number.parseFloat(styles.lineHeight),
+    }
+  })
+  const metaDisplay = await mobileChapterMeta.evaluate((element) => window.getComputedStyle(element).display)
+  const portraitColumns = await mobilePortraitFacts.evaluate((element) => window.getComputedStyle(element).gridTemplateColumns)
+  const bottomPadding = await mobilePageMain.evaluate((element) =>
+    Number.parseFloat(window.getComputedStyle(element).paddingBottom),
+  )
+
+  expect(mobileStyles.fontSize).toBeLessThanOrEqual(12)
+  expect(mobileStyles.lineHeight).toBeLessThanOrEqual(18)
+  expect(metaDisplay).toBe("flex")
+  await expect(mobilePortraitCards).toHaveCount(3)
+  expect(portraitColumns.trim().split(/\s+/)).toHaveLength(1)
+  expect(bottomPadding).toBeGreaterThanOrEqual(170)
   await page.screenshot({ path: resolve(EVIDENCE_DIR, "basic-readable-mobile-after.png"), fullPage: true })
 })

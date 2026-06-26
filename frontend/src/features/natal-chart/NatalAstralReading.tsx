@@ -51,7 +51,7 @@ function chapterBodyParagraphs(chapter: NatalReadingChapterViewModel, excerpt: s
   if (!normalizedFirstParagraph) return remainingParagraphs
 
   if (normalizedFirstParagraph === excerpt) {
-    return remainingParagraphs.length > 0 ? remainingParagraphs : chapter.paragraphs
+    return remainingParagraphs
   }
 
   if (normalizedFirstParagraph.startsWith(excerpt)) {

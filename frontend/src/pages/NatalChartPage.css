@@ -3,10 +3,24 @@
 .natal-page-container {
   --layout-page-padding: 0;
   --layout-padding-inline: 40px;
+  --natal-surface-page: transparent;
+  --natal-surface-container: var(--premium-glass-surface-1);
+  --natal-surface-data: color-mix(in srgb, var(--color-token-rgb-255-255-255) 34%, transparent);
+  --natal-surface-data-strong: color-mix(in srgb, var(--premium-accent-purple-strong) 6%, var(--premium-glass-surface-2));
+  --natal-surface-chip: color-mix(in srgb, var(--premium-accent-purple-strong) 5%, var(--premium-glass-surface-2));
+  --natal-border-data: var(--premium-glass-border-soft);
 }
 
 .page-layout.natal-page-container {
   width: 100%;
+}
+
+.dark .natal-page-container {
+  --natal-surface-container: var(--premium-glass-surface-1);
+  --natal-surface-data: var(--premium-glass-surface-2);
+  --natal-surface-data-strong: color-mix(in srgb, var(--premium-accent-purple-strong) 8%, var(--premium-glass-surface-2));
+  --natal-surface-chip: var(--premium-glass-surface-3);
+  --natal-border-data: var(--premium-glass-border);
 }
 
 .page-layout.natal-page-container .page-layout__main {
@@ -16,6 +30,7 @@
   min-height: 100vh;
   box-sizing: border-box;
   padding: 24px var(--layout-padding-inline) 48px;
+  background: var(--natal-surface-page);
 }
 
 /* Base Background and Halos (from DailyHoroscopePage) */
@@ -87,7 +102,7 @@
   padding: 14px;
   border: 1px solid var(--premium-glass-border);
   border-radius: var(--premium-radius-card);
-  background: linear-gradient(135deg, var(--premium-glass-surface-1) 0%, var(--premium-glass-surface-2) 100%);
+  background: linear-gradient(135deg, var(--natal-surface-container) 0%, var(--premium-glass-surface-2) 100%);
   box-shadow: var(--premium-inner-light);
 }
 
@@ -226,7 +241,7 @@
 
 /* Card Overrides */
 .natal-card {
-  background: var(--premium-glass-surface-1);
+  background: var(--natal-surface-container);
   backdrop-filter: blur(24px) saturate(160%);
   -webkit-backdrop-filter: blur(24px) saturate(160%);
   border: 1px solid var(--premium-glass-border);
@@ -639,14 +654,14 @@
 .natal-badge--confidence {
   flex-shrink: 0;
   width: fit-content;
-  min-height: 24px;
-  padding: 0 9px;
-  border-color: color-mix(in srgb, var(--premium-accent-purple-strong) 22%, var(--premium-glass-border-soft));
-  background: color-mix(in srgb, var(--premium-accent-purple-strong) 10%, transparent);
-  color: var(--premium-accent-purple-strong);
+  min-height: 22px;
+  padding: 0 8px;
+  border-color: color-mix(in srgb, var(--premium-text-meta) 16%, var(--premium-glass-border-soft));
+  background: color-mix(in srgb, var(--premium-text-meta) 5%, transparent);
+  color: var(--premium-text-meta);
   font-size: var(--font-size-2xs);
-  font-weight: var(--font-weight-bold);
-  letter-spacing: var(--letter-spacing-wide-control);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-wide-xs);
   text-transform: uppercase;
 }
 
@@ -654,27 +669,27 @@
   min-height: 26px;
   padding: 0 9px;
   border-radius: var(--radius-md);
-  border-color: color-mix(in srgb, var(--premium-accent-purple-strong) 14%, var(--premium-glass-border-soft));
-  background: color-mix(in srgb, var(--premium-accent-purple-strong) 7%, var(--premium-glass-surface-2));
+  border-color: color-mix(in srgb, var(--premium-accent-purple-strong) 12%, var(--natal-border-data));
+  background: var(--natal-surface-chip);
   color: var(--premium-text-strong);
 }
 
 .natal-badge--fact-detail {
-  min-height: 23px;
+  min-height: 22px;
   padding: 0 8px;
-  border-color: color-mix(in srgb, var(--color-token-rgb-255-255-255) 42%, transparent);
-  background: color-mix(in srgb, var(--color-token-rgb-255-255-255) 64%, transparent);
+  border-color: color-mix(in srgb, var(--premium-text-meta) 14%, transparent);
+  background: color-mix(in srgb, var(--color-token-rgb-255-255-255) 42%, transparent);
   color: var(--premium-text-meta);
   font-size: var(--font-size-2xs);
 }
 
 .natal-badge--basis {
-  min-height: 20px;
-  padding: 0 7px;
-  border-color: color-mix(in srgb, var(--premium-text-meta) 18%, transparent);
-  background: color-mix(in srgb, var(--color-token-rgb-255-255-255) 34%, transparent);
+  min-height: 19px;
+  padding: 0 6px;
+  border-color: color-mix(in srgb, var(--premium-text-meta) 14%, transparent);
+  background: color-mix(in srgb, var(--color-token-rgb-255-255-255) 24%, transparent);
   color: var(--premium-text-meta);
-  font-size: var(--font-size-2xs);
+  font-size: var(--font-size-3xs);
   font-weight: var(--font-weight-semibold);
 }
 
@@ -902,6 +917,11 @@
   gap: 16px;
 }
 
+.natal-reading__summary h2 {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
 .natal-reading__header h2 {
   margin: 0;
   font-size: var(--font-size-xl);
@@ -982,7 +1002,7 @@
   padding: 18px;
   border: 1px solid var(--premium-glass-border);
   border-radius: var(--premium-radius-card);
-  background: var(--premium-glass-surface-1);
+  background: var(--natal-surface-container);
   box-shadow: var(--premium-inner-light);
 }
 
@@ -1014,7 +1034,7 @@
   padding: 11px;
   border: 1px solid var(--premium-glass-border-soft);
   border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--color-token-rgb-255-255-255) 34%, transparent);
+  background: var(--natal-surface-data);
 }
 
 .natal-reading-facts__group:not(.natal-reading-facts__group--primary) {
@@ -1025,7 +1045,7 @@
   grid-column: 1;
   grid-row: 1 / span 3;
   padding: 14px;
-  background: color-mix(in srgb, var(--premium-accent-purple-strong) 6%, var(--premium-glass-surface-2));
+  background: var(--natal-surface-data-strong);
 }
 
 .natal-reading-facts__group--primary .natal-reading-facts__list {
@@ -1037,7 +1057,7 @@
   padding: 9px;
   border: 1px solid var(--premium-glass-border-soft);
   border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--color-token-rgb-255-255-255) 36%, transparent);
+  background: var(--natal-surface-data);
 }
 
 .natal-reading-facts__group-head {
@@ -1115,13 +1135,13 @@
 
 .natal-reading__chapter {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(190px, 0.34fr);
+  grid-template-columns: minmax(0, 1fr) minmax(180px, 0.31fr);
   gap: 18px;
   align-items: start;
   padding: 18px;
   border: 1px solid var(--premium-glass-border-soft);
   border-radius: var(--premium-radius-card);
-  background: color-mix(in srgb, var(--color-token-rgb-255-255-255) 30%, var(--premium-glass-surface-2));
+  background: var(--natal-surface-data);
 }
 
 .natal-reading__chapter--no-meta {
@@ -1171,9 +1191,13 @@
 
 .natal-reading__chapter-meta {
   display: grid;
-  gap: 10px;
+  gap: 8px;
   min-width: 0;
   justify-items: start;
+  align-content: start;
+  align-self: start;
+  padding-top: 2px;
+  color: var(--premium-text-meta);
 }
 
 .natal-reading__precision-note {
@@ -1199,9 +1223,9 @@
 
 .natal-reading__basis {
   display: grid;
-  gap: 7px;
+  gap: 6px;
   width: 100%;
-  padding-top: 10px;
+  padding-top: 8px;
   border-top: 1px solid var(--premium-glass-border-soft);
 }
 
@@ -1239,8 +1263,15 @@
 
 /* Responsive */
 @media (max-width: 768px) {
+  .natal-page-container {
+    --layout-padding-inline: 10px;
+    --natal-surface-data: color-mix(in srgb, var(--color-token-rgb-255-255-255) 28%, transparent);
+    --natal-surface-data-strong: color-mix(in srgb, var(--premium-accent-purple-strong) 4%, var(--premium-glass-surface-2));
+    --natal-surface-chip: color-mix(in srgb, var(--premium-accent-purple-strong) 4%, var(--premium-glass-surface-2));
+  }
+
   .page-layout.natal-page-container .page-layout__main {
-    padding: 10px 10px calc(120px + env(safe-area-inset-bottom));
+    padding: 10px var(--layout-padding-inline) calc(176px + env(safe-area-inset-bottom));
   }
   
   .natal-page-header__title {
@@ -1277,19 +1308,32 @@
   }
 
   .natal-page-portrait__facts {
-    grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+    grid-template-columns: 1fr;
     gap: 6px;
   }
 
+  .natal-page-portrait__facts .natal-page-portrait__fact:nth-child(3) {
+    grid-column: auto;
+  }
+
   .natal-page-portrait__fact {
-    min-height: 56px;
-    padding: 8px;
+    min-height: 48px;
+    padding: 7px 8px;
+  }
+
+  .natal-page-portrait__label,
+  .natal-page-portrait__detail {
+    font-size: var(--font-size-3xs);
+  }
+
+  .natal-page-portrait__fact strong {
+    font-size: var(--font-size-xs);
   }
 
   .natal-card,
   .natal-reading-facts,
   .natal-reading__chapter {
-    padding: 12px;
+    padding: 11px;
     border-radius: var(--radius-lg);
   }
 
@@ -1302,8 +1346,36 @@
   }
 
   .natal-reading__summary {
-    flex-direction: column;
-    gap: 8px;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: 5px 8px;
+  }
+
+  .natal-reading {
+    gap: 11px;
+  }
+
+  .natal-reading__header {
+    gap: 5px;
+  }
+
+  .natal-reading__header h2 {
+    font-size: var(--font-size-17);
+    line-height: var(--type-label-line-height);
+  }
+
+  .natal-reading__header p,
+  .natal-reading__safety,
+  .natal-reading__disclaimer {
+    font-size: var(--font-size-xs);
+    line-height: var(--line-height-copy);
+  }
+
+  .natal-reading__chapter p {
+    font-size: var(--font-size-xs);
+    line-height: var(--line-height-copy-tight);
   }
 
   .natal-grid {
@@ -1324,14 +1396,28 @@
 
   .natal-reading-facts__grid {
     grid-template-columns: 1fr;
-    gap: 8px;
+    gap: 7px;
+  }
+
+  .natal-reading-facts {
+    gap: 9px;
+  }
+
+  .natal-reading-facts__header {
+    gap: 2px;
+  }
+
+  .natal-reading-facts__header h2 {
+    font-size: var(--font-size-md);
+    line-height: var(--type-label-line-height);
   }
 
   .natal-reading-facts__group,
   .natal-reading-facts__group--primary {
     grid-column: auto;
     grid-row: auto;
-    padding: 10px;
+    gap: 6px;
+    padding: 8px;
   }
 
   .natal-reading-facts__group:not(.natal-reading-facts__group--primary) {
@@ -1340,49 +1426,152 @@
 
   .natal-reading-facts__group--primary .natal-reading-facts__list {
     grid-template-columns: 1fr;
-    gap: 8px;
+    gap: 5px;
   }
 
   .natal-reading-facts__group--primary .natal-reading-facts__item {
-    padding: 0 0 8px;
+    padding: 0 0 6px;
     border: 0;
     border-bottom: 1px solid var(--premium-glass-border-soft);
     border-radius: 0;
     background: transparent;
   }
 
+  .natal-reading-facts__group-head {
+    gap: 6px;
+  }
+
   .natal-reading-facts__marker {
-    width: 28px;
-    height: 28px;
+    width: 24px;
+    height: 24px;
+  }
+
+  .natal-reading-facts__marker svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .natal-reading-facts__group h3 {
+    font-size: var(--font-size-xs);
+    line-height: var(--type-label-line-height);
+  }
+
+  .natal-reading-facts__list {
+    gap: 4px;
+  }
+
+  .natal-reading-facts__item {
+    gap: 3px;
+    padding-bottom: 5px;
+  }
+
+  .natal-reading-facts__item dd {
+    gap: 4px;
+  }
+
+  .natal-reading-facts__item strong {
+    font-size: var(--font-size-2xs);
+  }
+
+  .natal-reading-facts__item span {
+    font-size: var(--font-size-3xs);
   }
 
   .natal-reading__chapters {
-    gap: 10px;
+    gap: 7px;
   }
 
   .natal-reading__chapter {
     grid-template-columns: 1fr;
-    gap: 12px;
+    gap: 7px;
+    padding: 10px;
   }
 
   .natal-reading__chapter-main {
-    gap: 8px;
+    gap: 5px;
   }
 
   .natal-reading__chapter-body {
+    gap: 5px;
     max-width: none;
   }
 
   .natal-reading__chapter-meta {
-    gap: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 5px 7px;
+    width: 100%;
+    padding-top: 6px;
+    border-top: 1px solid color-mix(in srgb, var(--premium-text-meta) 12%, transparent);
   }
 
-  .natal-reading__chapter-head h3,
+  .natal-reading__chapter-head h3 {
+    font-size: var(--font-size-sm);
+    line-height: var(--type-label-line-height);
+  }
+
   .natal-reading__chapter-excerpt {
-    font-size: var(--font-size-md);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-medium);
+    line-height: var(--line-height-copy-tight);
   }
 
   .natal-reading__basis {
-    padding-top: 8px;
+    flex: 1 1 100%;
+    gap: 5px;
+    padding-top: 0;
+    border-top: none;
+  }
+
+  .natal-reading__basis > span {
+    font-size: var(--font-size-3xs);
+    letter-spacing: var(--letter-spacing-wide-control);
+  }
+
+  .natal-reading__basis ul {
+    gap: 4px;
+  }
+
+  .natal-section-eyebrow {
+    margin-bottom: 4px;
+    font-size: var(--font-size-3xs);
+    letter-spacing: var(--letter-spacing-wide-control);
+  }
+
+  .natal-badge--report-status {
+    min-height: 20px;
+    padding: 0 7px;
+    font-size: var(--font-size-3xs);
+  }
+
+  .natal-badge--astro-data {
+    min-height: 22px;
+    padding: 0 7px;
+    border-radius: var(--radius-control);
+    font-size: var(--font-size-3xs);
+  }
+
+  .natal-badge--fact-detail {
+    min-height: 20px;
+    padding: 0 6px;
+    font-size: var(--font-size-3xs);
+  }
+
+  .natal-badge--basis {
+    min-height: 16px;
+    padding: 0 4px;
+    border-color: color-mix(in srgb, var(--premium-text-meta) 10%, transparent);
+    background: color-mix(in srgb, var(--color-token-rgb-255-255-255) 14%, transparent);
+    font-size: var(--font-size-3xs);
+  }
+
+  .natal-badge--confidence {
+    min-height: 18px;
+    padding: 0 6px;
+    border-color: color-mix(in srgb, var(--premium-text-meta) 12%, transparent);
+    background: transparent;
+    font-size: var(--font-size-3xs);
+    letter-spacing: var(--letter-spacing-wide-xs);
   }
 }

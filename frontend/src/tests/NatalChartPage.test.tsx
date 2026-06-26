@@ -432,6 +432,7 @@ describe("NatalChartPage", () => {
     expect(await screen.findByRole("heading", { name: "Lecture sans repères" })).toBeVisible()
     const chapter = container.querySelector(".natal-reading__chapter")
     expect(chapter).toHaveClass("natal-reading__chapter--no-meta")
+    expect(screen.getAllByText("Contenu narratif sans métadonnees.")).toHaveLength(1)
     expect(screen.queryByLabelText(/Qualité et repères pour Chapitre minimal/i)).not.toBeInTheDocument()
   })
 
