@@ -9,6 +9,7 @@
   --natal-surface-data-strong: color-mix(in srgb, var(--premium-accent-purple-strong) 6%, var(--premium-glass-surface-2));
   --natal-surface-chip: color-mix(in srgb, var(--premium-accent-purple-strong) 5%, var(--premium-glass-surface-2));
   --natal-border-data: var(--premium-glass-border-soft);
+  font-family: var(--font-family-base);
 }
 
 .page-layout.natal-page-container {
@@ -1291,25 +1292,25 @@
 
   .natal-page-portrait {
     grid-template-columns: 1fr;
-    gap: 9px;
+    gap: 7px;
     margin-top: 4px;
-    padding: 11px;
+    padding: 9px;
     border-radius: var(--radius-lg);
   }
 
   .natal-page-portrait__copy {
-    gap: 5px;
+    gap: 4px;
   }
 
   .natal-page-portrait__copy p {
-    font-size: var(--font-size-xs);
-    line-height: var(--line-height-normal);
+    font-size: var(--font-size-2xs);
+    line-height: var(--type-metadata-line-height);
     -webkit-line-clamp: 3;
   }
 
   .natal-page-portrait__facts {
     grid-template-columns: 1fr;
-    gap: 6px;
+    gap: 5px;
   }
 
   .natal-page-portrait__facts .natal-page-portrait__fact:nth-child(3) {
@@ -1317,8 +1318,8 @@
   }
 
   .natal-page-portrait__fact {
-    min-height: 48px;
-    padding: 7px 8px;
+    min-height: 42px;
+    padding: 6px 7px;
   }
 
   .natal-page-portrait__label,
@@ -1327,7 +1328,7 @@
   }
 
   .natal-page-portrait__fact strong {
-    font-size: var(--font-size-xs);
+    font-size: var(--font-size-2xs);
   }
 
   .natal-card,
@@ -1374,8 +1375,8 @@
   }
 
   .natal-reading__chapter p {
-    font-size: var(--font-size-xs);
-    line-height: var(--line-height-copy-tight);
+    font-size: var(--font-size-2xs);
+    line-height: var(--type-metadata-line-height);
   }
 
   .natal-grid {
@@ -1478,21 +1479,21 @@
   }
 
   .natal-reading__chapters {
-    gap: 7px;
+    gap: 6px;
   }
 
   .natal-reading__chapter {
     grid-template-columns: 1fr;
-    gap: 7px;
-    padding: 10px;
+    gap: 6px;
+    padding: 9px;
   }
 
   .natal-reading__chapter-main {
-    gap: 5px;
+    gap: 4px;
   }
 
   .natal-reading__chapter-body {
-    gap: 5px;
+    gap: 4px;
     max-width: none;
   }
 
@@ -1500,26 +1501,27 @@
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 5px 7px;
+    gap: 4px 5px;
     width: 100%;
-    padding-top: 6px;
+    padding-top: 4px;
     border-top: 1px solid color-mix(in srgb, var(--premium-text-meta) 12%, transparent);
   }
 
   .natal-reading__chapter-head h3 {
-    font-size: var(--font-size-sm);
+    font-size: var(--font-size-xs);
     line-height: var(--type-label-line-height);
   }
 
   .natal-reading__chapter-excerpt {
-    font-size: var(--font-size-xs);
+    color: color-mix(in srgb, var(--premium-text-strong) 72%, var(--premium-text-meta) 28%) !important;
+    font-size: var(--font-size-2xs);
     font-weight: var(--font-weight-medium);
-    line-height: var(--line-height-copy-tight);
+    line-height: var(--type-metadata-line-height);
   }
 
   .natal-reading__basis {
     flex: 1 1 100%;
-    gap: 5px;
+    gap: 3px;
     padding-top: 0;
     border-top: none;
   }
@@ -1530,7 +1532,17 @@
   }
 
   .natal-reading__basis ul {
-    gap: 4px;
+    flex-wrap: nowrap;
+    gap: 3px;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-bottom: 1px;
+    scrollbar-width: none;
+  }
+
+  .natal-reading__basis ul::-webkit-scrollbar {
+    display: none;
   }
 
   .natal-section-eyebrow {
@@ -1558,12 +1570,23 @@
     font-size: var(--font-size-3xs);
   }
 
-  .natal-badge--basis {
-    min-height: 16px;
-    padding: 0 4px;
+  .natal-reading__basis .natal-badge--basis {
+    display: inline-flex;
+    box-sizing: border-box;
+    flex: 0 0 auto;
+    height: calc(var(--font-size-3xs) + 4px);
+    min-height: 0;
+    max-width: none;
+    padding: 0 3px;
     border-color: color-mix(in srgb, var(--premium-text-meta) 10%, transparent);
-    background: color-mix(in srgb, var(--color-token-rgb-255-255-255) 14%, transparent);
+    background: color-mix(in srgb, var(--color-token-rgb-255-255-255) 10%, transparent);
+    color: color-mix(in srgb, var(--premium-text-meta) 86%, var(--premium-text-main) 14%);
     font-size: var(--font-size-3xs);
+    font-weight: var(--font-weight-medium);
+    line-height: calc(var(--font-size-3xs) + 4px);
+    overflow: visible;
+    text-overflow: clip;
+    white-space: nowrap;
   }
 
   .natal-badge--confidence {
@@ -1573,5 +1596,26 @@
     background: transparent;
     font-size: var(--font-size-3xs);
     letter-spacing: var(--letter-spacing-wide-xs);
+  }
+
+  .natal-chart-guide {
+    margin-top: 14px;
+  }
+
+  .natal-chart-guide__summary {
+    min-height: 38px;
+    padding: 9px 12px;
+    font-size: var(--font-size-xs);
+    line-height: var(--type-label-line-height);
+  }
+
+  .natal-chart-guide__summary::after {
+    font-size: var(--font-size-md);
+  }
+
+  .natal-chart-guide__content {
+    padding: 0 12px 14px;
+    font-size: var(--font-size-2xs);
+    line-height: var(--line-height-copy-tight);
   }
 }

@@ -237,10 +237,15 @@ test("capture les preuves desktop et mobile d'une lecture Basic V2 lisible", asy
 
   await page.setViewportSize({ width: 390, height: 844 })
   const mobileChapterText = page.locator(".natal-reading__chapter-body p").first()
+  const mobileChapterTitle = page.locator(".natal-reading__chapter-head h3").first()
+  const mobileChapterExcerpt = page.locator(".natal-reading__chapter-excerpt").first()
   const mobileChapterMeta = page.locator(".natal-reading__chapter-meta").first()
+  const mobileBasisList = page.locator(".natal-reading__basis ul").first()
+  const mobileBasisChip = page.locator(".natal-badge--basis").first()
   const mobilePortraitFacts = page.locator(".natal-page-portrait__facts").first()
   const mobilePortraitCards = page.locator(".natal-page-portrait__fact")
   const mobilePageMain = page.locator(".page-layout.natal-page-container .page-layout__main").first()
+  const mobileGuideSummary = page.locator(".natal-chart-guide__summary").first()
   const mobileStyles = await mobileChapterText.evaluate((element) => {
     const styles = window.getComputedStyle(element)
     return {
@@ -248,17 +253,60 @@ test("capture les preuves desktop et mobile d'une lecture Basic V2 lisible", asy
       lineHeight: Number.parseFloat(styles.lineHeight),
     }
   })
+  const excerptStyles = await mobileChapterExcerpt.evaluate((element) => {
+    const styles = window.getComputedStyle(element)
+    return {
+      fontSize: Number.parseFloat(styles.fontSize),
+      fontWeight: Number.parseFloat(styles.fontWeight),
+      lineHeight: Number.parseFloat(styles.lineHeight),
+    }
+  })
+  const titleStyles = await mobileChapterTitle.evaluate((element) => {
+    const styles = window.getComputedStyle(element)
+    return {
+      fontSize: Number.parseFloat(styles.fontSize),
+    }
+  })
+  const basisChipStyles = await mobileBasisChip.evaluate((element) => {
+    const styles = window.getComputedStyle(element)
+    return {
+      fontSize: Number.parseFloat(styles.fontSize),
+      height: Number.parseFloat(styles.height),
+      paddingLeft: Number.parseFloat(styles.paddingLeft),
+      textOverflow: styles.textOverflow,
+      whiteSpace: styles.whiteSpace,
+    }
+  })
+  const basisListStyles = await mobileBasisList.evaluate((element) => {
+    const styles = window.getComputedStyle(element)
+    return {
+      flexWrap: styles.flexWrap,
+      overflowX: styles.overflowX,
+    }
+  })
+  const guideSummaryHeight = await mobileGuideSummary.evaluate((element) => element.getBoundingClientRect().height)
   const metaDisplay = await mobileChapterMeta.evaluate((element) => window.getComputedStyle(element).display)
   const portraitColumns = await mobilePortraitFacts.evaluate((element) => window.getComputedStyle(element).gridTemplateColumns)
   const bottomPadding = await mobilePageMain.evaluate((element) =>
     Number.parseFloat(window.getComputedStyle(element).paddingBottom),
   )
 
-  expect(mobileStyles.fontSize).toBeLessThanOrEqual(12)
-  expect(mobileStyles.lineHeight).toBeLessThanOrEqual(18)
+  expect(mobileStyles.fontSize).toBeLessThanOrEqual(11)
+  expect(mobileStyles.lineHeight).toBeLessThanOrEqual(16)
+  expect(excerptStyles.fontSize).toBeLessThan(titleStyles.fontSize)
+  expect(excerptStyles.fontWeight).toBeLessThanOrEqual(500)
+  expect(excerptStyles.lineHeight).toBeLessThanOrEqual(16)
   expect(metaDisplay).toBe("flex")
+  expect(basisChipStyles.fontSize).toBeLessThanOrEqual(10)
+  expect(basisChipStyles.height).toBeLessThanOrEqual(16)
+  expect(basisChipStyles.paddingLeft).toBeLessThanOrEqual(3)
+  expect(basisChipStyles.textOverflow).toBe("clip")
+  expect(basisChipStyles.whiteSpace).toBe("nowrap")
+  expect(basisListStyles.flexWrap).toBe("nowrap")
+  expect(basisListStyles.overflowX).toBe("auto")
   await expect(mobilePortraitCards).toHaveCount(3)
   expect(portraitColumns.trim().split(/\s+/)).toHaveLength(1)
+  expect(guideSummaryHeight).toBeLessThanOrEqual(40)
   expect(bottomPadding).toBeGreaterThanOrEqual(170)
   await page.screenshot({ path: resolve(EVIDENCE_DIR, "basic-readable-mobile-after.png"), fullPage: true })
 })
