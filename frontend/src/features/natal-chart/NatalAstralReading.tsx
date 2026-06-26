@@ -1,4 +1,5 @@
 // Composant public d'affichage de l'interprétation natale Astral normalisée.
+import { useEffect, useId, useState } from "react"
 import { Link } from "react-router-dom"
 import { Home, Sparkles, Sun, Triangle } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
@@ -16,12 +17,22 @@ type NatalAstralReadingProps = {
 
 const PUBLIC_READING_ERROR_MESSAGE =
   "La lecture Astral n'a pas pu être générée pour le moment. Veuillez réessayer plus tard."
+const EXCERPT_MAX_LENGTH = 140
 
 const GROUP_MARKERS: Record<string, LucideIcon> = {
   "Repères principaux": Sun,
   Maisons: Home,
   "Planètes notables": Sparkles,
   "Aspects notables": Triangle,
+}
+const OPEN_MAIN_CHAPTER_COUNT = 2
+
+function compactExcerpt(text: string): string {
+  if (text.length <= EXCERPT_MAX_LENGTH) return text
+
+  const rawExcerpt = text.slice(0, EXCERPT_MAX_LENGTH - 3).trimEnd()
+  const lastWordBoundary = rawExcerpt.lastIndexOf(" ")
+  return lastWordBoundary > 80 ? rawExcerpt.slice(0, lastWordBoundary) : rawExcerpt
 }
 
 function markerForGroup(title: string): LucideIcon {
@@ -38,9 +49,8 @@ function chapterExcerpt(chapter: NatalReadingChapterViewModel): string | null {
   if (!firstParagraph) return null
 
   const firstSentence = firstParagraph.match(/^(.+?[.!?])(?:\s|$)/)?.[1]
-  if (firstSentence && firstSentence.length <= 190) return firstSentence
-  if (firstParagraph.length <= 190) return firstParagraph
-  return `${firstParagraph.slice(0, 187).trim()}...`
+  const excerpt = firstSentence && firstSentence.length <= EXCERPT_MAX_LENGTH ? firstSentence : compactExcerpt(firstParagraph)
+  return excerpt.endsWith(".") || excerpt.endsWith("!") || excerpt.endsWith("?") ? excerpt : `${excerpt}...`
 }
 
 function chapterBodyParagraphs(chapter: NatalReadingChapterViewModel, excerpt: string | null): string[] {
@@ -54,12 +64,28 @@ function chapterBodyParagraphs(chapter: NatalReadingChapterViewModel, excerpt: s
     return remainingParagraphs
   }
 
-  if (normalizedFirstParagraph.startsWith(excerpt)) {
-    const remainder = normalizedFirstParagraph.slice(excerpt.length).trim()
+  const excerptPrefix = excerpt.replace(/\.\.\.$/, "").trim()
+  if (excerptPrefix && normalizedFirstParagraph.startsWith(excerptPrefix)) {
+    const remainder = normalizedFirstParagraph.slice(excerptPrefix.length).trim()
     return remainder ? [remainder, ...remainingParagraphs] : remainingParagraphs
   }
 
   return chapter.paragraphs
+}
+
+function chapterThemeTitle(chapter: NatalReadingChapterViewModel, index: number): string {
+  return `${index + 1}. ${chapter.title}`
+}
+
+function chapterPanelId(baseId: string, itemKey: string): string {
+  const safeKey = itemKey.replace(/[^a-zA-Z0-9_-]/g, "-")
+  return `${baseId}-${safeKey}-body`
+}
+
+function chapterStateKey(chapter: NatalReadingChapterViewModel, itemKey: string): string {
+  return [itemKey, chapter.paragraphs.join("\u0000"), chapter.astroBasis.join("\u0000"), chapter.safetyFlags.join("\u0000")].join(
+    "\u0001",
+  )
 }
 
 function NatalCalculationFacts({ facts }: { facts: NatalCalculationFactsViewModel }) {
@@ -101,28 +127,72 @@ function NatalCalculationFacts({ facts }: { facts: NatalCalculationFactsViewMode
   )
 }
 
-function NatalChapterCard({ chapter, itemKey }: { chapter: NatalReadingChapterViewModel; itemKey: string }) {
+function NatalChapterCard({
+  chapter,
+  itemKey,
+  themeTitle,
+  defaultExpanded = true,
+  compact = false,
+}: {
+  chapter: NatalReadingChapterViewModel
+  itemKey: string
+  themeTitle: string
+  defaultExpanded?: boolean
+  compact?: boolean
+}) {
+  const baseId = useId()
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded)
+  const resetKey = chapterStateKey(chapter, itemKey)
   const excerpt = chapterExcerpt(chapter)
   const bodyParagraphs = chapterBodyParagraphs(chapter, excerpt)
   const hasMeta = Boolean(chapter.confidenceLabel) || chapter.astroBasis.length > 0 || chapter.safetyFlags.length > 0
-  const chapterClassName = hasMeta ? "natal-reading__chapter" : "natal-reading__chapter natal-reading__chapter--no-meta"
+  const panelId = chapterPanelId(baseId, itemKey)
+  const canToggle = bodyParagraphs.length > 0
+  const chapterClassName = [
+    "natal-reading__chapter",
+    hasMeta ? "" : "natal-reading__chapter--no-meta",
+    isExpanded ? "natal-reading__chapter--expanded" : "natal-reading__chapter--collapsed",
+    compact ? "natal-reading__chapter--compact" : "",
+  ]
+    .filter(Boolean)
+    .join(" ")
+
+  useEffect(() => {
+    setIsExpanded(defaultExpanded)
+  }, [defaultExpanded, resetKey])
 
   return (
     <section className={chapterClassName}>
       <div className="natal-reading__chapter-main">
         <div className="natal-reading__chapter-head">
           <div className="natal-reading__chapter-title">
-            <h3>{chapter.title}</h3>
+            <h3>{themeTitle}</h3>
             <span className="natal-section-eyebrow">Lecture guidée</span>
           </div>
         </div>
-        {excerpt ? <p className="natal-reading__chapter-excerpt">{excerpt}</p> : null}
+        {excerpt ? (
+          <p className="natal-reading__chapter-excerpt">
+            <span className="natal-reading__chapter-excerpt-label">À retenir</span>
+            <span className="natal-reading__chapter-excerpt-text">{excerpt}</span>
+          </p>
+        ) : null}
         {bodyParagraphs.length > 0 ? (
-          <div className="natal-reading__chapter-body">
+          <div className="natal-reading__chapter-body" id={panelId} hidden={!isExpanded}>
             {bodyParagraphs.map((paragraph, paragraphIndex) => (
               <p key={`${itemKey}-paragraph-${paragraphIndex}`}>{paragraph}</p>
             ))}
           </div>
+        ) : null}
+        {canToggle ? (
+          <button
+            aria-controls={panelId}
+            aria-expanded={isExpanded}
+            className="natal-reading__chapter-toggle"
+            type="button"
+            onClick={() => setIsExpanded((current) => !current)}
+          >
+            {isExpanded ? "Réduire" : "Lire la suite"}
+          </button>
         ) : null}
       </div>
       {hasMeta ? (
@@ -191,12 +261,25 @@ export function NatalAstralReading({ reading, showSummary = true }: NatalAstralR
       ) : null}
 
       {reading.chapters.length > 0 ? (
+        <div className="natal-reading__progress" aria-label="Progression des lectures">
+          <span className="natal-section-eyebrow">Parcours de lecture</span>
+          <ol>
+            {reading.chapters.map((chapter, index) => (
+              <li key={`progress-${chapter.code ?? chapter.title}-${index}`}>{chapterThemeTitle(chapter, index)}</li>
+            ))}
+          </ol>
+        </div>
+      ) : null}
+
+      {reading.chapters.length > 0 ? (
         <div className="natal-reading__chapters">
           {reading.chapters.map((chapter, index) => (
             <NatalChapterCard
               chapter={chapter}
+              defaultExpanded={index < OPEN_MAIN_CHAPTER_COUNT}
               itemKey={`chapter-${chapter.code ?? chapter.title}-${index}`}
               key={`${chapter.code ?? chapter.title}-${index}`}
+              themeTitle={chapterThemeTitle(chapter, index)}
             />
           ))}
         </div>
@@ -210,12 +293,15 @@ export function NatalAstralReading({ reading, showSummary = true }: NatalAstralR
             <span className="natal-section-eyebrow">Repères calculés</span>
             <h2 id="natal-reading-explanations-title">Explications du moteur Astral</h2>
           </div>
-          <div className="natal-reading-explanations__grid">
+          <div className="natal-reading-explanations__list">
             {reading.explanations.map((chapter, index) => (
               <NatalChapterCard
+                compact
                 chapter={chapter}
+                defaultExpanded={false}
                 itemKey={`explanation-${chapter.code ?? chapter.title}-${index}`}
                 key={`explanation-${chapter.code ?? chapter.title}-${index}`}
+                themeTitle={chapter.title}
               />
             ))}
           </div>

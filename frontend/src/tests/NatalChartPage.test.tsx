@@ -234,6 +234,17 @@ describe("NatalChartPage", () => {
                   confidence: "medium",
                   astro_basis: ["Soleil en Cancer", "Lune en Balance"],
                 },
+                {
+                  code: "emotions",
+                  title: "Emotions",
+                  body:
+                    "Deuxieme lecture ouverte par defaut avec une phrase volontairement longue pour verifier que le chapeau tronque ne repete pas tout le debut du paragraphe dans le detail. Elle reste accessible sans action initiale.",
+                },
+                {
+                  code: "relations",
+                  title: "Relations",
+                  body: "Troisieme lecture secondaire repliee. Elle devient lisible apres action.",
+                },
               ],
               legal: {
                 disclaimer: "Lecture symbolique et non medicale.",
@@ -252,7 +263,8 @@ describe("NatalChartPage", () => {
           explanations: {
             items: [
               {
-                explanation: "Votre lecture met l'accent sur une dynamique personnelle stable.",
+                explanation:
+                  "Votre lecture met l'accent sur une dynamique personnelle stable. Ce repere detaille la maniere dont le calcul soutient cette interpretation.",
                 expression_primary: "Maison 10",
                 fact_id: "placement:sun:taurus:house:10",
                 kind_code: "placement",
@@ -295,17 +307,27 @@ describe("NatalChartPage", () => {
     expect(screen.getByRole("region", { name: "Aspects notables" })).toHaveTextContent("Jupiter - Uranus")
     expect(screen.getAllByText("Une synthese claire du theme.")).toHaveLength(1)
     expect(container.querySelector(".natal-badge--report-status")).toHaveTextContent("basic")
-    expect(screen.getByRole("heading", { name: "Identite" })).toBeVisible()
-    expect(screen.getByText("Chapitre narratif principal conserve.")).toHaveClass("natal-reading__chapter-excerpt")
+    expect(screen.getByRole("heading", { name: "1. Identite" })).toBeVisible()
+    expect(screen.getByLabelText("Progression des lectures")).toHaveTextContent("1. Identite")
+    expect(screen.getByLabelText("Progression des lectures")).toHaveTextContent("2. Emotions")
+    expect(screen.getByLabelText("Progression des lectures")).toHaveTextContent("3. Relations")
+    expect(screen.getByText(/Chapitre narratif principal conserve/i).closest(".natal-reading__chapter-excerpt")).not.toBeNull()
+    expect(container.querySelector(".natal-reading__chapter-excerpt")).toHaveTextContent("À retenir")
     expect(container.querySelector(".natal-reading__chapter-excerpt")).toHaveTextContent(
       /Chapitre narratif principal conserve/i,
     )
     const chapterTitle = container.querySelector(".natal-reading__chapter-title")
-    expect(chapterTitle).toHaveTextContent("Identite")
-    expect((chapterTitle?.textContent ?? "").indexOf("Identite")).toBeLessThan(
+    expect(chapterTitle).toHaveTextContent("1. Identite")
+    expect((chapterTitle?.textContent ?? "").indexOf("1. Identite")).toBeLessThan(
       (chapterTitle?.textContent ?? "").indexOf("Lecture guidée"),
     )
     expect(screen.getByText("Suite analytique preservee.")).toBeVisible()
+    expect(screen.getByText(/Elle reste accessible sans action initiale/i)).toBeVisible()
+    const longExcerptStart = "Deuxieme lecture ouverte par defaut avec une phrase volontairement longue"
+    expect((document.body.textContent?.match(new RegExp(longExcerptStart, "g")) ?? [])).toHaveLength(1)
+    expect(screen.getByText("Elle devient lisible apres action.")).not.toBeVisible()
+    expect(screen.getAllByRole("button", { name: "Réduire" })).toHaveLength(2)
+    expect(screen.getAllByRole("button", { name: "Réduire" })[0]).toHaveAttribute("aria-expanded", "true")
     expect(screen.getByText("Confiance moyenne")).toHaveClass("natal-badge--confidence")
     expect(screen.getByText("Repères utilisés")).toBeVisible()
     expect(screen.getByText("Soleil en Cancer")).toBeVisible()
@@ -313,6 +335,8 @@ describe("NatalChartPage", () => {
     const explanationsSection = screen.getByRole("region", { name: "Explications du moteur Astral" })
     expect(explanationsSection).toHaveTextContent("Sun en taurus maison 10")
     expect(explanationsSection).toHaveTextContent(/dynamique personnelle stable/i)
+    expect(screen.getAllByRole("button", { name: "Lire la suite" })).toHaveLength(2)
+    expect(screen.getAllByRole("button", { name: "Lire la suite" })[0]).toHaveAttribute("aria-expanded", "false")
     expect(screen.queryByText("placement:sun:taurus:house:10")).not.toBeInTheDocument()
     expect(screen.queryByText("cache")).not.toBeInTheDocument()
     expect(screen.getByText("Comment lire ton thème natal")).toBeVisible()
@@ -366,6 +390,7 @@ describe("NatalChartPage", () => {
   })
 
   it("affiche les explications dediees sans message de chapitres manquants", async () => {
+    const user = userEvent.setup()
     mockUseAstralJobStatus.mockReturnValue({
       data: {
         run_id: "run-natal-explanations-only",
@@ -385,7 +410,8 @@ describe("NatalChartPage", () => {
           explanations: {
             items: [
               {
-                explanation: "Le Soleil en Taureau en maison 10 indique une orientation stable.",
+                explanation:
+                  "Le Soleil en Taureau en maison 10 indique une orientation stable. Cette explication detaille le repere sans interrompre la lecture principale.",
                 title: "Sun en taurus maison 10",
               },
             ],
@@ -403,6 +429,12 @@ describe("NatalChartPage", () => {
     expect(await screen.findByRole("heading", { name: "Lecture avec repères" })).toBeVisible()
     const explanationsSection = screen.getByRole("region", { name: "Explications du moteur Astral" })
     expect(explanationsSection).toHaveTextContent("Sun en taurus maison 10")
+    const readMore = screen.getByRole("button", { name: "Lire la suite" })
+    expect(readMore).toHaveAttribute("aria-expanded", "false")
+    expect(screen.getByText(/Cette explication detaille/i)).not.toBeVisible()
+    await user.click(readMore)
+    expect(readMore).toHaveAttribute("aria-expanded", "true")
+    expect(screen.getByText(/Cette explication detaille/i)).toBeVisible()
     expect(screen.queryByText(/ne contient pas encore de chapitres publics/i)).not.toBeInTheDocument()
   })
 
