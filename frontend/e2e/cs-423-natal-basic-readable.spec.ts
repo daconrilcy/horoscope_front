@@ -250,17 +250,17 @@ test("capture les preuves desktop et mobile d'une lecture Basic V2 lisible", asy
         bodyFontFamily: bodyStyles.fontFamily,
         bodyFontSize: bodyStyles.fontSize,
         bodyFontWeight: bodyStyles.fontWeight,
-        bodyLineHeight: bodyStyles.lineHeight,
+        bodyLineHeight: Number.parseFloat(bodyStyles.lineHeight),
         excerptFontFamily: excerptStyles.fontFamily,
         excerptFontSize: excerptStyles.fontSize,
         excerptFontWeight: excerptStyles.fontWeight,
-        excerptLineHeight: excerptStyles.lineHeight,
+        excerptLineHeight: Number.parseFloat(excerptStyles.lineHeight),
       }
     })
   expect(desktopTypography.excerptFontFamily).toBe(desktopTypography.bodyFontFamily)
   expect(desktopTypography.excerptFontSize).toBe(desktopTypography.bodyFontSize)
   expect(desktopTypography.excerptFontWeight).toBe(desktopTypography.bodyFontWeight)
-  expect(desktopTypography.excerptLineHeight).toBe(desktopTypography.bodyLineHeight)
+  expect(desktopTypography.bodyLineHeight).toBeGreaterThan(desktopTypography.excerptLineHeight)
 
   const desktopSurfaceWidths = await page.evaluate(() => {
     const portrait = document.querySelector(".natal-page-portrait")
@@ -299,6 +299,11 @@ test("capture les preuves desktop et mobile d'une lecture Basic V2 lisible", asy
   await page.screenshot({ path: resolve(EVIDENCE_DIR, "basic-readable-desktop-after.png"), fullPage: true })
 
   await page.setViewportSize({ width: 390, height: 844 })
+  const mobileMetaToggle = page.locator(".natal-reading__meta-toggle").first()
+  await expect(mobileMetaToggle).toHaveAttribute("aria-expanded", "false")
+  await mobileMetaToggle.click()
+  await expect(mobileMetaToggle).toHaveAttribute("aria-expanded", "true")
+  await expect(mobileMetaToggle).toHaveText("Masquer les repères")
   const mobileChapterText = page.locator(".natal-reading__chapter-body p").first()
   const mobileChapterTitle = page.locator(".natal-reading__chapter-head h3").first()
   const mobileChapterExcerpt = page.locator(".natal-reading__chapter-excerpt").first()

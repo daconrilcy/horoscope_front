@@ -13,6 +13,7 @@ const mockUseAccessTokenSnapshot = vi.fn()
 const mockUseAstralJobStatus = vi.fn()
 const mockUseAstralJobEvents = vi.fn()
 let capturedAstralEventHandler: ((event: unknown) => void) | null = null
+let restoreScrollIntoView: (() => void) | null = null
 
 vi.mock("../api/astral", async () => {
   const actual = await vi.importActual<typeof import("../api/astral")>("../api/astral")
@@ -54,6 +55,17 @@ function renderNatalChartPage(initialEntries = ["/natal"]) {
       </MemoryRouter>
     </QueryClientProvider>,
   )
+}
+
+function mockScrollIntoView() {
+  const originalScrollIntoView = Element.prototype.scrollIntoView
+  const scrollIntoViewMock = vi.fn()
+  Element.prototype.scrollIntoView = scrollIntoViewMock
+  restoreScrollIntoView = () => {
+    Element.prototype.scrollIntoView = originalScrollIntoView
+    restoreScrollIntoView = null
+  }
+  return scrollIntoViewMock
 }
 
 beforeEach(() => {
@@ -98,6 +110,7 @@ beforeEach(() => {
 })
 
 afterEach(() => {
+  restoreScrollIntoView?.()
   cleanup()
   queryClient.clear()
 })
@@ -162,6 +175,7 @@ describe("NatalChartPage", () => {
 
   it("rend une lecture Astral structuree et la precision reduite si le job revient en simplifie", async () => {
     const user = userEvent.setup()
+    const scrollIntoViewMock = mockScrollIntoView()
     mockUseAstralJobStatus.mockReturnValue({
       data: {
         run_id: "run-natal-2",
@@ -306,12 +320,21 @@ describe("NatalChartPage", () => {
     expect(screen.getByRole("region", { name: "Maisons" })).toHaveTextContent("Maison II")
     expect(screen.getByRole("region", { name: "Planètes notables" })).toHaveTextContent("Mercure")
     expect(screen.getByRole("region", { name: "Aspects notables" })).toHaveTextContent("Jupiter - Uranus")
+    expect(container.querySelector(".natal-badge--astro-sign")).toHaveTextContent("Capricorne")
+    expect(container.querySelector(".natal-badge--astro-house")).toHaveTextContent("Valeurs")
+    expect(container.querySelector(".natal-badge--astro-aspect")).toHaveTextContent("Jupiter - Uranus")
+    expect(container.querySelector(".natal-badge--astro-intensity")).toHaveTextContent("Très élevée")
     expect(screen.getAllByText("Une synthese claire du theme.")).toHaveLength(1)
     expect(container.querySelector(".natal-badge--report-status")).toHaveTextContent("Essentielle")
     expect(screen.getByRole("heading", { name: "1. Identite" })).toBeVisible()
-    expect(screen.getByLabelText("Progression des lectures")).toHaveTextContent("1. Identite")
-    expect(screen.getByLabelText("Progression des lectures")).toHaveTextContent("2. Emotions")
-    expect(screen.getByLabelText("Progression des lectures")).toHaveTextContent("3. Relations")
+    expect(screen.getByLabelText("Progression des lectures")).toHaveTextContent("Identite")
+    expect(screen.getByLabelText("Progression des lectures")).toHaveTextContent("Emotions")
+    expect(screen.getByLabelText("Progression des lectures")).toHaveTextContent("Relations")
+    const firstProgressLink = screen.getByRole("button", { name: "Identite" })
+    expect(firstProgressLink).toHaveAttribute("aria-current", "step")
+    await user.click(screen.getByRole("button", { name: "Relations" }))
+    expect(screen.getByRole("button", { name: "Relations" })).toHaveAttribute("aria-current", "step")
+    expect(scrollIntoViewMock).toHaveBeenCalledWith({ behavior: "smooth", block: "start" })
     expect(screen.getByText(/Chapitre narratif principal conserve/i).closest(".natal-reading__chapter-excerpt")).not.toBeNull()
     expect(container.querySelector(".natal-reading__chapter-excerpt")).toHaveTextContent("À retenir")
     expect(container.querySelector(".natal-reading__chapter-excerpt")).toHaveTextContent(
@@ -342,6 +365,11 @@ describe("NatalChartPage", () => {
     expect(screen.getByText("Repères utilisés")).toBeVisible()
     expect(screen.getByText("Soleil en Cancer")).toBeVisible()
     expect(screen.getByText("Lune en Balance")).toBeVisible()
+    const firstMetaToggle = screen.getAllByRole("button", { name: "Afficher les repères" })[0]
+    expect(firstMetaToggle).toHaveAttribute("aria-expanded", "false")
+    await user.click(firstMetaToggle)
+    expect(firstMetaToggle).toHaveAttribute("aria-expanded", "true")
+    expect(firstMetaToggle).toHaveTextContent("Masquer les repères")
     const explanationsSection = screen.getByRole("region", { name: "Explications du moteur Astral" })
     expect(explanationsSection).toHaveTextContent("Soleil en Taureau maison 10")
     expect(screen.queryByText("Very high")).not.toBeInTheDocument()

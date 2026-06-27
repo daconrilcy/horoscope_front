@@ -221,6 +221,31 @@ test("garde /natal lisible et non masque a 360, 390 et 430 px", async ({ page })
     await page.setViewportSize(viewport)
     await expectNoHorizontalOverflow(page)
 
+    const progressList = page.locator(".natal-reading__progress ol").first()
+    const progressStyles = await progressList.evaluate((element) => {
+      const styles = window.getComputedStyle(element)
+      return {
+        display: styles.display,
+        overflowX: styles.overflowX,
+        scrollSnapType: styles.scrollSnapType,
+      }
+    })
+    expect(progressStyles.display).toBe("flex")
+    expect(progressStyles.overflowX).toBe("auto")
+    expect(progressStyles.scrollSnapType).toContain("x")
+
+    const progressLink = page.locator(".natal-reading__progress-link").first()
+    await expectTouchTarget(progressLink)
+    const progressLinkBox = await progressLink.boundingBox()
+    expect(progressLinkBox?.width ?? 0).toBeLessThanOrEqual(190)
+
+    const metaToggle = page.locator(".natal-reading__meta-toggle").first()
+    await expectTouchTarget(metaToggle)
+    await expect(metaToggle).toHaveAttribute("aria-expanded", "false")
+    await metaToggle.click()
+    await expect(metaToggle).toHaveAttribute("aria-expanded", "true")
+    await expect(metaToggle).toHaveText("Masquer les repères")
+
     const longBasis = page.getByText("Maison VI - Routines / hygiène de vie").first()
     await expect(longBasis).toBeVisible()
     const longBasisStyles = await longBasis.evaluate((element) => {
@@ -257,6 +282,9 @@ test("garde /natal lisible et non masque a 360, 390 et 430 px", async ({ page })
       return { metaTop: metaBox.top, mainBottom: mainBox?.bottom ?? 0 }
     })
     expect(metaTop.metaTop).toBeGreaterThanOrEqual(metaTop.mainBottom - 1)
+
+    await metaToggle.click()
+    await expect(metaToggle).toHaveAttribute("aria-expanded", "false")
 
     const reduceButton = page.locator(".natal-reading__chapter-toggle").first()
     await expectTouchTarget(reduceButton)

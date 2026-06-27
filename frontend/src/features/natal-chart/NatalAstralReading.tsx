@@ -1,5 +1,5 @@
 // Composant public d'affichage de l'interprétation natale Astral normalisée.
-import { useEffect, useId, useState } from "react"
+import { useEffect, useId, useMemo, useState } from "react"
 import { Link } from "react-router-dom"
 import { Home, Sparkles, Sun, Triangle } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
@@ -26,6 +26,7 @@ const GROUP_MARKERS: Record<string, LucideIcon> = {
   "Aspects notables": Triangle,
 }
 const OPEN_MAIN_CHAPTER_COUNT = 2
+const MAIN_CHAPTER_ROOT_ID = "natal-reading-chapter"
 
 function compactExcerpt(text: string): string {
   if (text.length <= EXCERPT_MAX_LENGTH) return text
@@ -42,6 +43,17 @@ function markerForGroup(title: string): LucideIcon {
 function groupClassName(title: string): string {
   const modifier = title === "Repères principaux" ? " natal-reading-facts__group--primary" : ""
   return `natal-reading-facts__group${modifier}`
+}
+
+function primaryFactBadgeClassName(title: string): string {
+  if (title === "Maisons") return "natal-badge natal-badge--astro-data natal-badge--astro-house"
+  if (title === "Aspects notables") return "natal-badge natal-badge--astro-data natal-badge--astro-aspect"
+  return "natal-badge natal-badge--astro-data natal-badge--astro-sign"
+}
+
+function detailFactBadgeClassName(title: string): string {
+  const modifier = title === "Maisons" || title === "Aspects notables" ? " natal-badge--astro-intensity" : ""
+  return `natal-badge natal-badge--fact-detail${modifier}`
 }
 
 function chapterExcerpt(chapter: NatalReadingChapterViewModel): string | null {
@@ -75,6 +87,19 @@ function chapterBodyParagraphs(chapter: NatalReadingChapterViewModel, excerpt: s
 
 function chapterThemeTitle(chapter: NatalReadingChapterViewModel, index: number): string {
   return `${index + 1}. ${chapter.title}`
+}
+
+function safeDomId(value: string): string {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9_-]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .toLowerCase()
+}
+
+function chapterAnchorId(itemKey: string): string {
+  return `${MAIN_CHAPTER_ROOT_ID}-${safeDomId(itemKey)}`
 }
 
 function chapterPanelId(baseId: string, itemKey: string): string {
@@ -111,10 +136,10 @@ function NatalCalculationFacts({ facts }: { facts: NatalCalculationFactsViewMode
                   <div className="natal-reading-facts__item" key={`${group.title}-${item.label}-${item.value}`}>
                     <dt>{item.label}</dt>
                     <dd>
-                      <span className="natal-badge natal-badge--astro-data">
+                      <span className={primaryFactBadgeClassName(group.title)}>
                         <strong>{item.value}</strong>
                       </span>
-                      {item.detail ? <span className="natal-badge natal-badge--fact-detail">{item.detail}</span> : null}
+                      {item.detail ? <span className={detailFactBadgeClassName(group.title)}>{item.detail}</span> : null}
                     </dd>
                   </div>
                 ))}
@@ -131,38 +156,44 @@ function NatalChapterCard({
   chapter,
   itemKey,
   themeTitle,
+  anchorId,
   defaultExpanded = true,
   compact = false,
 }: {
   chapter: NatalReadingChapterViewModel
   itemKey: string
   themeTitle: string
+  anchorId?: string
   defaultExpanded?: boolean
   compact?: boolean
 }) {
   const baseId = useId()
   const [isExpanded, setIsExpanded] = useState(defaultExpanded)
+  const [isMetaExpanded, setIsMetaExpanded] = useState(false)
   const resetKey = chapterStateKey(chapter, itemKey)
   const excerpt = chapterExcerpt(chapter)
   const bodyParagraphs = chapterBodyParagraphs(chapter, excerpt)
   const hasMeta = Boolean(chapter.confidenceLabel) || chapter.astroBasis.length > 0 || chapter.safetyFlags.length > 0
   const panelId = chapterPanelId(baseId, itemKey)
+  const metaPanelId = `${panelId}-meta`
   const canToggle = bodyParagraphs.length > 0
   const chapterClassName = [
     "natal-reading__chapter",
     hasMeta ? "" : "natal-reading__chapter--no-meta",
     isExpanded ? "natal-reading__chapter--expanded" : "natal-reading__chapter--collapsed",
     compact ? "natal-reading__chapter--compact" : "",
+    hasMeta && isMetaExpanded ? "natal-reading__chapter--meta-expanded" : "",
   ]
     .filter(Boolean)
     .join(" ")
 
   useEffect(() => {
     setIsExpanded(defaultExpanded)
+    setIsMetaExpanded(false)
   }, [defaultExpanded, resetKey])
 
   return (
-    <section className={chapterClassName}>
+    <section className={chapterClassName} id={anchorId}>
       <div className="natal-reading__chapter-main">
         <div className="natal-reading__chapter-head">
           <div className="natal-reading__chapter-title">
@@ -187,7 +218,9 @@ function NatalChapterCard({
             id={panelId}
           >
             {bodyParagraphs.map((paragraph, paragraphIndex) => (
-              <p key={`${itemKey}-paragraph-${paragraphIndex}`}>{paragraph}</p>
+              <p className="natal-reading__prose-paragraph" key={`${itemKey}-paragraph-${paragraphIndex}`}>
+                {paragraph}
+              </p>
             ))}
           </div>
         ) : null}
@@ -202,9 +235,20 @@ function NatalChapterCard({
             {isExpanded ? "Réduire" : "Lire la suite"}
           </button>
         ) : null}
+        {hasMeta ? (
+          <button
+            aria-controls={metaPanelId}
+            aria-expanded={isMetaExpanded}
+            className="natal-reading__meta-toggle"
+            type="button"
+            onClick={() => setIsMetaExpanded((current) => !current)}
+          >
+            {isMetaExpanded ? "Masquer les repères" : "Afficher les repères"}
+          </button>
+        ) : null}
       </div>
       {hasMeta ? (
-        <aside className="natal-reading__chapter-meta" aria-label={`Qualité et repères pour ${chapter.title}`}>
+        <aside className="natal-reading__chapter-meta" aria-label={`Qualité et repères pour ${chapter.title}`} id={metaPanelId}>
           {chapter.confidenceLabel ? (
             <span className="natal-badge natal-badge--confidence">{chapter.confidenceLabel}</span>
           ) : null}
@@ -231,6 +275,62 @@ function NatalChapterCard({
 
 /** Affiche la lecture Astral sans exposer les champs techniques du moteur externe. */
 export function NatalAstralReading({ reading, showSummary = true }: NatalAstralReadingProps) {
+  const mainChapterEntries = useMemo(
+    () =>
+      reading.chapters.map((chapter, index) => {
+        const itemKey = `chapter-${chapter.code ?? chapter.title}-${index}`
+        return {
+          anchorId: chapterAnchorId(itemKey),
+          chapter,
+          itemKey,
+          progressKey: `progress-${chapter.code ?? chapter.title}-${index}`,
+          title: chapterThemeTitle(chapter, index),
+        }
+      }),
+    [reading.chapters],
+  )
+  const [activeChapterKey, setActiveChapterKey] = useState<string | null>(mainChapterEntries[0]?.itemKey ?? null)
+
+  useEffect(() => {
+    setActiveChapterKey((currentKey) =>
+      currentKey && mainChapterEntries.some((entry) => entry.itemKey === currentKey)
+        ? currentKey
+        : mainChapterEntries[0]?.itemKey ?? null,
+    )
+  }, [mainChapterEntries])
+
+  useEffect(() => {
+    if (!mainChapterEntries.length || typeof IntersectionObserver !== "function") return undefined
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visibleEntry = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((left, right) => left.boundingClientRect.top - right.boundingClientRect.top)[0]
+        if (visibleEntry?.target instanceof HTMLElement) {
+          const nextKey = visibleEntry.target.dataset.chapterKey
+          if (nextKey) setActiveChapterKey(nextKey)
+        }
+      },
+      { rootMargin: "-20% 0px -62% 0px", threshold: [0, 0.2, 0.55] },
+    )
+
+    for (const entry of mainChapterEntries) {
+      const element = document.getElementById(entry.anchorId)
+      if (element) {
+        element.dataset.chapterKey = entry.itemKey
+        observer.observe(element)
+      }
+    }
+
+    return () => observer.disconnect()
+  }, [mainChapterEntries])
+
+  function scrollToChapter(anchorId: string, itemKey: string) {
+    setActiveChapterKey(itemKey)
+    document.getElementById(anchorId)?.scrollIntoView({ behavior: "smooth", block: "start" })
+  }
+
   if (reading.status === "failed" || reading.status === "safety_rejected") {
     return (
       <article className="natal-reading natal-reading--error" aria-label="Erreur de lecture Astral">
@@ -268,26 +368,40 @@ export function NatalAstralReading({ reading, showSummary = true }: NatalAstralR
         </p>
       ) : null}
 
-      {reading.chapters.length > 0 ? (
-        <div className="natal-reading__progress" aria-label="Progression des lectures">
+      {mainChapterEntries.length > 0 ? (
+        <nav className="natal-reading__progress" aria-label="Progression des lectures">
           <span className="natal-section-eyebrow">Parcours de lecture</span>
           <ol>
-            {reading.chapters.map((chapter, index) => (
-              <li key={`progress-${chapter.code ?? chapter.title}-${index}`}>{chapterThemeTitle(chapter, index)}</li>
+            {mainChapterEntries.map((entry, index) => (
+              <li key={entry.progressKey}>
+                <button
+                  aria-current={activeChapterKey === entry.itemKey ? "step" : undefined}
+                  className={[
+                    "natal-reading__progress-link",
+                    activeChapterKey === entry.itemKey ? "is-active" : "",
+                  ].filter(Boolean).join(" ")}
+                  type="button"
+                  onClick={() => scrollToChapter(entry.anchorId, entry.itemKey)}
+                >
+                  <span className="natal-reading__progress-index" aria-hidden="true">{index + 1}</span>
+                  <span>{entry.title.replace(/^\d+\.\s*/, "")}</span>
+                </button>
+              </li>
             ))}
           </ol>
-        </div>
+        </nav>
       ) : null}
 
-      {reading.chapters.length > 0 ? (
+      {mainChapterEntries.length > 0 ? (
         <div className="natal-reading__chapters">
-          {reading.chapters.map((chapter, index) => (
+          {mainChapterEntries.map((entry, index) => (
             <NatalChapterCard
-              chapter={chapter}
+              anchorId={entry.anchorId}
+              chapter={entry.chapter}
               defaultExpanded={index < OPEN_MAIN_CHAPTER_COUNT}
-              itemKey={`chapter-${chapter.code ?? chapter.title}-${index}`}
-              key={`${chapter.code ?? chapter.title}-${index}`}
-              themeTitle={chapterThemeTitle(chapter, index)}
+              itemKey={entry.itemKey}
+              key={entry.itemKey}
+              themeTitle={entry.title}
             />
           ))}
         </div>
