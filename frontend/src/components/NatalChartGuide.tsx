@@ -1,3 +1,6 @@
+// Composant de guide natal replié avec le même patron d'interaction que les lectures.
+import { useId, useState } from "react"
+
 import type { AstrologyLang } from "../i18n/astrology"
 import { getGuideTranslations } from "../i18n/natalChart"
 
@@ -6,13 +9,37 @@ interface NatalChartGuideProps {
   missingBirthTime: boolean
 }
 
+/** Affiche le guide de lecture du thème natal dans un panneau accessible et contrôlé. */
 export function NatalChartGuide({ lang, missingBirthTime }: NatalChartGuideProps) {
   const g = getGuideTranslations(lang)
+  const contentId = useId()
+  const [isExpanded, setIsExpanded] = useState(false)
 
   return (
-    <details className="app-card natal-chart-guide">
-      <summary className="natal-chart-guide__summary">{g.title}</summary>
-      <div className="natal-chart-guide__content">
+    <section className="app-card natal-chart-guide" aria-labelledby={`${contentId}-title`}>
+      <div className="natal-chart-guide__header">
+        <h2 className="natal-chart-guide__title" id={`${contentId}-title`}>
+          {g.title}
+        </h2>
+        <button
+          aria-controls={contentId}
+          aria-expanded={isExpanded}
+          className="natal-reading__chapter-toggle natal-chart-guide__toggle"
+          type="button"
+          onClick={() => setIsExpanded((current) => !current)}
+        >
+          {isExpanded ? "Réduire le guide" : "Lire le guide"}
+        </button>
+      </div>
+      <div
+        aria-hidden={!isExpanded}
+        className={[
+          "natal-chart-guide__content",
+          isExpanded ? "natal-chart-guide__content--expanded" : "natal-chart-guide__content--collapsed",
+        ].join(" ")}
+        hidden={!isExpanded}
+        id={contentId}
+      >
         <p className="natal-chart-guide__intro">{g.intro}</p>
 
         <section className="natal-chart-guide__section">
@@ -76,6 +103,6 @@ export function NatalChartGuide({ lang, missingBirthTime }: NatalChartGuideProps
           </dl>
         </section>
       </div>
-    </details>
+    </section>
   )
 }

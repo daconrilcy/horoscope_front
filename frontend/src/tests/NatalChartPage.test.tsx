@@ -161,6 +161,7 @@ describe("NatalChartPage", () => {
   })
 
   it("rend une lecture Astral structuree et la precision reduite si le job revient en simplifie", async () => {
+    const user = userEvent.setup()
     mockUseAstralJobStatus.mockReturnValue({
       data: {
         run_id: "run-natal-2",
@@ -327,7 +328,16 @@ describe("NatalChartPage", () => {
     expect((document.body.textContent?.match(new RegExp(longExcerptStart, "g")) ?? [])).toHaveLength(1)
     expect(screen.getByText("Elle devient lisible apres action.")).not.toBeVisible()
     expect(screen.getAllByRole("button", { name: "Réduire" })).toHaveLength(2)
-    expect(screen.getAllByRole("button", { name: "Réduire" })[0]).toHaveAttribute("aria-expanded", "true")
+    const firstChapterToggle = screen.getAllByRole("button", { name: "Réduire" })[0]
+    expect(firstChapterToggle).toHaveAttribute("aria-expanded", "true")
+    await user.click(firstChapterToggle)
+    expect(firstChapterToggle).toHaveAttribute("aria-expanded", "false")
+    expect(firstChapterToggle).toHaveTextContent("Lire la suite")
+    expect(screen.getByText("Suite analytique preservee.")).not.toBeVisible()
+    await user.click(firstChapterToggle)
+    expect(firstChapterToggle).toHaveAttribute("aria-expanded", "true")
+    expect(firstChapterToggle).toHaveTextContent("Réduire")
+    expect(screen.getByText("Suite analytique preservee.")).toBeVisible()
     expect(screen.getByText("Confiance moyenne")).toHaveClass("natal-badge--confidence")
     expect(screen.getByText("Repères utilisés")).toBeVisible()
     expect(screen.getByText("Soleil en Cancer")).toBeVisible()
@@ -342,6 +352,17 @@ describe("NatalChartPage", () => {
     expect(screen.queryByText("placement:sun:taurus:house:10")).not.toBeInTheDocument()
     expect(screen.queryByText("cache")).not.toBeInTheDocument()
     expect(screen.getByText("Comment lire ton thème natal")).toBeVisible()
+    const guideToggle = screen.getByRole("button", { name: "Lire le guide" })
+    expect(guideToggle).toHaveAttribute("aria-expanded", "false")
+    expect(screen.getByText(/Ton thème natal est une représentation géométrique/i)).not.toBeVisible()
+    await user.click(guideToggle)
+    expect(guideToggle).toHaveAttribute("aria-expanded", "true")
+    expect(guideToggle).toHaveTextContent("Réduire le guide")
+    expect(screen.getByText(/Ton thème natal est une représentation géométrique/i)).toBeVisible()
+    await user.click(guideToggle)
+    expect(guideToggle).toHaveAttribute("aria-expanded", "false")
+    expect(guideToggle).toHaveTextContent("Lire le guide")
+    expect(screen.getByText(/Ton thème natal est une représentation géométrique/i)).not.toBeVisible()
     expect(screen.getByRole("alert")).toHaveTextContent(/Thème partiel : certaines données de naissance/i)
     expect(screen.queryByText(/completude partielle/i)).not.toBeInTheDocument()
     expect(screen.queryByLabelText("Resultat Astral")).not.toBeInTheDocument()

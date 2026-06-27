@@ -177,7 +177,15 @@ function NatalChapterCard({
           </p>
         ) : null}
         {bodyParagraphs.length > 0 ? (
-          <div className="natal-reading__chapter-body" id={panelId} hidden={!isExpanded}>
+          <div
+            aria-hidden={!isExpanded}
+            className={[
+              "natal-reading__chapter-body",
+              isExpanded ? "natal-reading__chapter-body--expanded" : "natal-reading__chapter-body--collapsed",
+            ].join(" ")}
+            hidden={!isExpanded}
+            id={panelId}
+          >
             {bodyParagraphs.map((paragraph, paragraphIndex) => (
               <p key={`${itemKey}-paragraph-${paragraphIndex}`}>{paragraph}</p>
             ))}

@@ -220,9 +220,32 @@ test("capture les preuves desktop et mobile d'une lecture Basic V2 lisible", asy
 
   await page.setViewportSize({ width: 1440, height: 1200 })
   await page.goto(`/natal?runId=${ASTRAL_RUN_ID}`)
-  await expect(page.getByRole("heading", { name: "Lecture Basic publique" })).toBeVisible()
+  await expect(page.getByRole("heading", { name: "Lecture Essentielle publique" })).toBeVisible()
   await expect(page.getByText(/Introduction lisible/i).first()).toBeVisible()
   await expect(page.getByText(/Conclusion:/i).first()).toBeVisible()
+  const firstChapterToggle = page.locator(".natal-reading__chapter-toggle").first()
+  const firstChapterBody = page.locator(".natal-reading__chapter-body").first()
+  await expect(firstChapterBody).toBeVisible()
+  await firstChapterToggle.click()
+  await expect(firstChapterToggle).toHaveAttribute("aria-expanded", "false")
+  await expect(firstChapterToggle).toHaveText("Lire la suite")
+  await expect(firstChapterBody).not.toBeVisible()
+  await firstChapterToggle.click()
+  await expect(firstChapterToggle).toHaveAttribute("aria-expanded", "true")
+  await expect(firstChapterToggle).toHaveText("Réduire")
+  await expect(firstChapterBody).toBeVisible()
+
+  const guideToggle = page.locator(".natal-chart-guide__toggle").first()
+  await expect(guideToggle).toHaveAttribute("aria-expanded", "false")
+  await expect(guideToggle).toHaveText("Lire le guide")
+  await guideToggle.click()
+  await expect(guideToggle).toHaveAttribute("aria-expanded", "true")
+  await expect(guideToggle).toHaveText("Réduire le guide")
+  await expect(page.getByText(/Ton thème natal est une représentation géométrique/i)).toBeVisible()
+  await guideToggle.click()
+  await expect(guideToggle).toHaveAttribute("aria-expanded", "false")
+  await expect(guideToggle).toHaveText("Lire le guide")
+  await expect(page.getByText(/Ton thème natal est une représentation géométrique/i)).not.toBeVisible()
 
   const publicBody = (await page.locator(".natal-reading").innerText()).trim()
   expect(publicBody).not.toMatch(
@@ -245,7 +268,7 @@ test("capture les preuves desktop et mobile d'une lecture Basic V2 lisible", asy
   const mobilePortraitFacts = page.locator(".natal-page-portrait__facts").first()
   const mobilePortraitCards = page.locator(".natal-page-portrait__fact")
   const mobilePageMain = page.locator(".page-layout.natal-page-container .page-layout__main").first()
-  const mobileGuideSummary = page.locator(".natal-chart-guide__summary").first()
+  const mobileGuideToggle = page.locator(".natal-chart-guide__toggle").first()
   const mobileStyles = await mobileChapterText.evaluate((element) => {
     const styles = window.getComputedStyle(element)
     return {
@@ -284,7 +307,7 @@ test("capture les preuves desktop et mobile d'une lecture Basic V2 lisible", asy
       overflowX: styles.overflowX,
     }
   })
-  const guideSummaryHeight = await mobileGuideSummary.evaluate((element) => element.getBoundingClientRect().height)
+  const guideToggleHeight = await mobileGuideToggle.evaluate((element) => element.getBoundingClientRect().height)
   const metaDisplay = await mobileChapterMeta.evaluate((element) => window.getComputedStyle(element).display)
   const portraitColumns = await mobilePortraitFacts.evaluate((element) => window.getComputedStyle(element).gridTemplateColumns)
   const bottomPadding = await mobilePageMain.evaluate((element) =>
@@ -306,7 +329,7 @@ test("capture les preuves desktop et mobile d'une lecture Basic V2 lisible", asy
   expect(basisListStyles.overflowX).toBe("visible")
   await expect(mobilePortraitCards).toHaveCount(3)
   expect(portraitColumns.trim().split(/\s+/)).toHaveLength(1)
-  expect(guideSummaryHeight).toBeGreaterThanOrEqual(44)
+  expect(guideToggleHeight).toBeGreaterThanOrEqual(44)
   expect(bottomPadding).toBeGreaterThanOrEqual(140)
   await page.screenshot({ path: resolve(EVIDENCE_DIR, "basic-readable-mobile-after.png"), fullPage: true })
 })

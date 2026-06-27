@@ -33,6 +33,12 @@
   --natal-badge-meta-border: color-mix(in srgb, var(--premium-text-meta) 10%, var(--natal-border-block));
   --natal-text-reading: color-mix(in srgb, var(--premium-text-strong) 78%, var(--premium-text-main) 22%);
   --natal-text-reading-muted: color-mix(in srgb, var(--premium-text-meta) 82%, var(--premium-text-main) 18%);
+  --natal-type-page-title-size: var(--type-page-title-size);
+  --natal-type-section-title-size: var(--font-size-xl);
+  --natal-type-card-title-size: var(--font-size-lg);
+  --natal-type-subsection-title-size: var(--font-size-sm);
+  --natal-type-body-size: var(--type-body-size);
+  --natal-type-body-line-height: var(--line-height-prose);
   font-family: var(--font-family-base);
 }
 
@@ -118,10 +124,10 @@
 
 .natal-page-header__title {
   margin: 0;
-  font-size: var(--font-size-display-md);
-  line-height: var(--line-height-display-relaxed);
-  font-weight: var(--font-weight-bold);
-  letter-spacing: var(--letter-spacing-tight-sm);
+  font-size: var(--natal-type-page-title-size);
+  font-weight: var(--type-page-title-weight);
+  letter-spacing: 0;
+  line-height: var(--type-page-title-line-height);
   color: var(--premium-text-strong);
 }
 
@@ -763,81 +769,97 @@
   font-weight: var(--font-weight-bold);
 }
 
-/* Natal Chart Guide Premium Styling */
 .natal-chart-guide {
   margin-top: 24px;
-  background: var(--natal-surface-block);
-  border: 1px solid var(--natal-border-block);
+  display: grid;
+  gap: 16px;
+  padding: 22px;
+  background: var(--natal-surface-reading);
+  border: 1px solid var(--natal-border-reading);
   border-radius: var(--natal-radius-section);
-  overflow: hidden;
-  transition: all var(--duration-slow) var(--easing-default);
+  box-shadow: var(--natal-shadow-section);
 }
 
-.natal-chart-guide[open] {
-  background: var(--natal-surface-section);
-  box-shadow: var(--natal-shadow-block);
-}
-
-.natal-chart-guide__summary {
-  padding: 20px 24px;
-  font-weight: var(--font-weight-bold);
-  font-size: var(--font-size-md);
-  color: var(--premium-text-strong);
-  cursor: pointer;
-  list-style: none;
+.natal-chart-guide__header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
+  gap: 16px;
+  min-width: 0;
 }
 
-.natal-chart-guide__summary::-webkit-details-marker {
-  display: none;
+.natal-chart-guide__title {
+  margin: 0;
+  min-width: 0;
+  flex: 1 1 auto;
+  font-size: var(--natal-type-section-title-size);
+  font-weight: var(--type-section-title-weight);
+  line-height: var(--type-section-title-line-height);
+  color: var(--premium-text-strong);
 }
 
-.natal-chart-guide__summary::after {
-  content: '+';
-  font-size: var(--font-size-xl);
-  font-weight: var(--font-weight-regular);
-  transition: transform var(--duration-slow) var(--easing-default);
-}
-
-.natal-chart-guide[open] .natal-chart-guide__summary::after {
-  transform: rotate(45deg);
+.natal-chart-guide__toggle {
+  flex: 0 0 auto;
 }
 
 .natal-chart-guide__content {
-  padding: 0 24px 24px;
-  font-size: var(--font-size-sm);
-  color: var(--premium-text-main);
-  line-height: var(--line-height-relaxed);
+  display: grid;
+  gap: 18px;
+  color: var(--natal-text-reading);
+  font-size: var(--natal-type-body-size);
+  font-weight: var(--type-body-weight);
+  line-height: var(--natal-type-body-line-height);
+}
+
+.natal-chart-guide__content--collapsed {
+  display: none;
+}
+
+.natal-chart-guide__content[hidden] {
+  display: none;
+}
+
+.natal-chart-guide__content--expanded {
+  display: grid;
 }
 
 .natal-chart-guide__intro {
-  margin-top: 0;
-  margin-bottom: 24px;
-  font-style: italic;
-  opacity: 0.8;
+  margin: 0;
+  color: var(--natal-text-reading);
+  font-size: var(--natal-type-body-size);
+  font-weight: var(--type-body-weight);
+  line-height: var(--natal-type-body-line-height);
 }
 
 .natal-chart-guide__section {
-  margin-bottom: 24px;
-  padding-top: 20px;
+  display: grid;
+  gap: 8px;
+  padding-top: 16px;
   border-top: 1px solid var(--premium-glass-border-soft);
 }
 
 .natal-chart-guide__section h3 {
-  font-size: var(--font-size-15);
-  font-weight: var(--font-weight-bold);
-  margin: 0 0 12px;
-  color: var(--premium-accent-purple-strong);
-  text-transform: uppercase;
-  letter-spacing: var(--letter-spacing-wide-control);
+  margin: 0;
+  color: var(--premium-text-strong);
+  font-size: var(--natal-type-card-title-size);
+  font-weight: var(--type-card-title-weight);
+  letter-spacing: 0;
+  line-height: var(--type-card-title-line-height);
+}
+
+.natal-chart-guide__section p {
+  margin: 0;
+  color: var(--natal-text-reading);
+  font-size: var(--natal-type-body-size);
+  font-weight: var(--type-body-weight);
+  line-height: var(--natal-type-body-line-height);
 }
 
 .natal-chart-guide__faq dl {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
+  margin: 0;
 }
 
 .natal-chart-guide__faq-item dt {
@@ -848,7 +870,14 @@
 
 .natal-chart-guide__faq-item dd {
   margin: 0;
-  opacity: 0.85;
+  color: var(--natal-text-reading);
+}
+
+.natal-chart-guide__missing-time {
+  padding: 12px 14px;
+  border: 1px solid var(--natal-border-accent);
+  border-radius: var(--natal-radius-block);
+  background: var(--natal-surface-reading-muted);
 }
 
 .natal-house-interval {
@@ -977,8 +1006,9 @@
 
 .natal-reading__header h2 {
   margin: 0;
-  font-size: var(--font-size-xl);
-  line-height: var(--line-height-display-relaxed);
+  font-size: var(--natal-type-section-title-size);
+  font-weight: var(--type-section-title-weight);
+  line-height: var(--type-section-title-line-height);
   color: var(--premium-text-strong);
 }
 
@@ -988,7 +1018,9 @@
 .natal-reading__disclaimer {
   margin: 0;
   color: var(--natal-text-reading);
-  line-height: var(--line-height-prose);
+  font-size: var(--natal-type-body-size);
+  font-weight: var(--type-body-weight);
+  line-height: var(--natal-type-body-line-height);
 }
 
 .natal-reading__chapters {
@@ -1046,8 +1078,9 @@
 .natal-reading-explanations__header h2 {
   margin: 0;
   color: var(--premium-text-strong);
-  font-size: var(--font-size-lg);
-  line-height: var(--type-label-line-height);
+  font-size: var(--natal-type-section-title-size);
+  font-weight: var(--type-section-title-weight);
+  line-height: var(--type-section-title-line-height);
 }
 
 .natal-reading-explanations__list {
@@ -1068,7 +1101,7 @@
 }
 
 .natal-reading-explanations .natal-reading__chapter-head h3 {
-  font-size: var(--font-size-15);
+  font-size: var(--natal-type-card-title-size);
 }
 
 .natal-reading-explanations .natal-reading__chapter-body {
@@ -1077,8 +1110,8 @@
 }
 
 .natal-reading-explanations .natal-reading__chapter-body p {
-  font-size: var(--font-size-sm);
-  line-height: var(--line-height-prose);
+  font-size: var(--natal-type-body-size);
+  line-height: var(--natal-type-body-line-height);
 }
 
 .natal-reading-facts {
@@ -1098,8 +1131,9 @@
 
 .natal-reading-facts__header h2 {
   margin: 0;
-  font-size: var(--font-size-lg);
-  line-height: var(--type-label-line-height);
+  font-size: var(--natal-type-section-title-size);
+  font-weight: var(--type-section-title-weight);
+  line-height: var(--type-section-title-line-height);
   color: var(--premium-text-strong);
 }
 
@@ -1166,8 +1200,9 @@
 
 .natal-reading-facts__group h3 {
   margin: 0;
-  font-size: var(--font-size-sm);
-  line-height: var(--type-label-line-height);
+  font-size: var(--natal-type-subsection-title-size);
+  font-weight: var(--type-card-title-weight);
+  line-height: var(--type-card-title-line-height);
   color: var(--premium-text-strong);
 }
 
@@ -1259,10 +1294,10 @@
 
 .natal-reading__chapter-head h3 {
   margin: 0;
-  font-size: var(--font-size-2xl);
-  font-weight: var(--font-weight-bold);
-  letter-spacing: var(--letter-spacing-tight-xs);
-  line-height: var(--type-label-line-height);
+  font-size: var(--natal-type-card-title-size);
+  font-weight: var(--type-card-title-weight);
+  letter-spacing: 0;
+  line-height: var(--type-card-title-line-height);
   color: var(--premium-text-strong);
 }
 
@@ -1299,6 +1334,18 @@
   display: grid;
   gap: 14px;
   max-width: 68ch;
+}
+
+.natal-reading__chapter-body--collapsed {
+  display: none;
+}
+
+.natal-reading__chapter-body[hidden] {
+  display: none;
+}
+
+.natal-reading__chapter-body--expanded {
+  display: grid;
 }
 
 .natal-reading__chapter-body p {
@@ -1789,21 +1836,33 @@
 
   .natal-chart-guide {
     margin-top: 14px;
+    gap: 10px;
+    padding: 12px;
   }
 
-  .natal-chart-guide__summary {
+  .natal-chart-guide__header {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .natal-chart-guide__title {
+    font-size: var(--font-size-md);
+    line-height: var(--type-label-line-height);
+  }
+
+  .natal-chart-guide__toggle {
     min-height: 44px;
-    padding: 10px 12px;
+    padding: 0 14px;
     font-size: var(--font-size-xs);
     line-height: var(--type-label-line-height);
   }
 
-  .natal-chart-guide__summary::after {
-    font-size: var(--font-size-md);
+  .natal-chart-guide__content {
+    font-size: var(--font-size-xs);
+    line-height: var(--line-height-relaxed);
   }
 
-  .natal-chart-guide__content {
-    padding: 0 12px 14px;
+  .natal-chart-guide__section p {
     font-size: var(--font-size-xs);
     line-height: var(--line-height-relaxed);
   }
