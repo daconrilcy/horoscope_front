@@ -306,7 +306,7 @@ describe("NatalChartPage", () => {
     expect(screen.getByRole("region", { name: "Planètes notables" })).toHaveTextContent("Mercure")
     expect(screen.getByRole("region", { name: "Aspects notables" })).toHaveTextContent("Jupiter - Uranus")
     expect(screen.getAllByText("Une synthese claire du theme.")).toHaveLength(1)
-    expect(container.querySelector(".natal-badge--report-status")).toHaveTextContent("basic")
+    expect(container.querySelector(".natal-badge--report-status")).toHaveTextContent("Essentielle")
     expect(screen.getByRole("heading", { name: "1. Identite" })).toBeVisible()
     expect(screen.getByLabelText("Progression des lectures")).toHaveTextContent("1. Identite")
     expect(screen.getByLabelText("Progression des lectures")).toHaveTextContent("2. Emotions")
@@ -333,7 +333,9 @@ describe("NatalChartPage", () => {
     expect(screen.getByText("Soleil en Cancer")).toBeVisible()
     expect(screen.getByText("Lune en Balance")).toBeVisible()
     const explanationsSection = screen.getByRole("region", { name: "Explications du moteur Astral" })
-    expect(explanationsSection).toHaveTextContent("Sun en taurus maison 10")
+    expect(explanationsSection).toHaveTextContent("Soleil en Taureau maison 10")
+    expect(screen.queryByText("Very high")).not.toBeInTheDocument()
+    expect(screen.queryByText("Resources")).not.toBeInTheDocument()
     expect(explanationsSection).toHaveTextContent(/dynamique personnelle stable/i)
     expect(screen.getAllByRole("button", { name: "Lire la suite" })).toHaveLength(2)
     expect(screen.getAllByRole("button", { name: "Lire la suite" })[0]).toHaveAttribute("aria-expanded", "false")
@@ -428,7 +430,7 @@ describe("NatalChartPage", () => {
 
     expect(await screen.findByRole("heading", { name: "Lecture avec repères" })).toBeVisible()
     const explanationsSection = screen.getByRole("region", { name: "Explications du moteur Astral" })
-    expect(explanationsSection).toHaveTextContent("Sun en taurus maison 10")
+    expect(explanationsSection).toHaveTextContent("Soleil en Taureau maison 10")
     const readMore = screen.getByRole("button", { name: "Lire la suite" })
     expect(readMore).toHaveAttribute("aria-expanded", "false")
     expect(screen.getByText(/Cette explication detaille/i)).not.toBeVisible()
@@ -602,7 +604,7 @@ describe("NatalChartPage", () => {
                   astro_basis: [
                     {
                       fact_id: "signal:mc:taurus",
-                      label: "Milieu du Ciel en Taureau",
+                      label: "Midheaven in Taurus",
                       interpretive_role: "core",
                     },
                   ],
@@ -620,7 +622,7 @@ describe("NatalChartPage", () => {
     renderNatalChartPage()
 
     expect(await screen.findByRole("heading", { name: "Lecture premium Astral" })).toBeVisible()
-    expect(screen.getByText("premium")).toBeVisible()
+    expect(screen.getByText("Premium")).toBeVisible()
     expect(screen.getByText("Milieu du Ciel en Taureau (central)")).toBeVisible()
     expect(screen.queryByText(/signal:mc:taurus/i)).not.toBeInTheDocument()
     expect(screen.queryByText(/hidden gateway/i)).not.toBeInTheDocument()

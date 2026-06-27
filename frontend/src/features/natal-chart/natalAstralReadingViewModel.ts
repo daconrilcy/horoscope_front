@@ -77,6 +77,59 @@ const NOTABLE_PLACEMENT_ORDER = [
 const MAX_NOTABLE_PLACEMENTS = 6
 const MAX_MAJOR_ASPECTS = 5
 const HIGHLIGHT_FACT_LABELS = ["Soleil", "Lune", "Ascendant"] as const
+const ASTRAL_TEXT_REPLACEMENTS: ReadonlyArray<[RegExp, string]> = [
+  [/\bHow to read your natal chart\b/gi, "Comment lire ton thème natal"],
+  [/\bSun\b/gi, "Soleil"],
+  [/\bMoon\b/gi, "Lune"],
+  [/\bMercury\b/gi, "Mercure"],
+  [/\bVenus\b/gi, "Vénus"],
+  [/\bMars\b/gi, "Mars"],
+  [/\bJupiter\b/gi, "Jupiter"],
+  [/\bSaturn\b/gi, "Saturne"],
+  [/\bUranus\b/gi, "Uranus"],
+  [/\bNeptune\b/gi, "Neptune"],
+  [/\bPluto\b/gi, "Pluton"],
+  [/\bMidheaven\b/gi, "Milieu du Ciel"],
+  [/\bMC\b/g, "Milieu du Ciel"],
+  [/\bImum Coeli\b/gi, "Fond du Ciel"],
+  [/\bIC\b/g, "Fond du Ciel"],
+  [/\bAries\b/gi, "Bélier"],
+  [/\bTaurus\b/gi, "Taureau"],
+  [/\bGemini\b/gi, "Gémeaux"],
+  [/\bCancer\b/gi, "Cancer"],
+  [/\bLeo\b/gi, "Lion"],
+  [/\bVirgo\b/gi, "Vierge"],
+  [/\bLibra\b/gi, "Balance"],
+  [/\bScorpio\b/gi, "Scorpion"],
+  [/\bSagittarius\b/gi, "Sagittaire"],
+  [/\bCapricorn\b/gi, "Capricorne"],
+  [/\bAquarius\b/gi, "Verseau"],
+  [/\bPisces\b/gi, "Poissons"],
+  [/\bCareer\b/gi, "Carrière"],
+  [/\bResources\b/gi, "Valeurs"],
+  [/\bValues\b/gi, "Valeurs"],
+  [/\bVery high\b/gi, "Très élevée"],
+  [/\bBasic\b/gi, "Essentielle"],
+  [/\bFree\b/gi, "Découverte"],
+  [/\bConjunction\b/gi, "Conjonction"],
+  [/\bSquare\b/gi, "Carré"],
+  [/\bTrine\b/gi, "Trigone"],
+  [/\bSextile\b/gi, "Sextile"],
+  [/\bOpposition\b/gi, "Opposition"],
+  [/\bHouse\b/gi, "maison"],
+  [/\bin\b/gi, "en"],
+]
+const ASTRAL_METADATA_TRANSLATIONS: Record<string, string> = {
+  career: "Carrière",
+  communication: "Communication",
+  home: "Foyer",
+  resources: "Valeurs",
+  spirituality: "Spiritualité",
+  "very high": "Très élevée",
+  high: "Élevée",
+  medium: "Moyenne",
+  low: "Limitée",
+}
 const PUBLIC_OBJECT_LABELS: Record<string, string> = {
   ascendant: "Ascendant",
   descendant: "Descendant",
@@ -109,6 +162,20 @@ function asNumber(value: unknown): number | null {
 
 function normalizeCode(value: string): string {
   return value.trim().toLowerCase().replace(/\s+/g, "_")
+}
+
+function localizeAstralDisplayText(value: string): string {
+  const readableValue = value.replace(/[_-]+/g, " ")
+  return ASTRAL_TEXT_REPLACEMENTS.reduce(
+    (currentValue, [pattern, replacement]) => currentValue.replace(pattern, replacement),
+    readableValue,
+  )
+}
+
+function localizedMetadataText(value: unknown): string | null {
+  const text = asText(value)
+  if (!text) return null
+  return ASTRAL_METADATA_TRANSLATIONS[text.toLowerCase()] ?? localizeAstralDisplayText(text)
 }
 
 function formatDegree(value: unknown): string | null {
@@ -154,10 +221,10 @@ function roleLabel(value: unknown): string | null {
 
 function astroBasisLabel(value: unknown): string | null {
   const directText = asText(value)
-  if (directText) return directText
+  if (directText) return localizeAstralDisplayText(directText)
 
   const basis = asRecord(value)
-  const label = asText(basis?.label) ?? asText(basis?.factor)
+  const label = localizedMetadataText(basis?.label) ?? localizedMetadataText(basis?.factor)
   if (!label) return null
 
   const role = roleLabel(basis?.interpretive_role)
@@ -189,7 +256,10 @@ function asCompleteness(value: unknown): NatalReadingCompleteness {
 }
 
 function labelForReading(tier: NatalReadingTier): string {
-  return tier
+  if (tier === "free") return "Découverte"
+  if (tier === "basic") return "Essentielle"
+  if (tier === "premium") return "Premium"
+  return "Lecture"
 }
 
 function confidenceLabel(value: unknown): string | null {
@@ -239,9 +309,9 @@ function evidenceLabels(value: unknown): string[] {
   return value
     .map((item) => {
       const record = asRecord(item)
-      if (!record) return asText(item)
-      const label = asText(record.label)
-      const meaning = asText(record.meaning)
+      if (!record) return localizedMetadataText(item)
+      const label = localizedMetadataText(record.label)
+      const meaning = localizedMetadataText(record.meaning)
       if (label && meaning) return `${label}: ${meaning}`
       return label ?? meaning
     })
@@ -298,7 +368,7 @@ function explanationItems(value: unknown): Record<string, unknown>[] {
     .filter(([key]) => key !== "language_code" && key !== "status")
     .map<Record<string, unknown> | null>(([key, entry]) => {
       const entryText = asText(entry)
-      return entryText ? { title: key, body: entryText } : null
+      return entryText ? { title: localizeAstralDisplayText(key), body: entryText } : null
     })
     .filter((item): item is Record<string, unknown> => Boolean(item))
 }
@@ -369,7 +439,7 @@ function buildChapters(reading: Record<string, unknown>): NatalReadingChapterVie
       const paragraphs = chapterParagraphs(chapterRecord)
       return {
         code: asText(chapterRecord.code),
-        title: asText(chapterRecord.title) ?? `Chapitre ${index + 1}`,
+        title: localizedMetadataText(chapterRecord.title) ?? `Chapitre ${index + 1}`,
         paragraphs,
         confidenceLabel: confidenceLabel(chapterRecord.confidence),
         astroBasis: [
@@ -536,7 +606,7 @@ function buildLegacyPlacementFacts(source: Record<string, unknown>): NatalCalcul
         detail: joinDetails([
           formatHouse(item.house_number ?? item.house),
           formatDegree(item.longitude ?? item.longitude_deg),
-          item.is_retrograde === true ? "retrograde" : null,
+          item.is_retrograde === true ? "rétrograde" : null,
         ]),
       }
     })
@@ -570,7 +640,7 @@ function buildNotablePlacementFacts(projection: Record<string, unknown>): NatalC
       detail: joinDetails([
         formatHouse(asRecord(placement.house)?.number),
         formatDegree(placement.longitude_deg),
-        asText(placement.motion)?.toLowerCase().includes("retrograde") ? "retrograde" : null,
+        asText(placement.motion)?.toLowerCase().includes("retrograde") ? "rétrograde" : null,
       ]),
     }
   })
@@ -604,8 +674,8 @@ function buildHouseFacts(source: Record<string, unknown>, projection: Record<str
       if (!item || number === null) return null
       return {
         label: translateHouse(number, "fr"),
-        value: asText(item.theme) ?? "Maison dominante",
-        detail: asText(item.importance),
+        value: localizedMetadataText(item.theme) ?? "Maison dominante",
+        detail: localizedMetadataText(item.importance),
       }
     })
     .filter((item): item is NatalCalculationFactItemViewModel => Boolean(item))
@@ -631,7 +701,7 @@ function buildAspectFacts(source: Record<string, unknown>, projection: Record<st
           ].filter((object): object is string => Boolean(object))
       const directAspect = asText(item.aspect)
       const aspectCode = asText(item.aspect_code ?? item.type)
-      const aspectLabel = aspectCode ? translateAspect(aspectCode, "fr") : directAspect
+      const aspectLabel = aspectCode ? translateAspect(aspectCode, "fr") : directAspect ? localizeAstralDisplayText(directAspect) : null
       if (!aspectLabel || objects.length < 2) return null
 
       return {
@@ -747,7 +817,7 @@ function successViewModel(
 
   return {
     status: "success",
-    title: asText(summary?.title) ?? "Lecture natale",
+    title: localizedMetadataText(summary?.title) ?? "Lecture natale",
     shortText: asText(summary?.short_text),
     tier: metadata.tier,
     variant: metadata.variant,

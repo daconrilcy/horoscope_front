@@ -43,7 +43,8 @@ describe("buildNatalInterpretationViewModel", () => {
     const viewModel = buildNatalInterpretationViewModel(job, "basic")
 
     expect(viewModel?.status).toBe("success")
-    expect(viewModel?.label).toBe("basic")
+    expect(viewModel?.title).toBe("Lecture Essentielle")
+    expect(viewModel?.label).toBe("Essentielle")
     expect(viewModel?.chapters[0]?.paragraphs).toEqual(["Premier paragraphe.", "Second paragraphe."])
     expect(viewModel?.chapters[0]?.confidenceLabel).toBe("Confiance élevée")
     expect(viewModel?.chapters[0]?.astroBasis).toEqual(["Soleil en Lion", "Lune en Balance (appui)"])
@@ -93,8 +94,8 @@ describe("buildNatalInterpretationViewModel", () => {
           dynamics: {
             major_aspects: [
               {
-                aspect: "Jupiter opposition Uranus",
-                objects: ["Jupiter", "Uranus"],
+                aspect: "Sun square Moon",
+                objects: ["Sun", "Moon"],
                 orb_degrees: 0.76,
                 quality: "Tension",
               },
@@ -118,7 +119,7 @@ describe("buildNatalInterpretationViewModel", () => {
 
     expect(viewModel?.tier).toBe("premium")
     expect(viewModel?.variant).toBe("full")
-    expect(viewModel?.label).toBe("premium")
+    expect(viewModel?.label).toBe("Premium")
     expect(viewModel?.isPartial).toBe(false)
     expect(viewModel?.calculationFacts?.groups.map((group) => group.title)).toEqual([
       "Repères principaux",
@@ -131,6 +132,16 @@ describe("buildNatalInterpretationViewModel", () => {
       { label: "Ascendant", value: "Scorpion", detail: "Maison I - Identité" },
       { label: "Descendant", value: "Taureau", detail: "Maison VII - Relations" },
     ])
+    expect(viewModel?.calculationFacts?.groups[1]?.items[0]).toEqual({
+      label: "Maison II - Valeurs",
+      value: "Valeurs",
+      detail: "Très élevée",
+    })
+    expect(viewModel?.calculationFacts?.groups[2]?.items[0]).toEqual({
+      label: "Soleil Carré Lune",
+      value: "Soleil - Lune",
+      detail: "0.76° - Tension",
+    })
     expect(viewModel?.highlightFacts).toEqual([
       { label: "Soleil", value: "Capricorne", detail: "Maison II - Valeurs - 281.45°" },
       { label: "Lune", value: "Poissons", detail: "Maison IV - Foyer - 341.76°" },
@@ -327,7 +338,7 @@ describe("buildNatalInterpretationViewModel", () => {
       service_code: "natal_basic",
       result: {
         summary: {
-          title: "Lecture Astral externe",
+          title: "How to read your natal chart",
           short_text: "Résumé issu du moteur externe.",
         },
         explanations: {
@@ -338,7 +349,7 @@ describe("buildNatalInterpretationViewModel", () => {
               fact_id: "placement:sun:taurus:house:10",
               kind_code: "placement",
               source: "cache",
-              title: "Sun en taurus maison 10",
+              title: "sun_in_taurus_house_10",
             },
             {
               explanation: "Deuxième explication top-level conservée.",
@@ -357,15 +368,15 @@ describe("buildNatalInterpretationViewModel", () => {
 
     const viewModel = buildNatalInterpretationViewModel(job, "basic")
 
-    expect(viewModel?.title).toBe("Lecture Astral externe")
+    expect(viewModel?.title).toBe("Comment lire ton thème natal")
     expect(viewModel?.shortText).toBe("Résumé issu du moteur externe.")
     expect(viewModel?.chapters.map((chapter) => chapter.paragraphs[0])).toEqual([
       "Explication top-level fournie par result.explanations.items.",
       "Deuxième explication top-level conservée.",
     ])
     expect(viewModel?.chapters.map((chapter) => chapter.title)).toEqual([
-      "Sun en taurus maison 10",
-      "Moon en capricorn maison 6",
+      "Soleil en Taureau maison 10",
+      "Lune en Capricorne maison 6",
     ])
     expect(JSON.stringify(viewModel)).not.toContain("placement:sun:taurus:house:10")
     expect(JSON.stringify(viewModel)).not.toContain("cache")
@@ -446,7 +457,7 @@ describe("buildNatalInterpretationViewModel", () => {
 
     expect(viewModel?.chapters.map((chapter) => chapter.title)).toEqual(["Identité structurée"])
     expect(viewModel?.chapters.map((chapter) => chapter.paragraphs[0])).toEqual(["Chapitre narratif principal."])
-    expect(viewModel?.explanations.map((chapter) => chapter.title)).toEqual(["Sun en taurus maison 10"])
+    expect(viewModel?.explanations.map((chapter) => chapter.title)).toEqual(["Soleil en Taureau maison 10"])
     expect(viewModel?.explanations.map((chapter) => chapter.paragraphs[0])).toEqual([
       "Le Soleil en Taureau en maison 10 indique une orientation stable.",
     ])
@@ -483,7 +494,7 @@ describe("buildNatalInterpretationViewModel", () => {
     const viewModel = buildNatalInterpretationViewModel(job, "basic")
 
     expect(viewModel?.status).toBe("success")
-    expect(viewModel?.title).toBe("Lecture Basic publique")
+    expect(viewModel?.title).toBe("Lecture Essentielle publique")
     expect(viewModel?.shortText).toBe("Résumé Basic public.")
     expect(viewModel?.chapters.map((chapter) => chapter.title)).toEqual([
       "Introduction",
@@ -522,7 +533,7 @@ describe("buildNatalInterpretationViewModel", () => {
 
     const viewModel = buildNatalInterpretationViewModel(job, "basic")
 
-    expect(viewModel?.title).toBe("Lecture Basic imbriquée")
+    expect(viewModel?.title).toBe("Lecture Essentielle imbriquée")
     expect(viewModel?.chapters[0]?.paragraphs).toEqual([
       "Introduction Basic imbriquée fournie par Astral.",
     ])
@@ -553,7 +564,7 @@ describe("buildNatalInterpretationViewModel", () => {
 
     const viewModel = buildNatalInterpretationViewModel(job, "basic")
 
-    expect(viewModel?.title).toBe("Lecture Basic publique")
+    expect(viewModel?.title).toBe("Lecture Essentielle publique")
     expect(viewModel?.chapters[0]?.paragraphs).toEqual([
       "Texte public de secours fourni par Astral.",
     ])
@@ -587,7 +598,7 @@ describe("buildNatalInterpretationViewModel", () => {
 
     const viewModel = buildNatalInterpretationViewModel(job, "basic")
 
-    expect(viewModel?.title).toBe("Lecture Basic complète")
+    expect(viewModel?.title).toBe("Lecture Essentielle complète")
     expect(viewModel?.chapters[0]?.paragraphs).toEqual([
       "Explication complète fournie par le moteur externe.",
     ])
@@ -614,7 +625,7 @@ describe("buildNatalInterpretationViewModel", () => {
 
     expect(viewModel?.variant).toBe("simplified")
     expect(viewModel?.completeness).toBe("partial")
-    expect(viewModel?.label).toBe("basic")
+    expect(viewModel?.label).toBe("Essentielle")
     expect(viewModel?.isPartial).toBe(true)
   })
 
@@ -676,7 +687,7 @@ describe("buildNatalInterpretationViewModel", () => {
     const viewModel = buildNatalInterpretationViewModel(job)
 
     expect(viewModel?.status).toBe("empty")
-    expect(viewModel?.label).toBe("unknown")
+    expect(viewModel?.label).toBe("Lecture")
     expect(viewModel?.shortText).toContain("forme publique")
     expect(JSON.stringify(viewModel)).not.toContain("hidden")
   })

@@ -8,8 +8,10 @@ import { readAppCssSurface } from "./design-system-policy"
 const themePath = path.resolve(__dirname, "../styles/theme.css")
 const designTokensPath = path.resolve(__dirname, "../styles/design-tokens.css")
 const premiumThemePath = path.resolve(__dirname, "../styles/premium-theme.css")
+const natalChartPageCssPath = path.resolve(__dirname, "../pages/NatalChartPage.css")
 const themeContent = fs.readFileSync(designTokensPath, "utf-8") + "\n" + fs.readFileSync(themePath, "utf-8")
 const premiumThemeContent = fs.readFileSync(premiumThemePath, "utf-8")
+const natalChartPageCssContent = fs.readFileSync(natalChartPageCssPath, "utf-8")
 
 function escapeRegex(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
@@ -136,6 +138,16 @@ describe("theme.css validation (Static Analysis)", () => {
     expect(getTokenValue(themeContent, ":root", "--font-family-heading")).toBe("var(--font-family-base)")
     expect(getTokenValue(themeContent, ":root", "--font-family-editorial")).toBe("var(--font-family-base)")
     expect(getTokenValue(themeContent, ":root", "--font-family-script")).toBe("var(--font-family-base)")
+  })
+
+  it("raccorde les surfaces et badges de /natal aux roles visuels de page", () => {
+    expect(natalChartPageCssContent).toContain("--natal-radius-section: var(--premium-radius-card)")
+    expect(natalChartPageCssContent).toContain("--natal-surface-section: var(--premium-glass-surface-1)")
+    expect(natalChartPageCssContent).toContain("--natal-badge-key-surface: var(--natal-surface-chip)")
+    expect(natalChartPageCssContent).toMatch(/\.natal-badge--astro-data\s*\{[\s\S]*background:\s*var\(--natal-badge-key-surface\)/)
+    expect(natalChartPageCssContent).toMatch(/\.natal-badge--basis\s*\{[\s\S]*background:\s*var\(--natal-badge-meta-surface\)/)
+    expect(natalChartPageCssContent).toMatch(/\.natal-data-pill\s*\{[\s\S]*background:\s*var\(--natal-badge-meta-surface\)/)
+    expect(natalChartPageCssContent).toMatch(/\.natal-data-card\s*\{[\s\S]*background:\s*var\(--natal-surface-block\)/)
   })
 })
 
