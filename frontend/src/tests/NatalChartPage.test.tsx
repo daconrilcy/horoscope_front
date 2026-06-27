@@ -253,7 +253,7 @@ describe("NatalChartPage", () => {
                   code: "emotions",
                   title: "Emotions",
                   body:
-                    "Deuxieme lecture ouverte par defaut avec une phrase volontairement longue pour verifier que le chapeau tronque ne repete pas tout le debut du paragraphe dans le detail. Elle reste accessible sans action initiale.",
+                    "Deuxieme lecture ouverte par defaut avec une phrase volontairement longue pour verifier que le chapeau tronque ne repete pas tout le debut du paragraphe dans le detail. Elle reste accessible sans action initiale, avec une phrase volontairement etendue qui accumule plusieurs nuances successives, plusieurs indications symboliques reliees entre elles, plusieurs appuis de lecture destines a rester dans le texte complet, et plusieurs respirations internes pour verifier que le rendu cree de vrais paragraphes plus courts.",
                 },
                 {
                   code: "relations",
@@ -327,10 +327,11 @@ describe("NatalChartPage", () => {
     expect(screen.getAllByText("Une synthese claire du theme.")).toHaveLength(1)
     expect(container.querySelector(".natal-badge--report-status")).toHaveTextContent("Essentielle")
     expect(screen.getByRole("heading", { name: "1. Identite" })).toBeVisible()
-    expect(screen.getByLabelText("Progression des lectures")).toHaveTextContent("Identité")
-    expect(screen.getByLabelText("Progression des lectures")).toHaveTextContent("Émotions")
+    expect(screen.getByLabelText("Progression des lectures")).toHaveTextContent("Identite")
+    expect(screen.getByLabelText("Progression des lectures")).toHaveTextContent("Emotions")
     expect(screen.getByLabelText("Progression des lectures")).toHaveTextContent("Relations")
-    const firstProgressLink = screen.getByRole("button", { name: "Identité" })
+    expect(container.querySelector(".natal-reading__progress-label--short")).toHaveTextContent("Identité")
+    const firstProgressLink = screen.getByRole("button", { name: "Identite" })
     expect(firstProgressLink).toHaveAttribute("aria-current", "step")
     await user.click(screen.getByRole("button", { name: "Relations" }))
     expect(screen.getByRole("button", { name: "Relations" })).toHaveAttribute("aria-current", "step")
@@ -349,6 +350,9 @@ describe("NatalChartPage", () => {
     expect(screen.getByText(/Elle reste accessible sans action initiale/i)).toBeVisible()
     const renderedProseParagraphs = Array.from(container.querySelectorAll(".natal-reading__prose-paragraph"))
     expect(renderedProseParagraphs.length).toBeGreaterThan(3)
+    expect(Math.max(...renderedProseParagraphs.map((paragraph) => paragraph.textContent?.length ?? 0))).toBeLessThanOrEqual(
+      260,
+    )
     expect(renderedProseParagraphs.map((paragraph) => paragraph.textContent).join(" ")).toContain(
       "Suite analytique preservee.",
     )

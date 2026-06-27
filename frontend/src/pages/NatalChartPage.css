@@ -1114,10 +1114,14 @@
   font-weight: var(--font-weight-bold);
 }
 
-.natal-reading__progress-link span:last-child {
+.natal-reading__progress-label {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.natal-reading__progress-label--short {
+  display: none;
 }
 
 .natal-reading__progress-link:hover,
@@ -1853,6 +1857,14 @@
     padding: 6px 10px 6px 8px;
     font-size: var(--font-size-2xs);
     white-space: nowrap;
+  }
+
+  .natal-reading__progress-label--full {
+    display: none;
+  }
+
+  .natal-reading__progress-label--short {
+    display: inline;
   }
 
   .natal-reading__progress-index {

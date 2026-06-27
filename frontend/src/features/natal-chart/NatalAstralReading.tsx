@@ -97,7 +97,7 @@ function splitProseParagraph(paragraph: string): string[] {
   if (normalizedParagraph.length <= PROSE_CHUNK_TARGET_LENGTH) return normalizedParagraph ? [normalizedParagraph] : []
 
   const sentences = normalizedParagraph.match(/[^.!?]+[.!?]+(?:["'»”])?|[^.!?]+$/g)
-  if (!sentences || sentences.length < 2) return [normalizedParagraph]
+  if (!sentences || sentences.length < 2) return splitLongProseChunk(normalizedParagraph)
 
   const chunks: string[] = []
   let currentChunk = ""
@@ -106,8 +106,56 @@ function splitProseParagraph(paragraph: string): string[] {
     if (!normalizedSentence) continue
     const nextChunk = currentChunk ? `${currentChunk} ${normalizedSentence}` : normalizedSentence
     if (currentChunk && nextChunk.length > PROSE_CHUNK_TARGET_LENGTH) {
-      chunks.push(currentChunk)
+      chunks.push(...splitLongProseChunk(currentChunk))
       currentChunk = normalizedSentence
+    } else {
+      currentChunk = nextChunk
+    }
+  }
+  if (currentChunk) chunks.push(...splitLongProseChunk(currentChunk))
+  return chunks
+}
+
+function splitLongProseChunk(chunk: string): string[] {
+  if (chunk.length <= PROSE_CHUNK_TARGET_LENGTH) return chunk ? [chunk] : []
+
+  const parts = chunk.split(/([,;:]\s+)/)
+  const chunks: string[] = []
+  let currentChunk = ""
+  for (let index = 0; index < parts.length; index += 2) {
+    const part = `${parts[index] ?? ""}${parts[index + 1] ?? ""}`.trim()
+    if (!part) continue
+    if (part.length > PROSE_CHUNK_TARGET_LENGTH) {
+      if (currentChunk) {
+        chunks.push(currentChunk)
+        currentChunk = ""
+      }
+      chunks.push(...splitOverlongProsePart(part))
+      continue
+    }
+    const nextChunk = currentChunk ? `${currentChunk} ${part}` : part
+    if (currentChunk && nextChunk.length > PROSE_CHUNK_TARGET_LENGTH) {
+      chunks.push(currentChunk)
+      currentChunk = part
+    } else {
+      currentChunk = nextChunk
+    }
+  }
+  if (currentChunk) chunks.push(currentChunk)
+  return chunks.length > 0 ? chunks : [chunk]
+}
+
+function splitOverlongProsePart(part: string): string[] {
+  const words = part.split(/\s+/).filter(Boolean)
+  if (words.length < 2) return [part]
+
+  const chunks: string[] = []
+  let currentChunk = ""
+  for (const word of words) {
+    const nextChunk = currentChunk ? `${currentChunk} ${word}` : word
+    if (currentChunk && nextChunk.length > PROSE_CHUNK_TARGET_LENGTH) {
+      chunks.push(currentChunk)
+      currentChunk = word
     } else {
       currentChunk = nextChunk
     }
@@ -417,7 +465,12 @@ export function NatalAstralReading({ reading, showSummary = true }: NatalAstralR
           <ol>
             {mainChapterEntries.map((entry, index) => (
               <li key={entry.progressKey}>
+                {/*
+                 * Le libellé complet reste le nom accessible et l'affichage desktop ;
+                 * le libellé court sert uniquement au rail mobile compact.
+                 */}
                 <button
+                  aria-label={entry.title.replace(/^\d+\.\s*/, "")}
                   aria-current={activeChapterKey === entry.itemKey ? "step" : undefined}
                   className={[
                     "natal-reading__progress-link",
@@ -428,7 +481,12 @@ export function NatalAstralReading({ reading, showSummary = true }: NatalAstralR
                   title={entry.title.replace(/^\d+\.\s*/, "")}
                 >
                   <span className="natal-reading__progress-index" aria-hidden="true">{index + 1}</span>
-                  <span>{shortProgressTitle(entry.title, index)}</span>
+                  <span className="natal-reading__progress-label natal-reading__progress-label--full" aria-hidden="true">
+                    {entry.title.replace(/^\d+\.\s*/, "")}
+                  </span>
+                  <span className="natal-reading__progress-label natal-reading__progress-label--short" aria-hidden="true">
+                    {shortProgressTitle(entry.title, index)}
+                  </span>
                 </button>
               </li>
             ))}
