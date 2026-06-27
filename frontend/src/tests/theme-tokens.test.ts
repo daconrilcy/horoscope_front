@@ -149,6 +149,24 @@ describe("theme.css validation (Static Analysis)", () => {
     expect(natalChartPageCssContent).toMatch(/\.natal-data-pill\s*\{[\s\S]*background:\s*var\(--natal-badge-meta-surface\)/)
     expect(natalChartPageCssContent).toMatch(/\.natal-data-card\s*\{[\s\S]*background:\s*var\(--natal-surface-block\)/)
   })
+
+  it("conserve le peek mobile volontaire du parcours /natal et attenue la bottom nav", () => {
+    const natalBottomNavRule = natalChartPageCssContent.match(
+      /body:has\(\.is-natal-page\) \.bottom-nav\s*\{([^}]*)\}/,
+    )?.[1]
+
+    expect(natalChartPageCssContent).toContain("--natal-progress-peek: 34px")
+    expect(natalChartPageCssContent).toMatch(
+      /\.natal-reading__progress li\s*\{[\s\S]*flex:\s*0 0 clamp\(156px,\s*calc\(100% - var\(--natal-progress-peek\)\),\s*240px\)/,
+    )
+    expect(natalBottomNavRule).toContain("border-color: color-mix(in srgb, var(--color-nav-border) 30%, transparent)")
+    expect(natalBottomNavRule).toContain("background: color-mix(in srgb, var(--color-nav-glass) 28%, transparent)")
+    expect(natalBottomNavRule).toContain("box-shadow: 0 4px 14px color-mix(in srgb, var(--premium-text-strong) 4%, transparent)")
+    expect(natalBottomNavRule).not.toContain("opacity:")
+    expect(natalChartPageCssContent).toMatch(
+      /body:has\(\.is-natal-page\) \.bottom-nav__item--active\s*\{[\s\S]*background:\s*color-mix\(in srgb,\s*var\(--color-nav-active-bg\)\s*34%,\s*transparent\)/,
+    )
+  })
 })
 
 describe("AC#2 - Valeurs exactes des tokens critiques (story 17-10)", () => {

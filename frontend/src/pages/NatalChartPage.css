@@ -13,11 +13,11 @@
   --natal-surface-reading: color-mix(in srgb, var(--color-token-rgb-255-255-255) 86%, var(--color-token-rgb-248-243-255) 14%);
   --natal-surface-reading-soft: color-mix(in srgb, var(--color-token-rgb-255-255-255) 72%, var(--color-token-rgb-244-237-255) 28%);
   --natal-surface-reading-muted: color-mix(in srgb, var(--premium-accent-purple-strong) 5%, var(--color-token-rgb-255-255-255) 95%);
-  --natal-border-data: var(--premium-glass-border-soft);
-  --natal-border-reading: color-mix(in srgb, var(--premium-accent-purple-strong) 14%, var(--premium-glass-border-soft));
-  --natal-border-section: var(--premium-glass-border);
-  --natal-border-block: var(--premium-glass-border-soft);
-  --natal-border-accent: color-mix(in srgb, var(--premium-accent-purple-strong) 20%, var(--premium-glass-border-soft));
+  --natal-border-data: color-mix(in srgb, var(--premium-glass-border-soft) 62%, transparent);
+  --natal-border-reading: color-mix(in srgb, var(--premium-accent-purple-strong) 9%, var(--premium-glass-border-soft) 56%, transparent);
+  --natal-border-section: color-mix(in srgb, var(--premium-glass-border) 68%, transparent);
+  --natal-border-block: color-mix(in srgb, var(--premium-glass-border-soft) 58%, transparent);
+  --natal-border-accent: color-mix(in srgb, var(--premium-accent-purple-strong) 14%, var(--premium-glass-border-soft) 54%, transparent);
   --natal-radius-section: var(--premium-radius-card);
   --natal-radius-block: var(--radius-lg);
   --natal-radius-badge: var(--radius-full);
@@ -44,6 +44,7 @@
   --natal-type-reading-text-size: var(--natal-type-body-size);
   --natal-type-reading-text-weight: var(--type-body-weight);
   --natal-type-reading-text-line-height: var(--natal-type-body-line-height);
+  --natal-progress-peek: 34px;
   font-family: var(--font-family-base);
 }
 
@@ -61,17 +62,30 @@
   --natal-surface-reading: color-mix(in srgb, var(--premium-glass-surface-2) 88%, var(--premium-accent-purple-strong) 12%);
   --natal-surface-reading-soft: color-mix(in srgb, var(--premium-glass-surface-2) 82%, var(--premium-accent-purple-strong) 18%);
   --natal-surface-reading-muted: color-mix(in srgb, var(--premium-glass-surface-2) 90%, var(--premium-accent-purple-strong) 10%);
-  --natal-border-data: var(--premium-glass-border);
-  --natal-border-reading: color-mix(in srgb, var(--premium-accent-purple-strong) 18%, var(--premium-glass-border));
-  --natal-border-section: var(--premium-glass-border);
-  --natal-border-block: var(--premium-glass-border);
-  --natal-border-accent: color-mix(in srgb, var(--premium-accent-purple-strong) 24%, var(--premium-glass-border));
+  --natal-border-data: color-mix(in srgb, var(--premium-glass-border) 72%, transparent);
+  --natal-border-reading: color-mix(in srgb, var(--premium-accent-purple-strong) 12%, var(--premium-glass-border) 58%, transparent);
+  --natal-border-section: color-mix(in srgb, var(--premium-glass-border) 76%, transparent);
+  --natal-border-block: color-mix(in srgb, var(--premium-glass-border) 64%, transparent);
+  --natal-border-accent: color-mix(in srgb, var(--premium-accent-purple-strong) 16%, var(--premium-glass-border) 60%, transparent);
   --natal-badge-key-surface: var(--natal-surface-chip);
   --natal-badge-detail-surface: var(--natal-surface-block);
   --natal-badge-status-surface: var(--natal-surface-block);
   --natal-badge-meta-surface: var(--natal-surface-reading-muted);
   --natal-text-reading: color-mix(in srgb, var(--premium-text-strong) 88%, var(--premium-text-main) 12%);
   --natal-text-reading-muted: color-mix(in srgb, var(--premium-text-meta) 88%, var(--premium-text-main) 12%);
+}
+
+@media (max-width: 768px) {
+  body:has(.is-natal-page) .bottom-nav {
+    bottom: calc(var(--app-mobile-nav-inset) + env(safe-area-inset-bottom));
+    border-color: color-mix(in srgb, var(--color-nav-border) 30%, transparent);
+    background: color-mix(in srgb, var(--color-nav-glass) 28%, transparent);
+    box-shadow: 0 4px 14px color-mix(in srgb, var(--premium-text-strong) 4%, transparent);
+  }
+
+  body:has(.is-natal-page) .bottom-nav__item--active {
+    background: color-mix(in srgb, var(--color-nav-active-bg) 34%, transparent);
+  }
 }
 
 .page-layout.natal-page-container .page-layout__main {
@@ -1845,7 +1859,7 @@
   }
 
   .natal-reading__progress li {
-    flex: 0 0 auto;
+    flex: 0 0 clamp(156px, calc(100% - var(--natal-progress-peek)), 240px);
     min-height: 0;
     padding: 0;
     scroll-snap-align: start;
