@@ -18,6 +18,7 @@ type NatalAstralReadingProps = {
 const PUBLIC_READING_ERROR_MESSAGE =
   "La lecture Astral n'a pas pu être générée pour le moment. Veuillez réessayer plus tard."
 const EXCERPT_MAX_LENGTH = 140
+const PROSE_CHUNK_TARGET_LENGTH = 230
 
 const GROUP_MARKERS: Record<string, LucideIcon> = {
   "Repères principaux": Sun,
@@ -27,6 +28,7 @@ const GROUP_MARKERS: Record<string, LucideIcon> = {
 }
 const OPEN_MAIN_CHAPTER_COUNT = 2
 const MAIN_CHAPTER_ROOT_ID = "natal-reading-chapter"
+const SHORT_PROGRESS_LABELS = ["Identité", "Émotions", "Relations", "Carrière", "Talents", "Croissance"]
 
 function compactExcerpt(text: string): string {
   if (text.length <= EXCERPT_MAX_LENGTH) return text
@@ -66,27 +68,68 @@ function chapterExcerpt(chapter: NatalReadingChapterViewModel): string | null {
 }
 
 function chapterBodyParagraphs(chapter: NatalReadingChapterViewModel, excerpt: string | null): string[] {
-  if (!excerpt) return chapter.paragraphs
+  const splitParagraphs = (paragraphs: string[]) => paragraphs.flatMap(splitProseParagraph)
+  if (!excerpt) return splitParagraphs(chapter.paragraphs)
 
   const [firstParagraph, ...remainingParagraphs] = chapter.paragraphs
   const normalizedFirstParagraph = firstParagraph?.trim()
-  if (!normalizedFirstParagraph) return remainingParagraphs
+  if (!normalizedFirstParagraph) return splitParagraphs(remainingParagraphs)
 
   if (normalizedFirstParagraph === excerpt) {
-    return remainingParagraphs
+    return splitParagraphs(remainingParagraphs)
   }
 
   const excerptPrefix = excerpt.replace(/\.\.\.$/, "").trim()
   if (excerptPrefix && normalizedFirstParagraph.startsWith(excerptPrefix)) {
     const remainder = normalizedFirstParagraph.slice(excerptPrefix.length).trim()
-    return remainder ? [remainder, ...remainingParagraphs] : remainingParagraphs
+    return splitParagraphs(remainder ? [remainder, ...remainingParagraphs] : remainingParagraphs)
   }
 
-  return chapter.paragraphs
+  return splitParagraphs(chapter.paragraphs)
 }
 
 function chapterThemeTitle(chapter: NatalReadingChapterViewModel, index: number): string {
   return `${index + 1}. ${chapter.title}`
+}
+
+function splitProseParagraph(paragraph: string): string[] {
+  const normalizedParagraph = paragraph.trim()
+  if (normalizedParagraph.length <= PROSE_CHUNK_TARGET_LENGTH) return normalizedParagraph ? [normalizedParagraph] : []
+
+  const sentences = normalizedParagraph.match(/[^.!?]+[.!?]+(?:["'»”])?|[^.!?]+$/g)
+  if (!sentences || sentences.length < 2) return [normalizedParagraph]
+
+  const chunks: string[] = []
+  let currentChunk = ""
+  for (const sentence of sentences) {
+    const normalizedSentence = sentence.trim()
+    if (!normalizedSentence) continue
+    const nextChunk = currentChunk ? `${currentChunk} ${normalizedSentence}` : normalizedSentence
+    if (currentChunk && nextChunk.length > PROSE_CHUNK_TARGET_LENGTH) {
+      chunks.push(currentChunk)
+      currentChunk = normalizedSentence
+    } else {
+      currentChunk = nextChunk
+    }
+  }
+  if (currentChunk) chunks.push(currentChunk)
+  return chunks
+}
+
+function shortProgressTitle(title: string, index: number): string {
+  const normalizedTitle = title
+    .replace(/^\d+\.\s*/, "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+
+  if (normalizedTitle.includes("ident")) return "Identité"
+  if (normalizedTitle.includes("emotion") || normalizedTitle.includes("lune")) return "Émotions"
+  if (normalizedTitle.includes("relation") || normalizedTitle.includes("amour")) return "Relations"
+  if (normalizedTitle.includes("carriere") || normalizedTitle.includes("travail")) return "Carrière"
+  if (normalizedTitle.includes("talent") || normalizedTitle.includes("ressource")) return "Talents"
+  if (normalizedTitle.includes("croissance") || normalizedTitle.includes("evolution")) return "Croissance"
+  return SHORT_PROGRESS_LABELS[index] ?? title.replace(/^\d+\.\s*/, "")
 }
 
 function safeDomId(value: string): string {
@@ -382,9 +425,10 @@ export function NatalAstralReading({ reading, showSummary = true }: NatalAstralR
                   ].filter(Boolean).join(" ")}
                   type="button"
                   onClick={() => scrollToChapter(entry.anchorId, entry.itemKey)}
+                  title={entry.title.replace(/^\d+\.\s*/, "")}
                 >
                   <span className="natal-reading__progress-index" aria-hidden="true">{index + 1}</span>
-                  <span>{entry.title.replace(/^\d+\.\s*/, "")}</span>
+                  <span>{shortProgressTitle(entry.title, index)}</span>
                 </button>
               </li>
             ))}

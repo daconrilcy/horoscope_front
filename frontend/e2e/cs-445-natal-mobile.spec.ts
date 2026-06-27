@@ -236,6 +236,9 @@ test("garde /natal lisible et non masque a 360, 390 et 430 px", async ({ page })
 
     const progressLink = page.locator(".natal-reading__progress-link").first()
     await expectTouchTarget(progressLink)
+    await expect(progressLink).toContainText("Identité")
+    await expect(page.locator(".natal-reading__progress-link").nth(1)).toContainText("Émotions")
+    await expect(page.locator(".natal-reading__progress-link").nth(2)).toContainText("Relations")
     const progressLinkBox = await progressLink.boundingBox()
     expect(progressLinkBox?.width ?? 0).toBeLessThanOrEqual(190)
 

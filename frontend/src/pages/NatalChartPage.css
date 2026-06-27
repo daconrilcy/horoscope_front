@@ -26,13 +26,13 @@
   --natal-glass-filter: var(--glass-card-backdrop-filter);
   --natal-content-width: 100%;
   --natal-badge-key-surface: var(--natal-surface-chip);
-  --natal-badge-key-border: color-mix(in srgb, var(--premium-accent-purple-strong) 9%, var(--natal-border-data));
+  --natal-badge-key-border: color-mix(in srgb, var(--premium-accent-purple-strong) 7%, var(--natal-border-data));
   --natal-badge-detail-surface: color-mix(in srgb, var(--premium-text-meta) 4%, var(--natal-surface-block));
-  --natal-badge-detail-border: color-mix(in srgb, var(--premium-text-meta) 9%, var(--natal-border-block));
+  --natal-badge-detail-border: color-mix(in srgb, var(--premium-text-meta) 6%, var(--natal-border-block));
   --natal-badge-status-surface: color-mix(in srgb, var(--premium-text-meta) 4%, var(--natal-surface-block));
   --natal-badge-status-border: color-mix(in srgb, var(--premium-text-meta) 12%, var(--natal-border-block));
   --natal-badge-meta-surface: color-mix(in srgb, var(--premium-text-meta) 2%, var(--natal-surface-reading-muted));
-  --natal-badge-meta-border: color-mix(in srgb, var(--premium-text-meta) 6%, var(--natal-border-block));
+  --natal-badge-meta-border: color-mix(in srgb, var(--premium-text-meta) 4%, var(--natal-border-block));
   --natal-text-reading: color-mix(in srgb, var(--premium-text-strong) 78%, var(--premium-text-main) 22%);
   --natal-text-reading-muted: color-mix(in srgb, var(--premium-text-meta) 82%, var(--premium-text-main) 18%);
   --natal-type-page-title-size: var(--type-page-title-size);
@@ -724,8 +724,8 @@
   width: fit-content;
   min-height: 20px;
   padding: 0 7px;
-  border-color: color-mix(in srgb, var(--natal-badge-meta-border) 62%, transparent);
-  background: color-mix(in srgb, var(--natal-badge-meta-surface) 58%, transparent);
+  border-color: color-mix(in srgb, var(--natal-badge-meta-border) 44%, transparent);
+  background: color-mix(in srgb, var(--natal-badge-meta-surface) 46%, transparent);
   color: var(--natal-text-reading-muted);
   font-size: var(--font-size-3xs);
   font-weight: var(--font-weight-medium);
@@ -743,17 +743,17 @@
 }
 
 .natal-badge--astro-sign {
-  border-color: color-mix(in srgb, var(--premium-accent-purple-strong) 13%, var(--natal-border-block));
+  border-color: color-mix(in srgb, var(--premium-accent-purple-strong) 10%, var(--natal-border-block));
   background: color-mix(in srgb, var(--premium-accent-purple-strong) 7%, var(--natal-surface-chip));
 }
 
 .natal-badge--astro-house {
-  border-color: color-mix(in srgb, var(--premium-glass-border-strong) 48%, var(--natal-border-block));
+  border-color: color-mix(in srgb, var(--premium-glass-border-strong) 34%, var(--natal-border-block));
   background: color-mix(in srgb, var(--premium-glass-border-strong) 10%, var(--natal-surface-block));
 }
 
 .natal-badge--astro-aspect {
-  border-color: color-mix(in srgb, var(--premium-accent-purple-strong) 10%, var(--natal-border-block));
+  border-color: color-mix(in srgb, var(--premium-accent-purple-strong) 8%, var(--natal-border-block));
   background: color-mix(in srgb, var(--premium-accent-purple-strong) 4%, var(--natal-surface-block));
 }
 
@@ -774,8 +774,8 @@
 .natal-badge--basis {
   min-height: 18px;
   padding: 0 5px;
-  border-color: color-mix(in srgb, var(--natal-badge-meta-border) 58%, transparent);
-  background: color-mix(in srgb, var(--natal-badge-meta-surface) 52%, transparent);
+  border-color: color-mix(in srgb, var(--natal-badge-meta-border) 40%, transparent);
+  background: color-mix(in srgb, var(--natal-badge-meta-surface) 42%, transparent);
   color: var(--natal-text-reading-muted);
   font-size: var(--font-size-3xs);
   font-weight: var(--font-weight-medium);
@@ -1234,7 +1234,7 @@
   min-width: 0;
   min-height: 0;
   padding: 12px;
-  border: 1px solid color-mix(in srgb, var(--natal-border-block) 48%, transparent);
+  border: 1px solid color-mix(in srgb, var(--natal-border-block) 34%, transparent);
   border-radius: var(--natal-radius-block);
   background: color-mix(in srgb, var(--natal-surface-data) 58%, transparent);
 }
@@ -1246,7 +1246,7 @@
 .natal-reading-facts__group--primary {
   grid-column: span 2;
   padding: 14px;
-  border-color: color-mix(in srgb, var(--premium-accent-purple-strong) 8%, var(--natal-border-block));
+  border-color: color-mix(in srgb, var(--premium-accent-purple-strong) 6%, var(--natal-border-block));
   background: color-mix(in srgb, var(--natal-surface-data-strong) 64%, transparent);
 }
 
@@ -1258,7 +1258,7 @@
 .natal-reading-facts__group--primary .natal-reading-facts__item {
   padding: 0 0 8px;
   border: 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--premium-glass-border-soft) 58%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--premium-glass-border-soft) 42%, transparent);
   border-radius: 0;
   background: transparent;
 }
@@ -1279,7 +1279,7 @@
   height: 26px;
   border-radius: var(--radius-full);
   background: color-mix(in srgb, var(--premium-accent-purple-strong) 5%, var(--premium-glass-surface-2));
-  border: 1px solid color-mix(in srgb, var(--premium-accent-purple-strong) 6%, var(--premium-glass-border-soft));
+  border: 1px solid color-mix(in srgb, var(--premium-accent-purple-strong) 4%, var(--premium-glass-border-soft));
   color: color-mix(in srgb, var(--premium-accent-purple-strong) 86%, var(--premium-text-main) 14%);
 }
 
@@ -1302,7 +1302,7 @@
   gap: 5px;
   min-width: 0;
   padding-bottom: 7px;
-  border-bottom: 1px solid color-mix(in srgb, var(--premium-glass-border-soft) 56%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--premium-glass-border-soft) 40%, transparent);
 }
 
 .natal-reading-facts__item:last-child {
@@ -1395,7 +1395,7 @@
   gap: 6px;
   margin: 0;
   padding: 14px 16px;
-  border-left: 2px solid color-mix(in srgb, var(--natal-border-accent) 76%, transparent);
+  border-left: 2px solid color-mix(in srgb, var(--natal-border-accent) 58%, transparent);
   border-radius: var(--natal-radius-block);
   background: color-mix(in srgb, var(--natal-surface-reading-muted) 66%, transparent);
   color: color-mix(in srgb, var(--premium-text-strong) 88%, var(--premium-text-main) 12%) !important;
@@ -1459,7 +1459,7 @@
   align-content: start;
   align-self: start;
   padding: 12px;
-  border: 1px solid color-mix(in srgb, var(--natal-badge-meta-border) 54%, transparent);
+  border: 1px solid color-mix(in srgb, var(--natal-badge-meta-border) 34%, transparent);
   border-radius: var(--natal-radius-block);
   background: color-mix(in srgb, var(--natal-surface-reading-muted) 52%, transparent);
   color: var(--natal-text-reading-muted);
@@ -1598,7 +1598,7 @@
   }
 
   .page-layout.natal-page-container .page-layout__main {
-    padding: 10px var(--layout-padding-inline) calc(168px + env(safe-area-inset-bottom) + var(--app-mobile-nav-inset));
+    padding: 10px var(--layout-padding-inline) calc(216px + env(safe-area-inset-bottom) + var(--app-mobile-nav-inset));
   }
   
   .natal-page-header__title {
@@ -1749,7 +1749,7 @@
     grid-row: auto;
     gap: 6px;
     padding: 8px;
-    border-color: color-mix(in srgb, var(--natal-border-block) 34%, transparent);
+    border-color: color-mix(in srgb, var(--natal-border-block) 24%, transparent);
     background: color-mix(in srgb, var(--natal-surface-data) 45%, transparent);
   }
 
@@ -1765,7 +1765,7 @@
   .natal-reading-facts__group--primary .natal-reading-facts__item {
     padding: 0 0 6px;
     border: 0;
-    border-bottom: 1px solid color-mix(in srgb, var(--premium-glass-border-soft) 48%, transparent);
+    border-bottom: 1px solid color-mix(in srgb, var(--premium-glass-border-soft) 34%, transparent);
     border-radius: 0;
     background: transparent;
   }
@@ -1796,7 +1796,7 @@
   .natal-reading-facts__item {
     gap: 3px;
     padding-bottom: 5px;
-    border-bottom-color: color-mix(in srgb, var(--premium-glass-border-soft) 48%, transparent);
+    border-bottom-color: color-mix(in srgb, var(--premium-glass-border-soft) 34%, transparent);
   }
 
   .natal-reading-facts__item dd {
@@ -1849,7 +1849,6 @@
 
   .natal-reading__progress-link {
     width: auto;
-    max-width: 11.5rem;
     min-height: 44px;
     padding: 6px 10px 6px 8px;
     font-size: var(--font-size-2xs);
@@ -1888,7 +1887,7 @@
     width: 100%;
     box-sizing: border-box;
     padding: 9px;
-    border: 1px solid color-mix(in srgb, var(--natal-badge-meta-border) 46%, transparent);
+    border: 1px solid color-mix(in srgb, var(--natal-badge-meta-border) 30%, transparent);
     border-radius: var(--radius-lg);
     background: color-mix(in srgb, var(--natal-surface-reading-muted) 56%, transparent);
   }
@@ -1987,8 +1986,8 @@
     min-height: 24px;
     max-width: 100%;
     padding: 3px 6px;
-    border-color: color-mix(in srgb, var(--natal-badge-meta-border) 50%, transparent);
-    background: color-mix(in srgb, var(--natal-badge-meta-surface) 48%, transparent);
+    border-color: color-mix(in srgb, var(--natal-badge-meta-border) 34%, transparent);
+    background: color-mix(in srgb, var(--natal-badge-meta-surface) 40%, transparent);
     color: color-mix(in srgb, var(--premium-text-meta) 86%, var(--premium-text-main) 14%);
     font-size: var(--font-size-2xs);
     font-weight: var(--font-weight-medium);
@@ -2001,8 +2000,8 @@
   .natal-badge--confidence {
     min-height: 18px;
     padding: 0 6px;
-    border-color: color-mix(in srgb, var(--natal-badge-meta-border) 48%, transparent);
-    background: color-mix(in srgb, var(--natal-badge-meta-surface) 44%, transparent);
+    border-color: color-mix(in srgb, var(--natal-badge-meta-border) 32%, transparent);
+    background: color-mix(in srgb, var(--natal-badge-meta-surface) 38%, transparent);
     font-size: var(--font-size-3xs);
     letter-spacing: var(--letter-spacing-wide-xs);
   }
