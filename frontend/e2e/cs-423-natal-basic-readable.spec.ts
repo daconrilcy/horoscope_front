@@ -235,6 +235,46 @@ test("capture les preuves desktop et mobile d'une lecture Basic V2 lisible", asy
   await expect(firstChapterToggle).toHaveText("Réduire")
   await expect(firstChapterBody).toBeVisible()
 
+  const desktopTypography = await page
+    .locator(".natal-reading__chapter-body p")
+    .first()
+    .evaluate((bodyText) => {
+      const chapter = bodyText.closest(".natal-reading__chapter")
+      const excerptText = chapter?.querySelector(".natal-reading__chapter-excerpt-text")
+      if (!excerptText || !bodyText) {
+        throw new Error("Lecture natale incomplete pour la comparaison typographique")
+      }
+      const excerptStyles = window.getComputedStyle(excerptText)
+      const bodyStyles = window.getComputedStyle(bodyText)
+      return {
+        bodyFontFamily: bodyStyles.fontFamily,
+        bodyFontSize: bodyStyles.fontSize,
+        bodyFontWeight: bodyStyles.fontWeight,
+        bodyLineHeight: bodyStyles.lineHeight,
+        excerptFontFamily: excerptStyles.fontFamily,
+        excerptFontSize: excerptStyles.fontSize,
+        excerptFontWeight: excerptStyles.fontWeight,
+        excerptLineHeight: excerptStyles.lineHeight,
+      }
+    })
+  expect(desktopTypography.excerptFontFamily).toBe(desktopTypography.bodyFontFamily)
+  expect(desktopTypography.excerptFontSize).toBe(desktopTypography.bodyFontSize)
+  expect(desktopTypography.excerptFontWeight).toBe(desktopTypography.bodyFontWeight)
+  expect(desktopTypography.excerptLineHeight).toBe(desktopTypography.bodyLineHeight)
+
+  const desktopSurfaceWidths = await page.evaluate(() => {
+    const portrait = document.querySelector(".natal-page-portrait")
+    const contentCard = document.querySelector(".natal-card")
+    if (!portrait || !contentCard) {
+      throw new Error("Cadres natals introuvables pour la comparaison de largeur")
+    }
+    return {
+      cardWidth: contentCard.getBoundingClientRect().width,
+      portraitWidth: portrait.getBoundingClientRect().width,
+    }
+  })
+  expect(Math.abs(desktopSurfaceWidths.portraitWidth - desktopSurfaceWidths.cardWidth)).toBeLessThanOrEqual(1)
+
   const guideToggle = page.locator(".natal-chart-guide__toggle").first()
   await expect(guideToggle).toHaveAttribute("aria-expanded", "false")
   await expect(guideToggle).toHaveText("Lire le guide")
