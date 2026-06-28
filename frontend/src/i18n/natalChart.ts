@@ -34,6 +34,22 @@ export type NatalChartGuideTranslations = {
   faq: NatalChartFaqItem[]
 }
 
+export type NatalChartPageCopy = {
+  meta: string
+  title: string
+  context: string
+  portraitLabel: string
+  portraitFactsLabel: string
+  jobError: string
+  jobLaunchError: string
+  jobLoading: string
+  jobStatusLabel: string
+  readingUnavailable: string
+  startButton: string
+  retryButton: string
+  profileLink: string
+}
+
 type NatalChartTranslations = {
   title: string
   basicTitle: string
@@ -92,6 +108,7 @@ type NatalChartTranslations = {
   aspectMeaningLabel: string
   aspectMeaningMap: Record<string, string>
   wrapConnector: string
+  page: NatalChartPageCopy
   interpretation: {
     loading: string
     title: string
@@ -240,6 +257,23 @@ const natalChartTranslationsBase: Record<Exclude<AstrologyLang, "de">, NatalChar
       OPPOSITION: "L'aspect met en miroir deux pôles à équilibrer dans la vie du natif.",
     },
     wrapConnector: "puis 0°",
+    page: {
+      meta: "Thème natal Astral",
+      title: "Votre thème natal",
+      context:
+        "Une synthèse structurée de vos marqueurs personnels, de leurs appuis et des tensions majeures de votre ciel de naissance.",
+      portraitLabel: "Portrait astral",
+      portraitFactsLabel: "Marqueurs clés du portrait astral",
+      jobError:
+        "Le service Astral n'a pas pu produire votre thème natal pour le moment. Veuillez réessayer plus tard.",
+      jobLaunchError: "Le calcul Astral n'a pas pu être lancé ou récupéré.",
+      jobLoading: "Votre thème natal est en cours de génération. Cette étape peut prendre quelques instants.",
+      jobStatusLabel: "Statut",
+      readingUnavailable: "La lecture est indisponible pour ce job Astral.",
+      startButton: "Lancer le thème natal",
+      retryButton: "Relancer le thème natal",
+      profileLink: "Vérifier mon profil de naissance",
+    },
     interpretation: {
       loading: "L'IA analyse votre thème natal...",
       title: "Interprétation de votre thème",
@@ -481,6 +515,22 @@ const natalChartTranslationsBase: Record<Exclude<AstrologyLang, "de">, NatalChar
       OPPOSITION: "The aspect mirrors two poles that need balance in the native's life.",
     },
     wrapConnector: "then 0°",
+    page: {
+      meta: "Astral natal chart",
+      title: "Your natal chart",
+      context:
+        "A structured synthesis of your personal markers, their supports, and the major tensions in your birth sky.",
+      portraitLabel: "Astral portrait",
+      portraitFactsLabel: "Key astral portrait markers",
+      jobError: "Astral could not produce your natal chart right now. Please try again later.",
+      jobLaunchError: "The Astral calculation could not be started or retrieved.",
+      jobLoading: "Your natal chart is being generated. This step may take a few moments.",
+      jobStatusLabel: "Status",
+      readingUnavailable: "The reading is unavailable for this Astral job.",
+      startButton: "Start natal chart",
+      retryButton: "Restart natal chart",
+      profileLink: "Check my birth profile",
+    },
     interpretation: {
       loading: "AI is analyzing your natal chart...",
       title: "Chart Interpretation",
@@ -720,6 +770,22 @@ const natalChartTranslationsBase: Record<Exclude<AstrologyLang, "de">, NatalChar
       OPPOSITION: "El aspecto pone en espejo dos polos que deben equilibrarse en la vida del nativo.",
     },
     wrapConnector: "luego 0°",
+    page: {
+      meta: "Carta natal Astral",
+      title: "Tu carta natal",
+      context:
+        "Una síntesis estructurada de tus marcadores personales, sus apoyos y las tensiones principales de tu cielo natal.",
+      portraitLabel: "Retrato astral",
+      portraitFactsLabel: "Marcadores clave del retrato astral",
+      jobError: "Astral no pudo producir tu carta natal por el momento. Inténtalo de nuevo más tarde.",
+      jobLaunchError: "No se pudo iniciar o recuperar el cálculo Astral.",
+      jobLoading: "Tu carta natal se está generando. Este paso puede tardar unos instantes.",
+      jobStatusLabel: "Estado",
+      readingUnavailable: "La lectura no está disponible para este job Astral.",
+      startButton: "Iniciar carta natal",
+      retryButton: "Reiniciar carta natal",
+      profileLink: "Verificar mi perfil de nacimiento",
+    },
     interpretation: {
       loading: "La IA está analizando tu carta natal...",
       title: "Interpretación de tu carta",

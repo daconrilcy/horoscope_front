@@ -5,6 +5,12 @@ import userEvent from "@testing-library/user-event"
 import { MemoryRouter } from "react-router-dom"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
+import {
+  buildNatalAstralJobRequest,
+  resolveNatalAstralPlan,
+} from "../features/natal-chart/natalAstralJobConfig"
+import { resolveNatalJobViewState } from "../features/natal-chart/natalJobViewState"
+import { mergeCurrentAstralJobState } from "../features/natal-chart/useNatalAstralJob"
 import { NatalChartPage } from "../pages/NatalChartPage"
 
 const mockSubmitAstralJob = vi.fn()
@@ -116,6 +122,65 @@ afterEach(() => {
 })
 
 describe("NatalChartPage", () => {
+  it("mappe les variantes d'entitlement vers le plan Astral natal temporaire", () => {
+    expect(resolveNatalAstralPlan("premium_full")).toBe("premium")
+    expect(resolveNatalAstralPlan("basic_short")).toBe("basic")
+    expect(resolveNatalAstralPlan("single_astrologer")).toBe("basic")
+    expect(resolveNatalAstralPlan("unknown_variant")).toBe("free")
+    expect(buildNatalAstralJobRequest({ plan: "premium" })).toEqual(
+      expect.objectContaining({
+        product: "natal_full",
+        plan: "premium",
+        target_language_code: "fr",
+        audience_level: "expert",
+      }),
+    )
+  })
+
+  it("normalise les statuts Astral en etats d'affichage natal", () => {
+    expect(resolveNatalJobViewState({ hasTransportError: false, isWorking: false })).toBe("idle")
+    expect(resolveNatalJobViewState({ hasTransportError: true, isWorking: true })).toBe("transport-error")
+    expect(resolveNatalJobViewState({ hasTransportError: false, isWorking: true })).toBe("working")
+    expect(
+      resolveNatalJobViewState({
+        hasTransportError: false,
+        isWorking: false,
+        currentJob: { run_id: "run-1", status: "completed" },
+      }),
+    ).toBe("completed")
+    expect(
+      resolveNatalJobViewState({
+        hasTransportError: false,
+        isWorking: false,
+        currentJob: { run_id: "run-2", status: "failed" },
+      }),
+    ).toBe("terminal-error")
+  })
+
+  it("conserve result error et token_usage quand un evenement SSE partiel les omet", () => {
+    const mergedJob = mergeCurrentAstralJobState(
+      { run_id: "run-merge", status: "completed" },
+      {
+        run_id: "run-merge",
+        status: "running",
+        result: { reading: { status: "success" } },
+        error: { code: "previous" },
+        token_usage: { total: 42 },
+      },
+      undefined,
+    )
+
+    expect(mergedJob).toEqual(
+      expect.objectContaining({
+        run_id: "run-merge",
+        status: "completed",
+        result: { reading: { status: "success" } },
+        error: { code: "previous" },
+        token_usage: { total: 42 },
+      }),
+    )
+  })
+
   it("ne soumet pas automatiquement un job Astral au montage", async () => {
     renderNatalChartPage()
 
@@ -170,6 +235,28 @@ describe("NatalChartPage", () => {
         }),
         expect.anything(),
       )
+    })
+  })
+
+  it("ignore une double action de lancement avant la fin de la premiere soumission", async () => {
+    const user = userEvent.setup()
+    let resolveSubmit: ((value: { run_id: string; status: string; service_code: string }) => void) | null = null
+    mockSubmitAstralJob.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveSubmit = resolve
+        }),
+    )
+
+    renderNatalChartPage()
+
+    await user.dblClick(await screen.findByRole("button", { name: "Lancer le thème natal" }))
+
+    expect(mockSubmitAstralJob).toHaveBeenCalledTimes(1)
+    resolveSubmit?.({
+      run_id: "run-natal-double",
+      status: "queued",
+      service_code: "natal_basic",
     })
   })
 
@@ -447,6 +534,36 @@ describe("NatalChartPage", () => {
 
     expect(await screen.findByRole("heading", { name: "Lecture conservee" })).toBeVisible()
     expect(screen.getByText("Le polling garde le texte public.")).toBeVisible()
+  })
+
+  it("ignore un evenement SSE qui cible un autre run", async () => {
+    mockUseAstralJobStatus.mockReturnValue({
+      data: {
+        run_id: "run-natal-current",
+        status: "completed",
+        service_code: "natal_basic",
+        result: {
+          reading: {
+            status: "success",
+            reading: {
+              summary: {
+                title: "Lecture courante",
+                short_text: "Le run courant reste affiche.",
+              },
+              chapters: [],
+            },
+          },
+        },
+      },
+      isError: false,
+      isPending: false,
+    })
+
+    renderNatalChartPage(["/natal?runId=run-natal-current"])
+    capturedAstralEventHandler?.({ run_id: "run-natal-other", status: "failed" })
+
+    expect(await screen.findByRole("heading", { name: "Lecture courante" })).toBeVisible()
+    expect(screen.queryByText("Le service Astral n'a pas pu produire votre thème natal")).not.toBeInTheDocument()
   })
 
   it("affiche les explications dediees sans message de chapitres manquants", async () => {
