@@ -143,7 +143,11 @@ describe("theme.css validation (Static Analysis)", () => {
   it("raccorde les surfaces et badges de /natal aux roles visuels de page", () => {
     expect(natalChartPageCssContent).toContain("--natal-radius-section: var(--premium-radius-card)")
     expect(natalChartPageCssContent).toContain("--natal-surface-section: var(--premium-glass-surface-1)")
+    expect(natalChartPageCssContent).toContain("--natal-panel-background: var(--glass-card-premium-bg)")
     expect(natalChartPageCssContent).toContain("--natal-badge-key-surface: var(--natal-surface-chip)")
+    expect(natalChartPageCssContent).toMatch(
+      /\.natal-page-portrait,\s*\.natal-card,\s*\.natal-reading-facts,\s*\.natal-reading__chapter\s*\{[\s\S]*box-sizing:\s*border-box[\s\S]*box-shadow:\s*var\(--natal-shadow-section\)/,
+    )
     expect(natalChartPageCssContent).toMatch(/\.natal-badge--astro-data\s*\{[\s\S]*background:\s*var\(--natal-badge-key-surface\)/)
     expect(natalChartPageCssContent).toMatch(/\.natal-badge--basis\s*\{[\s\S]*background:\s*var\(--natal-badge-meta-surface\)/)
     expect(natalChartPageCssContent).toMatch(/\.natal-data-pill\s*\{[\s\S]*background:\s*var\(--natal-badge-meta-surface\)/)
