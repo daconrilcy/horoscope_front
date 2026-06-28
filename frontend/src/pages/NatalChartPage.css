@@ -629,7 +629,7 @@
 }
 
 .natal-data-card {
-  padding: 16px 18px;
+  padding: 16px 16px;
   border-radius: var(--natal-radius-block);
   background: var(--natal-surface-block);
   border: 1px solid var(--natal-border-block);
@@ -694,7 +694,7 @@
   display: inline-flex;
   align-items: center;
   min-height: 28px;
-  padding: 0 10px;
+  padding: 12px;
   border-radius: var(--natal-radius-badge);
   background: var(--natal-badge-meta-surface);
   border: 1px solid var(--natal-badge-meta-border);
@@ -723,7 +723,7 @@
 
 .natal-badge--report-status {
   min-height: 22px;
-  padding: 0 8px;
+  padding: 12px;
   border-color: var(--natal-badge-status-border);
   background: var(--natal-badge-status-surface);
   color: var(--premium-text-meta);
@@ -737,7 +737,7 @@
   flex-shrink: 0;
   width: fit-content;
   min-height: 20px;
-  padding: 0 7px;
+  padding: 12px;
   border-color: color-mix(in srgb, var(--natal-badge-meta-border) 28%, transparent);
   background: color-mix(in srgb, var(--natal-badge-meta-surface) 34%, transparent);
   color: var(--natal-text-reading-muted);
@@ -749,7 +749,7 @@
 
 .natal-badge--astro-data {
   min-height: 26px;
-  padding: 0 9px;
+  padding: 12px;
   border-radius: var(--natal-radius-block);
   border-color: var(--natal-badge-key-border);
   background: var(--natal-badge-key-surface);
@@ -773,7 +773,7 @@
 
 .natal-badge--fact-detail {
   min-height: 22px;
-  padding: 0 8px;
+  padding: 12px;
   border-color: var(--natal-badge-detail-border);
   background: color-mix(in srgb, var(--natal-badge-detail-surface) 82%, transparent);
   color: var(--premium-text-meta);
@@ -787,7 +787,7 @@
 
 .natal-badge--basis {
   min-height: 18px;
-  padding: 0 5px;
+  padding: 12px;
   border-color: color-mix(in srgb, var(--natal-badge-meta-border) 28%, transparent);
   background: color-mix(in srgb, var(--natal-badge-meta-surface) 34%, transparent);
   color: var(--natal-text-reading-muted);
@@ -797,6 +797,8 @@
 
 .natal-page-portrait__facts .natal-page-portrait__fact {
   display: grid;
+  align-content: center;
+  padding: 12px;
 }
 
 .natal-data-card__support {
@@ -1618,7 +1620,7 @@
   .page-layout.natal-page-container .page-layout__main {
     padding: 10px var(--layout-padding-inline) calc(216px + env(safe-area-inset-bottom) + var(--app-mobile-nav-inset));
   }
-  
+
   .natal-page-header__title {
     font-size: var(--font-size-xl);
     line-height: var(--type-section-title-line-height);
