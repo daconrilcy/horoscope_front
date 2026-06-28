@@ -150,14 +150,16 @@ describe("theme.css validation (Static Analysis)", () => {
     expect(natalChartPageCssContent).toMatch(/\.natal-data-card\s*\{[\s\S]*background:\s*var\(--natal-surface-block\)/)
   })
 
-  it("conserve le peek mobile volontaire du parcours /natal et attenue la bottom nav", () => {
+  it("conserve la grille mobile du parcours /natal et attenue la bottom nav", () => {
     const natalBottomNavRule = natalChartPageCssContent.match(
       /body:has\(\.is-natal-page\) \.bottom-nav\s*\{([^}]*)\}/,
     )?.[1]
 
-    expect(natalChartPageCssContent).toContain("--natal-progress-peek: 34px")
     expect(natalChartPageCssContent).toMatch(
-      /\.natal-reading__progress li\s*\{[\s\S]*flex:\s*0 0 clamp\(156px,\s*calc\(100% - var\(--natal-progress-peek\)\),\s*240px\)/,
+      /\.natal-reading__progress ol\s*\{[\s\S]*grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)/,
+    )
+    expect(natalChartPageCssContent).toMatch(
+      /\.natal-reading__progress-link\s*\{[\s\S]*box-sizing:\s*border-box[\s\S]*max-width:\s*100%/,
     )
     expect(natalBottomNavRule).toContain("border-color: color-mix(in srgb, var(--color-nav-border) 30%, transparent)")
     expect(natalBottomNavRule).toContain("background: color-mix(in srgb, var(--color-nav-glass) 28%, transparent)")

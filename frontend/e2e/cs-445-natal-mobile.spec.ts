@@ -226,21 +226,32 @@ test("garde /natal lisible et non masque a 360, 390 et 430 px", async ({ page })
       const styles = window.getComputedStyle(element)
       return {
         display: styles.display,
+        gridTemplateColumns: styles.gridTemplateColumns,
         overflowX: styles.overflowX,
-        scrollSnapType: styles.scrollSnapType,
       }
     })
-    expect(progressStyles.display).toBe("flex")
-    expect(progressStyles.overflowX).toBe("auto")
-    expect(progressStyles.scrollSnapType).toContain("x")
+    expect(progressStyles.display).toBe("grid")
+    expect(progressStyles.gridTemplateColumns.trim().split(/\s+/)).toHaveLength(2)
+    expect(progressStyles.overflowX).toBe("visible")
 
     const progressLink = page.locator(".natal-reading__progress-link").first()
     await expectTouchTarget(progressLink)
     await expect(progressLink.locator(".natal-reading__progress-label--short")).toHaveText("Identité")
     await expect(page.locator(".natal-reading__progress-label--short").nth(1)).toHaveText("Émotions")
     await expect(page.locator(".natal-reading__progress-label--short").nth(2)).toHaveText("Relations")
-    const progressLinkBox = await progressLink.boundingBox()
-    expect(progressLinkBox?.width ?? 0).toBeLessThanOrEqual(190)
+    const progressLinkOverflow = await page.locator(".natal-reading__progress li").evaluateAll((items) =>
+      items.map((item) => {
+        const link = item.querySelector(".natal-reading__progress-link")
+        const itemBox = item.getBoundingClientRect()
+        const linkBox = link?.getBoundingClientRect()
+        return {
+          itemWidth: itemBox.width,
+          linkWidth: linkBox?.width ?? 0,
+          overflow: (linkBox?.width ?? 0) - itemBox.width,
+        }
+      }),
+    )
+    expect(progressLinkOverflow.every(({ overflow }) => overflow <= 1)).toBe(true)
 
     const metaToggle = page.locator(".natal-reading__meta-toggle").first()
     await expectTouchTarget(metaToggle)

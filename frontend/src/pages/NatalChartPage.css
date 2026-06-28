@@ -44,7 +44,6 @@
   --natal-type-reading-text-size: var(--natal-type-body-size);
   --natal-type-reading-text-weight: var(--type-body-weight);
   --natal-type-reading-text-line-height: var(--natal-type-body-line-height);
-  --natal-progress-peek: 34px;
   font-family: var(--font-family-base);
 }
 
@@ -160,6 +159,7 @@
 
 .natal-page-portrait {
   display: grid;
+  align-content: center;
   grid-template-columns: minmax(0, 0.92fr) minmax(360px, 1.08fr);
   gap: 22px;
   align-items: start;
@@ -177,13 +177,14 @@
 
 .natal-page-portrait__copy {
   display: grid;
+  align-content: center;
   gap: 6px;
   min-width: 0;
 }
 
 .natal-page-portrait__head {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 18px;
   min-width: 0;
@@ -1837,7 +1838,7 @@
 
   .natal-reading__progress {
     gap: 0;
-    padding: 8px 0 8px 8px;
+    padding: 8px;
   }
 
   .natal-reading__progress > .natal-section-eyebrow {
@@ -1845,34 +1846,29 @@
   }
 
   .natal-reading__progress ol {
-    display: flex;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 6px;
     max-width: 100%;
-    padding: 2px 8px 2px 2px;
-    overflow-x: auto;
-    overscroll-behavior-inline: contain;
-    scroll-padding-inline: 8px;
-    scroll-snap-type: x proximity;
-    scrollbar-width: none;
-  }
-
-  .natal-reading__progress ol::-webkit-scrollbar {
-    display: none;
+    padding: 2px;
+    overflow: visible;
   }
 
   .natal-reading__progress li {
-    flex: 0 0 clamp(156px, calc(100% - var(--natal-progress-peek)), 240px);
+    min-width: 0;
     min-height: 0;
     padding: 0;
-    scroll-snap-align: start;
   }
 
   .natal-reading__progress-link {
-    width: auto;
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
     min-height: 44px;
     padding: 6px 10px 6px 8px;
     font-size: var(--font-size-2xs);
     white-space: nowrap;
+    overflow: hidden;
   }
 
   .natal-reading__progress-label--full {
