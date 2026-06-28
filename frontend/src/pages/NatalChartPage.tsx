@@ -7,6 +7,9 @@ import { useNatalAstralJob } from "../features/natal-chart/useNatalAstralJob"
 import { NatalChartGuide } from "../components/NatalChartGuide"
 import { useAstrologyLabels } from "../i18n/astrology"
 import { natalChartTranslations } from "../i18n/natalChart"
+import "../features/natal-chart/natalTheme.css"
+import "../features/natal-chart/natalBadges.css"
+import "../features/natal-chart/natalCards.css"
 import "./NatalChartPage.css"
 
 /** Compose la page thème natal à partir des modules feature dédiés. */
@@ -36,7 +39,9 @@ export function NatalChartPage() {
                   <span className="natal-section-eyebrow">{copy.portraitLabel}</span>
                   <p>{natalJob.natalReading.shortText ?? copy.context}</p>
                 </div>
-                <span className="natal-badge natal-badge--report-status">{natalJob.natalReading.label}</span>
+                <span className="natal-page-portrait__status natal-badge natal-badge--report-status">
+                  {natalJob.natalReading.label}
+                </span>
               </div>
             </div>
             <div className="natal-page-portrait__facts" aria-label={copy.portraitFactsLabel}>

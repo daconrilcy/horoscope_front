@@ -1,0 +1,59 @@
+/* Surfaces partagees du theme natal, limitees aux enveloppes reutilisees. */
+
+.natal-page-portrait,
+.natal-card,
+.natal-reading-facts,
+.natal-reading__chapter {
+  box-sizing: border-box;
+  width: var(--natal-content-width);
+  border-radius: var(--natal-radius-section);
+  backdrop-filter: var(--natal-glass-filter);
+  -webkit-backdrop-filter: var(--natal-glass-filter);
+  box-shadow: var(--natal-shadow-section);
+}
+
+.natal-page-portrait,
+.natal-card,
+.natal-reading-facts {
+  border: 1px solid var(--natal-border-section);
+  background: var(--natal-panel-background);
+}
+
+.natal-card {
+  padding: 20px;
+  transition: transform var(--duration-normal) var(--easing-default), box-shadow var(--duration-normal) var(--easing-default);
+}
+
+.natal-card:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--natal-shadow-section);
+}
+
+.natal-section-eyebrow {
+  display: block;
+  margin-bottom: 6px;
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-strong);
+  color: var(--premium-text-meta);
+  text-transform: uppercase;
+  letter-spacing: var(--letter-spacing-wide-md);
+}
+
+@media (max-width: 768px) {
+  .natal-card,
+    .natal-reading-facts,
+    .natal-reading__chapter {
+      padding: 12px;
+      border-radius: var(--radius-lg);
+    }
+
+  .natal-card:hover {
+      transform: none;
+    }
+
+  .natal-section-eyebrow {
+      margin-bottom: 4px;
+      font-size: var(--font-size-3xs);
+      letter-spacing: var(--letter-spacing-wide-control);
+    }
+}

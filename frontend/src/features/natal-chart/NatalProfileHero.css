@@ -1,0 +1,68 @@
+/* Styles du hero public du theme natal. */
+
+.natal-hero__title {
+  margin: 0;
+  font-size: var(--font-size-xl);
+  line-height: var(--line-height-display-relaxed);
+  color: var(--premium-text-strong);
+}
+
+.natal-hero {
+  margin-bottom: 28px;
+}
+
+.natal-hero {
+  display: grid;
+  gap: 22px;
+  padding: 28px;
+  border-radius: var(--natal-radius-section);
+  background: var(--natal-surface-section);
+  border: 1px solid var(--natal-border-section);
+  box-shadow: var(--natal-shadow-block);
+}
+
+.natal-hero__copy p {
+  max-width: 820px;
+  margin: 8px 0 0;
+  color: var(--premium-text-main);
+  line-height: var(--line-height-prose);
+}
+
+.natal-hero__triptych {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 16px;
+}
+
+.natal-hero-pill {
+  padding: 18px;
+  border-radius: var(--natal-radius-block);
+  border: 1px solid var(--natal-border-block);
+  background: var(--natal-surface-block);
+}
+
+.natal-hero-pill h3 {
+  margin: 0 0 8px;
+  font-size: var(--font-size-md);
+  line-height: var(--type-label-line-height);
+  color: var(--premium-text-strong);
+}
+
+.natal-hero-pill p {
+  margin: 0;
+  color: var(--premium-text-main);
+  line-height: var(--line-height-copy-loose);
+}
+
+.natal-hero-pill__symbol {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  margin-bottom: 10px;
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--color-token-rgb-122-95-220) 12%, transparent);
+  color: var(--premium-accent-purple-strong);
+  font-weight: var(--font-weight-bold);
+}

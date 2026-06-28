@@ -9,6 +9,8 @@ import type {
   NatalInterpretationViewModel,
   NatalReadingChapterViewModel,
 } from "./natalAstralReadingViewModel"
+import "./NatalReading.css"
+import "./NatalReadingFacts.css"
 
 type NatalAstralReadingProps = {
   reading: NatalInterpretationViewModel

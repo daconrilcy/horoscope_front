@@ -1,0 +1,124 @@
+/* Styles des details techniques planètes, maisons et donnees brutes du theme natal. */
+
+.natal-grid {
+  display: grid;
+  gap: 24px;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+  margin-bottom: 32px;
+}
+
+.natal-card__intro {
+  margin: 0 0 20px;
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-prose);
+  color: var(--premium-text-main);
+}
+
+.natal-technical-card__title {
+  margin: 0 0 20px;
+  color: var(--premium-text-strong);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--letter-spacing-tight-xs);
+}
+
+.natal-data-list {
+  display: grid;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.natal-data-card {
+  padding: 16px 16px;
+  border-radius: var(--natal-radius-block);
+  background: var(--natal-surface-block);
+  border: 1px solid var(--natal-border-block);
+  border-bottom: 1px solid var(--natal-border-block);
+  color: var(--premium-text-main);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-normal);
+  padding-bottom: 16px;
+  box-shadow: var(--natal-shadow-block);
+}
+
+.dark .natal-data-card,
+.dark .natal-aspect-item,
+.dark .natal-aspect-meta__item {
+  background: var(--natal-surface-block);
+  border-color: var(--natal-border-block);
+}
+
+.dark .natal-data-pill {
+  background: var(--natal-badge-meta-surface);
+  border-color: var(--natal-badge-meta-border);
+  color: var(--premium-text-main);
+}
+
+.natal-data-card__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.natal-data-card__title {
+  font-size: var(--font-size-15);
+  color: var(--premium-text-strong);
+}
+
+.natal-data-card__value {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  color: var(--premium-accent-purple-strong);
+  text-align: right;
+}
+
+.natal-data-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.natal-data-card__reading {
+  margin: 8px 0 0;
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-copy-loose);
+  color: var(--premium-text-main);
+}
+
+.natal-data-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 12px;
+  border-radius: var(--natal-radius-badge);
+  background: var(--natal-badge-meta-surface);
+  border: 1px solid var(--natal-badge-meta-border);
+  color: var(--premium-text-main);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+}
+
+.natal-data-card__support {
+  margin: 12px 0 0;
+  font-size: var(--font-size-xs);
+  line-height: var(--line-height-copy-loose);
+  color: var(--premium-text-meta);
+}
+
+@media (max-width: 768px) {
+  .natal-grid {
+      grid-template-columns: 1fr;
+    }
+
+  .natal-data-card__head {
+      flex-direction: column;
+    }
+
+  .natal-data-card__value {
+      text-align: left;
+    }
+}

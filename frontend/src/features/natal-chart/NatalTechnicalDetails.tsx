@@ -1,5 +1,7 @@
 // Details techniques du theme natal: rendu brut reserve au mode astrologue.
 import type { AspectResult, HouseResult, PlanetPosition } from "../../api/natalChart"
+import "./NatalTechnicalDetails.css"
+import "./NatalAspects.css"
 
 type NatalTechnicalDetailsProps = {
   planetPositions: PlanetPosition[]
@@ -50,7 +52,7 @@ export function NatalTechnicalDetails({
     <>
       <div className="natal-grid">
         <article className="natal-card">
-          <h2>{t.sections.planets}</h2>
+          <h2 className="natal-technical-card__title">{t.sections.planets}</h2>
           <p className="natal-card__intro">{t.planetsLead}</p>
           <ul className="natal-data-list">
             {planetPositions.map((item) => {
@@ -84,7 +86,7 @@ export function NatalTechnicalDetails({
         </article>
 
         <article className="natal-card">
-          <h2>{t.sections.houses}</h2>
+          <h2 className="natal-technical-card__title">{t.sections.houses}</h2>
           <p className="natal-card__intro">{t.housesLead}</p>
           <ul className="natal-data-list">
             {sortedHouses.map((item) => (
@@ -106,7 +108,7 @@ export function NatalTechnicalDetails({
       </div>
 
       <article className="natal-card natal-aspects-card">
-        <h2>{t.sections.aspects}</h2>
+        <h2 className="natal-technical-card__title">{t.sections.aspects}</h2>
         <p className="natal-card__intro">{t.aspectsLead}</p>
         {aspects.length === 0 ? (
           <p>{t.noAspects}</p>

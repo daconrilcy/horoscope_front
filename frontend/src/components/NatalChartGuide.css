@@ -1,0 +1,165 @@
+/* Styles du guide pedagogique du theme natal. */
+
+.natal-chart-guide {
+  margin-top: 24px;
+  display: grid;
+  gap: 16px;
+  padding: 22px;
+  background: var(--natal-surface-reading);
+  border: 1px solid var(--natal-border-reading);
+  border-radius: var(--natal-radius-section);
+  box-shadow: var(--natal-shadow-section);
+}
+
+.natal-chart-guide__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  min-width: 0;
+}
+
+.natal-chart-guide__title {
+  margin: 0;
+  min-width: 0;
+  flex: 1 1 auto;
+  font-size: var(--natal-type-section-title-size);
+  font-weight: var(--type-section-title-weight);
+  line-height: var(--type-section-title-line-height);
+  color: var(--premium-text-strong);
+}
+
+.natal-chart-guide__toggle {
+  flex: 0 0 auto;
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid var(--natal-border-accent);
+  border-radius: var(--natal-radius-badge);
+  background: var(--natal-badge-key-surface);
+  color: var(--premium-accent-purple-strong);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  cursor: pointer;
+}
+
+.natal-chart-guide__toggle:hover {
+  background: color-mix(in srgb, var(--premium-accent-purple-strong) 8%, var(--natal-surface-reading-muted));
+}
+
+.natal-chart-guide__toggle:focus-visible {
+  outline: var(--natal-focus-outline);
+  outline-offset: 2px;
+}
+
+.natal-chart-guide__content {
+  display: grid;
+  gap: 18px;
+  color: var(--natal-text-reading);
+  font-size: var(--natal-type-body-size);
+  font-weight: var(--type-body-weight);
+  line-height: var(--natal-type-body-line-height);
+}
+
+.natal-chart-guide__content--collapsed {
+  display: none;
+}
+
+.natal-chart-guide__content[hidden] {
+  display: none;
+}
+
+.natal-chart-guide__content--expanded {
+  display: grid;
+}
+
+.natal-chart-guide__intro {
+  margin: 0;
+  color: var(--natal-text-reading);
+  font-size: var(--natal-type-body-size);
+  font-weight: var(--type-body-weight);
+  line-height: var(--natal-type-body-line-height);
+}
+
+.natal-chart-guide__section {
+  display: grid;
+  gap: 8px;
+  padding-top: 16px;
+  border-top: 1px solid var(--premium-glass-border-soft);
+}
+
+.natal-chart-guide__section h3 {
+  margin: 0;
+  color: var(--premium-text-strong);
+  font-size: var(--natal-type-card-title-size);
+  font-weight: var(--type-card-title-weight);
+  letter-spacing: 0;
+  line-height: var(--type-card-title-line-height);
+}
+
+.natal-chart-guide__section p {
+  margin: 0;
+  color: var(--natal-text-reading);
+  font-size: var(--natal-type-body-size);
+  font-weight: var(--type-body-weight);
+  line-height: var(--natal-type-body-line-height);
+}
+
+.natal-chart-guide__faq dl {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+}
+
+.natal-chart-guide__faq-item dt {
+  font-weight: var(--font-weight-bold);
+  color: var(--premium-text-strong);
+  margin-bottom: 4px;
+}
+
+.natal-chart-guide__faq-item dd {
+  margin: 0;
+  color: var(--natal-text-reading);
+}
+
+.natal-chart-guide__missing-time {
+  padding: 12px 14px;
+  border: 1px solid var(--natal-border-accent);
+  border-radius: var(--natal-radius-block);
+  background: var(--natal-surface-reading-muted);
+}
+
+@media (max-width: 768px) {
+  .natal-chart-guide {
+      margin-top: 14px;
+      gap: 10px;
+      padding: 12px;
+    }
+
+  .natal-chart-guide__header {
+      flex-direction: column;
+      gap: 8px;
+    }
+
+  .natal-chart-guide__title {
+      font-size: var(--font-size-md);
+      line-height: var(--type-label-line-height);
+    }
+
+  .natal-chart-guide__toggle {
+      min-height: 44px;
+      padding: 0 14px;
+      font-size: var(--font-size-xs);
+      line-height: var(--type-label-line-height);
+    }
+
+  .natal-chart-guide__content {
+      font-size: var(--font-size-xs);
+      line-height: var(--line-height-relaxed);
+    }
+
+  .natal-chart-guide__section p {
+      font-size: var(--font-size-xs);
+      line-height: var(--line-height-relaxed);
+    }
+}

@@ -7,6 +7,7 @@ import type { NatalChartPageCopy } from "../../i18n/natalChart"
 import { NatalAstralReading } from "./NatalAstralReading"
 import type { NatalInterpretationViewModel } from "./natalAstralReadingViewModel"
 import type { NatalJobViewState } from "./natalJobViewState"
+import "./NatalJobCard.css"
 
 type NatalJobCardProps = {
   viewState: NatalJobViewState

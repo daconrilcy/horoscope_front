@@ -9,9 +9,24 @@ const themePath = path.resolve(__dirname, "../styles/theme.css")
 const designTokensPath = path.resolve(__dirname, "../styles/design-tokens.css")
 const premiumThemePath = path.resolve(__dirname, "../styles/premium-theme.css")
 const natalChartPageCssPath = path.resolve(__dirname, "../pages/NatalChartPage.css")
+const natalCssPaths = [
+  "../features/natal-chart/natalTheme.css",
+  "../features/natal-chart/natalBadges.css",
+  "../features/natal-chart/natalCards.css",
+  "../features/natal-chart/NatalJobCard.css",
+  "../features/natal-chart/NatalReading.css",
+  "../features/natal-chart/NatalReadingFacts.css",
+  "../features/natal-chart/NatalAspects.css",
+  "../features/natal-chart/NatalTechnicalDetails.css",
+  "../features/natal-chart/NatalProfileHero.css",
+  "../features/natal-chart/NatalAstrologerMode.css",
+  "../components/NatalChartGuide.css",
+  "../pages/NatalChartPage.css",
+]
 const themeContent = fs.readFileSync(designTokensPath, "utf-8") + "\n" + fs.readFileSync(themePath, "utf-8")
 const premiumThemeContent = fs.readFileSync(premiumThemePath, "utf-8")
 const natalChartPageCssContent = fs.readFileSync(natalChartPageCssPath, "utf-8")
+const natalCssContent = natalCssPaths.map((cssPath) => fs.readFileSync(path.resolve(__dirname, cssPath), "utf-8")).join("\n")
 
 function escapeRegex(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
@@ -141,17 +156,17 @@ describe("theme.css validation (Static Analysis)", () => {
   })
 
   it("raccorde les surfaces et badges de /natal aux roles visuels de page", () => {
-    expect(natalChartPageCssContent).toContain("--natal-radius-section: var(--premium-radius-card)")
-    expect(natalChartPageCssContent).toContain("--natal-surface-section: var(--premium-glass-surface-1)")
-    expect(natalChartPageCssContent).toContain("--natal-panel-background: var(--glass-card-premium-bg)")
-    expect(natalChartPageCssContent).toContain("--natal-badge-key-surface: var(--natal-surface-chip)")
-    expect(natalChartPageCssContent).toMatch(
+    expect(natalCssContent).toContain("--natal-radius-section: var(--premium-radius-card)")
+    expect(natalCssContent).toContain("--natal-surface-section: var(--premium-glass-surface-1)")
+    expect(natalCssContent).toContain("--natal-panel-background: var(--glass-card-premium-bg)")
+    expect(natalCssContent).toContain("--natal-badge-key-surface: var(--natal-surface-chip)")
+    expect(natalCssContent).toMatch(
       /\.natal-page-portrait,\s*\.natal-card,\s*\.natal-reading-facts,\s*\.natal-reading__chapter\s*\{[\s\S]*box-sizing:\s*border-box[\s\S]*box-shadow:\s*var\(--natal-shadow-section\)/,
     )
-    expect(natalChartPageCssContent).toMatch(/\.natal-badge--astro-data\s*\{[\s\S]*background:\s*var\(--natal-badge-key-surface\)/)
-    expect(natalChartPageCssContent).toMatch(/\.natal-badge--basis\s*\{[\s\S]*background:\s*var\(--natal-badge-meta-surface\)/)
-    expect(natalChartPageCssContent).toMatch(/\.natal-data-pill\s*\{[\s\S]*background:\s*var\(--natal-badge-meta-surface\)/)
-    expect(natalChartPageCssContent).toMatch(/\.natal-data-card\s*\{[\s\S]*background:\s*var\(--natal-surface-block\)/)
+    expect(natalCssContent).toMatch(/\.natal-badge--astro-data\s*\{[\s\S]*background:\s*var\(--natal-badge-key-surface\)/)
+    expect(natalCssContent).toMatch(/\.natal-badge--basis\s*\{[\s\S]*background:\s*var\(--natal-badge-meta-surface\)/)
+    expect(natalCssContent).toMatch(/\.natal-data-pill\s*\{[\s\S]*background:\s*var\(--natal-badge-meta-surface\)/)
+    expect(natalCssContent).toMatch(/\.natal-data-card\s*\{[\s\S]*background:\s*var\(--natal-surface-block\)/)
   })
 
   it("conserve la grille mobile du parcours /natal et attenue la bottom nav", () => {
@@ -159,10 +174,10 @@ describe("theme.css validation (Static Analysis)", () => {
       /body:has\(\.is-natal-page\) \.bottom-nav\s*\{([^}]*)\}/,
     )?.[1]
 
-    expect(natalChartPageCssContent).toMatch(
+    expect(natalCssContent).toMatch(
       /\.natal-reading__progress ol\s*\{[\s\S]*grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)/,
     )
-    expect(natalChartPageCssContent).toMatch(
+    expect(natalCssContent).toMatch(
       /\.natal-reading__progress-link\s*\{[\s\S]*box-sizing:\s*border-box[\s\S]*max-width:\s*100%/,
     )
     expect(natalBottomNavRule).toContain("border-color: color-mix(in srgb, var(--color-nav-border) 30%, transparent)")
@@ -171,6 +186,13 @@ describe("theme.css validation (Static Analysis)", () => {
     expect(natalBottomNavRule).not.toContain("opacity:")
     expect(natalChartPageCssContent).toMatch(
       /body:has\(\.is-natal-page\) \.bottom-nav__item--active\s*\{[\s\S]*background:\s*color-mix\(in srgb,\s*var\(--color-nav-active-bg\)\s*34%,\s*transparent\)/,
+    )
+  })
+
+  it("garde NatalChartPage.css limite au shell de page natal", () => {
+    expect(natalChartPageCssContent.split(/\r?\n/).length).toBeLessThanOrEqual(250)
+    expect(natalChartPageCssContent).not.toMatch(
+      /natal-(reading|chart-guide|aspect|data|hero|astrologer|badge|card__)/,
     )
   })
 })

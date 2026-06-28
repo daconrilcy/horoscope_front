@@ -1,0 +1,129 @@
+/* Badges transverses du theme natal partages par la page et ses modules. */
+
+.dark .natal-badge {
+  background: var(--premium-glass-surface-3);
+  border-color: var(--premium-glass-border);
+  color: var(--premium-text-main);
+}
+
+.natal-badge--astro-data strong {
+  color: var(--premium-accent-purple-strong);
+  font-weight: var(--font-weight-bold);
+}
+
+.natal-badge {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  max-width: 100%;
+  min-width: 0;
+  border: 1px solid var(--natal-border-block);
+  border-radius: var(--natal-radius-badge);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-normal);
+  overflow-wrap: anywhere;
+}
+
+.natal-badge--report-status {
+  min-height: 22px;
+  padding: 12px;
+  border-color: var(--natal-badge-status-border);
+  background: var(--natal-badge-status-surface);
+  color: var(--premium-text-meta);
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-wide-control);
+  text-transform: uppercase;
+}
+
+.natal-badge--confidence {
+  flex-shrink: 0;
+  width: fit-content;
+  min-height: 20px;
+  padding: 12px;
+  border-color: color-mix(in srgb, var(--natal-badge-meta-border) 28%, transparent);
+  background: color-mix(in srgb, var(--natal-badge-meta-surface) 34%, transparent);
+  color: var(--natal-text-reading-muted);
+  font-size: var(--font-size-3xs);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: var(--letter-spacing-wide-xs);
+  text-transform: uppercase;
+}
+
+.natal-badge--astro-data {
+  min-height: 26px;
+  padding: 12px;
+  border-radius: var(--natal-radius-block);
+  border-color: var(--natal-badge-key-border);
+  background: var(--natal-badge-key-surface);
+  color: var(--premium-text-strong);
+}
+
+.natal-badge--astro-sign {
+  border-color: color-mix(in srgb, var(--premium-accent-purple-strong) 10%, var(--natal-border-block));
+  background: color-mix(in srgb, var(--premium-accent-purple-strong) 7%, var(--natal-surface-chip));
+}
+
+.natal-badge--astro-house {
+  border-color: color-mix(in srgb, var(--premium-glass-border-strong) 34%, var(--natal-border-block));
+  background: color-mix(in srgb, var(--premium-glass-border-strong) 10%, var(--natal-surface-block));
+}
+
+.natal-badge--astro-aspect {
+  border-color: color-mix(in srgb, var(--premium-accent-purple-strong) 8%, var(--natal-border-block));
+  background: color-mix(in srgb, var(--premium-accent-purple-strong) 4%, var(--natal-surface-block));
+}
+
+.natal-badge--fact-detail {
+  min-height: 22px;
+  padding: 12px;
+  border-color: var(--natal-badge-detail-border);
+  background: color-mix(in srgb, var(--natal-badge-detail-surface) 82%, transparent);
+  color: var(--premium-text-meta);
+  font-size: var(--font-size-2xs);
+}
+
+.natal-badge--astro-intensity {
+  color: color-mix(in srgb, var(--premium-text-main) 82%, var(--premium-text-meta) 18%);
+  font-weight: var(--font-weight-medium);
+}
+
+.natal-badge--basis {
+  min-height: 18px;
+  padding: 12px;
+  border-color: color-mix(in srgb, var(--natal-badge-meta-border) 28%, transparent);
+  background: color-mix(in srgb, var(--natal-badge-meta-surface) 34%, transparent);
+  color: var(--natal-text-reading-muted);
+  font-size: var(--font-size-3xs);
+  font-weight: var(--font-weight-medium);
+}
+
+@media (max-width: 768px) {
+  .natal-badge--report-status {
+      min-height: 20px;
+      padding: 0 7px;
+      font-size: var(--font-size-3xs);
+    }
+
+  .natal-badge--astro-data {
+      min-height: 28px;
+      padding: 4px 8px;
+      border-radius: var(--radius-control);
+      font-size: var(--font-size-2xs);
+    }
+
+  .natal-badge--fact-detail {
+      min-height: 24px;
+      padding: 3px 7px;
+      font-size: var(--font-size-2xs);
+    }
+
+  .natal-badge--confidence {
+      min-height: 18px;
+      padding: 0 6px;
+      border-color: color-mix(in srgb, var(--natal-badge-meta-border) 32%, transparent);
+      background: color-mix(in srgb, var(--natal-badge-meta-surface) 38%, transparent);
+      font-size: var(--font-size-3xs);
+      letter-spacing: var(--letter-spacing-wide-xs);
+    }
+}

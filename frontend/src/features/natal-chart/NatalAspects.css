@@ -1,0 +1,98 @@
+/* Styles des aspects astrologiques techniques du theme natal. */
+
+.natal-aspects-card {
+  margin-bottom: 32px;
+}
+
+.natal-aspects-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.natal-aspect-item {
+  border: 1px solid color-mix(in srgb, var(--color-token-rgb-255-255-255) 42%, transparent);
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--color-token-rgb-255-255-255) 42%, transparent) 0%, color-mix(in srgb, var(--color-token-rgb-248-244-255) 72%, transparent) 100%);
+  box-shadow:
+    var(--shadow-card);
+}
+
+.natal-aspect-item__head {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.natal-aspect-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 0 12px;
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--color-token-rgb-122-95-220) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-token-rgb-122-95-220) 14%, transparent);
+  color: var(--premium-accent-purple-strong);
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-bold);
+  text-transform: uppercase;
+  letter-spacing: var(--letter-spacing-wide-md);
+}
+
+.natal-aspect-title {
+  margin: 0;
+  font-size: var(--font-size-md);
+  line-height: var(--type-label-line-height);
+  color: var(--premium-text-strong);
+}
+
+.natal-aspect-meaning {
+  margin: 12px 0 0;
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-relaxed);
+  color: var(--premium-text-main);
+}
+
+.natal-aspect-meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 16px 0 0;
+}
+
+.natal-aspect-meta__item {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-token-rgb-255-255-255) 66%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-token-rgb-255-255-255) 42%, transparent);
+}
+
+.natal-aspect-meta__item dt {
+  margin: 0 0 4px;
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--letter-spacing-wide-label);
+  text-transform: uppercase;
+  color: var(--premium-text-meta);
+}
+
+.natal-aspect-meta__item dd {
+  margin: 0;
+  font-size: var(--font-size-13);
+  line-height: var(--type-metadata-line-height);
+  color: var(--premium-text-strong);
+}
+
+@media (max-width: 768px) {
+  .natal-aspect-meta {
+      grid-template-columns: 1fr;
+    }
+}

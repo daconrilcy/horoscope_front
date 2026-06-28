@@ -3,6 +3,7 @@ import type { LatestNatalChart } from "../../api/natalChart"
 import type { AstrologyLabelers, PublicCopyLang } from "./natalPublicFacts"
 import { formatPlacement, getPlanetPosition } from "./natalPublicFacts"
 import { getNatalPublicCopy } from "./natalPublicCopy"
+import "./NatalProfileHero.css"
 
 type NatalProfileHeroProps = {
   chart: LatestNatalChart
@@ -23,7 +24,7 @@ export function NatalProfileHero({ chart, labels, lang }: NatalProfileHeroProps)
     <section className="natal-hero" aria-labelledby="natal-profile-hero-title">
       <div className="natal-hero__copy">
         <span className="natal-section-eyebrow">{copy.title}</span>
-        <h2 id="natal-profile-hero-title">{copy.title}</h2>
+        <h2 className="natal-hero__title" id="natal-profile-hero-title">{copy.title}</h2>
         <p>{copy.lead}</p>
       </div>
       <div className="natal-hero__triptych" aria-label={copy.title}>

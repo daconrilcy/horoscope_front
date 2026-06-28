@@ -3,6 +3,7 @@ import { useId, useState } from "react"
 
 import type { AstrologyLang } from "../i18n/astrology"
 import { getGuideTranslations } from "../i18n/natalChart"
+import "./NatalChartGuide.css"
 
 interface NatalChartGuideProps {
   lang: AstrologyLang
@@ -24,7 +25,7 @@ export function NatalChartGuide({ lang, missingBirthTime }: NatalChartGuideProps
         <button
           aria-controls={contentId}
           aria-expanded={isExpanded}
-          className="natal-reading__chapter-toggle natal-chart-guide__toggle"
+          className="natal-chart-guide__toggle"
           type="button"
           onClick={() => setIsExpanded((current) => !current)}
         >

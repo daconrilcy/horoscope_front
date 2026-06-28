@@ -4,6 +4,7 @@ import { Link } from "react-router-dom"
 import type { FeatureEntitlementResponse } from "../../api/billing"
 import type { PublicCopyLang } from "./natalPublicFacts"
 import { getNatalPublicCopy } from "./natalPublicCopy"
+import "./NatalAstrologerMode.css"
 
 type NatalAstrologerModeProps = {
   access: FeatureEntitlementResponse | undefined
@@ -27,7 +28,7 @@ export function NatalAstrologerMode({ access, children, lang }: NatalAstrologerM
       <div className="natal-astrologer-mode__header">
         <div>
           <span className="natal-section-eyebrow">{copy.eyebrow}</span>
-          <h2 id="natal-astrologer-mode-title">{copy.title}</h2>
+          <h2 className="natal-astrologer-mode__title" id="natal-astrologer-mode-title">{copy.title}</h2>
         </div>
         <button
           type="button"
