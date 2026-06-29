@@ -215,7 +215,7 @@ test("garde /natal lisible et non masque a 360, 390 et 430 px", async ({ page })
   await setupNatalFixture(page)
 
   await page.goto(`/natal?runId=${ASTRAL_RUN_ID}`)
-  await expect(page.getByRole("heading", { name: "Lecture mobile Astral" })).toBeVisible()
+  await expect(page.getByRole("heading", { name: "Thème natal" })).toBeVisible()
 
   for (const viewport of MOBILE_VIEWPORTS) {
     await page.setViewportSize(viewport)

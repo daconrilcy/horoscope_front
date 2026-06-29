@@ -168,7 +168,7 @@ describe("theme.css validation (Static Analysis)", () => {
     )
     expect(natalCssContent).toMatch(/\.natal-card--completed\s*\{[\s\S]*background:\s*transparent[\s\S]*box-shadow:\s*none/)
     expect(natalCssContent).toMatch(/\.natal-badge--astro-data\s*\{[\s\S]*background:\s*var\(--natal-badge-key-surface\)/)
-    expect(natalCssContent).toMatch(/\.natal-badge--basis\s*\{[\s\S]*background:\s*color-mix\(in srgb,\s*var\(--natal-badge-meta-surface\)/)
+    expect(natalCssContent).toMatch(/\.natal-badge--basis\s*\{[\s\S]*background:\s*var\(--color-token-rgb-255-255-255\)/)
     expect(natalCssContent).toMatch(/\.natal-reading-metrics__item--moon\s*\{[\s\S]*--natal-metric-tone:\s*var\(--natal-tone-moon\)/)
     expect(natalCssContent).toMatch(/\.natal-data-pill\s*\{[\s\S]*background:\s*var\(--natal-badge-meta-surface\)/)
     expect(natalCssContent).toMatch(/\.natal-data-card\s*\{[\s\S]*background:\s*var\(--natal-surface-block\)/)

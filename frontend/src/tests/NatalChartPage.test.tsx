@@ -188,7 +188,7 @@ describe("NatalChartPage", () => {
 
     expect(screen.getByRole("heading", { name: "Votre thème natal" })).toBeVisible()
     expect(screen.getByText(/Une synthèse structurée de vos marqueurs personnels/i)).toBeVisible()
-    expect(screen.getByText("Comment lire ton thème natal")).toBeVisible()
+    expect(screen.getByRole("heading", { name: "Comment lire ton thème natal" })).toBeVisible()
     expect(await screen.findByRole("button", { name: "Lancer le thème natal" })).toBeEnabled()
     expect(mockSubmitAstralJob).not.toHaveBeenCalled()
   })
@@ -411,13 +411,13 @@ describe("NatalChartPage", () => {
 
     const { container } = renderNatalChartPage()
 
-    expect(await screen.findByRole("heading", { name: "Lecture natale publique" })).toBeVisible()
+    expect(await screen.findByRole("heading", { name: "Thème natal" })).toBeVisible()
     const heroLogo = container.querySelector(".natal-reading-hero__symbol .natal-reading-hero__logo")
     expect(heroLogo).toHaveAttribute("src", expect.stringContaining("Natal_Logo"))
     expect(screen.getByRole("heading", { name: "Base du calcul natal" })).toBeVisible()
     expect(screen.getByText("Données de calcul Astral")).toBeVisible()
     const renderedText = document.body.textContent ?? ""
-    expect(renderedText.indexOf("Lecture natale publique")).toBeLessThan(
+    expect(renderedText.indexOf("Thème natal")).toBeLessThan(
       renderedText.indexOf("Base du calcul natal"),
     )
     expect(screen.getByLabelText("Sommaire de lecture")).toHaveTextContent("Sommaire")
@@ -443,10 +443,13 @@ describe("NatalChartPage", () => {
     expect(container.querySelector(".natal-badge--astro-intensity")).toHaveTextContent("Très élevée")
     expect(screen.getAllByText("Une synthese claire du theme.")).toHaveLength(1)
     expect(container.querySelector(".natal-badge--report-status")).toHaveTextContent("Essentielle")
-    expect(screen.getByRole("heading", { name: "1. Identite" })).toBeVisible()
+    expect(screen.getByRole("heading", { name: "Identite" })).toBeVisible()
     expect(screen.getByLabelText("Sommaire de lecture")).toHaveTextContent("Identité")
     expect(screen.getByLabelText("Sommaire de lecture")).toHaveTextContent("Émotions")
     expect(screen.getByLabelText("Sommaire de lecture")).toHaveTextContent("Relations")
+    expect(screen.getByLabelText("Sommaire de lecture")).toHaveTextContent("Éléments du calcul")
+    expect(screen.getByLabelText("Sommaire de lecture")).toHaveTextContent("Explications du calcul")
+    expect(screen.getByLabelText("Sommaire de lecture")).toHaveTextContent("Comment lire ton thème natal")
     const progressBar = container.querySelector(".natal-reading-summary__bar")
     expect(progressBar).toHaveProperty("value", 0)
     const firstProgressLink = screen.getByRole("button", { name: "Identite" })
@@ -465,8 +468,9 @@ describe("NatalChartPage", () => {
       /Chapitre narratif principal conserve/i,
     )
     const chapterTitle = container.querySelector(".natal-reading__chapter-title")
-    expect(chapterTitle).toHaveTextContent("1. Identite")
-    expect((chapterTitle?.textContent ?? "").indexOf("1. Identite")).toBeLessThan(
+    expect(chapterTitle).toHaveTextContent("Identite")
+    expect(chapterTitle).not.toHaveTextContent("1. Identite")
+    expect((chapterTitle?.textContent ?? "").indexOf("Identite")).toBeLessThan(
       (chapterTitle?.textContent ?? "").indexOf("Lecture guidée"),
     )
     expect(screen.getByText("Suite analytique preservee.")).toBeVisible()
@@ -514,7 +518,7 @@ describe("NatalChartPage", () => {
     expect(screen.getAllByRole("button", { name: "Lire la suite" })[0]).toHaveAttribute("aria-expanded", "false")
     expect(screen.queryByText("placement:sun:taurus:house:10")).not.toBeInTheDocument()
     expect(screen.queryByText("cache")).not.toBeInTheDocument()
-    expect(screen.getByText("Comment lire ton thème natal")).toBeVisible()
+    expect(screen.getByRole("heading", { name: "Comment lire ton thème natal" })).toBeVisible()
     expect(container.querySelector("#natal-chart-guide")?.closest(".natal-reading__main")).not.toBeNull()
     const guideToggle = screen.getByRole("button", { name: "Lire le guide" })
     expect(guideToggle).toHaveAttribute("aria-expanded", "false")
@@ -572,7 +576,7 @@ describe("NatalChartPage", () => {
     renderNatalChartPage()
     capturedAstralEventHandler?.({ run_id: "run-natal-3", status: "completed" })
 
-    expect(await screen.findByRole("heading", { name: "Lecture conservee" })).toBeVisible()
+    expect(await screen.findByRole("heading", { name: "Thème natal" })).toBeVisible()
     expect(screen.getByText("Le polling garde le texte public.")).toBeVisible()
   })
 
@@ -602,7 +606,7 @@ describe("NatalChartPage", () => {
     renderNatalChartPage(["/natal?runId=run-natal-current"])
     capturedAstralEventHandler?.({ run_id: "run-natal-other", status: "failed" })
 
-    expect(await screen.findByRole("heading", { name: "Lecture courante" })).toBeVisible()
+    expect(await screen.findByRole("heading", { name: "Thème natal" })).toBeVisible()
     expect(screen.queryByText("Le service Astral n'a pas pu produire votre thème natal")).not.toBeInTheDocument()
   })
 
@@ -643,7 +647,7 @@ describe("NatalChartPage", () => {
 
     renderNatalChartPage()
 
-    expect(await screen.findByRole("heading", { name: "Lecture avec repères" })).toBeVisible()
+    expect(await screen.findByRole("heading", { name: "Thème natal" })).toBeVisible()
     const explanationsSection = screen.getByRole("region", { name: "Explications du moteur Astral" })
     expect(explanationsSection).toHaveTextContent("Soleil en Taureau maison 10")
     const readMore = screen.getByRole("button", { name: "Lire la suite" })
@@ -686,7 +690,7 @@ describe("NatalChartPage", () => {
 
     const { container } = renderNatalChartPage()
 
-    expect(await screen.findByRole("heading", { name: "Lecture sans repères" })).toBeVisible()
+    expect(await screen.findByRole("heading", { name: "Thème natal" })).toBeVisible()
     const chapter = container.querySelector(".natal-reading__chapter")
     expect(chapter).toHaveClass("natal-reading__chapter--no-meta")
     expect(within(chapter as HTMLElement).getAllByText("Contenu narratif sans métadonnees.")).toHaveLength(1)
@@ -836,7 +840,7 @@ describe("NatalChartPage", () => {
 
     renderNatalChartPage()
 
-    expect(await screen.findByRole("heading", { name: "Lecture premium Astral" })).toBeVisible()
+    expect(await screen.findByRole("heading", { name: "Thème natal" })).toBeVisible()
     expect(screen.getAllByText("Premium").length).toBeGreaterThanOrEqual(1)
     expect(screen.getByText("Milieu du Ciel en Taureau (central)")).toBeVisible()
     expect(screen.queryByText(/signal:mc:taurus/i)).not.toBeInTheDocument()

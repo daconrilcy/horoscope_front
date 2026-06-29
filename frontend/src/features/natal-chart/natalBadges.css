@@ -39,15 +39,16 @@
 .natal-badge--confidence {
   flex-shrink: 0;
   width: fit-content;
-  min-height: 24px;
-  padding: 3px 9px;
-  border-color: color-mix(in srgb, var(--natal-badge-meta-border) 28%, transparent);
-  background: color-mix(in srgb, var(--natal-badge-meta-surface) 34%, transparent);
-  color: var(--natal-text-reading-muted);
-  font-size: var(--font-size-3xs);
-  font-weight: var(--font-weight-medium);
-  letter-spacing: var(--letter-spacing-wide-xs);
-  text-transform: uppercase;
+  min-height: 28px;
+  padding: 4px 11px;
+  border-color: color-mix(in srgb, var(--natal-theme-color, var(--premium-accent-purple-strong)) 34%, var(--natal-border-block));
+  border-radius: var(--radius-control);
+  background: var(--color-token-rgb-255-255-255);
+  color: color-mix(in srgb, var(--premium-text-strong) 76%, var(--natal-theme-color, var(--premium-accent-purple-strong)) 24%);
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0;
+  text-transform: none;
 }
 
 .natal-badge--astro-data {
@@ -89,13 +90,14 @@
 }
 
 .natal-badge--basis {
-  min-height: 22px;
-  padding: 2px 8px;
-  border-color: color-mix(in srgb, var(--natal-badge-meta-border) 28%, transparent);
-  background: color-mix(in srgb, var(--natal-badge-meta-surface) 34%, transparent);
-  color: var(--natal-text-reading-muted);
-  font-size: var(--font-size-3xs);
-  font-weight: var(--font-weight-medium);
+  min-height: 28px;
+  padding: 4px 11px;
+  border-color: color-mix(in srgb, var(--natal-theme-color, var(--premium-accent-purple-strong)) 30%, var(--natal-border-block));
+  border-radius: var(--radius-control);
+  background: var(--color-token-rgb-255-255-255);
+  color: color-mix(in srgb, var(--premium-text-main) 78%, var(--natal-theme-color, var(--premium-accent-purple-strong)) 22%);
+  font-size: var(--font-size-2xs);
+  font-weight: var(--font-weight-semibold);
 }
 
 @media (max-width: 768px) {
@@ -119,11 +121,9 @@
     }
 
   .natal-badge--confidence {
-      min-height: 18px;
-      padding: 0 6px;
-      border-color: color-mix(in srgb, var(--natal-badge-meta-border) 32%, transparent);
-      background: color-mix(in srgb, var(--natal-badge-meta-surface) 38%, transparent);
+      min-height: 24px;
+      padding: 2px 8px;
       font-size: var(--font-size-3xs);
-      letter-spacing: var(--letter-spacing-wide-xs);
+      letter-spacing: 0;
     }
 }

@@ -38,6 +38,9 @@ const PUBLIC_READING_ERROR_MESSAGE =
   "La lecture Astral n'a pas pu être générée pour le moment. Veuillez réessayer plus tard."
 const EXCERPT_MAX_LENGTH = 140
 const PROSE_CHUNK_TARGET_LENGTH = 230
+const CALCULATION_FACTS_SECTION_ID = "natal-reading-calculation-facts"
+const CALCULATION_EXPLANATIONS_SECTION_ID = "natal-reading-calculation-explanations"
+const READING_GUIDE_SECTION_ID = "natal-chart-guide"
 
 const GROUP_MARKERS: Record<string, LucideIcon> = {
   "Repères principaux": Sun,
@@ -56,6 +59,7 @@ type MainChapterEntry = {
   anchorId: string
   chapter: NatalReadingChapterViewModel
   excerpt: string | null
+  indexLabel: string
   itemKey: string
   progressKey: string
   readTimeLabel: string
@@ -66,6 +70,14 @@ type MainChapterEntry = {
 
 type ReadingMetric = NatalHighlightFactViewModel & {
   icon: LucideIcon
+}
+
+type SummaryExtraEntry = {
+  anchorId: string
+  indexLabel: string
+  key: string
+  subtitle: string
+  title: string
 }
 
 function compactExcerpt(text: string): string {
@@ -126,8 +138,8 @@ function chapterBodyParagraphs(chapter: NatalReadingChapterViewModel, excerpt: s
   return splitParagraphs(chapter.paragraphs)
 }
 
-function chapterThemeTitle(chapter: NatalReadingChapterViewModel, index: number): string {
-  return `${index + 1}. ${chapter.title}`
+function chapterThemeTitle(chapter: NatalReadingChapterViewModel): string {
+  return chapter.title.replace(/^\d+\.\s*/, "")
 }
 
 function chapterThemeClassName(index: number): string {
@@ -329,7 +341,7 @@ function NatalReadingFactsDetails({ facts }: { facts: NatalCalculationFactsViewM
   const [isExpanded, setIsExpanded] = useState(false)
 
   return (
-    <section className="natal-reading-facts" aria-labelledby="natal-reading-facts-title">
+    <section className="natal-reading-facts" aria-labelledby="natal-reading-facts-title" id={CALCULATION_FACTS_SECTION_ID}>
       <div className="natal-reading-facts__header">
         <div>
           <span className="natal-section-eyebrow">{facts.sourceLabel}</span>
@@ -373,7 +385,7 @@ function NatalReadingHero({ reading, showSummary }: { reading: NatalInterpretati
         </nav>
         <span className="natal-section-eyebrow">Interprétation de votre thème natal</span>
         <div className="natal-reading__summary">
-          <h1>{reading.title}</h1>
+          <h1>Thème natal</h1>
           <span className="natal-badge natal-badge--report-status">{reading.label}</span>
         </div>
         {showSummary && reading.shortText ? <p>{reading.shortText}</p> : null}
@@ -412,10 +424,12 @@ function NatalReadingMetricsBar({ reading }: { reading: NatalInterpretationViewM
 function NatalReadingSummaryNav({
   activeChapterKey,
   entries,
+  extraEntries,
   onNavigate,
 }: {
   activeChapterKey: string | null
   entries: MainChapterEntry[]
+  extraEntries: SummaryExtraEntry[]
   onNavigate: (anchorId: string, itemKey: string) => void
 }) {
   const activeIndex = Math.max(
@@ -436,7 +450,7 @@ function NatalReadingSummaryNav({
         </progress>
       </div>
       <ol className="natal-reading-summary__list">
-        {entries.map((entry, index) => (
+        {entries.map((entry) => (
           <li className="natal-reading-summary__item" key={entry.progressKey}>
             <button
               aria-label={entry.title.replace(/^\d+\.\s*/, "")}
@@ -449,7 +463,7 @@ function NatalReadingSummaryNav({
               type="button"
               onClick={() => onNavigate(entry.anchorId, entry.itemKey)}
             >
-              <span className="natal-reading-summary__index" aria-hidden="true">{index + 1}</span>
+              <span className="natal-reading-summary__index" aria-hidden="true">{entry.indexLabel}</span>
               <span className="natal-reading-summary__copy">
                 <span className="natal-reading-summary__title">{entry.shortTitle}</span>
                 {entry.excerpt ? <span className="natal-reading-summary__excerpt">{entry.excerpt}</span> : null}
@@ -457,8 +471,21 @@ function NatalReadingSummaryNav({
             </button>
           </li>
         ))}
+        {extraEntries.map((entry) => (
+          <li className="natal-reading-summary__item natal-reading-summary__item--extra" key={entry.key}>
+            <a className="natal-reading-summary__extra-link" href={`#${entry.anchorId}`}>
+              <span className="natal-reading-summary__index natal-reading-summary__index--extra" aria-hidden="true">
+                {entry.indexLabel}
+              </span>
+              <span className="natal-reading-summary__copy">
+                <span className="natal-reading-summary__title">{entry.title}</span>
+                <span className="natal-reading-summary__excerpt">{entry.subtitle}</span>
+              </span>
+            </a>
+          </li>
+        ))}
       </ol>
-      <a href="#natal-chart-guide" className="natal-reading-summary__guide">
+      <a href={`#${READING_GUIDE_SECTION_ID}`} className="natal-reading-summary__guide">
         <span className="natal-reading-summary__guide-label">
           <BookOpen size={18} aria-hidden="true" />
           Guide de lecture
@@ -518,7 +545,7 @@ function NatalChapterCard({
     <section className={chapterClassName} id={anchorId}>
       <div className="natal-reading__chapter-main">
         <div className="natal-reading__chapter-head">
-          {entry ? <span className="natal-reading__chapter-index" aria-hidden="true">{entry.title.match(/^\d+/)?.[0]}</span> : null}
+          {entry ? <span className="natal-reading__chapter-index" aria-hidden="true">{entry.indexLabel}</span> : null}
           <div className="natal-reading__chapter-title">
             <h3>{themeTitle}</h3>
             <span className="natal-section-eyebrow">Lecture guidée</span>
@@ -625,11 +652,12 @@ export function NatalAstralReading({ guide, reading, showSummary = true }: Natal
     () =>
       reading.chapters.map((chapter, index) => {
         const itemKey = `chapter-${chapter.code ?? chapter.title}-${index}`
-        const title = chapterThemeTitle(chapter, index)
+        const title = chapterThemeTitle(chapter)
         return {
           anchorId: chapterAnchorId(itemKey),
           chapter,
           excerpt: chapterExcerpt(chapter),
+          indexLabel: String(index + 1),
           itemKey,
           progressKey: `progress-${chapter.code ?? chapter.title}-${index}`,
           readTimeLabel: estimatedReadTime(chapter),
@@ -641,6 +669,42 @@ export function NatalAstralReading({ guide, reading, showSummary = true }: Natal
     [reading.chapters],
   )
   const [activeChapterKey, setActiveChapterKey] = useState<string | null>(mainChapterEntries[0]?.itemKey ?? null)
+  const summaryExtraEntries = useMemo(() => {
+    const startIndex = mainChapterEntries.length
+    const entries: SummaryExtraEntry[] = []
+
+    if (reading.calculationFacts) {
+      entries.push({
+        anchorId: CALCULATION_FACTS_SECTION_ID,
+        indexLabel: String(startIndex + entries.length + 1),
+        key: "calculation-facts",
+        subtitle: "Positions, maisons et aspects retenus",
+        title: "Éléments du calcul",
+      })
+    }
+
+    if (reading.explanations.length > 0) {
+      entries.push({
+        anchorId: CALCULATION_EXPLANATIONS_SECTION_ID,
+        indexLabel: String(startIndex + entries.length + 1),
+        key: "calculation-explanations",
+        subtitle: "Logique utilisée par le moteur",
+        title: "Explications du calcul",
+      })
+    }
+
+    if (guide) {
+      entries.push({
+        anchorId: READING_GUIDE_SECTION_ID,
+        indexLabel: String(startIndex + entries.length + 1),
+        key: "reading-guide",
+        subtitle: "Repères pour interpréter la page",
+        title: "Comment lire ton thème natal",
+      })
+    }
+
+    return entries
+  }, [guide, mainChapterEntries.length, reading.calculationFacts, reading.explanations.length])
 
   useEffect(() => {
     setActiveChapterKey((currentKey) =>
@@ -721,6 +785,7 @@ export function NatalAstralReading({ guide, reading, showSummary = true }: Natal
         <NatalReadingSummaryNav
           activeChapterKey={activeChapterKey}
           entries={mainChapterEntries}
+          extraEntries={summaryExtraEntries}
           onNavigate={scrollToChapter}
         />
         <div className="natal-reading__main">
@@ -753,7 +818,11 @@ export function NatalAstralReading({ guide, reading, showSummary = true }: Natal
           {reading.calculationFacts ? <NatalReadingFactsDetails facts={reading.calculationFacts} /> : null}
 
           {reading.explanations.length > 0 ? (
-            <section className="natal-reading-explanations" aria-labelledby="natal-reading-explanations-title">
+            <section
+              className="natal-reading-explanations"
+              aria-labelledby="natal-reading-explanations-title"
+              id={CALCULATION_EXPLANATIONS_SECTION_ID}
+            >
               <div className="natal-reading-explanations__header">
                 <span className="natal-section-eyebrow">Repères calculés</span>
                 <h2 id="natal-reading-explanations-title">Explications du moteur Astral</h2>
