@@ -1,10 +1,13 @@
 // Helpers de tests statiques pour garder la discipline design-system frontend.
 import fs from "fs"
 import path from "path"
+import * as sass from "sass"
 
 export const frontendRoot = path.resolve(__dirname, "..")
 
-export const APP_CSS_MODULE_FILES = [
+export const STYLE_FILE_EXTENSIONS = [".css", ".scss"] as const
+
+export const APP_STYLE_MODULE_FILES = [
   "styles/app/tokens.css",
   "styles/app/base.css",
   "styles/app/typography.css",
@@ -18,17 +21,33 @@ export const APP_CSS_MODULE_FILES = [
   "styles/app/skeletons.css",
 ] as const
 
+export const APP_CSS_MODULE_FILES = APP_STYLE_MODULE_FILES
+
+/** Lit un fichier source frontend sans transformation. */
 export function readFrontendFile(relativePath: string): string {
   return fs.readFileSync(path.join(frontendRoot, relativePath), "utf-8")
 }
 
+/** Lit un fichier de style comme CSS analyse, en compilant les sources SCSS. */
+export function readFrontendStyleFile(relativePath: string): string {
+  const absolutePath = path.join(frontendRoot, relativePath)
+
+  if (relativePath.endsWith(".scss")) {
+    return sass.compile(absolutePath).css
+  }
+
+  return fs.readFileSync(absolutePath, "utf-8")
+}
+
+/** Lit la surface CSS applicative historique en incluant les modules compilables. */
 export function readAppCssSurface(): string {
   return [
-    readFrontendFile("App.css"),
-    ...APP_CSS_MODULE_FILES.map((file) => readFrontendFile(file)),
+    readFrontendStyleFile("App.css"),
+    ...APP_STYLE_MODULE_FILES.map((file) => readFrontendStyleFile(file)),
   ].join("\n")
 }
 
+/** Liste recursivement les fichiers frontend ayant l'extension demandee. */
 export function listFiles(dir: string, extension: string): string[] {
   const base = path.join(frontendRoot, dir)
   const results: string[] = []
@@ -44,6 +63,11 @@ export function listFiles(dir: string, extension: string): string[] {
   }
 
   return results
+}
+
+/** Liste les feuilles de style CSS et SCSS reconnues par les gardes statiques. */
+export function listStyleFiles(dir = ""): string[] {
+  return STYLE_FILE_EXTENSIONS.flatMap((extension) => listFiles(dir, extension))
 }
 
 export function extractCssVariableDeclarations(css: string): string[] {
@@ -75,8 +99,8 @@ export function extractCssVariableUsages(css: string): string[] {
 }
 
 export function collectCssFallbacks(): Array<{ file: string; token: string; literal: string }> {
-  return listFiles("", ".css").flatMap((file) =>
-    extractCssFallbacks(readFrontendFile(file)).map((fallback) => ({ file, ...fallback })),
+  return listStyleFiles().flatMap((file) =>
+    extractCssFallbacks(readFrontendStyleFile(file)).map((fallback) => ({ file, ...fallback })),
   )
 }
 

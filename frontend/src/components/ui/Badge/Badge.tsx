@@ -1,7 +1,7 @@
 // Primitive de badge qui mappe les couleurs autorisees vers des classes CSS tokenisees.
 import React from 'react';
 import { classNames } from '@utils/classNames';
-import './Badge.css';
+import './Badge.scss';
 
 export const BADGE_COLORS = {
   chat:         'var(--color-badge-chat)',

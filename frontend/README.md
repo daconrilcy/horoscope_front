@@ -10,6 +10,12 @@ This template provides a minimal setup to get React working in Vite with HMR.
 - `pnpm test:b2b:coverage`: run the B2B suite with coverage thresholds.
 - `pnpm audit:prod`: audit runtime dependencies only (`--omit=dev`).
 
+## Styles
+
+- Global `.css` and `.scss` files are both supported by Vite.
+- SCSS support is provided by the official `sass` dev dependency.
+- Existing CSS files do not need to be migrated; new component styles may use `.scss` while keeping the same design-token and no-inline-style rules.
+
 ## Auth Session Behavior
 
 - The app resolves authenticated role-based navigation from `GET /v1/auth/me` (server-validated identity), not from JWT payload parsing in UI components.

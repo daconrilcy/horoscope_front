@@ -55,7 +55,18 @@
   display: block;
 }
 
-/* Adjust icon sizes based on badge size */
-.badge--sm svg { width: 18px; height: 18px; }
-.badge--md svg { width: 20px; height: 20px; }
-.badge--lg svg { width: 20px; height: 20px; }
+/* Ajuste les tailles d'icone selon la taille du badge. */
+.badge--sm svg {
+  width: 18px;
+  height: 18px;
+}
+
+.badge--md svg {
+  width: 20px;
+  height: 20px;
+}
+
+.badge--lg svg {
+  width: 20px;
+  height: 20px;
+}
