@@ -57,7 +57,7 @@ export function NatalJobCard({
       {viewState === "completed" ? (
         <>
           {reading ? (
-            <NatalAstralReading reading={reading} showSummary={reading.highlightFacts.length === 0} />
+            <NatalAstralReading reading={reading} />
           ) : (
             <p className="natal-card__lead">{copy.readingUnavailable}</p>
           )}

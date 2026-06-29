@@ -1,6 +1,6 @@
 // Vérifie que la page thème natal ne boucle pas après un échec Astral.
 import { QueryClient, QueryClientProvider, useMutation } from "@tanstack/react-query"
-import { cleanup, render, screen, waitFor } from "@testing-library/react"
+import { cleanup, render, screen, waitFor, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { MemoryRouter } from "react-router-dom"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
@@ -389,20 +389,22 @@ describe("NatalChartPage", () => {
     expect(screen.getByRole("heading", { name: "Base du calcul natal" })).toBeVisible()
     expect(screen.getByText("Données de calcul Astral")).toBeVisible()
     const renderedText = document.body.textContent ?? ""
-    expect(renderedText.indexOf("Base du calcul natal")).toBeLessThan(
-      renderedText.indexOf("Lecture natale publique"),
+    expect(renderedText.indexOf("Lecture natale publique")).toBeLessThan(
+      renderedText.indexOf("Base du calcul natal"),
     )
+    expect(screen.getByLabelText("Sommaire de lecture")).toHaveTextContent("Sommaire")
+    expect(screen.getByLabelText("Sommaire de lecture")).toHaveTextContent("0% complété")
+    expect(screen.getByLabelText("Marqueurs clés du portrait astral")).toHaveTextContent("Statut")
+    await user.click(screen.getByRole("button", { name: "Afficher la base" }))
     expect(screen.getByRole("region", { name: "Repères principaux" })).toHaveTextContent("Soleil")
     expect(screen.getByRole("region", { name: "Repères principaux" })).toHaveTextContent("Ascendant")
     expect(screen.getByRole("region", { name: "Repères principaux" })).toHaveTextContent("Descendant")
-    const portrait = screen.getByLabelText("Portrait astral")
-    expect(portrait).toHaveClass("natal-page-portrait")
+    const portrait = screen.getByLabelText("Marqueurs clés du portrait astral")
+    expect(portrait).toHaveClass("natal-reading-metrics")
     expect(screen.getByLabelText("Marqueurs clés du portrait astral")).toHaveTextContent("Soleil")
     expect(screen.getByLabelText("Marqueurs clés du portrait astral")).toHaveTextContent("Lune")
     expect(screen.getByLabelText("Marqueurs clés du portrait astral")).toHaveTextContent("Ascendant")
-    expect(portrait.querySelector(".natal-page-portrait__title-block")).toHaveTextContent(
-      "Une synthese claire du theme.",
-    )
+    expect(screen.getByText("Une synthese claire du theme.")).toBeVisible()
     expect(container.querySelector(".natal-reading-facts__group--primary")).toHaveTextContent("Repères principaux")
     expect(screen.getByRole("region", { name: "Maisons" })).toHaveTextContent("Maison II")
     expect(screen.getByRole("region", { name: "Planètes notables" })).toHaveTextContent("Mercure")
@@ -414,18 +416,19 @@ describe("NatalChartPage", () => {
     expect(screen.getAllByText("Une synthese claire du theme.")).toHaveLength(1)
     expect(container.querySelector(".natal-badge--report-status")).toHaveTextContent("Essentielle")
     expect(screen.getByRole("heading", { name: "1. Identite" })).toBeVisible()
-    expect(screen.getByLabelText("Progression des lectures")).toHaveTextContent("Identite")
-    expect(screen.getByLabelText("Progression des lectures")).toHaveTextContent("Emotions")
-    expect(screen.getByLabelText("Progression des lectures")).toHaveTextContent("Relations")
-    expect(container.querySelector(".natal-reading__progress-label--short")).toHaveTextContent("Identité")
+    expect(screen.getByLabelText("Sommaire de lecture")).toHaveTextContent("Identité")
+    expect(screen.getByLabelText("Sommaire de lecture")).toHaveTextContent("Émotions")
+    expect(screen.getByLabelText("Sommaire de lecture")).toHaveTextContent("Relations")
     const firstProgressLink = screen.getByRole("button", { name: "Identite" })
     expect(firstProgressLink).toHaveAttribute("aria-current", "step")
     await user.click(screen.getByRole("button", { name: "Relations" }))
     expect(screen.getByRole("button", { name: "Relations" })).toHaveAttribute("aria-current", "step")
     expect(scrollIntoViewMock).toHaveBeenCalledWith({ behavior: "smooth", block: "start" })
-    expect(screen.getByText(/Chapitre narratif principal conserve/i).closest(".natal-reading__chapter-excerpt")).not.toBeNull()
-    expect(container.querySelector(".natal-reading__chapter-excerpt")).toHaveTextContent("À retenir")
-    expect(container.querySelector(".natal-reading__chapter-excerpt")).toHaveTextContent(
+    const firstChapter = container.querySelector(".natal-reading__chapter")
+    expect(firstChapter).not.toBeNull()
+    expect(within(firstChapter as HTMLElement).getByText(/Chapitre narratif principal conserve/i).closest(".natal-reading__chapter-excerpt")).not.toBeNull()
+    expect(within(firstChapter as HTMLElement).getByText("À retenir")).toBeVisible()
+    expect(firstChapter?.querySelector(".natal-reading__chapter-excerpt")).toHaveTextContent(
       /Chapitre narratif principal conserve/i,
     )
     const chapterTitle = container.querySelector(".natal-reading__chapter-title")
@@ -444,7 +447,10 @@ describe("NatalChartPage", () => {
       "Suite analytique preservee.",
     )
     const longExcerptStart = "Deuxieme lecture ouverte par defaut avec une phrase volontairement longue"
-    expect((document.body.textContent?.match(new RegExp(longExcerptStart, "g")) ?? [])).toHaveLength(1)
+    const chapterTexts = Array.from(container.querySelectorAll(".natal-reading__chapter"))
+      .map((chapter) => chapter.textContent ?? "")
+      .join(" ")
+    expect((chapterTexts.match(new RegExp(longExcerptStart, "g")) ?? [])).toHaveLength(1)
     expect(screen.getByText("Elle devient lisible apres action.")).not.toBeVisible()
     expect(screen.getAllByRole("button", { name: "Réduire" })).toHaveLength(2)
     const firstChapterToggle = screen.getAllByRole("button", { name: "Réduire" })[0]
@@ -458,7 +464,7 @@ describe("NatalChartPage", () => {
     expect(firstChapterToggle).toHaveTextContent("Réduire")
     expect(screen.getByText("Suite analytique preservee.")).toBeVisible()
     expect(screen.getByText("Confiance moyenne")).toHaveClass("natal-badge--confidence")
-    expect(screen.getByText("Repères utilisés")).toBeVisible()
+    expect(screen.getByText("Repères & évidences")).toBeVisible()
     expect(screen.getByText("Soleil en Cancer")).toBeVisible()
     expect(screen.getByText("Lune en Balance")).toBeVisible()
     const firstMetaToggle = screen.getAllByRole("button", { name: "Afficher les repères" })[0]
@@ -649,8 +655,8 @@ describe("NatalChartPage", () => {
     expect(await screen.findByRole("heading", { name: "Lecture sans repères" })).toBeVisible()
     const chapter = container.querySelector(".natal-reading__chapter")
     expect(chapter).toHaveClass("natal-reading__chapter--no-meta")
-    expect(screen.getAllByText("Contenu narratif sans métadonnees.")).toHaveLength(1)
-    expect(screen.queryByLabelText(/Qualité et repères pour Chapitre minimal/i)).not.toBeInTheDocument()
+    expect(within(chapter as HTMLElement).getAllByText("Contenu narratif sans métadonnees.")).toHaveLength(1)
+    expect(screen.queryByLabelText(/Repères et évidences pour Chapitre minimal/i)).not.toBeInTheDocument()
   })
 
   it("traite safety_rejected comme un statut terminal explicite", async () => {
@@ -797,7 +803,7 @@ describe("NatalChartPage", () => {
     renderNatalChartPage()
 
     expect(await screen.findByRole("heading", { name: "Lecture premium Astral" })).toBeVisible()
-    expect(screen.getByText("Premium")).toBeVisible()
+    expect(screen.getAllByText("Premium").length).toBeGreaterThanOrEqual(1)
     expect(screen.getByText("Milieu du Ciel en Taureau (central)")).toBeVisible()
     expect(screen.queryByText(/signal:mc:taurus/i)).not.toBeInTheDocument()
     expect(screen.queryByText(/hidden gateway/i)).not.toBeInTheDocument()

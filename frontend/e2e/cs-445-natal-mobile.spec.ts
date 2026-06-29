@@ -221,7 +221,7 @@ test("garde /natal lisible et non masque a 360, 390 et 430 px", async ({ page })
     await page.setViewportSize(viewport)
     await expectNoHorizontalOverflow(page)
 
-    const progressList = page.locator(".natal-reading__progress ol").first()
+    const progressList = page.locator(".natal-reading-summary__list").first()
     const progressStyles = await progressList.evaluate((element) => {
       const styles = window.getComputedStyle(element)
       return {
@@ -234,14 +234,14 @@ test("garde /natal lisible et non masque a 360, 390 et 430 px", async ({ page })
     expect(progressStyles.gridTemplateColumns.trim().split(/\s+/)).toHaveLength(2)
     expect(progressStyles.overflowX).toBe("visible")
 
-    const progressLink = page.locator(".natal-reading__progress-link").first()
+    const progressLink = page.locator(".natal-reading-summary__button").first()
     await expectTouchTarget(progressLink)
-    await expect(progressLink.locator(".natal-reading__progress-label--short")).toHaveText("Identité")
-    await expect(page.locator(".natal-reading__progress-label--short").nth(1)).toHaveText("Émotions")
-    await expect(page.locator(".natal-reading__progress-label--short").nth(2)).toHaveText("Relations")
-    const progressLinkOverflow = await page.locator(".natal-reading__progress li").evaluateAll((items) =>
+    await expect(progressLink.locator(".natal-reading-summary__title")).toHaveText("Identité")
+    await expect(page.locator(".natal-reading-summary__title").nth(1)).toHaveText("Émotions")
+    await expect(page.locator(".natal-reading-summary__title").nth(2)).toHaveText("Relations")
+    const progressLinkOverflow = await page.locator(".natal-reading-summary__item").evaluateAll((items) =>
       items.map((item) => {
-        const link = item.querySelector(".natal-reading__progress-link")
+        const link = item.querySelector(".natal-reading-summary__button")
         const itemBox = item.getBoundingClientRect()
         const linkBox = link?.getBoundingClientRect()
         return {
