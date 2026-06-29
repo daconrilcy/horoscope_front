@@ -80,6 +80,11 @@ type SummaryExtraEntry = {
   title: string
 }
 
+type SummaryTrackedEntry = {
+  anchorId: string
+  itemKey: string
+}
+
 function compactExcerpt(text: string): string {
   if (text.length <= EXCERPT_MAX_LENGTH) return text
 
@@ -432,10 +437,9 @@ function NatalReadingSummaryNav({
   extraEntries: SummaryExtraEntry[]
   onNavigate: (anchorId: string, itemKey: string) => void
 }) {
-  const activeIndex = Math.max(
-    0,
-    entries.findIndex((entry) => entry.itemKey === activeChapterKey),
-  )
+  const activeIndex = activeChapterKey?.startsWith("extra-")
+    ? entries.length - 1
+    : Math.max(0, entries.findIndex((entry) => entry.itemKey === activeChapterKey))
   const completion = progressPercent(activeIndex, entries.length)
 
   if (entries.length === 0) return null
@@ -473,7 +477,17 @@ function NatalReadingSummaryNav({
         ))}
         {extraEntries.map((entry) => (
           <li className="natal-reading-summary__item natal-reading-summary__item--extra" key={entry.key}>
-            <a className="natal-reading-summary__extra-link" href={`#${entry.anchorId}`}>
+            <a
+              aria-current={activeChapterKey === `extra-${entry.key}` ? "step" : undefined}
+              className={[
+                "natal-reading-summary__extra-link",
+                activeChapterKey === `extra-${entry.key}` ? "is-active" : "",
+              ]
+                .filter(Boolean)
+                .join(" ")}
+              href={`#${entry.anchorId}`}
+              onClick={() => onNavigate(entry.anchorId, `extra-${entry.key}`)}
+            >
               <span className="natal-reading-summary__index natal-reading-summary__index--extra" aria-hidden="true">
                 {entry.indexLabel}
               </span>
@@ -668,7 +682,6 @@ export function NatalAstralReading({ guide, reading, showSummary = true }: Natal
       }),
     [reading.chapters],
   )
-  const [activeChapterKey, setActiveChapterKey] = useState<string | null>(mainChapterEntries[0]?.itemKey ?? null)
   const summaryExtraEntries = useMemo(() => {
     const startIndex = mainChapterEntries.length
     const entries: SummaryExtraEntry[] = []
@@ -693,35 +706,34 @@ export function NatalAstralReading({ guide, reading, showSummary = true }: Natal
       })
     }
 
-    if (guide) {
-      entries.push({
-        anchorId: READING_GUIDE_SECTION_ID,
-        indexLabel: String(startIndex + entries.length + 1),
-        key: "reading-guide",
-        subtitle: "Repères pour interpréter la page",
-        title: "Comment lire ton thème natal",
-      })
-    }
-
     return entries
-  }, [guide, mainChapterEntries.length, reading.calculationFacts, reading.explanations.length])
+  }, [mainChapterEntries.length, reading.calculationFacts, reading.explanations.length])
+
+  const summaryTrackedEntries = useMemo<SummaryTrackedEntry[]>(
+    () => [
+      ...mainChapterEntries.map((entry) => ({ anchorId: entry.anchorId, itemKey: entry.itemKey })),
+      ...summaryExtraEntries.map((entry) => ({ anchorId: entry.anchorId, itemKey: `extra-${entry.key}` })),
+    ],
+    [mainChapterEntries, summaryExtraEntries],
+  )
+  const [activeSummaryKey, setActiveSummaryKey] = useState<string | null>(summaryTrackedEntries[0]?.itemKey ?? null)
 
   useEffect(() => {
-    setActiveChapterKey((currentKey) =>
-      currentKey && mainChapterEntries.some((entry) => entry.itemKey === currentKey)
+    setActiveSummaryKey((currentKey) =>
+      currentKey && summaryTrackedEntries.some((entry) => entry.itemKey === currentKey)
         ? currentKey
-        : mainChapterEntries[0]?.itemKey ?? null,
+        : summaryTrackedEntries[0]?.itemKey ?? null,
     )
-  }, [mainChapterEntries])
+  }, [summaryTrackedEntries])
 
   useEffect(() => {
-    if (!mainChapterEntries.length || typeof window === "undefined") return undefined
+    if (!summaryTrackedEntries.length || typeof window === "undefined") return undefined
 
     let frameId = 0
 
     const updateActiveChapterFromViewport = () => {
       const viewportAnchor = Math.min(180, window.innerHeight * 0.28)
-      const measuredChapters = mainChapterEntries.flatMap((entry) => {
+      const measuredChapters = summaryTrackedEntries.flatMap((entry) => {
         const element = document.getElementById(entry.anchorId)
         if (!element) return []
         const rect = element.getBoundingClientRect()
@@ -738,7 +750,7 @@ export function NatalAstralReading({ guide, reading, showSummary = true }: Natal
         (viewportAnchor < orderedChapters[0].rect.top
           ? orderedChapters[0].entry.itemKey
           : orderedChapters[orderedChapters.length - 1]?.entry.itemKey)
-      if (nextKey) setActiveChapterKey(nextKey)
+      if (nextKey) setActiveSummaryKey(nextKey)
     }
 
     const scheduleUpdate = () => {
@@ -755,10 +767,10 @@ export function NatalAstralReading({ guide, reading, showSummary = true }: Natal
       window.removeEventListener("scroll", scheduleUpdate)
       window.removeEventListener("resize", scheduleUpdate)
     }
-  }, [mainChapterEntries])
+  }, [summaryTrackedEntries])
 
   function scrollToChapter(anchorId: string, itemKey: string) {
-    setActiveChapterKey(itemKey)
+    setActiveSummaryKey(itemKey)
     document.getElementById(anchorId)?.scrollIntoView({ behavior: "smooth", block: "start" })
   }
 
@@ -783,7 +795,7 @@ export function NatalAstralReading({ guide, reading, showSummary = true }: Natal
     <article className="natal-reading" aria-label="Interprétation de votre thème natal">
       <div className="natal-reading__layout">
         <NatalReadingSummaryNav
-          activeChapterKey={activeChapterKey}
+          activeChapterKey={activeSummaryKey}
           entries={mainChapterEntries}
           extraEntries={summaryExtraEntries}
           onNavigate={scrollToChapter}

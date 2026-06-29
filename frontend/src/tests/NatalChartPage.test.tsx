@@ -266,14 +266,50 @@ describe("NatalChartPage", () => {
     const user = userEvent.setup()
     const scrollIntoViewMock = mockScrollIntoView()
     const originalGetBoundingClientRect = Element.prototype.getBoundingClientRect
+    const viewportStage = { current: "chapters" as "chapters" | "facts" | "explanations" }
     restoreGetBoundingClientRect = () => {
       Element.prototype.getBoundingClientRect = originalGetBoundingClientRect
       restoreGetBoundingClientRect = null
     }
     Element.prototype.getBoundingClientRect = function getBoundingClientRect(this: Element) {
+      if (this instanceof HTMLElement && this.id === "natal-reading-calculation-facts") {
+        const top = viewportStage.current === "facts" ? 120 : 1600
+        return {
+          bottom: top + 420,
+          height: 420,
+          left: 0,
+          right: 920,
+          toJSON: () => undefined,
+          top,
+          width: 920,
+          x: 0,
+          y: top,
+        } as DOMRect
+      }
+
+      if (this instanceof HTMLElement && this.id === "natal-reading-calculation-explanations") {
+        const top = viewportStage.current === "explanations" ? 120 : 2320
+        return {
+          bottom: top + 420,
+          height: 420,
+          left: 0,
+          right: 920,
+          toJSON: () => undefined,
+          top,
+          width: 920,
+          x: 0,
+          y: top,
+        } as DOMRect
+      }
+
       if (this instanceof HTMLElement && this.classList.contains("natal-reading__chapter")) {
         const chapterIndex = Number.parseInt(this.id.split("-").at(-1) ?? "0", 10)
-        const top = chapterIndex * 720
+        const top =
+          viewportStage.current === "facts"
+            ? 820 + chapterIndex * 720
+            : viewportStage.current === "explanations"
+              ? 1540 + chapterIndex * 720
+              : chapterIndex * 720
         return {
           bottom: top + 640,
           height: 640,
@@ -449,7 +485,7 @@ describe("NatalChartPage", () => {
     expect(screen.getByLabelText("Sommaire de lecture")).toHaveTextContent("Relations")
     expect(screen.getByLabelText("Sommaire de lecture")).toHaveTextContent("Éléments du calcul")
     expect(screen.getByLabelText("Sommaire de lecture")).toHaveTextContent("Explications du calcul")
-    expect(screen.getByLabelText("Sommaire de lecture")).toHaveTextContent("Comment lire ton thème natal")
+    expect(screen.getByLabelText("Sommaire de lecture")).not.toHaveTextContent("Comment lire ton thème natal")
     const progressBar = container.querySelector(".natal-reading-summary__bar")
     expect(progressBar).toHaveProperty("value", 0)
     const firstProgressLink = screen.getByRole("button", { name: "Identite" })
@@ -504,6 +540,22 @@ describe("NatalChartPage", () => {
     expect(screen.getByText("Repères & évidences")).toBeVisible()
     expect(screen.getByText("Soleil en Cancer")).toBeVisible()
     expect(screen.getByText("Lune en Balance")).toBeVisible()
+    const calculationFactsLink = screen.getByRole("link", { name: /Éléments du calcul/ })
+    const explanationsLink = screen.getByRole("link", { name: /Explications du calcul/ })
+    expect(calculationFactsLink).not.toHaveAttribute("aria-current", "step")
+    expect(explanationsLink).not.toHaveAttribute("aria-current", "step")
+    viewportStage.current = "facts"
+    window.dispatchEvent(new Event("scroll"))
+    await waitFor(() => {
+      expect(calculationFactsLink).toHaveAttribute("aria-current", "step")
+      expect(progressBar).toHaveProperty("value", 100)
+    })
+    viewportStage.current = "explanations"
+    window.dispatchEvent(new Event("scroll"))
+    await waitFor(() => {
+      expect(explanationsLink).toHaveAttribute("aria-current", "step")
+      expect(progressBar).toHaveProperty("value", 100)
+    })
     const firstMetaToggle = screen.getAllByRole("button", { name: "Afficher les repères" })[0]
     expect(firstMetaToggle).toHaveAttribute("aria-expanded", "false")
     await user.click(firstMetaToggle)
