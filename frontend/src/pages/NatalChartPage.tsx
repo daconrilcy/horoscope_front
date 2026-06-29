@@ -23,6 +23,11 @@ export function NatalChartPage() {
     currentJob: natalJob.currentJob,
   })
   const showIntroHeader = viewState !== "completed"
+  const natalGuide = (
+    <div id="natal-chart-guide">
+      <NatalChartGuide lang={lang} missingBirthTime={Boolean(natalJob.natalReading?.isPartial)} />
+    </div>
+  )
 
   return (
     <PageLayout className="natal-page-container is-natal-page">
@@ -43,13 +48,12 @@ export function NatalChartPage() {
         copy={copy}
         canStart={natalJob.canStart}
         canRetry={natalJob.canRetry}
+        readingGuide={viewState === "completed" ? natalGuide : undefined}
         onStart={natalJob.startJob}
         onRetry={natalJob.startJob}
       />
 
-      <div id="natal-chart-guide">
-        <NatalChartGuide lang={lang} missingBirthTime={Boolean(natalJob.natalReading?.isPartial)} />
-      </div>
+      {viewState === "completed" ? null : natalGuide}
     </PageLayout>
   )
 }

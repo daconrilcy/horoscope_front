@@ -1,5 +1,5 @@
 // Composant public d'affichage de l'interprétation natale Astral normalisée.
-import { useEffect, useId, useMemo, useState } from "react"
+import { useEffect, useId, useMemo, useState, type ReactNode } from "react"
 import { Link } from "react-router-dom"
 import {
   BadgeCheck,
@@ -24,10 +24,12 @@ import type {
   NatalInterpretationViewModel,
   NatalReadingChapterViewModel,
 } from "./natalAstralReadingViewModel"
+import natalLogoSrc from "../../assets/Natal_Logo.png"
 import "./NatalReading.css"
 import "./NatalReadingFacts.css"
 
 type NatalAstralReadingProps = {
+  guide?: ReactNode
   reading: NatalInterpretationViewModel
   showSummary?: boolean
 }
@@ -361,7 +363,7 @@ function NatalReadingHero({ reading, showSummary }: { reading: NatalInterpretati
   return (
     <header className="natal-reading-hero">
       <div className="natal-reading-hero__symbol" aria-hidden="true">
-        <Sparkles size={30} strokeWidth={1.6} />
+        <img className="natal-reading-hero__logo" src={natalLogoSrc} alt="" />
       </div>
       <div className="natal-reading-hero__content">
         <nav className="natal-reading-hero__breadcrumb" aria-label="Fil d'Ariane">
@@ -618,7 +620,7 @@ function NatalChapterCard({
 }
 
 /** Affiche la lecture Astral sans exposer les champs techniques du moteur externe. */
-export function NatalAstralReading({ reading, showSummary = true }: NatalAstralReadingProps) {
+export function NatalAstralReading({ guide, reading, showSummary = true }: NatalAstralReadingProps) {
   const mainChapterEntries = useMemo(
     () =>
       reading.chapters.map((chapter, index) => {
@@ -649,30 +651,46 @@ export function NatalAstralReading({ reading, showSummary = true }: NatalAstralR
   }, [mainChapterEntries])
 
   useEffect(() => {
-    if (!mainChapterEntries.length || typeof IntersectionObserver !== "function") return undefined
+    if (!mainChapterEntries.length || typeof window === "undefined") return undefined
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visibleEntry = entries
-          .filter((entry) => entry.isIntersecting)
-          .sort((left, right) => left.boundingClientRect.top - right.boundingClientRect.top)[0]
-        if (visibleEntry?.target instanceof HTMLElement) {
-          const nextKey = visibleEntry.target.dataset.chapterKey
-          if (nextKey) setActiveChapterKey(nextKey)
-        }
-      },
-      { rootMargin: "-20% 0px -62% 0px", threshold: [0, 0.2, 0.55] },
-    )
+    let frameId = 0
 
-    for (const entry of mainChapterEntries) {
-      const element = document.getElementById(entry.anchorId)
-      if (element) {
-        element.dataset.chapterKey = entry.itemKey
-        observer.observe(element)
-      }
+    const updateActiveChapterFromViewport = () => {
+      const viewportAnchor = Math.min(180, window.innerHeight * 0.28)
+      const measuredChapters = mainChapterEntries.flatMap((entry) => {
+        const element = document.getElementById(entry.anchorId)
+        if (!element) return []
+        const rect = element.getBoundingClientRect()
+        return [{ entry, rect }]
+      })
+      if (measuredChapters.length === 0) return
+
+      const orderedChapters = [...measuredChapters].sort((left, right) => left.rect.top - right.rect.top)
+      const visibleChapter = orderedChapters
+        .filter(({ rect }) => rect.bottom > viewportAnchor && rect.top < window.innerHeight)
+        .sort((left, right) => Math.abs(left.rect.top - viewportAnchor) - Math.abs(right.rect.top - viewportAnchor))[0]
+      const nextKey =
+        visibleChapter?.entry.itemKey ??
+        (viewportAnchor < orderedChapters[0].rect.top
+          ? orderedChapters[0].entry.itemKey
+          : orderedChapters[orderedChapters.length - 1]?.entry.itemKey)
+      if (nextKey) setActiveChapterKey(nextKey)
     }
 
-    return () => observer.disconnect()
+    const scheduleUpdate = () => {
+      window.cancelAnimationFrame(frameId)
+      frameId = window.requestAnimationFrame(updateActiveChapterFromViewport)
+    }
+
+    scheduleUpdate()
+    window.addEventListener("scroll", scheduleUpdate, { passive: true })
+    window.addEventListener("resize", scheduleUpdate)
+
+    return () => {
+      window.cancelAnimationFrame(frameId)
+      window.removeEventListener("scroll", scheduleUpdate)
+      window.removeEventListener("resize", scheduleUpdate)
+    }
   }, [mainChapterEntries])
 
   function scrollToChapter(anchorId: string, itemKey: string) {
@@ -756,6 +774,7 @@ export function NatalAstralReading({ reading, showSummary = true }: NatalAstralR
           ) : null}
 
           {reading.disclaimer ? <p className="natal-reading__disclaimer">{reading.disclaimer}</p> : null}
+          {guide}
         </div>
       </div>
     </article>

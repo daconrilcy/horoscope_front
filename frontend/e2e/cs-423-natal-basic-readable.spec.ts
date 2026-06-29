@@ -266,17 +266,36 @@ test("capture les preuves desktop et mobile d'une lecture Basic V2 lisible", asy
     const metrics = document.querySelector(".natal-reading-metrics")
     const chapter = document.querySelector(".natal-reading__chapter")
     const contentCard = document.querySelector(".natal-card")
-    if (!metrics || !chapter || !contentCard) {
+    const guide = document.querySelector(".natal-chart-guide")
+    if (!metrics || !chapter || !contentCard || !guide) {
       throw new Error("Cadres natals introuvables pour la comparaison de largeur")
     }
     return {
       chapterWidth: chapter.getBoundingClientRect().width,
       cardWidth: contentCard.getBoundingClientRect().width,
+      guideWidth: guide.getBoundingClientRect().width,
       metricsWidth: metrics.getBoundingClientRect().width,
     }
   })
   expect(Math.abs(desktopSurfaceWidths.metricsWidth - desktopSurfaceWidths.chapterWidth)).toBeLessThanOrEqual(1)
+  expect(Math.abs(desktopSurfaceWidths.guideWidth - desktopSurfaceWidths.chapterWidth)).toBeLessThanOrEqual(1)
   expect(desktopSurfaceWidths.cardWidth).toBeGreaterThanOrEqual(desktopSurfaceWidths.metricsWidth)
+
+  const summaryPosition = await page
+    .locator(".natal-reading-summary")
+    .first()
+    .evaluate((element) => window.getComputedStyle(element).position)
+  expect(summaryPosition).toBe("sticky")
+  const progressBar = page.locator(".natal-reading-summary__bar").first()
+  expect(await progressBar.evaluate((element) => (element as HTMLProgressElement).value)).toBe(0)
+  await page.locator(".natal-reading-summary__button").nth(2).click()
+  await expect
+    .poll(() => progressBar.evaluate((element) => (element as HTMLProgressElement).value))
+    .toBeGreaterThan(0)
+  await page.locator(".natal-reading-summary__button").last().click()
+  await expect
+    .poll(() => progressBar.evaluate((element) => (element as HTMLProgressElement).value))
+    .toBe(100)
 
   const guideToggle = page.locator(".natal-chart-guide__toggle").first()
   await expect(guideToggle).toHaveAttribute("aria-expanded", "false")

@@ -1,4 +1,5 @@
 // Rendu des états du job Astral natal sans orchestration API.
+import type { ReactNode } from "react"
 import { Link } from "react-router-dom"
 import { RefreshCw } from "lucide-react"
 
@@ -16,6 +17,7 @@ type NatalJobCardProps = {
   copy: NatalChartPageCopy
   canStart: boolean
   canRetry: boolean
+  readingGuide?: ReactNode
   onStart: () => void
   onRetry: () => void
 }
@@ -28,6 +30,7 @@ export function NatalJobCard({
   copy,
   canStart,
   canRetry,
+  readingGuide,
   onStart,
   onRetry,
 }: NatalJobCardProps) {
@@ -57,7 +60,7 @@ export function NatalJobCard({
       {viewState === "completed" ? (
         <>
           {reading ? (
-            <NatalAstralReading reading={reading} />
+            <NatalAstralReading guide={readingGuide} reading={reading} />
           ) : (
             <p className="natal-card__lead">{copy.readingUnavailable}</p>
           )}

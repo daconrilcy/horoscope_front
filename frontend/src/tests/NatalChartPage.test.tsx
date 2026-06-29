@@ -20,6 +20,7 @@ const mockUseAstralJobStatus = vi.fn()
 const mockUseAstralJobEvents = vi.fn()
 let capturedAstralEventHandler: ((event: unknown) => void) | null = null
 let restoreScrollIntoView: (() => void) | null = null
+let restoreGetBoundingClientRect: (() => void) | null = null
 
 vi.mock("../api/astral", async () => {
   const actual = await vi.importActual<typeof import("../api/astral")>("../api/astral")
@@ -117,6 +118,7 @@ beforeEach(() => {
 
 afterEach(() => {
   restoreScrollIntoView?.()
+  restoreGetBoundingClientRect?.()
   cleanup()
   queryClient.clear()
 })
@@ -263,6 +265,30 @@ describe("NatalChartPage", () => {
   it("rend une lecture Astral structuree et la precision reduite si le job revient en simplifie", async () => {
     const user = userEvent.setup()
     const scrollIntoViewMock = mockScrollIntoView()
+    const originalGetBoundingClientRect = Element.prototype.getBoundingClientRect
+    restoreGetBoundingClientRect = () => {
+      Element.prototype.getBoundingClientRect = originalGetBoundingClientRect
+      restoreGetBoundingClientRect = null
+    }
+    Element.prototype.getBoundingClientRect = function getBoundingClientRect(this: Element) {
+      if (this instanceof HTMLElement && this.classList.contains("natal-reading__chapter")) {
+        const chapterIndex = Number.parseInt(this.id.split("-").at(-1) ?? "0", 10)
+        const top = chapterIndex * 720
+        return {
+          bottom: top + 640,
+          height: 640,
+          left: 0,
+          right: 920,
+          toJSON: () => undefined,
+          top,
+          width: 920,
+          x: 0,
+          y: top,
+        } as DOMRect
+      }
+
+      return originalGetBoundingClientRect.call(this)
+    }
     mockUseAstralJobStatus.mockReturnValue({
       data: {
         run_id: "run-natal-2",
@@ -386,6 +412,8 @@ describe("NatalChartPage", () => {
     const { container } = renderNatalChartPage()
 
     expect(await screen.findByRole("heading", { name: "Lecture natale publique" })).toBeVisible()
+    const heroLogo = container.querySelector(".natal-reading-hero__symbol .natal-reading-hero__logo")
+    expect(heroLogo).toHaveAttribute("src", expect.stringContaining("Natal_Logo"))
     expect(screen.getByRole("heading", { name: "Base du calcul natal" })).toBeVisible()
     expect(screen.getByText("Données de calcul Astral")).toBeVisible()
     const renderedText = document.body.textContent ?? ""
@@ -419,10 +447,15 @@ describe("NatalChartPage", () => {
     expect(screen.getByLabelText("Sommaire de lecture")).toHaveTextContent("Identité")
     expect(screen.getByLabelText("Sommaire de lecture")).toHaveTextContent("Émotions")
     expect(screen.getByLabelText("Sommaire de lecture")).toHaveTextContent("Relations")
+    const progressBar = container.querySelector(".natal-reading-summary__bar")
+    expect(progressBar).toHaveProperty("value", 0)
     const firstProgressLink = screen.getByRole("button", { name: "Identite" })
     expect(firstProgressLink).toHaveAttribute("aria-current", "step")
     await user.click(screen.getByRole("button", { name: "Relations" }))
     expect(screen.getByRole("button", { name: "Relations" })).toHaveAttribute("aria-current", "step")
+    await waitFor(() => {
+      expect(progressBar).toHaveProperty("value", 100)
+    })
     expect(scrollIntoViewMock).toHaveBeenCalledWith({ behavior: "smooth", block: "start" })
     const firstChapter = container.querySelector(".natal-reading__chapter")
     expect(firstChapter).not.toBeNull()
@@ -482,6 +515,7 @@ describe("NatalChartPage", () => {
     expect(screen.queryByText("placement:sun:taurus:house:10")).not.toBeInTheDocument()
     expect(screen.queryByText("cache")).not.toBeInTheDocument()
     expect(screen.getByText("Comment lire ton thème natal")).toBeVisible()
+    expect(container.querySelector("#natal-chart-guide")?.closest(".natal-reading__main")).not.toBeNull()
     const guideToggle = screen.getByRole("button", { name: "Lire le guide" })
     expect(guideToggle).toHaveAttribute("aria-expanded", "false")
     expect(screen.getByText(/Ton thème natal est une représentation géométrique/i)).not.toBeVisible()

@@ -16,6 +16,7 @@
   display: grid;
   gap: 16px;
   min-width: 0;
+  width: 100%;
 }
 
 .natal-reading-hero {
@@ -30,6 +31,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  box-sizing: border-box;
   width: 72px;
   height: 72px;
   border: 1px solid var(--natal-border-section);
@@ -39,6 +41,13 @@
     var(--natal-panel-background);
   color: var(--premium-accent-purple-strong);
   box-shadow: var(--natal-shadow-block);
+}
+
+.natal-reading-hero__logo {
+  display: block;
+  width: 54px;
+  height: 54px;
+  object-fit: contain;
 }
 
 .natal-reading-hero__content {
@@ -155,15 +164,18 @@
 }
 
 .natal-reading-summary {
-  position: static;
+  position: sticky;
+  top: 72px;
   display: grid;
   gap: 0;
   min-width: 0;
+  max-height: calc(100vh - 90px);
   padding: 0;
   border: 1px solid var(--natal-border-section);
   border-radius: var(--natal-radius-section);
   background: var(--natal-panel-background);
   box-shadow: var(--natal-shadow-section);
+  overflow-y: auto;
 }
 
 .natal-reading-summary__header {
@@ -187,11 +199,14 @@
 }
 
 .natal-reading-summary__bar {
+  appearance: none;
+  -webkit-appearance: none;
   width: 100%;
   height: 6px;
   border: 0;
   border-radius: var(--radius-full);
   background: var(--natal-badge-meta-surface);
+  accent-color: var(--premium-accent-purple-strong);
   overflow: hidden;
 }
 
@@ -204,6 +219,10 @@
 .natal-reading-summary__bar::-moz-progress-bar {
   border-radius: var(--radius-full);
   background: var(--premium-accent-purple-strong);
+}
+
+.natal-reading-summary__bar::-webkit-progress-inner-element {
+  border-radius: var(--radius-full);
 }
 
 .natal-reading-summary__list {
@@ -662,7 +681,7 @@
 .natal-reading__chapter-body {
   display: grid;
   gap: 14px;
-  max-width: 65ch;
+  width: 100%;
   color: var(--natal-text-reading);
   font-size: var(--natal-type-reading-text-size);
   font-weight: var(--natal-type-reading-text-weight);
@@ -688,7 +707,7 @@
 }
 
 .natal-reading__prose-paragraph {
-  max-width: 65ch;
+  max-width: none;
 }
 
 .natal-reading__chapter-meta {
@@ -864,6 +883,11 @@
       width: 52px;
       height: 52px;
       border-radius: var(--radius-lg);
+    }
+
+  .natal-reading-hero__logo {
+      width: 40px;
+      height: 40px;
     }
 
   .natal-reading-hero h1 {
