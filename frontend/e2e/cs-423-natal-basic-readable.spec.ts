@@ -260,20 +260,23 @@ test("capture les preuves desktop et mobile d'une lecture Basic V2 lisible", asy
   expect(desktopTypography.excerptFontFamily).toBe(desktopTypography.bodyFontFamily)
   expect(desktopTypography.excerptFontSize).toBe(desktopTypography.bodyFontSize)
   expect(desktopTypography.excerptFontWeight).toBe(desktopTypography.bodyFontWeight)
-  expect(desktopTypography.bodyLineHeight).toBeGreaterThan(desktopTypography.excerptLineHeight)
+  expect(desktopTypography.excerptLineHeight).toBe(desktopTypography.bodyLineHeight)
 
   const desktopSurfaceWidths = await page.evaluate(() => {
-    const portrait = document.querySelector(".natal-page-portrait")
+    const metrics = document.querySelector(".natal-reading-metrics")
+    const chapter = document.querySelector(".natal-reading__chapter")
     const contentCard = document.querySelector(".natal-card")
-    if (!portrait || !contentCard) {
+    if (!metrics || !chapter || !contentCard) {
       throw new Error("Cadres natals introuvables pour la comparaison de largeur")
     }
     return {
+      chapterWidth: chapter.getBoundingClientRect().width,
       cardWidth: contentCard.getBoundingClientRect().width,
-      portraitWidth: portrait.getBoundingClientRect().width,
+      metricsWidth: metrics.getBoundingClientRect().width,
     }
   })
-  expect(Math.abs(desktopSurfaceWidths.portraitWidth - desktopSurfaceWidths.cardWidth)).toBeLessThanOrEqual(1)
+  expect(Math.abs(desktopSurfaceWidths.metricsWidth - desktopSurfaceWidths.chapterWidth)).toBeLessThanOrEqual(1)
+  expect(desktopSurfaceWidths.cardWidth).toBeGreaterThanOrEqual(desktopSurfaceWidths.metricsWidth)
 
   const guideToggle = page.locator(".natal-chart-guide__toggle").first()
   await expect(guideToggle).toHaveAttribute("aria-expanded", "false")
@@ -310,8 +313,8 @@ test("capture les preuves desktop et mobile d'une lecture Basic V2 lisible", asy
   const mobileChapterMeta = page.locator(".natal-reading__chapter-meta").first()
   const mobileBasisList = page.locator(".natal-reading__basis ul").first()
   const mobileBasisChip = page.locator(".natal-badge--basis").first()
-  const mobilePortraitFacts = page.locator(".natal-page-portrait__facts").first()
-  const mobilePortraitCards = page.locator(".natal-page-portrait__fact")
+  const mobileMetrics = page.locator(".natal-reading-metrics").first()
+  const mobileMetricCards = page.locator(".natal-reading-metrics__item")
   const mobilePageMain = page.locator(".page-layout.natal-page-container .page-layout__main").first()
   const mobileGuideToggle = page.locator(".natal-chart-guide__toggle").first()
   const mobileStyles = await mobileChapterText.evaluate((element) => {
@@ -354,7 +357,7 @@ test("capture les preuves desktop et mobile d'une lecture Basic V2 lisible", asy
   })
   const guideToggleHeight = await mobileGuideToggle.evaluate((element) => element.getBoundingClientRect().height)
   const metaDisplay = await mobileChapterMeta.evaluate((element) => window.getComputedStyle(element).display)
-  const portraitColumns = await mobilePortraitFacts.evaluate((element) => window.getComputedStyle(element).gridTemplateColumns)
+  const metricsColumns = await mobileMetrics.evaluate((element) => window.getComputedStyle(element).gridTemplateColumns)
   const bottomPadding = await mobilePageMain.evaluate((element) =>
     Number.parseFloat(window.getComputedStyle(element).paddingBottom),
   )
@@ -372,8 +375,8 @@ test("capture les preuves desktop et mobile d'une lecture Basic V2 lisible", asy
   expect(basisChipStyles.whiteSpace).toBe("normal")
   expect(basisListStyles.flexWrap).toBe("wrap")
   expect(basisListStyles.overflowX).toBe("visible")
-  await expect(mobilePortraitCards).toHaveCount(3)
-  expect(portraitColumns.trim().split(/\s+/)).toHaveLength(1)
+  await expect(mobileMetricCards).toHaveCount(4)
+  expect(metricsColumns.trim().split(/\s+/)).toHaveLength(1)
   expect(guideToggleHeight).toBeGreaterThanOrEqual(44)
   expect(bottomPadding).toBeGreaterThanOrEqual(140)
   await page.screenshot({ path: resolve(EVIDENCE_DIR, "basic-readable-mobile-after.png"), fullPage: true })

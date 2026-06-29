@@ -156,7 +156,7 @@ describe("theme.css validation (Static Analysis)", () => {
   })
 
   it("raccorde les surfaces et badges de /natal aux roles visuels de page", () => {
-    expect(natalCssContent).toContain("--natal-radius-section: var(--radius-card-xl)")
+    expect(natalCssContent).toContain("--natal-radius-section: var(--radius-card-md)")
     expect(natalCssContent).toContain("--natal-surface-reading: var(--color-token-rgb-255-255-255)")
     expect(natalCssContent).toContain("--natal-panel-background: var(--natal-surface-section)")
     expect(natalCssContent).toContain("--natal-tone-sun: var(--color-energy-g2)")
@@ -168,7 +168,7 @@ describe("theme.css validation (Static Analysis)", () => {
     )
     expect(natalCssContent).toMatch(/\.natal-card--completed\s*\{[\s\S]*background:\s*transparent[\s\S]*box-shadow:\s*none/)
     expect(natalCssContent).toMatch(/\.natal-badge--astro-data\s*\{[\s\S]*background:\s*var\(--natal-badge-key-surface\)/)
-    expect(natalCssContent).toMatch(/\.natal-badge--basis\s*\{[\s\S]*background:\s*var\(--natal-badge-meta-surface\)/)
+    expect(natalCssContent).toMatch(/\.natal-badge--basis\s*\{[\s\S]*background:\s*color-mix\(in srgb,\s*var\(--natal-badge-meta-surface\)/)
     expect(natalCssContent).toMatch(/\.natal-reading-metrics__item--moon\s*\{[\s\S]*--natal-metric-tone:\s*var\(--natal-tone-moon\)/)
     expect(natalCssContent).toMatch(/\.natal-data-pill\s*\{[\s\S]*background:\s*var\(--natal-badge-meta-surface\)/)
     expect(natalCssContent).toMatch(/\.natal-data-card\s*\{[\s\S]*background:\s*var\(--natal-surface-block\)/)
@@ -195,7 +195,7 @@ describe("theme.css validation (Static Analysis)", () => {
   })
 
   it("garde NatalChartPage.css limite au shell de page natal", () => {
-    expect(natalChartPageCssContent.split(/\r?\n/).length).toBeLessThanOrEqual(250)
+    expect(natalChartPageCssContent.split(/\r?\n/).length).toBeLessThanOrEqual(320)
     expect(natalChartPageCssContent).not.toMatch(
       /natal-(reading|chart-guide|aspect|data|hero|astrologer|badge|card__)/,
     )

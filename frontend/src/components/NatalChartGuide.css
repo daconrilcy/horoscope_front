@@ -1,14 +1,14 @@
 /* Styles du guide pedagogique du theme natal. */
 
 .natal-chart-guide {
-  margin-top: 24px;
+  margin-top: 18px;
   display: grid;
-  gap: 16px;
-  padding: 22px;
+  gap: 12px;
+  padding: 16px 18px;
   background: var(--natal-surface-reading);
   border: 1px solid var(--natal-border-reading);
   border-radius: var(--natal-radius-section);
-  box-shadow: var(--natal-shadow-section);
+  box-shadow: var(--natal-shadow-block);
 }
 
 .natal-chart-guide__header {
@@ -23,7 +23,7 @@
   margin: 0;
   min-width: 0;
   flex: 1 1 auto;
-  font-size: var(--natal-type-section-title-size);
+  font-size: var(--font-size-lg);
   font-weight: var(--type-section-title-weight);
   line-height: var(--type-section-title-line-height);
   color: var(--premium-text-strong);
@@ -31,8 +31,8 @@
 
 .natal-chart-guide__toggle {
   flex: 0 0 auto;
-  min-height: 36px;
-  padding: 0 14px;
+  min-height: 32px;
+  padding: 0 12px;
   border: 1px solid var(--natal-border-accent);
   border-radius: var(--natal-radius-badge);
   background: var(--natal-badge-key-surface);
@@ -53,7 +53,7 @@
 
 .natal-chart-guide__content {
   display: grid;
-  gap: 18px;
+  gap: 14px;
   color: var(--natal-text-reading);
   font-size: var(--natal-type-body-size);
   font-weight: var(--type-body-weight);
@@ -82,8 +82,8 @@
 
 .natal-chart-guide__section {
   display: grid;
-  gap: 8px;
-  padding-top: 16px;
+  gap: 7px;
+  padding-top: 12px;
   border-top: 1px solid var(--premium-glass-border-soft);
 }
 
@@ -147,7 +147,7 @@
     }
 
   .natal-chart-guide__toggle {
-      min-height: 44px;
+      min-height: 46px;
       padding: 0 14px;
       font-size: var(--font-size-xs);
       line-height: var(--type-label-line-height);

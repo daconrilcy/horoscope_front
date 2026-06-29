@@ -1,7 +1,21 @@
 // Composant public d'affichage de l'interprétation natale Astral normalisée.
 import { useEffect, useId, useMemo, useState } from "react"
 import { Link } from "react-router-dom"
-import { BadgeCheck, BookOpen, Clock, Compass, Home, Lightbulb, Moon, Sparkles, Sun, Triangle } from "lucide-react"
+import {
+  BadgeCheck,
+  BookOpen,
+  ChevronDown,
+  ChevronRight,
+  ChevronUp,
+  Clock,
+  Compass,
+  Home,
+  Lightbulb,
+  Moon,
+  Sparkles,
+  Sun,
+  Triangle,
+} from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 
 import type {
@@ -443,8 +457,11 @@ function NatalReadingSummaryNav({
         ))}
       </ol>
       <a href="#natal-chart-guide" className="natal-reading-summary__guide">
-        <BookOpen size={18} aria-hidden="true" />
-        Guide de lecture
+        <span className="natal-reading-summary__guide-label">
+          <BookOpen size={18} aria-hidden="true" />
+          Guide de lecture
+        </span>
+        <ChevronRight size={16} aria-hidden="true" />
       </a>
     </aside>
   )
@@ -509,6 +526,18 @@ function NatalChapterCard({
               <Clock size={14} aria-hidden="true" />
               {entry.readTimeLabel}
             </span>
+          ) : null}
+          {canToggle ? (
+            <button
+              aria-controls={panelId}
+              aria-expanded={isExpanded}
+              aria-label={`${isExpanded ? "Réduire" : "Ouvrir"} ${chapter.title}`}
+              className="natal-reading__chapter-collapse"
+              type="button"
+              onClick={() => setIsExpanded((current) => !current)}
+            >
+              {isExpanded ? <ChevronUp size={18} aria-hidden="true" /> : <ChevronDown size={18} aria-hidden="true" />}
+            </button>
           ) : null}
         </div>
         {excerpt ? (

@@ -51,8 +51,8 @@
 }
 
 .natal-badge--astro-data {
-  min-height: 26px;
-  padding: 4px 10px;
+  min-height: 24px;
+  padding: 3px 9px;
   border-radius: var(--radius-control);
   border-color: var(--natal-badge-key-border);
   background: var(--natal-badge-key-surface);
@@ -75,8 +75,8 @@
 }
 
 .natal-badge--fact-detail {
-  min-height: 22px;
-  padding: 3px 9px;
+  min-height: 20px;
+  padding: 2px 8px;
   border-color: var(--natal-badge-detail-border);
   background: color-mix(in srgb, var(--natal-badge-detail-surface) 82%, transparent);
   color: var(--premium-text-meta);
@@ -89,8 +89,8 @@
 }
 
 .natal-badge--basis {
-  min-height: 24px;
-  padding: 3px 9px;
+  min-height: 22px;
+  padding: 2px 8px;
   border-color: color-mix(in srgb, var(--natal-badge-meta-border) 28%, transparent);
   background: color-mix(in srgb, var(--natal-badge-meta-surface) 34%, transparent);
   color: var(--natal-text-reading-muted);
