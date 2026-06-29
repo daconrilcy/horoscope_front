@@ -124,6 +124,7 @@
   line-height: var(--line-height-prose);
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 3;
+  line-clamp: 3;
 }
 
 .natal-page-portrait__facts {
@@ -216,6 +217,7 @@
       font-size: var(--font-size-xs);
       line-height: var(--line-height-normal);
       -webkit-line-clamp: 3;
+      line-clamp: 3;
     }
 
   .natal-page-portrait__facts {
