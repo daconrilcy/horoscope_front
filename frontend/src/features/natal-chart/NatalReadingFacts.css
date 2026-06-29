@@ -2,8 +2,9 @@
 
 .natal-reading-facts {
   display: grid;
-  gap: 16px;
-  padding: 18px;
+  gap: 14px;
+  padding: 16px 18px;
+  box-shadow: var(--natal-shadow-block);
 }
 
 .natal-reading-facts__header {
@@ -56,19 +57,19 @@
   display: grid;
   align-items: start;
   grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 12px;
+  gap: 10px;
 }
 
 .natal-reading-facts__group {
   display: grid;
   align-content: start;
-  gap: 10px;
+  gap: 8px;
   min-width: 0;
   min-height: 0;
-  padding: 12px;
-  border: 1px solid color-mix(in srgb, var(--natal-border-block) 28%, transparent);
+  padding: 10px;
+  border: 1px solid color-mix(in srgb, var(--natal-border-block) 48%, transparent);
   border-radius: var(--natal-radius-block);
-  background: color-mix(in srgb, var(--natal-surface-data) 50%, transparent);
+  background: color-mix(in srgb, var(--natal-surface-data) 72%, transparent);
 }
 
 .natal-reading-facts__group:not(.natal-reading-facts__group--primary) {
@@ -77,9 +78,9 @@
 
 .natal-reading-facts__group--primary {
   grid-column: span 2;
-  padding: 14px;
-  border-color: color-mix(in srgb, var(--premium-accent-purple-strong) 4%, var(--natal-border-block));
-  background: color-mix(in srgb, var(--natal-surface-data-strong) 56%, transparent);
+  padding: 12px;
+  border-color: color-mix(in srgb, var(--premium-accent-purple-strong) 10%, var(--natal-border-block));
+  background: color-mix(in srgb, var(--natal-surface-data-strong) 34%, var(--color-token-rgb-255-255-255));
 }
 
 .natal-reading-facts__group--primary .natal-reading-facts__list {

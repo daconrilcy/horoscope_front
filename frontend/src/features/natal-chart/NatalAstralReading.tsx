@@ -1,7 +1,7 @@
 // Composant public d'affichage de l'interprétation natale Astral normalisée.
 import { useEffect, useId, useMemo, useState } from "react"
 import { Link } from "react-router-dom"
-import { BadgeCheck, BookOpen, Clock, Compass, Home, Moon, Sparkles, Sun, Triangle } from "lucide-react"
+import { BadgeCheck, BookOpen, Clock, Compass, Home, Lightbulb, Moon, Sparkles, Sun, Triangle } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 
 import type {
@@ -135,6 +135,13 @@ function metricIcon(label: string): LucideIcon {
   if (label === "Lune") return Moon
   if (label === "Ascendant") return Compass
   return BadgeCheck
+}
+
+function metricToneClassName(label: string): string {
+  if (label === "Soleil") return "natal-reading-metrics__item--sun"
+  if (label === "Lune") return "natal-reading-metrics__item--moon"
+  if (label === "Ascendant") return "natal-reading-metrics__item--ascendant"
+  return "natal-reading-metrics__item--status"
 }
 
 function buildReadingMetrics(reading: NatalInterpretationViewModel): ReadingMetric[] {
@@ -369,7 +376,10 @@ function NatalReadingMetricsBar({ reading }: { reading: NatalInterpretationViewM
       {metrics.map((metric) => {
         const Icon = metric.icon
         return (
-          <div className="natal-reading-metrics__item" key={`${metric.label}-${metric.value}-${metric.detail ?? ""}`}>
+          <div
+            className={`natal-reading-metrics__item ${metricToneClassName(metric.label)}`}
+            key={`${metric.label}-${metric.value}-${metric.detail ?? ""}`}
+          >
             <span className="natal-reading-metrics__icon" aria-hidden="true">
               <Icon size={24} strokeWidth={1.8} />
             </span>
@@ -503,8 +513,13 @@ function NatalChapterCard({
         </div>
         {excerpt ? (
           <p className="natal-reading__chapter-excerpt">
-            <span className="natal-reading__chapter-excerpt-label">À retenir</span>
-            <span className="natal-reading__chapter-excerpt-text">{excerpt}</span>
+            <span className="natal-reading__chapter-excerpt-icon" aria-hidden="true">
+              <Lightbulb size={20} strokeWidth={1.8} />
+            </span>
+            <span className="natal-reading__chapter-excerpt-copy">
+              <span className="natal-reading__chapter-excerpt-label">À retenir</span>
+              <span className="natal-reading__chapter-excerpt-text">{excerpt}</span>
+            </span>
           </p>
         ) : null}
         {bodyParagraphs.length > 0 ? (

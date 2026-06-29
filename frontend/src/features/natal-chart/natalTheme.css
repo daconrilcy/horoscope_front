@@ -1,30 +1,30 @@
-/* Variables de theme natal partagees, conservees intactes pendant le decoupage CSS. */
+/* Variables de theme natal partagees pour aligner les surfaces sur la maquette V2. */
 
 .natal-page-container {
   --layout-page-padding: 0;
   --layout-padding-inline: 40px;
-  --natal-surface-page: transparent;
-  --natal-surface-container: var(--premium-glass-surface-1);
-  --natal-surface-section: var(--premium-glass-surface-1);
-  --natal-surface-block: var(--premium-glass-surface-2);
-  --natal-surface-data: color-mix(in srgb, var(--color-token-rgb-255-255-255) 34%, transparent);
-  --natal-surface-data-strong: color-mix(in srgb, var(--premium-accent-purple-strong) 6%, var(--premium-glass-surface-2));
-  --natal-surface-chip: color-mix(in srgb, var(--premium-accent-purple-strong) 5%, var(--premium-glass-surface-2));
-  --natal-surface-reading: color-mix(in srgb, var(--color-token-rgb-255-255-255) 86%, var(--color-token-rgb-248-243-255) 14%);
-  --natal-surface-reading-soft: color-mix(in srgb, var(--color-token-rgb-255-255-255) 72%, var(--color-token-rgb-244-237-255) 28%);
-  --natal-surface-reading-muted: color-mix(in srgb, var(--premium-accent-purple-strong) 5%, var(--color-token-rgb-255-255-255) 95%);
-  --natal-border-data: color-mix(in srgb, var(--premium-glass-border-soft) 62%, transparent);
-  --natal-border-reading: color-mix(in srgb, var(--premium-accent-purple-strong) 9%, var(--premium-glass-border-soft) 56%, transparent);
-  --natal-border-section: color-mix(in srgb, var(--premium-glass-border) 68%, transparent);
-  --natal-border-block: color-mix(in srgb, var(--premium-glass-border-soft) 58%, transparent);
-  --natal-border-accent: color-mix(in srgb, var(--premium-accent-purple-strong) 14%, var(--premium-glass-border-soft) 54%, transparent);
-  --natal-radius-section: var(--premium-radius-card);
-  --natal-radius-block: var(--radius-lg);
+  --natal-surface-page: color-mix(in srgb, var(--color-token-fcfdff) 88%, var(--color-token-eef5ff) 12%);
+  --natal-surface-container: color-mix(in srgb, var(--color-token-rgb-255-255-255) 96%, var(--color-token-rgb-248-243-255) 4%);
+  --natal-surface-section: color-mix(in srgb, var(--color-token-rgb-255-255-255) 96%, var(--color-token-rgb-248-243-255) 4%);
+  --natal-surface-block: color-mix(in srgb, var(--color-token-rgb-255-255-255) 94%, var(--color-token-rgb-248-243-255) 6%);
+  --natal-surface-data: color-mix(in srgb, var(--color-token-rgb-255-255-255) 90%, var(--color-token-rgb-248-243-255) 10%);
+  --natal-surface-data-strong: color-mix(in srgb, var(--color-token-rgb-255-255-255) 88%, var(--premium-accent-purple-strong) 12%);
+  --natal-surface-chip: color-mix(in srgb, var(--color-token-rgb-255-255-255) 92%, var(--premium-accent-purple-strong) 8%);
+  --natal-surface-reading: var(--color-token-rgb-255-255-255);
+  --natal-surface-reading-soft: var(--color-token-rgb-255-255-255);
+  --natal-surface-reading-muted: color-mix(in srgb, var(--color-token-rgb-255-255-255) 90%, var(--natal-theme-color, var(--premium-accent-purple-strong)) 10%);
+  --natal-border-data: color-mix(in srgb, var(--premium-accent-purple-strong) 10%, var(--premium-glass-border-strong) 44%, transparent);
+  --natal-border-reading: color-mix(in srgb, var(--premium-accent-purple-strong) 11%, var(--premium-glass-border-strong) 44%, transparent);
+  --natal-border-section: color-mix(in srgb, var(--premium-accent-purple-strong) 10%, var(--premium-glass-border-strong) 50%, transparent);
+  --natal-border-block: color-mix(in srgb, var(--premium-accent-purple-strong) 8%, var(--premium-glass-border-strong) 42%, transparent);
+  --natal-border-accent: color-mix(in srgb, var(--premium-accent-purple-strong) 22%, var(--premium-glass-border-strong) 40%, transparent);
+  --natal-radius-section: var(--radius-card-xl);
+  --natal-radius-block: var(--radius-card-md);
   --natal-radius-badge: var(--radius-full);
-  --natal-shadow-section: var(--premium-shadow-card), var(--premium-inner-light);
-  --natal-shadow-block: var(--premium-shadow-card), var(--premium-inner-light);
-  --natal-glass-filter: var(--glass-card-backdrop-filter);
-  --natal-panel-background: var(--glass-card-premium-bg);
+  --natal-shadow-section: 0 10px 24px color-mix(in srgb, var(--premium-text-strong) 8%, transparent), var(--premium-inner-light);
+  --natal-shadow-block: 0 8px 18px color-mix(in srgb, var(--premium-text-strong) 6%, transparent), var(--premium-inner-light);
+  --natal-glass-filter: none;
+  --natal-panel-background: var(--natal-surface-section);
   --natal-focus-outline: 2px solid var(--premium-accent-purple-strong);
   --natal-content-width: 100%;
   --natal-badge-key-surface: var(--natal-surface-chip);
@@ -37,6 +37,10 @@
   --natal-badge-meta-border: color-mix(in srgb, var(--premium-text-meta) 4%, var(--natal-border-block));
   --natal-text-reading: color-mix(in srgb, var(--premium-text-strong) 78%, var(--premium-text-main) 22%);
   --natal-text-reading-muted: color-mix(in srgb, var(--premium-text-meta) 82%, var(--premium-text-main) 18%);
+  --natal-tone-sun: var(--color-energy-g2);
+  --natal-tone-moon: var(--color-token-255f9f);
+  --natal-tone-ascendant: var(--premium-accent-purple-strong);
+  --natal-tone-status: var(--color-cta-right);
   --natal-type-page-title-size: var(--type-page-title-size);
   --natal-type-section-title-size: var(--font-size-xl);
   --natal-type-card-title-size: var(--font-size-lg);
@@ -45,7 +49,7 @@
   --natal-type-body-line-height: var(--line-height-prose);
   --natal-type-reading-text-size: var(--natal-type-body-size);
   --natal-type-reading-text-weight: var(--type-body-weight);
-  --natal-type-reading-text-line-height: var(--natal-type-body-line-height);
+  --natal-type-reading-text-line-height: var(--line-height-prose-loose);
   font-family: var(--font-family-base);
 }
 
@@ -54,6 +58,7 @@
 }
 
 .dark .natal-page-container {
+  --natal-surface-page: transparent;
   --natal-surface-container: var(--premium-glass-surface-1);
   --natal-surface-section: var(--premium-glass-surface-1);
   --natal-surface-block: var(--premium-glass-surface-2);

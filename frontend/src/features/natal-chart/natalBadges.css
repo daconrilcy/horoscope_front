@@ -25,8 +25,8 @@
 }
 
 .natal-badge--report-status {
-  min-height: 22px;
-  padding: 12px;
+  min-height: 24px;
+  padding: 3px 10px;
   border-color: var(--natal-badge-status-border);
   background: var(--natal-badge-status-surface);
   color: var(--premium-text-meta);
@@ -39,8 +39,8 @@
 .natal-badge--confidence {
   flex-shrink: 0;
   width: fit-content;
-  min-height: 20px;
-  padding: 12px;
+  min-height: 24px;
+  padding: 3px 9px;
   border-color: color-mix(in srgb, var(--natal-badge-meta-border) 28%, transparent);
   background: color-mix(in srgb, var(--natal-badge-meta-surface) 34%, transparent);
   color: var(--natal-text-reading-muted);
@@ -52,8 +52,8 @@
 
 .natal-badge--astro-data {
   min-height: 26px;
-  padding: 12px;
-  border-radius: var(--natal-radius-block);
+  padding: 4px 10px;
+  border-radius: var(--radius-control);
   border-color: var(--natal-badge-key-border);
   background: var(--natal-badge-key-surface);
   color: var(--premium-text-strong);
@@ -76,7 +76,7 @@
 
 .natal-badge--fact-detail {
   min-height: 22px;
-  padding: 12px;
+  padding: 3px 9px;
   border-color: var(--natal-badge-detail-border);
   background: color-mix(in srgb, var(--natal-badge-detail-surface) 82%, transparent);
   color: var(--premium-text-meta);
@@ -89,8 +89,8 @@
 }
 
 .natal-badge--basis {
-  min-height: 18px;
-  padding: 12px;
+  min-height: 24px;
+  padding: 3px 9px;
   border-color: color-mix(in srgb, var(--natal-badge-meta-border) 28%, transparent);
   background: color-mix(in srgb, var(--natal-badge-meta-surface) 34%, transparent);
   color: var(--natal-text-reading-muted);

@@ -32,7 +32,7 @@ export function NatalJobCard({
   onRetry,
 }: NatalJobCardProps) {
   return (
-    <div className="natal-card">
+    <div className={viewState === "completed" ? "natal-card natal-card--completed" : "natal-card"}>
       {viewState === "transport-error" ? (
         <div className="natal-card__error" role="alert">
           <p>{copy.jobLaunchError}</p>
