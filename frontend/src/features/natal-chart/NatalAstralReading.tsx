@@ -24,7 +24,7 @@ import type {
   NatalInterpretationViewModel,
   NatalReadingChapterViewModel,
 } from "./natalAstralReadingViewModel"
-import natalLogoSrc from "../../assets/Natal_Logo.png"
+import natalLogoSrc from "../../assets/Natal_Logo02.png"
 import "./NatalReading.css"
 import "./NatalReadingFacts.css"
 

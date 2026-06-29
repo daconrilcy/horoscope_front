@@ -449,7 +449,7 @@ describe("NatalChartPage", () => {
 
     expect(await screen.findByRole("heading", { name: "Thème natal" })).toBeVisible()
     const heroLogo = container.querySelector(".natal-reading-hero__symbol .natal-reading-hero__logo")
-    expect(heroLogo).toHaveAttribute("src", expect.stringContaining("Natal_Logo"))
+    expect(heroLogo).toHaveAttribute("src", expect.stringContaining("Natal_Logo02"))
     expect(screen.getByRole("heading", { name: "Base du calcul natal" })).toBeVisible()
     expect(screen.getByText("Données de calcul Astral")).toBeVisible()
     const renderedText = document.body.textContent ?? ""
