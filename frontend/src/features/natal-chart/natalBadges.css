@@ -92,13 +92,13 @@
 .natal-badge--basis {
   min-height: 28px;
   padding: 4px 11px;
-  border-color: color-mix(in srgb, var(--natal-theme-color, var(--premium-accent-purple-strong)) 38%, var(--natal-border-block));
+  border-color: color-mix(in srgb, var(--natal-theme-color, var(--premium-accent-purple-strong)) 74%, var(--natal-border-block));
   border-radius: var(--radius-control);
-  background: var(--color-token-rgb-255-255-255);
-  color: color-mix(in srgb, var(--premium-text-main) 72%, var(--natal-theme-color, var(--premium-accent-purple-strong)) 28%);
+  background: color-mix(in srgb, var(--natal-theme-color, var(--premium-accent-purple-strong)) 9%, var(--color-token-rgb-255-255-255));
+  color: color-mix(in srgb, var(--premium-text-main) 62%, var(--natal-theme-color, var(--premium-accent-purple-strong)) 38%);
   font-size: var(--font-size-2xs);
   font-weight: var(--font-weight-semibold);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--natal-theme-color, var(--premium-accent-purple-strong)) 8%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--natal-theme-color, var(--premium-accent-purple-strong)) 22%, transparent);
 }
 
 @media (max-width: 768px) {
