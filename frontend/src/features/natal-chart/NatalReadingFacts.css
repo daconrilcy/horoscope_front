@@ -380,6 +380,13 @@
   color: var(--premium-accent-purple-strong);
 }
 
+.natal-reading-facts .natal-reading-facts__marker,
+.natal-reading-facts .natal-reading-facts__item-icon,
+.natal-reading-facts .natal-reading-facts__method-icon,
+.natal-reading-facts .natal-reading-facts__notice svg {
+  color: var(--premium-accent-purple-strong);
+}
+
 @media (max-width: 1180px) {
   .natal-reading-facts__grid {
     grid-template-columns: 1fr;

@@ -177,6 +177,9 @@ describe("theme.css validation (Static Analysis)", () => {
     expect(natalCssContent).toMatch(/\.natal-reading-metrics__item--moon\s*\{[\s\S]*--natal-metric-tone:\s*var\(--natal-tone-moon\)/)
     expect(natalCssContent).toMatch(/\.natal-data-pill\s*\{[\s\S]*background:\s*var\(--natal-badge-meta-surface\)/)
     expect(natalCssContent).toMatch(/\.natal-data-card\s*\{[\s\S]*background:\s*var\(--natal-surface-block\)/)
+    expect(natalCssContent).toMatch(
+      /\.natal-reading-facts \.natal-reading-facts__marker,\s*\.natal-reading-facts \.natal-reading-facts__item-icon,\s*\.natal-reading-facts \.natal-reading-facts__method-icon,\s*\.natal-reading-facts \.natal-reading-facts__notice svg\s*\{[\s\S]*color:\s*var\(--premium-accent-purple-strong\)/,
+    )
   })
 
   it("conserve la grille mobile du parcours /natal et attenue la bottom nav", () => {

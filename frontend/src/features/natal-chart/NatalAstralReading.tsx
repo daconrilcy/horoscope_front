@@ -26,12 +26,15 @@ import {
 import type { LucideIcon } from "lucide-react"
 
 import type {
+  NatalCalculationFactItemViewModel,
   NatalCalculationFactsViewModel,
   NatalHighlightFactViewModel,
   NatalInterpretationViewModel,
   NatalReadingChapterViewModel,
 } from "./natalAstralReadingViewModel"
 import natalLogoSrc from "../../assets/Natal_Logo02.png"
+import { getZodiacIcon } from "../../components/zodiacSignIconMap"
+import { normalizeSignCode } from "../../i18n/astrology"
 import "./NatalReading.css"
 import "./NatalReadingFacts.css"
 
@@ -144,6 +147,10 @@ function iconForPrimaryFact(label: string): LucideIcon {
   if (label === "Date") return CalendarDays
   if (label === "Heure de naissance") return Clock
   return Sparkles
+}
+
+function zodiacIconForFact(item: NatalCalculationFactItemViewModel) {
+  return getZodiacIcon(normalizeSignCode(item.value))
 }
 
 function primaryFactItemClassName(label: string): string {
@@ -391,11 +398,11 @@ function NatalPrimaryFactsPanel({ group }: { group: NatalCalculationFactsViewMod
       </div>
       <dl className="natal-reading-facts__list natal-reading-facts__list--primary">
         {group.items.map((item) => {
-          const Icon = iconForPrimaryFact(item.label)
+          const Icon = zodiacIconForFact(item) ?? iconForPrimaryFact(item.label)
           return (
             <div className={primaryFactItemClassName(item.label)} key={`${group.title}-${item.label}-${item.value}`}>
               <span className="natal-reading-facts__item-icon" aria-hidden="true">
-                <Icon size={21} strokeWidth={1.8} />
+                <Icon width={21} height={21} strokeWidth={1.8} />
               </span>
               <dt>{item.label}</dt>
               <dd>
