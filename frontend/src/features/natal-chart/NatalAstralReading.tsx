@@ -55,6 +55,19 @@ const GROUP_MARKERS: Record<string, LucideIcon> = {
   "Positions sensibles": CircleDot,
   "Aspects majeurs": Triangle,
 }
+const GROUP_MODIFIERS: Record<string, string> = {
+  "Repères principaux": "primary",
+  Maisons: "houses",
+  "Positions sensibles": "sensitive",
+  "Aspects majeurs": "aspects",
+}
+const METHOD_MODIFIERS: Record<string, string> = {
+  Coordonnées: "coordinates",
+  "Fuseau horaire": "timezone",
+  Précision: "precision",
+  Référence: "reference",
+  Système: "system",
+}
 const SECONDARY_FACTS_VISIBLE_COUNT = 3
 const OPEN_MAIN_CHAPTER_COUNT = 2
 const MAIN_CHAPTER_ROOT_ID = "natal-reading-chapter"
@@ -106,8 +119,10 @@ function markerForGroup(title: string): LucideIcon {
 }
 
 function groupClassName(title: string): string {
-  const modifier = title === "Repères principaux" ? " natal-reading-facts__group--primary" : ""
-  return `natal-reading-facts__group${modifier}`
+  const visualModifier = GROUP_MODIFIERS[title]
+  const primaryModifier = title === "Repères principaux" ? " natal-reading-facts__group--primary" : ""
+  const toneModifier = visualModifier ? ` natal-reading-facts__group--${visualModifier}` : ""
+  return `natal-reading-facts__group${primaryModifier}${toneModifier}`
 }
 
 function primaryFactBadgeClassName(title: string): string {
@@ -131,12 +146,22 @@ function iconForPrimaryFact(label: string): LucideIcon {
   return Sparkles
 }
 
+function primaryFactItemClassName(label: string): string {
+  const modifier = safeDomId(label)
+  return `natal-reading-facts__item natal-reading-facts__item--primary natal-reading-facts__item--${modifier}`
+}
+
 function iconForMethod(label: string): LucideIcon {
   if (label === "Système") return Settings
   if (label === "Fuseau horaire") return Clock
   if (label === "Coordonnées") return MapPin
   if (label === "Précision") return CircleDot
   return Sparkles
+}
+
+function methodClassName(label: string): string {
+  const modifier = METHOD_MODIFIERS[label]
+  return modifier ? `natal-reading-facts__method natal-reading-facts__method--${modifier}` : "natal-reading-facts__method"
 }
 
 function expandLabelForGroup(title: string, isExpanded: boolean): string {
@@ -368,7 +393,7 @@ function NatalPrimaryFactsPanel({ group }: { group: NatalCalculationFactsViewMod
         {group.items.map((item) => {
           const Icon = iconForPrimaryFact(item.label)
           return (
-            <div className="natal-reading-facts__item natal-reading-facts__item--primary" key={`${group.title}-${item.label}-${item.value}`}>
+            <div className={primaryFactItemClassName(item.label)} key={`${group.title}-${item.label}-${item.value}`}>
               <span className="natal-reading-facts__item-icon" aria-hidden="true">
                 <Icon size={21} strokeWidth={1.8} />
               </span>
@@ -446,7 +471,7 @@ function NatalCalculationMethodsPanel({ facts }: { facts: NatalCalculationFactsV
         {facts.methods.map((method) => {
           const Icon = iconForMethod(method.label)
           return (
-            <div className="natal-reading-facts__method" key={`${method.label}-${method.value}`}>
+            <div className={methodClassName(method.label)} key={`${method.label}-${method.value}`}>
               <span className="natal-reading-facts__method-icon" aria-hidden="true">
                 <Icon size={22} strokeWidth={1.8} />
               </span>
@@ -476,13 +501,17 @@ function NatalReadingFactsDetails({ facts }: { facts: NatalCalculationFactsViewM
   const primaryGroup = facts.groups.find((group) => group.title === "Repères principaux")
   const secondaryGroups = facts.groups.filter((group) => group.title !== "Repères principaux")
   const hasGroups = Boolean(primaryGroup) || secondaryGroups.length > 0
+  const gridClassName =
+    primaryGroup && secondaryGroups.length === 0
+      ? "natal-reading-facts__grid natal-reading-facts__grid--single"
+      : "natal-reading-facts__grid"
 
   return (
     <section className="natal-reading-facts" aria-labelledby="natal-reading-facts-title" id={CALCULATION_FACTS_SECTION_ID}>
       <NatalCalculationFactsHeader sourceLabel={facts.sourceLabel} />
       <div className="natal-reading-facts__content">
         {hasGroups ? (
-          <div className="natal-reading-facts__grid">
+          <div className={gridClassName}>
             {primaryGroup ? <NatalPrimaryFactsPanel group={primaryGroup} /> : null}
             {secondaryGroups.length > 0 ? (
               <div className="natal-reading-facts__secondary-grid">

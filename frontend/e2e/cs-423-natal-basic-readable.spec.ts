@@ -220,7 +220,8 @@ test("capture les preuves desktop et mobile d'une lecture Basic V2 lisible", asy
 
   await page.setViewportSize({ width: 1440, height: 1200 })
   await page.goto(`/natal?runId=${ASTRAL_RUN_ID}`)
-  await expect(page.getByRole("heading", { name: "Lecture Essentielle publique" })).toBeVisible()
+  await expect(page.getByRole("heading", { name: "Thème natal", exact: true })).toBeVisible()
+  await expect(page.getByText("Essentielle").first()).toBeVisible()
   await expect(page.getByText(/Introduction lisible/i).first()).toBeVisible()
   await expect(page.getByText(/Conclusion:/i).first()).toBeVisible()
   const firstChapterToggle = page.locator(".natal-reading__chapter-toggle").first()

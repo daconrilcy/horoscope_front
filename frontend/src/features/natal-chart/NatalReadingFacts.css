@@ -2,10 +2,16 @@
 
 .natal-reading-facts {
   display: grid;
-  gap: 28px;
-  padding: clamp(22px, 3vw, 36px);
+  gap: clamp(22px, 2.8vw, 34px);
+  padding: clamp(24px, 3.3vw, 42px) clamp(20px, 3vw, 40px) 0;
+  border: 1px solid var(--natal-border-section);
+  border-radius: var(--natal-radius-section);
   overflow: hidden;
-  background: color-mix(in srgb, var(--natal-surface-section) 94%, var(--color-token-f6f4ff) 6%);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--natal-surface-section) 97%, var(--color-token-f6f4ff) 3%),
+    color-mix(in srgb, var(--natal-surface-section) 91%, var(--color-token-eef5ff) 9%)
+  );
 }
 
 .natal-reading-facts__header {
@@ -17,14 +23,14 @@
 
 .natal-reading-facts__header-copy {
   display: grid;
-  gap: 8px;
+  gap: 10px;
   min-width: 0;
 }
 
 .natal-reading-facts__header h2 {
   margin: 0;
   color: var(--premium-text-strong);
-  font-size: clamp(var(--font-size-xl), 2.5vw, var(--type-page-title-size));
+  font-size: clamp(var(--font-size-xl), 2.6vw, var(--type-page-title-size));
   font-weight: var(--font-weight-bold);
   line-height: var(--type-page-title-line-height);
 }
@@ -44,10 +50,10 @@
   flex: 0 0 auto;
   gap: 8px;
   min-height: 44px;
-  padding: 0 18px;
+  padding: 0 20px;
   border: 1px solid color-mix(in srgb, var(--premium-accent-purple-strong) 14%, var(--natal-border-section));
   border-radius: var(--radius-full);
-  background: color-mix(in srgb, var(--color-token-rgb-255-255-255) 78%, var(--color-token-f6f4ff) 22%);
+  background: color-mix(in srgb, var(--color-token-rgb-255-255-255) 82%, var(--color-token-f6f4ff) 18%);
   box-shadow: var(--natal-shadow-block);
   color: var(--premium-accent-purple-strong);
   font-size: var(--font-size-sm);
@@ -63,13 +69,18 @@
 
 .natal-reading-facts__content {
   display: grid;
-  gap: 20px;
+  gap: 22px;
 }
 
 .natal-reading-facts__grid {
   display: grid;
-  grid-template-columns: minmax(300px, 1.05fr) minmax(0, 2.1fr);
+  grid-template-columns: minmax(310px, 1fr) minmax(0, 1.92fr);
   gap: 20px;
+}
+
+.natal-reading-facts__grid--single {
+  grid-template-columns: minmax(310px, 0.56fr);
+  justify-content: start;
 }
 
 .natal-reading-facts__secondary-grid {
@@ -78,16 +89,16 @@
   overflow: hidden;
   border: 1px solid var(--natal-border-section);
   border-radius: var(--natal-radius-section);
-  background: color-mix(in srgb, var(--natal-surface-data) 92%, transparent);
+  background: color-mix(in srgb, var(--natal-surface-data) 94%, transparent);
 }
 
 .natal-reading-facts__group {
   display: grid;
   align-content: start;
-  gap: 22px;
+  gap: 24px;
   min-width: 0;
   min-height: 0;
-  padding: 30px 28px;
+  padding: 30px 28px 28px;
 }
 
 .natal-reading-facts__secondary-grid .natal-reading-facts__group {
@@ -101,7 +112,12 @@
 .natal-reading-facts__group--primary {
   border: 1px solid var(--natal-border-section);
   border-radius: var(--natal-radius-section);
-  background: color-mix(in srgb, var(--color-token-rgb-255-255-255) 88%, var(--color-token-f6f4ff) 12%);
+  background: radial-gradient(
+      circle at 45% 52%,
+      color-mix(in srgb, var(--premium-accent-purple-strong) 7%, transparent) 0,
+      transparent 34%
+    ),
+    color-mix(in srgb, var(--color-token-rgb-255-255-255) 90%, var(--color-token-f6f4ff) 10%);
 }
 
 .natal-reading-facts__group-head,
@@ -138,6 +154,50 @@
   background: color-mix(in srgb, var(--premium-accent-purple-strong) 8%, var(--color-token-rgb-255-255-255));
 }
 
+.natal-reading-facts__item--soleil .natal-reading-facts__item-icon {
+  color: var(--premium-accent-purple-strong);
+  background: color-mix(in srgb, var(--color-energy-g1) 34%, var(--color-token-rgb-255-255-255));
+}
+
+.natal-reading-facts__item--lune .natal-reading-facts__item-icon {
+  color: var(--premium-accent-purple-strong);
+  background: color-mix(in srgb, var(--premium-accent-purple-strong) 10%, var(--color-token-rgb-255-255-255));
+}
+
+.natal-reading-facts__item--ascendant .natal-reading-facts__item-icon {
+  color: color-mix(in srgb, var(--color-cta-right) 84%, var(--premium-accent-purple-strong));
+  background: color-mix(in srgb, var(--color-cta-right) 16%, var(--color-token-rgb-255-255-255));
+}
+
+.natal-reading-facts__item--lieu .natal-reading-facts__item-icon,
+.natal-reading-facts__item--date .natal-reading-facts__item-icon,
+.natal-reading-facts__item--heure-de-naissance .natal-reading-facts__item-icon,
+.natal-reading-facts__item--milieu-du-ciel .natal-reading-facts__item-icon,
+.natal-reading-facts__item--fond-du-ciel .natal-reading-facts__item-icon {
+  color: color-mix(in srgb, var(--color-work-g2) 80%, var(--premium-accent-purple-strong));
+  background: color-mix(in srgb, var(--color-work-g1) 20%, var(--color-token-rgb-255-255-255));
+}
+
+.natal-reading-facts__group--houses .natal-reading-facts__marker,
+.natal-reading-facts__method--system .natal-reading-facts__method-icon {
+  color: var(--premium-accent-purple-strong);
+}
+
+.natal-reading-facts__group--sensitive .natal-reading-facts__marker,
+.natal-reading-facts__method--coordinates .natal-reading-facts__method-icon {
+  color: color-mix(in srgb, var(--color-work-g2) 82%, var(--premium-accent-purple-strong));
+}
+
+.natal-reading-facts__group--aspects .natal-reading-facts__marker,
+.natal-reading-facts__method--precision .natal-reading-facts__method-icon {
+  color: color-mix(in srgb, var(--color-cta-right) 78%, var(--premium-accent-purple-strong));
+}
+
+.natal-reading-facts__method--timezone .natal-reading-facts__method-icon,
+.natal-reading-facts__method--reference .natal-reading-facts__method-icon {
+  color: var(--premium-accent-purple-strong);
+}
+
 .natal-reading-facts__group h3,
 .natal-reading-facts__methods h3 {
   margin: 0;
@@ -161,7 +221,7 @@
   display: grid;
   gap: 10px;
   min-width: 0;
-  padding: 20px 0;
+  padding: 18px 0;
   border-bottom: 1px solid color-mix(in srgb, var(--natal-border-section) 64%, transparent);
 }
 
@@ -193,7 +253,7 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 10px 12px;
+  gap: 8px 12px;
   min-width: 0;
   margin: 0;
 }
@@ -208,6 +268,16 @@
   color: var(--premium-text-main);
   font-size: var(--font-size-xs);
   line-height: var(--line-height-normal);
+}
+
+.natal-reading-facts__group--primary .natal-reading-facts__item strong {
+  font-size: var(--font-size-lg);
+  line-height: var(--type-card-title-line-height);
+}
+
+.natal-reading-facts__group--primary .natal-badge--fact-detail {
+  background: color-mix(in srgb, var(--premium-accent-purple-strong) 7%, var(--natal-surface-chip));
+  color: var(--premium-text-main);
 }
 
 .natal-reading-facts__more {
@@ -235,24 +305,24 @@
 
 .natal-reading-facts__methods {
   display: grid;
-  gap: 22px;
-  padding: 26px 28px;
+  gap: 24px;
+  padding: 28px;
   border: 1px solid var(--natal-border-section);
   border-radius: var(--natal-radius-section);
-  background: color-mix(in srgb, var(--natal-surface-data) 94%, var(--color-token-f6f4ff) 6%);
+  background: color-mix(in srgb, var(--natal-surface-data) 95%, var(--color-token-f6f4ff) 5%);
 }
 
 .natal-reading-facts__methods-list {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 18px;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 18px 22px;
   margin: 0;
 }
 
 .natal-reading-facts__method {
   display: grid;
   grid-template-columns: 34px minmax(0, 1fr);
-  gap: 4px 12px;
+  gap: 5px 12px;
   min-width: 0;
 }
 
@@ -295,7 +365,10 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  margin: 2px 0 -8px;
+  margin: 0 calc(clamp(20px, 3vw, 40px) * -1);
+  padding: 18px clamp(20px, 3vw, 40px);
+  border-top: 1px solid color-mix(in srgb, var(--natal-border-section) 62%, transparent);
+  background: color-mix(in srgb, var(--color-token-f6f4ff) 34%, transparent);
   color: var(--premium-text-meta);
   font-size: var(--font-size-xs);
   line-height: var(--line-height-copy);
@@ -310,6 +383,10 @@
 @media (max-width: 1180px) {
   .natal-reading-facts__grid {
     grid-template-columns: 1fr;
+  }
+
+  .natal-reading-facts__methods-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
@@ -331,7 +408,7 @@
 @media (max-width: 768px) {
   .natal-reading-facts {
     gap: 18px;
-    padding: 16px;
+    padding: 16px 14px 0;
   }
 
   .natal-reading-facts__header {
@@ -380,6 +457,9 @@
   .natal-reading-facts__notice {
     align-items: flex-start;
     justify-content: flex-start;
+    margin-right: -14px;
+    margin-left: -14px;
+    padding: 14px;
     text-align: left;
   }
 }

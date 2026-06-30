@@ -1,5 +1,5 @@
 Sommaire
-25% complété
+100% complété
 1
 Identité
 Introduction lisible: cette lecture synthétise les appuis majeurs du thème sans jargon technique.
@@ -15,11 +15,14 @@ Votre progression devient plus fluide lorsque vous reliez vos choix quotidiens �
 5
 Talents
 Conclusion: la lecture met en avant des pistes compréhensibles, non prédictives et directement lisibles.
+6
+Éléments du calcul
+Positions, maisons et aspects retenus
 Guide de lecture
 Accueil
 Mon thème natal
 Lecture
-Lecture Essentielle publique
+Thème natal
 ESSENTIELLE
 Soleil
 Balance
@@ -34,7 +37,7 @@ Statut
 Essentielle
 Lecture complète
 1
-1. Introduction
+Introduction
 1 min de lecture
 
 À retenir
@@ -44,7 +47,7 @@ Repères & évidences
 Soleil en Balance: Expression personnelle orientée vers l'équilibre.
 Lune en Taureau: Besoin émotionnel de stabilité et de rythme.
 2
-2. Identité relationnelle
+Identité relationnelle
 1 min de lecture
 
 À retenir
@@ -54,28 +57,46 @@ Cette nuance reste volontairement sobre pour vérifier le corps de texte mobile.
 
 Réduire
 3
-3. Ressources émotionnelles
+Ressources émotionnelles
 1 min de lecture
 
 À retenir
 Votre sensibilité gagne en stabilité quand les repères sont simples, concrets et réguliers.
 
 4
-4. Chemin d'évolution
+Chemin d'évolution
 1 min de lecture
 
 À retenir
 Votre progression devient plus fluide lorsque vous reliez vos choix quotidiens à une intention durable.
 
 5
-5. Conclusion
+Conclusion
 1 min de lecture
 
 À retenir
 Conclusion: la lecture met en avant des pistes compréhensibles, non prédictives et directement lisibles.
 
-DONNÉES DE CALCUL ASTRAL
+CALCULS DU THÈME NATAL
 Base du calcul natal
-Afficher la base
+
+Paramètres astronomiques et astrologiques utilisés pour établir votre thème.
+
+Mon profil de base
+Repères principaux
+SOLEIL
+Balance
+Maison VII - Relations - 202.20°
+LUNE
+Taureau
+Maison II - Valeurs - 44.80°
+ASCENDANT
+Cancer
+Maison I - Identité
+
+Ces calculs sont effectués selon les normes astrologiques traditionnelles. Les interprétations peuvent varier selon l'approche.
 
 Contenu de réflexion personnelle, sans promesse de résultat.
+
+Comment lire ton thème natal
+Lire le guide
