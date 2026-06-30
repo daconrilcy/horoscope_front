@@ -803,8 +803,7 @@
 .natal-reading__progress-link:focus-visible,
 .natal-reading__chapter-toggle:focus-visible,
 .natal-reading__chapter-collapse:focus-visible,
-.natal-reading__meta-toggle:focus-visible,
-.natal-reading-facts__toggle:focus-visible {
+.natal-reading__meta-toggle:focus-visible {
   outline: var(--natal-focus-outline);
   outline-offset: 2px;
 }

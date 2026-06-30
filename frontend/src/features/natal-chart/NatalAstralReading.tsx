@@ -2,19 +2,26 @@
 import { useEffect, useId, useMemo, useState, type ReactNode } from "react"
 import { Link } from "react-router-dom"
 import {
+  ArrowRight,
   BadgeCheck,
   BookOpen,
+  CalendarDays,
   ChevronDown,
   ChevronRight,
   ChevronUp,
+  CircleDot,
   Clock,
   Compass,
   Home,
+  Info,
   Lightbulb,
+  MapPin,
   Moon,
+  Settings,
   Sparkles,
   Sun,
   Triangle,
+  UserRound,
 } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 
@@ -45,9 +52,10 @@ const READING_GUIDE_SECTION_ID = "natal-chart-guide"
 const GROUP_MARKERS: Record<string, LucideIcon> = {
   "Repères principaux": Sun,
   Maisons: Home,
-  "Planètes notables": Sparkles,
-  "Aspects notables": Triangle,
+  "Positions sensibles": CircleDot,
+  "Aspects majeurs": Triangle,
 }
+const SECONDARY_FACTS_VISIBLE_COUNT = 3
 const OPEN_MAIN_CHAPTER_COUNT = 2
 const MAIN_CHAPTER_ROOT_ID = "natal-reading-chapter"
 const SHORT_PROGRESS_LABELS = ["Identité", "Émotions", "Relations", "Carrière", "Talents", "Croissance"]
@@ -104,13 +112,38 @@ function groupClassName(title: string): string {
 
 function primaryFactBadgeClassName(title: string): string {
   if (title === "Maisons") return "natal-badge natal-badge--astro-data natal-badge--astro-house"
-  if (title === "Aspects notables") return "natal-badge natal-badge--astro-data natal-badge--astro-aspect"
+  if (title === "Aspects majeurs") return "natal-badge natal-badge--astro-data natal-badge--astro-aspect"
   return "natal-badge natal-badge--astro-data natal-badge--astro-sign"
 }
 
 function detailFactBadgeClassName(title: string): string {
-  const modifier = title === "Maisons" || title === "Aspects notables" ? " natal-badge--astro-intensity" : ""
+  const modifier = title === "Maisons" || title === "Aspects majeurs" ? " natal-badge--astro-intensity" : ""
   return `natal-badge natal-badge--fact-detail${modifier}`
+}
+
+function iconForPrimaryFact(label: string): LucideIcon {
+  if (label === "Soleil") return Sun
+  if (label === "Lune") return Moon
+  if (label === "Ascendant") return Compass
+  if (label === "Lieu") return MapPin
+  if (label === "Date") return CalendarDays
+  if (label === "Heure de naissance") return Clock
+  return Sparkles
+}
+
+function iconForMethod(label: string): LucideIcon {
+  if (label === "Système") return Settings
+  if (label === "Fuseau horaire") return Clock
+  if (label === "Coordonnées") return MapPin
+  if (label === "Précision") return CircleDot
+  return Sparkles
+}
+
+function expandLabelForGroup(title: string, isExpanded: boolean): string {
+  if (title === "Maisons") return isExpanded ? "Réduire les maisons" : "Voir toutes les maisons"
+  if (title === "Aspects majeurs") return isExpanded ? "Réduire les aspects" : "Voir tous les aspects"
+  if (title === "Positions sensibles") return isExpanded ? "Réduire les positions" : "Voir toutes les positions"
+  return isExpanded ? "Réduire" : "Voir tout"
 }
 
 function chapterExcerpt(chapter: NatalReadingChapterViewModel): string | null {
@@ -306,71 +339,162 @@ function chapterStateKey(chapter: NatalReadingChapterViewModel, itemKey: string)
   )
 }
 
-function NatalCalculationFacts({ facts }: { facts: NatalCalculationFactsViewModel }) {
+function NatalCalculationFactsHeader({ sourceLabel }: { sourceLabel: string }) {
   return (
-    <div className="natal-reading-facts__content">
-      <div className="natal-reading-facts__grid">
-        {facts.groups.map((group) => {
-          const Marker = markerForGroup(group.title)
-          return (
-            <section className={groupClassName(group.title)} key={group.title} aria-label={group.title}>
-              <div className="natal-reading-facts__group-head">
-                <span className="natal-reading-facts__marker" aria-hidden="true">
-                  <Marker size={16} strokeWidth={1.8} />
-                </span>
-                <h3>{group.title}</h3>
-              </div>
-              <dl className="natal-reading-facts__list">
-                {group.items.map((item) => (
-                  <div className="natal-reading-facts__item" key={`${group.title}-${item.label}-${item.value}`}>
-                    <dt>{item.label}</dt>
-                    <dd>
-                      <span className={primaryFactBadgeClassName(group.title)}>
-                        <strong>{item.value}</strong>
-                      </span>
-                      {item.detail ? <span className={detailFactBadgeClassName(group.title)}>{item.detail}</span> : null}
-                    </dd>
-                  </div>
-                ))}
-              </dl>
-            </section>
-          )
-        })}
+    <div className="natal-reading-facts__header">
+      <div className="natal-reading-facts__header-copy">
+        <span className="natal-section-eyebrow">{sourceLabel}</span>
+        <h2 id="natal-reading-facts-title">Base du calcul natal</h2>
+        <p>Paramètres astronomiques et astrologiques utilisés pour établir votre thème.</p>
       </div>
+      <Link to="/profile" className="natal-reading-facts__profile-link">
+        <UserRound size={17} aria-hidden="true" />
+        Mon profil de base
+      </Link>
     </div>
   )
 }
 
-function NatalReadingFactsDetails({ facts }: { facts: NatalCalculationFactsViewModel }) {
+function NatalPrimaryFactsPanel({ group }: { group: NatalCalculationFactsViewModel["groups"][number] }) {
+  return (
+    <section className={groupClassName(group.title)} aria-label={group.title}>
+      <div className="natal-reading-facts__group-head">
+        <span className="natal-reading-facts__marker" aria-hidden="true">
+          <Sparkles size={22} strokeWidth={1.8} />
+        </span>
+        <h3>{group.title}</h3>
+      </div>
+      <dl className="natal-reading-facts__list natal-reading-facts__list--primary">
+        {group.items.map((item) => {
+          const Icon = iconForPrimaryFact(item.label)
+          return (
+            <div className="natal-reading-facts__item natal-reading-facts__item--primary" key={`${group.title}-${item.label}-${item.value}`}>
+              <span className="natal-reading-facts__item-icon" aria-hidden="true">
+                <Icon size={21} strokeWidth={1.8} />
+              </span>
+              <dt>{item.label}</dt>
+              <dd>
+                <span className={primaryFactBadgeClassName(group.title)}>
+                  <strong>{item.value}</strong>
+                </span>
+                {item.detail ? <span className={detailFactBadgeClassName(group.title)}>{item.detail}</span> : null}
+              </dd>
+            </div>
+          )
+        })}
+      </dl>
+    </section>
+  )
+}
+
+function NatalCalculationGroupPanel({ group }: { group: NatalCalculationFactsViewModel["groups"][number] }) {
   const panelId = useId()
   const [isExpanded, setIsExpanded] = useState(false)
+  const Marker = markerForGroup(group.title)
+  const visibleItems = isExpanded ? group.items : group.items.slice(0, SECONDARY_FACTS_VISIBLE_COUNT)
+  const canExpand = group.items.length > SECONDARY_FACTS_VISIBLE_COUNT
 
   return (
-    <section className="natal-reading-facts" aria-labelledby="natal-reading-facts-title" id={CALCULATION_FACTS_SECTION_ID}>
-      <div className="natal-reading-facts__header">
-        <div>
-          <span className="natal-section-eyebrow">{facts.sourceLabel}</span>
-          <h2 id="natal-reading-facts-title">Base du calcul natal</h2>
-        </div>
+    <section className={groupClassName(group.title)} aria-label={group.title}>
+      <div className="natal-reading-facts__group-head">
+        <span className="natal-reading-facts__marker" aria-hidden="true">
+          <Marker size={22} strokeWidth={1.8} />
+        </span>
+        <h3>{group.title}</h3>
+      </div>
+      <dl className="natal-reading-facts__list" id={panelId}>
+        {visibleItems.map((item) => (
+          <div className="natal-reading-facts__item" key={`${group.title}-${item.label}-${item.value}`}>
+            <dt>{item.label}</dt>
+            <dd>
+              <span className={primaryFactBadgeClassName(group.title)}>
+                <strong>{item.value}</strong>
+              </span>
+              {item.detail ? <span className={detailFactBadgeClassName(group.title)}>{item.detail}</span> : null}
+            </dd>
+          </div>
+        ))}
+      </dl>
+      {canExpand ? (
         <button
           aria-controls={panelId}
           aria-expanded={isExpanded}
-          className="natal-reading-facts__toggle"
+          className="natal-reading-facts__more"
           type="button"
           onClick={() => setIsExpanded((current) => !current)}
         >
-          {isExpanded ? "Masquer la base" : "Afficher la base"}
+          {expandLabelForGroup(group.title, isExpanded)}
+          <ArrowRight size={16} aria-hidden="true" />
         </button>
+      ) : null}
+    </section>
+  )
+}
+
+function NatalCalculationMethodsPanel({ facts }: { facts: NatalCalculationFactsViewModel }) {
+  if (facts.methods.length === 0) return null
+
+  return (
+    <section className="natal-reading-facts__methods" aria-label="Système et méthodes de calcul">
+      <div className="natal-reading-facts__methods-head">
+        <span className="natal-reading-facts__marker" aria-hidden="true">
+          <Settings size={22} strokeWidth={1.8} />
+        </span>
+        <h3>Système & méthodes de calcul</h3>
       </div>
-      <div
-        className={[
-          "natal-reading-facts__panel",
-          isExpanded ? "natal-reading-facts__panel--expanded" : "natal-reading-facts__panel--collapsed",
-        ].join(" ")}
-        hidden={!isExpanded}
-        id={panelId}
-      >
-        <NatalCalculationFacts facts={facts} />
+      <dl className="natal-reading-facts__methods-list">
+        {facts.methods.map((method) => {
+          const Icon = iconForMethod(method.label)
+          return (
+            <div className="natal-reading-facts__method" key={`${method.label}-${method.value}`}>
+              <span className="natal-reading-facts__method-icon" aria-hidden="true">
+                <Icon size={22} strokeWidth={1.8} />
+              </span>
+              <dt>{method.label}</dt>
+              <dd>
+                <strong>{method.value}</strong>
+                {method.detail ? <span>{method.detail}</span> : null}
+              </dd>
+            </div>
+          )
+        })}
+      </dl>
+    </section>
+  )
+}
+
+function NatalCalculationNotice() {
+  return (
+    <p className="natal-reading-facts__notice">
+      <Info size={16} aria-hidden="true" />
+      Ces calculs sont effectués selon les normes astrologiques traditionnelles. Les interprétations peuvent varier selon l'approche.
+    </p>
+  )
+}
+
+function NatalReadingFactsDetails({ facts }: { facts: NatalCalculationFactsViewModel }) {
+  const primaryGroup = facts.groups.find((group) => group.title === "Repères principaux")
+  const secondaryGroups = facts.groups.filter((group) => group.title !== "Repères principaux")
+  const hasGroups = Boolean(primaryGroup) || secondaryGroups.length > 0
+
+  return (
+    <section className="natal-reading-facts" aria-labelledby="natal-reading-facts-title" id={CALCULATION_FACTS_SECTION_ID}>
+      <NatalCalculationFactsHeader sourceLabel={facts.sourceLabel} />
+      <div className="natal-reading-facts__content">
+        {hasGroups ? (
+          <div className="natal-reading-facts__grid">
+            {primaryGroup ? <NatalPrimaryFactsPanel group={primaryGroup} /> : null}
+            {secondaryGroups.length > 0 ? (
+              <div className="natal-reading-facts__secondary-grid">
+                {secondaryGroups.map((group) => (
+                  <NatalCalculationGroupPanel group={group} key={group.title} />
+                ))}
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+        <NatalCalculationMethodsPanel facts={facts} />
+        <NatalCalculationNotice />
       </div>
     </section>
   )

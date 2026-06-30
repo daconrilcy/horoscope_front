@@ -66,6 +66,10 @@ describe("buildNatalInterpretationViewModel", () => {
           reading_completeness: "completed",
         },
         calculation: {
+          zodiac: "Tropical",
+          house_system: "Placidus",
+          reference_version: "astro-ref-2026.06",
+          engine: "Astral Engine",
           core_identity: {
             sun: {
               placement: {
@@ -81,6 +85,12 @@ describe("buildNatalInterpretationViewModel", () => {
                 sign: "Pisces",
                 house: { number: 4, theme: "Home" },
                 longitude_deg: 341.7641,
+              },
+            },
+            imum_coeli: {
+              placement: {
+                sign: "Aquarius",
+                house: { number: 4, theme: "Home" },
               },
             },
           },
@@ -99,6 +109,11 @@ describe("buildNatalInterpretationViewModel", () => {
                 orb_degrees: 0.76,
                 quality: "Tension",
               },
+              { aspect: "Mercury trine Mars", objects: ["Mercury", "Mars"], orb_degrees: 1.12 },
+              { aspect: "Venus sextile Jupiter", objects: ["Venus", "Jupiter"], orb_degrees: 2.34 },
+              { aspect: "Saturn opposition Uranus", objects: ["Saturn", "Uranus"], orb_degrees: 3.45 },
+              { aspect: "Neptune square Pluto", objects: ["Neptune", "Pluto"], orb_degrees: 4.56 },
+              { aspect: "Moon trine Venus", objects: ["Moon", "Venus"], orb_degrees: 5.67 },
             ],
           },
         },
@@ -124,13 +139,18 @@ describe("buildNatalInterpretationViewModel", () => {
     expect(viewModel?.calculationFacts?.groups.map((group) => group.title)).toEqual([
       "Repères principaux",
       "Maisons",
-      "Aspects notables",
+      "Aspects majeurs",
     ])
     expect(viewModel?.calculationFacts?.groups[0]?.items).toEqual([
       { label: "Soleil", value: "Capricorne", detail: "Maison II - Valeurs - 281.45°" },
       { label: "Lune", value: "Poissons", detail: "Maison IV - Foyer - 341.76°" },
       { label: "Ascendant", value: "Scorpion", detail: "Maison I - Identité" },
       { label: "Descendant", value: "Taureau", detail: "Maison VII - Relations" },
+      { label: "Fond du Ciel", value: "Verseau", detail: "Maison IV - Foyer" },
+    ])
+    expect(viewModel?.calculationFacts?.methods).toEqual([
+      { label: "Système", value: "Tropical", detail: "Placidus" },
+      { label: "Référence", value: "astro-ref-2026.06", detail: "Astral Engine" },
     ])
     expect(viewModel?.calculationFacts?.groups[1]?.items[0]).toEqual({
       label: "Maison II - Valeurs",
@@ -142,6 +162,7 @@ describe("buildNatalInterpretationViewModel", () => {
       value: "Soleil - Lune",
       detail: "0.76° - Tension",
     })
+    expect(viewModel?.calculationFacts?.groups[2]?.items).toHaveLength(6)
     expect(viewModel?.highlightFacts).toEqual([
       { label: "Soleil", value: "Capricorne", detail: "Maison II - Valeurs - 281.45°" },
       { label: "Lune", value: "Poissons", detail: "Maison IV - Foyer - 341.76°" },

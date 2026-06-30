@@ -18,6 +18,7 @@ const mockUseEntitlementsSnapshot = vi.fn()
 const mockUseAccessTokenSnapshot = vi.fn()
 const mockUseAstralJobStatus = vi.fn()
 const mockUseAstralJobEvents = vi.fn()
+const mockUseBirthData = vi.fn()
 let capturedAstralEventHandler: ((event: unknown) => void) | null = null
 let restoreScrollIntoView: (() => void) | null = null
 let restoreGetBoundingClientRect: (() => void) | null = null
@@ -44,6 +45,10 @@ vi.mock("../api/astral", async () => {
 
 vi.mock("../hooks/useEntitlementSnapshot", () => ({
   useEntitlementsSnapshot: () => mockUseEntitlementsSnapshot(),
+}))
+
+vi.mock("../api/useBirthData", () => ({
+  useBirthData: () => mockUseBirthData(),
 }))
 
 vi.mock("../utils/authToken", () => ({
@@ -107,6 +112,11 @@ beforeEach(() => {
     isError: false,
   })
   mockUseAccessTokenSnapshot.mockReturnValue("access-token")
+  mockUseBirthData.mockReturnValue({
+    data: null,
+    isError: false,
+    isPending: false,
+  })
   mockUseAstralJobStatus.mockReturnValue({
     data: undefined,
     isError: false,
@@ -332,6 +342,10 @@ describe("NatalChartPage", () => {
         service_code: "natal_simplified",
         result: {
           calculation: {
+            zodiac: "Tropical",
+            house_system: "Placidus",
+            reference_version: "astro-ref-2026.06",
+            engine: "Astral Engine",
             core_identity: {
               sun: {
                 placement: {
@@ -376,6 +390,9 @@ describe("NatalChartPage", () => {
                   orb_degrees: 0.76,
                   quality: "Tension",
                 },
+                { aspect: "Mercury trine Mars", objects: ["Mercury", "Mars"], orb_degrees: 1.12 },
+                { aspect: "Venus sextile Jupiter", objects: ["Venus", "Jupiter"], orb_degrees: 2.34 },
+                { aspect: "Saturn opposition Uranus", objects: ["Saturn", "Uranus"], orb_degrees: 3.45 },
               ],
             },
           },
@@ -445,13 +462,30 @@ describe("NatalChartPage", () => {
       isPending: false,
     })
 
+    mockUseBirthData.mockReturnValue({
+      data: {
+        birth_date: "1988-04-12",
+        birth_time: "23:17",
+        birth_place: "Grenoble, France",
+        birth_timezone: "Europe/Paris",
+        birth_city: "Grenoble",
+        birth_country: "France",
+        birth_lat: 45.1885,
+        birth_lon: 5.7245,
+        geolocation_consent: false,
+      },
+      isError: false,
+      isPending: false,
+    })
+
     const { container } = renderNatalChartPage()
 
     expect(await screen.findByRole("heading", { name: "Thème natal" })).toBeVisible()
     const heroLogo = container.querySelector(".natal-reading-hero__symbol .natal-reading-hero__logo")
     expect(heroLogo).toHaveAttribute("src", expect.stringContaining("Natal_Logo02"))
     expect(screen.getByRole("heading", { name: "Base du calcul natal" })).toBeVisible()
-    expect(screen.getByText("Données de calcul Astral")).toBeVisible()
+    expect(screen.getByText("Calculs du thème natal")).toBeVisible()
+    expect(screen.getByRole("link", { name: "Mon profil de base" })).toHaveAttribute("href", "/profile")
     const renderedText = document.body.textContent ?? ""
     expect(renderedText.indexOf("Thème natal")).toBeLessThan(
       renderedText.indexOf("Base du calcul natal"),
@@ -459,10 +493,12 @@ describe("NatalChartPage", () => {
     expect(screen.getByLabelText("Sommaire de lecture")).toHaveTextContent("Sommaire")
     expect(screen.getByLabelText("Sommaire de lecture")).toHaveTextContent("0% complété")
     expect(screen.getByLabelText("Marqueurs clés du portrait astral")).toHaveTextContent("Statut")
-    await user.click(screen.getByRole("button", { name: "Afficher la base" }))
+    expect(screen.queryByRole("button", { name: "Afficher la base" })).not.toBeInTheDocument()
     expect(screen.getByRole("region", { name: "Repères principaux" })).toHaveTextContent("Soleil")
     expect(screen.getByRole("region", { name: "Repères principaux" })).toHaveTextContent("Ascendant")
     expect(screen.getByRole("region", { name: "Repères principaux" })).toHaveTextContent("Descendant")
+    expect(screen.getByRole("region", { name: "Repères principaux" })).toHaveTextContent("Grenoble")
+    expect(screen.getByRole("region", { name: "Repères principaux" })).toHaveTextContent("23:17")
     const portrait = screen.getByLabelText("Marqueurs clés du portrait astral")
     expect(portrait).toHaveClass("natal-reading-metrics")
     expect(screen.getByLabelText("Marqueurs clés du portrait astral")).toHaveTextContent("Soleil")
@@ -471,8 +507,19 @@ describe("NatalChartPage", () => {
     expect(screen.getByText("Une synthese claire du theme.")).toBeVisible()
     expect(container.querySelector(".natal-reading-facts__group--primary")).toHaveTextContent("Repères principaux")
     expect(screen.getByRole("region", { name: "Maisons" })).toHaveTextContent("Maison II")
-    expect(screen.getByRole("region", { name: "Planètes notables" })).toHaveTextContent("Mercure")
-    expect(screen.getByRole("region", { name: "Aspects notables" })).toHaveTextContent("Jupiter - Uranus")
+    expect(screen.getByRole("region", { name: "Positions sensibles" })).toHaveTextContent("Mercure")
+    expect(screen.getByRole("region", { name: "Aspects majeurs" })).toHaveTextContent("Jupiter - Uranus")
+    expect(screen.queryByText("Saturne - Uranus")).not.toBeInTheDocument()
+    const allAspectsButton = screen.getByRole("button", { name: "Voir tous les aspects" })
+    expect(allAspectsButton).toHaveAttribute("aria-expanded", "false")
+    await user.click(allAspectsButton)
+    expect(allAspectsButton).toHaveAttribute("aria-expanded", "true")
+    expect(screen.getByRole("region", { name: "Aspects majeurs" })).toHaveTextContent("Saturne - Uranus")
+    expect(screen.getByRole("region", { name: "Système et méthodes de calcul" })).toHaveTextContent("Système & méthodes de calcul")
+    expect(screen.getByRole("region", { name: "Système et méthodes de calcul" })).toHaveTextContent("Tropical")
+    expect(screen.getByRole("region", { name: "Système et méthodes de calcul" })).toHaveTextContent("Placidus")
+    expect(screen.getByRole("region", { name: "Système et méthodes de calcul" })).toHaveTextContent("Astral Engine")
+    expect(screen.getByRole("region", { name: "Système et méthodes de calcul" })).toHaveTextContent("Europe/Paris")
     expect(container.querySelector(".natal-badge--astro-sign")).toHaveTextContent("Capricorne")
     expect(container.querySelector(".natal-badge--astro-house")).toHaveTextContent("Valeurs")
     expect(container.querySelector(".natal-badge--astro-aspect")).toHaveTextContent("Jupiter - Uranus")
@@ -570,6 +617,9 @@ describe("NatalChartPage", () => {
     expect(screen.getAllByRole("button", { name: "Lire la suite" })[0]).toHaveAttribute("aria-expanded", "false")
     expect(screen.queryByText("placement:sun:taurus:house:10")).not.toBeInTheDocument()
     expect(screen.queryByText("cache")).not.toBeInTheDocument()
+    for (const forbiddenText of ["fact_id", "source_paths", "audit_input", "undefined", "null"]) {
+      expect(document.body).not.toHaveTextContent(forbiddenText)
+    }
     expect(screen.getByRole("heading", { name: "Comment lire ton thème natal" })).toBeVisible()
     expect(container.querySelector("#natal-chart-guide")?.closest(".natal-reading__main")).not.toBeNull()
     const guideToggle = screen.getByRole("button", { name: "Lire le guide" })
@@ -586,6 +636,54 @@ describe("NatalChartPage", () => {
     expect(screen.getByRole("alert")).toHaveTextContent(/Thème partiel : certaines données de naissance/i)
     expect(screen.queryByText(/completude partielle/i)).not.toBeInTheDocument()
     expect(screen.queryByLabelText("Resultat Astral")).not.toBeInTheDocument()
+  })
+
+  it("rend la base de calcul avec les donnees Astral quand birth-data echoue", async () => {
+    mockUseAstralJobStatus.mockReturnValue({
+      data: {
+        run_id: "run-natal-birth-data-error",
+        status: "completed",
+        result: {
+          calculation: {
+            core_identity: {
+              sun: {
+                placement: {
+                  object: "Sun",
+                  sign: "Capricorn",
+                  house: { number: 2, theme: "Resources" },
+                },
+              },
+            },
+            dominant_themes: {
+              houses: [{ number: 2, theme: "Resources", importance: "Very high" }],
+            },
+          },
+          reading: {
+            status: "success",
+            reading: {
+              summary: { title: "Lecture natale publique" },
+              chapters: [],
+            },
+          },
+        },
+      },
+      isError: false,
+      isPending: false,
+    })
+    mockUseBirthData.mockReturnValue({
+      data: undefined,
+      error: new Error("birth-data unavailable"),
+      isError: true,
+      isPending: false,
+    })
+
+    renderNatalChartPage()
+
+    expect(await screen.findByRole("heading", { name: "Base du calcul natal" })).toBeVisible()
+    expect(screen.getByRole("region", { name: "Repères principaux" })).toHaveTextContent("Soleil")
+    expect(screen.getByRole("region", { name: "Maisons" })).toHaveTextContent("Maison II")
+    expect(screen.queryByText("birth-data unavailable")).not.toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: "Afficher la base" })).not.toBeInTheDocument()
   })
 
   it("conserve le resultat de polling quand un evenement SSE completed est minimal", async () => {

@@ -9,6 +9,7 @@ import {
   useAstralJobStatus,
   useSubmitAstralJob,
 } from "../../api/astral"
+import { useBirthData } from "../../api/useBirthData"
 import { useEntitlementsSnapshot } from "../../hooks/useEntitlementSnapshot"
 import { hasUsableAccessToken, useAccessTokenSnapshot } from "../../utils/authToken"
 import {
@@ -56,6 +57,7 @@ export function useNatalAstralJob(): UseNatalAstralJobResult {
   const initialRunId = searchParams.get("runId")
   const hasValidSession = hasUsableAccessToken(accessToken)
   const entitlementsSnapshot = useEntitlementsSnapshot()
+  const birthDataSnapshot = useBirthData(accessToken)
   const natalAccess = entitlementsSnapshot.data?.features.find(
     (feature) => feature.feature_code === NATAL_ENTITLEMENT_FEATURE_CODE,
   )
@@ -70,8 +72,8 @@ export function useNatalAstralJob(): UseNatalAstralJobResult {
   const jobStatus = useAstralJobStatus(accessToken, runId)
   const currentJob = mergeCurrentAstralJobState(eventJob, jobStatus.data, submitJob.data)
   const natalReading = useMemo(
-    () => buildNatalInterpretationViewModel(currentJob, plan),
-    [currentJob, plan],
+    () => buildNatalInterpretationViewModel(currentJob, plan, birthDataSnapshot.data ?? null),
+    [birthDataSnapshot.data, currentJob, plan],
   )
   const isWorking =
     submitJob.isPending ||

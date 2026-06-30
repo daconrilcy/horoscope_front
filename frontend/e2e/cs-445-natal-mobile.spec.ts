@@ -175,6 +175,27 @@ async function setupNatalFixture(page: Page) {
     })
   })
 
+  await page.route("**/v1/users/me/birth-data", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        data: {
+          birth_date: "1990-01-15",
+          birth_time: "10:30",
+          birth_place: "Paris, France",
+          birth_timezone: "Europe/Paris",
+          birth_city: "Paris",
+          birth_country: "France",
+          birth_lat: 48.8566,
+          birth_lon: 2.3522,
+          geolocation_consent: false,
+        },
+        meta: { request_id: "birth-data-cs-445" },
+      }),
+    })
+  })
+
   await page.route(`**/v1/astral/jobs/${ASTRAL_RUN_ID}`, async (route) => {
     await route.fulfill({
       status: 200,
@@ -215,11 +236,15 @@ test("garde /natal lisible et non masque a 360, 390 et 430 px", async ({ page })
   await setupNatalFixture(page)
 
   await page.goto(`/natal?runId=${ASTRAL_RUN_ID}`)
-  await expect(page.getByRole("heading", { name: "Thème natal" })).toBeVisible()
+  await expect(page.getByRole("heading", { name: "Thème natal", exact: true })).toBeVisible()
 
   for (const viewport of MOBILE_VIEWPORTS) {
     await page.setViewportSize(viewport)
     await expectNoHorizontalOverflow(page)
+    await expect(page.getByRole("heading", { name: "Base du calcul natal" })).toBeVisible()
+    await expect(page.getByRole("region", { name: "Repères principaux" })).toContainText("Paris")
+    await expect(page.getByRole("region", { name: "Système et méthodes de calcul" })).toBeVisible()
+    await expect(page.getByRole("button", { name: "Afficher la base" })).toHaveCount(0)
 
     const progressList = page.locator(".natal-reading-summary__list").first()
     const progressStyles = await progressList.evaluate((element) => {

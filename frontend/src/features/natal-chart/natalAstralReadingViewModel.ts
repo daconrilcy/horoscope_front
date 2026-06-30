@@ -1,5 +1,6 @@
 // Normalisation des contrats d'interpretation natale Astral pour l'affichage public.
 import type { AstralJobResponse, AstralPlan } from "../../api/astral"
+import type { BirthProfileData } from "../../api/birthProfile"
 import { translateAspect, translateHouse, translatePlanet, translateSign } from "../../i18n/astrology"
 import { normalizeDisplayText } from "../../utils/strings"
 
@@ -28,8 +29,15 @@ export type NatalCalculationFactGroupViewModel = {
   items: NatalCalculationFactItemViewModel[]
 }
 
+export type NatalCalculationMethodViewModel = {
+  detail: string | null
+  label: string
+  value: string
+}
+
 export type NatalCalculationFactsViewModel = {
   groups: NatalCalculationFactGroupViewModel[]
+  methods: NatalCalculationMethodViewModel[]
   sourceLabel: string
 }
 
@@ -63,7 +71,7 @@ type ReadingMetadata = {
 }
 
 const DEFAULT_ERROR_MESSAGE = "La lecture Astral n'a pas pu etre affichee."
-const CORE_OBJECT_ORDER = ["sun", "moon", "ascendant", "descendant", "midheaven", "mc"] as const
+const CORE_OBJECT_ORDER = ["sun", "moon"] as const
 const NOTABLE_PLACEMENT_ORDER = [
   "mercury",
   "venus",
@@ -75,7 +83,6 @@ const NOTABLE_PLACEMENT_ORDER = [
   "pluto",
 ] as const
 const MAX_NOTABLE_PLACEMENTS = 6
-const MAX_MAJOR_ASPECTS = 5
 const HIGHLIGHT_FACT_LABELS = ["Soleil", "Lune", "Ascendant"] as const
 const ASTRAL_TEXT_REPLACEMENTS: ReadonlyArray<[RegExp, string]> = [
   [/\bHow to read your natal chart\b/gi, "Comment lire ton thème natal"],
@@ -183,6 +190,24 @@ function formatDegree(value: unknown): string | null {
   return degree === null ? null : `${degree.toFixed(2)}°`
 }
 
+function formatCoordinate(value: unknown, positiveSuffix: string, negativeSuffix: string): string | null {
+  const coordinate = asNumber(value)
+  if (coordinate === null) return null
+  const suffix = coordinate >= 0 ? positiveSuffix : negativeSuffix
+  return `${Math.abs(coordinate).toFixed(4)}° ${suffix}`
+}
+
+function formatBirthDate(value: string | null | undefined): string | null {
+  if (!value) return null
+  const [year, month, day] = value.split("-").map((part) => Number.parseInt(part, 10))
+  if (!year || !month || !day) return value
+  return new Intl.DateTimeFormat("fr-FR", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(new Date(year, month - 1, day))
+}
+
 function formatHouse(value: unknown): string | null {
   const number = asNumber(value)
   if (number === null) return null
@@ -204,6 +229,20 @@ function formatObject(value: unknown): string | null {
 function joinDetails(values: Array<string | null>): string | null {
   const details = values.filter((item): item is string => Boolean(item))
   return details.length > 0 ? details.join(" - ") : null
+}
+
+function joinUniqueDetails(values: Array<string | null>): string | null {
+  const details: string[] = []
+  for (const value of values) {
+    if (value && !details.includes(value)) details.push(value)
+  }
+  return details.length > 0 ? details.join(" - ") : null
+}
+
+function pushUniqueFact(items: NatalCalculationFactItemViewModel[], item: NatalCalculationFactItemViewModel | null): void {
+  if (!item) return
+  const exists = items.some((candidate) => candidate.label === item.label && candidate.value === item.value)
+  if (!exists) items.push(item)
 }
 
 function objectCodeFromLabel(value: unknown): string | null {
@@ -564,27 +603,30 @@ function buildCoreFacts(projection: Record<string, unknown>): NatalCalculationFa
     }
   }
 
-  if (angles) {
-    const angleMappings: Array<[string, string]> = [
-      ["ascendant", "Ascendant"],
-      ["descendant", "Descendant"],
-      ["midheaven", "Milieu du Ciel"],
-      ["mc", "Milieu du Ciel"],
-      ["imum_coeli", "Fond du Ciel"],
-      ["ic", "Fond du Ciel"],
-    ]
+  const angleMappings: Array<[string, string]> = [
+    ["ascendant", "Ascendant"],
+    ["descendant", "Descendant"],
+    ["midheaven", "Milieu du Ciel"],
+    ["mc", "Milieu du Ciel"],
+    ["imum_coeli", "Fond du Ciel"],
+    ["ic", "Fond du Ciel"],
+  ]
 
-    for (const [code, label] of angleMappings) {
-      if (items.some((item) => item.label === label)) continue
-      const angle = asRecord(angles[code])
-      const sign = formatSign(angle?.sign)
-      if (!angle || !sign) continue
+  for (const [code, label] of angleMappings) {
+    if (items.some((item) => item.label === label)) continue
+    const angle = asRecord(angles?.[code])
+    const sign = formatSign(angle?.sign)
+    if (angle && sign) {
       items.push({
         label,
         value: sign,
         detail: formatHouse(angle.house),
       })
+      continue
     }
+
+    const coreAngle = coreIdentity ? readCorePlacement(coreIdentity, code) : null
+    if (coreAngle) items.push(coreAngle)
   }
 
   return items
@@ -715,7 +757,108 @@ function buildAspectFacts(source: Record<string, unknown>, projection: Record<st
       }
     })
     .filter((item): item is NatalCalculationFactItemViewModel => Boolean(item))
-    .slice(0, MAX_MAJOR_ASPECTS)
+}
+
+function buildSensitivePointFacts(projection: Record<string, unknown>): NatalCalculationFactItemViewModel[] {
+  const points = Array.isArray(projection.astral_points) ? projection.astral_points : []
+  return points
+    .map((point) => {
+      const item = asRecord(point)
+      const label = formatObject(item?.code ?? item?.point_code)
+      const sign = formatSign(item?.sign ?? item?.sign_code)
+      if (!item || !label || !sign) return null
+      return {
+        label,
+        value: sign,
+        detail: joinDetails([
+          formatHouse(item.house ?? item.house_number),
+          formatDegree(item.longitude ?? item.degree_in_sign),
+        ]),
+      }
+    })
+    .filter((item): item is NatalCalculationFactItemViewModel => Boolean(item))
+}
+
+function buildBirthProfileFacts(birthProfile?: BirthProfileData | null): NatalCalculationFactItemViewModel[] {
+  if (!birthProfile) return []
+
+  const place = [birthProfile.birth_city, birthProfile.birth_country].filter(Boolean).join(", ") || birthProfile.birth_place
+  const coordinates = joinDetails([
+    formatCoordinate(birthProfile.birth_lat, "N", "S"),
+    formatCoordinate(birthProfile.birth_lon, "E", "O"),
+  ])
+  const items: NatalCalculationFactItemViewModel[] = []
+  pushUniqueFact(items, place ? { label: "Lieu", value: place, detail: coordinates } : null)
+  pushUniqueFact(items, birthProfile.birth_date ? { label: "Date", value: formatBirthDate(birthProfile.birth_date) ?? birthProfile.birth_date, detail: null } : null)
+  pushUniqueFact(items, birthProfile.birth_time ? { label: "Heure de naissance", value: birthProfile.birth_time, detail: null } : null)
+  return items
+}
+
+function firstMethodText(...values: unknown[]): string | null {
+  for (const value of values) {
+    const text = localizedMetadataText(value)
+    if (text) return text
+  }
+  return null
+}
+
+function firstRawMethodText(...values: unknown[]): string | null {
+  for (const value of values) {
+    const text = asText(value)
+    if (text) return text
+  }
+  return null
+}
+
+function buildCalculationMethods(
+  result: Record<string, unknown>,
+  projection: Record<string, unknown>,
+  birthProfile?: BirthProfileData | null,
+): NatalCalculationMethodViewModel[] {
+  const metadata = asRecord(result.metadata)
+  const quality = asRecord(result.quality)
+  const preparedInput = asRecord(projection.prepared_input)
+  const zodiac = firstMethodText(projection.zodiac, metadata?.zodiac)
+  const houseSystem = firstMethodText(projection.house_system, metadata?.house_system)
+  const referenceVersion = firstRawMethodText(metadata?.reference_version, result.reference_version, projection.reference_version)
+  const engine = firstMethodText(projection.engine, metadata?.engine, result.engine)
+  const referenceDetail = joinUniqueDetails([
+    referenceVersion ? engine : null,
+    firstRawMethodText(metadata?.ruleset_version, result.ruleset_version),
+  ])
+  const coordinates = joinDetails([
+    formatCoordinate(birthProfile?.birth_lat, "N", "S"),
+    formatCoordinate(birthProfile?.birth_lon, "E", "O"),
+  ])
+  const methods: NatalCalculationMethodViewModel[] = [
+    {
+      detail: zodiac ? houseSystem : null,
+      label: "Système",
+      value: zodiac ?? houseSystem ?? "",
+    },
+    {
+      detail: referenceDetail,
+      label: "Référence",
+      value: referenceVersion ?? engine ?? "",
+    },
+    {
+      detail: firstMethodText(preparedInput?.timezone_used, preparedInput?.birth_timezone, birthProfile?.birth_timezone),
+      label: "Fuseau horaire",
+      value: firstMethodText(preparedInput?.timezone_used, birthProfile?.birth_timezone) ?? "",
+    },
+    {
+      detail: null,
+      label: "Coordonnées",
+      value: coordinates ?? "",
+    },
+    {
+      detail: null,
+      label: "Précision",
+      value: firstMethodText(quality?.precision, projection.birth_date_precision) ?? "",
+    },
+  ]
+
+  return methods.filter((method) => Boolean(method.value))
 }
 
 function resolveCalculationProjection(result: Record<string, unknown>): Record<string, unknown> {
@@ -737,7 +880,10 @@ function resolveCalculationProjection(result: Record<string, unknown>): Record<s
   )
 }
 
-function buildCalculationFacts(result: Record<string, unknown>): NatalCalculationFactsViewModel | null {
+function buildCalculationFacts(
+  result: Record<string, unknown>,
+  birthProfile?: BirthProfileData | null,
+): NatalCalculationFactsViewModel | null {
   const projection = resolveCalculationProjection(result)
   const groups: NatalCalculationFactGroupViewModel[] = []
   const coreFacts = buildCoreFacts(projection)
@@ -745,14 +891,23 @@ function buildCalculationFacts(result: Record<string, unknown>): NatalCalculatio
   const notablePlacements = buildNotablePlacementFacts(projection)
   const houseFacts = buildHouseFacts(projection, projection)
   const aspectFacts = buildAspectFacts(projection, projection)
+  const sensitivePointFacts = buildSensitivePointFacts(projection)
+  const methods = buildCalculationMethods(result, projection, birthProfile)
 
-  const mainFacts = coreFacts.length > 0 ? coreFacts : legacyPlacementFacts.slice(0, 5)
+  const mainFacts = [...(coreFacts.length > 0 ? coreFacts : legacyPlacementFacts.slice(0, 5))]
+  for (const profileFact of buildBirthProfileFacts(birthProfile)) {
+    pushUniqueFact(mainFacts, profileFact)
+  }
   if (mainFacts.length > 0) groups.push({ title: "Repères principaux", items: mainFacts })
   if (houseFacts.length > 0) groups.push({ title: "Maisons", items: houseFacts })
-  if (notablePlacements.length > 0) groups.push({ title: "Planètes notables", items: notablePlacements })
-  if (aspectFacts.length > 0) groups.push({ title: "Aspects notables", items: aspectFacts })
+  if (sensitivePointFacts.length > 0) {
+    groups.push({ title: "Positions sensibles", items: sensitivePointFacts })
+  } else if (notablePlacements.length > 0) {
+    groups.push({ title: "Positions sensibles", items: notablePlacements })
+  }
+  if (aspectFacts.length > 0) groups.push({ title: "Aspects majeurs", items: aspectFacts })
 
-  return groups.length > 0 ? { groups, sourceLabel: "Données de calcul Astral" } : null
+  return groups.length > 0 || methods.length > 0 ? { groups, methods, sourceLabel: "Calculs du thème natal" } : null
 }
 
 /** Sélectionne les marqueurs affichés en en-tête sans recalculer l'astrologie côté React. */
@@ -837,12 +992,13 @@ function successViewModel(
 export function buildNatalInterpretationViewModel(
   job: AstralJobResponse | undefined,
   fallbackPlan?: AstralPlan,
+  birthProfile?: BirthProfileData | null,
 ): NatalInterpretationViewModel | null {
   const result = asRecord(job?.result)
   if (!result) return null
 
   const metadata = extractMetadata(job, fallbackPlan)
-  const calculationFacts = buildCalculationFacts(result)
+  const calculationFacts = buildCalculationFacts(result, birthProfile)
   const explanationsReading = resultExplanationsContainer(result)
   const legacyReading = legacyBasicReading(result)
   const readingResponse = resolveReadingContainer(result)
