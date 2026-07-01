@@ -9,8 +9,8 @@
   overflow: hidden;
   background: linear-gradient(
     135deg,
-    color-mix(in srgb, var(--natal-surface-section) 97%, var(--color-token-f6f4ff) 3%),
-    color-mix(in srgb, var(--natal-surface-section) 91%, var(--color-token-eef5ff) 9%)
+    color-mix(in srgb, var(--natal-surface-section) 97%, var(--natal-surface-reading-muted) 3%),
+    color-mix(in srgb, var(--natal-surface-section) 91%, var(--natal-surface-data) 9%)
   );
 }
 
@@ -53,7 +53,7 @@
   padding: 0 20px;
   border: 1px solid color-mix(in srgb, var(--premium-accent-purple-strong) 14%, var(--natal-border-section));
   border-radius: var(--radius-full);
-  background: color-mix(in srgb, var(--color-token-rgb-255-255-255) 82%, var(--color-token-f6f4ff) 18%);
+  background: color-mix(in srgb, var(--natal-surface-chip) 82%, var(--natal-surface-reading-muted) 18%);
   box-shadow: var(--natal-shadow-block);
   color: var(--premium-accent-purple-strong);
   font-size: var(--font-size-sm);
@@ -117,7 +117,7 @@
       color-mix(in srgb, var(--premium-accent-purple-strong) 7%, transparent) 0,
       transparent 34%
     ),
-    color-mix(in srgb, var(--color-token-rgb-255-255-255) 90%, var(--color-token-f6f4ff) 10%);
+    color-mix(in srgb, var(--natal-surface-data) 90%, var(--natal-surface-reading-muted) 10%);
 }
 
 .natal-reading-facts__group-head,
@@ -161,11 +161,11 @@
   background:
     linear-gradient(
       135deg,
-      color-mix(in srgb, var(--color-token-rgb-255-255-255) 92%, transparent),
-      color-mix(in srgb, var(--color-token-f6f4ff) 74%, var(--color-token-rgb-255-255-255))
+      color-mix(in srgb, var(--natal-surface-chip) 92%, transparent),
+      color-mix(in srgb, var(--natal-surface-reading-muted) 74%, var(--natal-surface-chip))
     );
   box-shadow:
-    inset 0 1px 0 color-mix(in srgb, var(--color-token-rgb-255-255-255) 88%, transparent),
+    inset 0 1px 0 color-mix(in srgb, var(--natal-surface-chip) 88%, transparent),
     0 10px 26px color-mix(in srgb, var(--premium-accent-purple-strong) 6%, transparent);
 }
 
@@ -178,7 +178,7 @@
   height: 38px;
   border: 1px solid color-mix(in srgb, var(--premium-accent-purple-strong) 13%, transparent);
   border-radius: var(--radius-lg);
-  background: color-mix(in srgb, var(--premium-accent-purple-strong) 8%, var(--color-token-rgb-255-255-255));
+  background: color-mix(in srgb, var(--premium-accent-purple-strong) 8%, var(--natal-surface-chip));
   color: var(--premium-accent-purple-strong);
 }
 
@@ -219,7 +219,7 @@
   height: 48px;
   border: 1px solid color-mix(in srgb, var(--premium-accent-purple-strong) 10%, transparent);
   border-radius: var(--radius-lg);
-  background: color-mix(in srgb, var(--premium-accent-purple-strong) 8%, var(--color-token-rgb-255-255-255));
+  background: color-mix(in srgb, var(--premium-accent-purple-strong) 8%, var(--natal-surface-chip));
 }
 
 .natal-reading-facts__item-icon {
@@ -227,22 +227,22 @@
   width: 48px;
   height: 48px;
   border-radius: var(--radius-lg);
-  background: color-mix(in srgb, var(--premium-accent-purple-strong) 8%, var(--color-token-rgb-255-255-255));
+  background: color-mix(in srgb, var(--premium-accent-purple-strong) 8%, var(--natal-surface-chip));
 }
 
 .natal-reading-facts__item--soleil .natal-reading-facts__item-icon {
   color: var(--premium-accent-purple-strong);
-  background: color-mix(in srgb, var(--color-energy-g1) 34%, var(--color-token-rgb-255-255-255));
+  background: color-mix(in srgb, var(--color-energy-g1) 34%, var(--natal-surface-chip));
 }
 
 .natal-reading-facts__item--lune .natal-reading-facts__item-icon {
   color: var(--premium-accent-purple-strong);
-  background: color-mix(in srgb, var(--premium-accent-purple-strong) 10%, var(--color-token-rgb-255-255-255));
+  background: color-mix(in srgb, var(--premium-accent-purple-strong) 10%, var(--natal-surface-chip));
 }
 
 .natal-reading-facts__item--ascendant .natal-reading-facts__item-icon {
   color: color-mix(in srgb, var(--color-cta-right) 84%, var(--premium-accent-purple-strong));
-  background: color-mix(in srgb, var(--color-cta-right) 16%, var(--color-token-rgb-255-255-255));
+  background: color-mix(in srgb, var(--color-cta-right) 16%, var(--natal-surface-chip));
 }
 
 .natal-reading-facts__item--lieu .natal-reading-facts__item-icon,
@@ -251,7 +251,7 @@
 .natal-reading-facts__item--milieu-du-ciel .natal-reading-facts__item-icon,
 .natal-reading-facts__item--fond-du-ciel .natal-reading-facts__item-icon {
   color: color-mix(in srgb, var(--color-work-g2) 80%, var(--premium-accent-purple-strong));
-  background: color-mix(in srgb, var(--color-work-g1) 20%, var(--color-token-rgb-255-255-255));
+  background: color-mix(in srgb, var(--color-work-g1) 20%, var(--natal-surface-chip));
 }
 
 .natal-reading-facts__group--houses .natal-reading-facts__marker,
@@ -385,7 +385,7 @@
   padding: 28px;
   border: 1px solid var(--natal-border-section);
   border-radius: var(--natal-radius-section);
-  background: color-mix(in srgb, var(--natal-surface-data) 95%, var(--color-token-f6f4ff) 5%);
+  background: color-mix(in srgb, var(--natal-surface-data) 95%, var(--natal-surface-reading-muted) 5%);
 }
 
 .natal-reading-facts__methods-list {
@@ -444,7 +444,7 @@
   margin: 0 calc(clamp(20px, 3vw, 40px) * -1);
   padding: 18px clamp(20px, 3vw, 40px);
   border-top: 1px solid color-mix(in srgb, var(--natal-border-section) 62%, transparent);
-  background: color-mix(in srgb, var(--color-token-f6f4ff) 34%, transparent);
+  background: color-mix(in srgb, var(--natal-surface-reading-muted) 34%, transparent);
   color: var(--premium-text-meta);
   font-size: var(--font-size-xs);
   line-height: var(--line-height-copy);

@@ -59,26 +59,58 @@
 
 .dark .natal-page-container {
   --natal-surface-page: transparent;
-  --natal-surface-container: var(--premium-glass-surface-1);
-  --natal-surface-section: var(--premium-glass-surface-1);
+  --natal-surface-container: var(--glass-card-premium-bg);
+  --natal-surface-section: var(--glass-card-premium-bg);
   --natal-surface-block: var(--premium-glass-surface-2);
   --natal-surface-data: var(--premium-glass-surface-2);
-  --natal-surface-data-strong: color-mix(in srgb, var(--premium-accent-purple-strong) 8%, var(--premium-glass-surface-2));
+  --natal-surface-data-strong: color-mix(in srgb, var(--premium-accent-purple-strong) 10%, var(--premium-glass-surface-2));
   --natal-surface-chip: var(--premium-glass-surface-3);
-  --natal-surface-reading: color-mix(in srgb, var(--premium-glass-surface-2) 88%, var(--premium-accent-purple-strong) 12%);
-  --natal-surface-reading-soft: color-mix(in srgb, var(--premium-glass-surface-2) 82%, var(--premium-accent-purple-strong) 18%);
+  --natal-surface-reading: color-mix(in srgb, var(--premium-glass-surface-2) 92%, var(--premium-accent-purple-strong) 8%);
+  --natal-surface-reading-soft: color-mix(in srgb, var(--premium-glass-surface-2) 88%, var(--premium-accent-purple-strong) 12%);
   --natal-surface-reading-muted: color-mix(in srgb, var(--premium-glass-surface-2) 90%, var(--premium-accent-purple-strong) 10%);
-  --natal-border-data: color-mix(in srgb, var(--premium-glass-border) 72%, transparent);
-  --natal-border-reading: color-mix(in srgb, var(--premium-accent-purple-strong) 12%, var(--premium-glass-border) 58%, transparent);
-  --natal-border-section: color-mix(in srgb, var(--premium-glass-border) 76%, transparent);
-  --natal-border-block: color-mix(in srgb, var(--premium-glass-border) 64%, transparent);
-  --natal-border-accent: color-mix(in srgb, var(--premium-accent-purple-strong) 16%, var(--premium-glass-border) 60%, transparent);
+  --natal-border-data: color-mix(in srgb, var(--glass-border) 82%, transparent);
+  --natal-border-reading: color-mix(in srgb, var(--premium-accent-purple-strong) 14%, var(--glass-border) 68%, transparent);
+  --natal-border-section: color-mix(in srgb, var(--glass-border) 88%, transparent);
+  --natal-border-block: color-mix(in srgb, var(--glass-border) 72%, transparent);
+  --natal-border-accent: color-mix(in srgb, var(--premium-accent-purple-strong) 22%, var(--glass-border-strong) 64%, transparent);
+  --natal-shadow-section: var(--premium-shadow-card);
+  --natal-shadow-block: var(--shadow-card);
+  --natal-glass-filter: var(--glass-card-backdrop-filter);
+  --natal-panel-background: var(--glass-card-premium-bg);
   --natal-badge-key-surface: var(--natal-surface-chip);
   --natal-badge-detail-surface: var(--natal-surface-block);
   --natal-badge-status-surface: var(--natal-surface-block);
   --natal-badge-meta-surface: var(--natal-surface-reading-muted);
   --natal-text-reading: color-mix(in srgb, var(--premium-text-strong) 88%, var(--premium-text-main) 12%);
   --natal-text-reading-muted: color-mix(in srgb, var(--premium-text-meta) 88%, var(--premium-text-main) 12%);
+}
+
+.dark body:has(.is-natal-page) .app-bg {
+  background: var(--premium-app-bg);
+}
+
+.dark body:has(.is-natal-page) .app-bg::before {
+  display: block;
+}
+
+.dark body:has(.is-natal-page) .app-bg::after {
+  display: none;
+}
+
+.dark body:has(.is-natal-page) .app-header {
+  background: color-mix(in srgb, var(--color-bg-top) 8%, var(--color-nav-glass) 11%);
+  border-bottom-color: var(--color-nav-border);
+  box-shadow: var(--premium-header-shadow);
+  backdrop-filter: blur(var(--surface-glass-blur)) saturate(170%);
+  -webkit-backdrop-filter: blur(var(--surface-glass-blur)) saturate(170%);
+}
+
+.dark body:has(.is-natal-page) .app-header::before {
+  display: block;
+}
+
+.dark body:has(.is-natal-page) .app-header-title {
+  color: var(--premium-text-strong);
 }
 
 @media (max-width: 768px) {
@@ -88,5 +120,11 @@
       --natal-surface-data-strong: color-mix(in srgb, var(--premium-accent-purple-strong) 4%, var(--premium-glass-surface-2));
       --natal-surface-chip: color-mix(in srgb, var(--premium-accent-purple-strong) 4%, var(--premium-glass-surface-2));
       --natal-type-reading-text-size: var(--font-size-sm);
+    }
+
+  .dark .natal-page-container {
+      --natal-surface-data: var(--premium-glass-surface-2);
+      --natal-surface-data-strong: color-mix(in srgb, var(--premium-accent-purple-strong) 10%, var(--premium-glass-surface-2));
+      --natal-surface-chip: var(--premium-glass-surface-3);
     }
 }

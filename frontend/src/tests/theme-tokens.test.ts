@@ -45,6 +45,11 @@ function getTokenValue(cssContent: string, selector: string, token: string): str
   return tokenMatch ? tokenMatch[1].trim() : ""
 }
 
+function getSelectorBlocks(cssContent: string, selector: string): string[] {
+  const blockPattern = new RegExp(`${escapeRegex(selector)}\\s*\\{([\\s\\S]*?)\\}`, "g")
+  return [...cssContent.matchAll(blockPattern)].map((match) => match[1])
+}
+
 function normalizeCssValue(value: string): string {
   return value.replace(/\s+/g, "")
 }
@@ -162,6 +167,9 @@ describe("theme.css validation (Static Analysis)", () => {
     expect(natalCssContent).toContain("--natal-tone-sun: var(--color-energy-g2)")
     expect(natalCssContent).toContain("--natal-type-reading-text-line-height: var(--line-height-prose-loose)")
     expect(natalCssContent).toMatch(/\.dark \.natal-page-container\s*\{[\s\S]*--natal-surface-page:\s*transparent/)
+    expect(natalCssContent).toMatch(/\.dark \.natal-page-container\s*\{[\s\S]*--natal-surface-section:\s*var\(--glass-card-premium-bg\)/)
+    expect(natalCssContent).toMatch(/\.dark \.natal-page-container\s*\{[\s\S]*--natal-panel-background:\s*var\(--glass-card-premium-bg\)/)
+    expect(natalCssContent).toMatch(/\.dark \.natal-page-container\s*\{[\s\S]*--natal-glass-filter:\s*var\(--glass-card-backdrop-filter\)/)
     expect(natalCssContent).toContain("--natal-badge-key-surface: var(--natal-surface-chip)")
     expect(natalCssContent).toMatch(
       /\.natal-page-portrait,\s*\.natal-card,\s*\.natal-reading-facts,\s*\.natal-reading__chapter\s*\{[\s\S]*box-sizing:\s*border-box[\s\S]*box-shadow:\s*var\(--natal-shadow-section\)/,
@@ -172,7 +180,7 @@ describe("theme.css validation (Static Analysis)", () => {
       /\.natal-badge--basis\s*\{[\s\S]*border-color:\s*color-mix\(in srgb,\s*var\(--natal-theme-color,\s*var\(--premium-accent-purple-strong\)\)\s*74%,\s*var\(--natal-border-block\)\)/,
     )
     expect(natalCssContent).toMatch(
-      /\.natal-badge--basis\s*\{[\s\S]*background:\s*color-mix\(in srgb,\s*var\(--natal-theme-color,\s*var\(--premium-accent-purple-strong\)\)\s*9%,\s*var\(--color-token-rgb-255-255-255\)\)/,
+      /\.natal-badge--basis\s*\{[\s\S]*background:\s*color-mix\(in srgb,\s*var\(--natal-theme-color,\s*var\(--premium-accent-purple-strong\)\)\s*9%,\s*var\(--natal-surface-chip\)\)/,
     )
     expect(natalCssContent).toMatch(/\.natal-reading-metrics__item--moon\s*\{[\s\S]*--natal-metric-tone:\s*var\(--natal-tone-moon\)/)
     expect(natalCssContent).toMatch(/\.natal-data-pill\s*\{[\s\S]*background:\s*var\(--natal-badge-meta-surface\)/)
@@ -180,6 +188,16 @@ describe("theme.css validation (Static Analysis)", () => {
     expect(natalCssContent).toMatch(
       /\.natal-reading-facts \.natal-reading-facts__marker,\s*\.natal-reading-facts \.natal-reading-facts__item-icon,\s*\.natal-reading-facts \.natal-reading-facts__method-icon,\s*\.natal-reading-facts \.natal-reading-facts__notice svg\s*\{[\s\S]*color:\s*var\(--premium-accent-purple-strong\)/,
     )
+  })
+
+  it("garde le fond cosmique actif sur /natal en dark sans reactiver le bruit", () => {
+    const darkAppBgBlocks = getSelectorBlocks(natalCssContent, ".dark body:has(.is-natal-page) .app-bg")
+    const darkBeforeBlocks = getSelectorBlocks(natalCssContent, ".dark body:has(.is-natal-page) .app-bg::before")
+    const darkAfterBlocks = getSelectorBlocks(natalCssContent, ".dark body:has(.is-natal-page) .app-bg::after")
+
+    expect(darkAppBgBlocks.join("\n")).toContain("background: var(--premium-app-bg)")
+    expect(darkBeforeBlocks.join("\n")).toContain("display: block")
+    expect(darkAfterBlocks.join("\n")).toContain("display: none")
   })
 
   it("conserve la grille mobile du parcours /natal et attenue la bottom nav", () => {

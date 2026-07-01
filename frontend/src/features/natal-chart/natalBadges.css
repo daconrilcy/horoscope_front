@@ -43,7 +43,7 @@
   padding: 4px 11px;
   border-color: color-mix(in srgb, var(--natal-theme-color, var(--premium-accent-purple-strong)) 34%, var(--natal-border-block));
   border-radius: var(--radius-control);
-  background: var(--color-token-rgb-255-255-255);
+  background: var(--natal-surface-chip);
   color: color-mix(in srgb, var(--premium-text-strong) 76%, var(--natal-theme-color, var(--premium-accent-purple-strong)) 24%);
   font-size: var(--font-size-2xs);
   font-weight: var(--font-weight-semibold);
@@ -94,7 +94,7 @@
   padding: 4px 11px;
   border-color: color-mix(in srgb, var(--natal-theme-color, var(--premium-accent-purple-strong)) 74%, var(--natal-border-block));
   border-radius: var(--radius-control);
-  background: color-mix(in srgb, var(--natal-theme-color, var(--premium-accent-purple-strong)) 9%, var(--color-token-rgb-255-255-255));
+  background: color-mix(in srgb, var(--natal-theme-color, var(--premium-accent-purple-strong)) 9%, var(--natal-surface-chip));
   color: color-mix(in srgb, var(--premium-text-main) 62%, var(--natal-theme-color, var(--premium-accent-purple-strong)) 38%);
   font-size: var(--font-size-2xs);
   font-weight: var(--font-weight-semibold);

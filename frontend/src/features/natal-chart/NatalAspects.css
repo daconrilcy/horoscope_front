@@ -14,12 +14,12 @@
 }
 
 .natal-aspect-item {
-  border: 1px solid color-mix(in srgb, var(--color-token-rgb-255-255-255) 42%, transparent);
+  border: 1px solid var(--natal-border-section);
   padding: 18px;
   display: flex;
   flex-direction: column;
   border-radius: var(--radius-lg);
-  background: linear-gradient(180deg, color-mix(in srgb, var(--color-token-rgb-255-255-255) 42%, transparent) 0%, color-mix(in srgb, var(--color-token-rgb-248-244-255) 72%, transparent) 100%);
+  background: linear-gradient(180deg, var(--natal-surface-block) 0%, var(--natal-surface-data) 100%);
   box-shadow:
     var(--shadow-card);
 }
@@ -71,8 +71,8 @@
   margin: 0;
   padding: 12px 14px;
   border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--color-token-rgb-255-255-255) 66%, transparent);
-  border: 1px solid color-mix(in srgb, var(--color-token-rgb-255-255-255) 42%, transparent);
+  background: var(--natal-surface-data);
+  border: 1px solid var(--natal-border-block);
 }
 
 .natal-aspect-meta__item dt {

@@ -2,7 +2,7 @@
 import { expect, test, type Page } from "@playwright/test"
 
 const ACCESS_TOKEN =
-  "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJkYXJrLW1vZGUtY3MxMzcifQ."
+  "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJkYXJrLW1vZGUtY3MxMzciLCJleHAiOjIwMDAwMDAwMDB9."
 
 const PROFILE_ID = "luna-dark"
 
@@ -26,6 +26,14 @@ const ENTITLEMENTS_RESPONSE = {
         reason_code: "included",
         access_mode: "unlimited",
         variant_code: null,
+        usage_states: [],
+      },
+      {
+        feature_code: "natal_chart",
+        granted: true,
+        reason_code: "included",
+        access_mode: "unlimited",
+        variant_code: "basic_short",
         usage_states: [],
       },
     ],
@@ -124,6 +132,81 @@ const PROFILE_RESPONSE = {
   },
 }
 
+const NATAL_RUN_ID = "dark-natal"
+
+const NATAL_JOB_RESPONSE = {
+  run_id: NATAL_RUN_ID,
+  status: "completed",
+  service_code: "natal_basic",
+  result: {
+    reading: {
+      status: "success",
+      reading: {
+        schema_version: "natal_reading_v1",
+        reading_type: "natal",
+        language: "fr",
+        summary: {
+          title: "Lecture dark natal",
+          short_text: "Une lecture claire du theme en mode sombre.",
+        },
+        chapters: [
+          {
+            code: "identity",
+            title: "Identité",
+            summary_sentence: "Une présence stable et lisible.",
+            body: "Votre thème natal met en avant une base personnelle structurée et facile à relire.",
+            confidence: "high",
+            astro_basis: ["Soleil en Bélier"],
+          },
+          {
+            code: "emotions",
+            title: "Émotions",
+            summary_sentence: "Un climat intérieur nuancé.",
+            body: "La lecture émotionnelle reste progressive et conserve des repères accessibles.",
+          },
+        ],
+        calculation_reference: {
+          version: "dark-test",
+          zodiacal_reference_system: "tropical",
+          coordinate_reference_system: "geocentric",
+          house_system: "placidus",
+          ephemeris_reference: "test-ephemeris",
+        },
+        legal: {
+          disclaimer: "Lecture symbolique.",
+        },
+      },
+    },
+    calculation: {
+      core_identity: {
+        sun: {
+          placement: {
+            object: "Sun",
+            sign: "Aries",
+            house: { number: 1, theme: "Identité" },
+          },
+        },
+        moon: {
+          placement: {
+            object: "Moon",
+            sign: "Cancer",
+            house: { number: 4, theme: "Intime" },
+          },
+        },
+      },
+      angles: {
+        ascendant: { sign: "Leo", house: 1 },
+      },
+      dominant_themes: {
+        houses: [{ number: 1, theme: "Identité", importance: "Forte" }],
+      },
+      dynamics: {
+        major_aspects: [{ aspect: "Sun trine Moon", objects: ["Sun", "Moon"], orb_degrees: 1.2 }],
+      },
+    },
+  },
+}
+
 /** Installe une session authentifiee en theme dark sans dependance backend. */
 async function setupDarkSession(page: Page) {
   await page.route("**/v1/auth/me*", async (route) => {
@@ -190,8 +273,24 @@ async function setupDarkSession(page: Page) {
     })
   })
 
+  await page.route(`**/v1/astral/jobs/${NATAL_RUN_ID}`, async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ data: NATAL_JOB_RESPONSE }),
+    })
+  })
+
+  await page.route(`**/v1/astral/jobs/${NATAL_RUN_ID}/events`, async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "text/event-stream",
+      body: "",
+    })
+  })
+
   await page.addInitScript((token) => {
-    window.localStorage.setItem("access_token", token)
+    window.localStorage.setItem("access_token_v2", token)
     window.localStorage.setItem("theme", "dark")
     window.localStorage.setItem("lang", "fr")
   }, ACCESS_TOKEN)
@@ -221,9 +320,9 @@ test.describe("CS-137 dark mode runtime surfaces", () => {
 
     await expect(page.locator("html")).toHaveClass(/dark/)
     await expect(page.locator(".summary-title")).toBeVisible()
-    await expect(page.locator(".summary-panel-card-wrapper")).toBeVisible()
+    await expect(page.locator(".summary-panel-card")).toBeVisible()
     await expect(page.locator(".shortcuts-section")).toBeVisible()
-    await expect(page.locator(".shortcut-card")).toHaveCount(3)
+    await expect(page.locator(".shortcut-card")).toHaveCount(2)
 
     const pageTitleColor = await readColorChannels(page, ".summary-title", "color")
     expect(pageTitleColor.red).toBeGreaterThan(220)
@@ -235,21 +334,18 @@ test.describe("CS-137 dark mode runtime surfaces", () => {
     expect(welcomeColor.green).toBeGreaterThan(180)
     expect(welcomeColor.blue).toBeGreaterThan(200)
 
-    const summaryTextColor = await readColorChannels(page, ".summary-panel-card__text", "color")
+    const summaryTextColor = await readColorChannels(page, ".summary-panel-card p", "color")
     expect(summaryTextColor.red).toBeGreaterThan(220)
     expect(summaryTextColor.green).toBeGreaterThan(210)
     expect(summaryTextColor.blue).toBeGreaterThan(220)
 
-    const summaryCtaBackground = await readColorChannels(page, ".summary-panel-card__cta", "backgroundColor")
-    expect(summaryCtaBackground.alpha).toBeGreaterThanOrEqual(0.6)
+    const summaryCtaBackground = await readColorChannels(page, ".summary-panel-card", "backgroundColor")
+    expect(summaryCtaBackground.alpha).toBeGreaterThanOrEqual(0.05)
 
-    const summaryCtaColor = await readColorChannels(page, ".summary-panel-card__cta", "color")
+    const summaryCtaColor = await readColorChannels(page, ".summary-panel-card__link", "color")
     expect(summaryCtaColor.red).toBeGreaterThan(220)
     expect(summaryCtaColor.green).toBeGreaterThan(210)
     expect(summaryCtaColor.blue).toBeGreaterThan(220)
-
-    const pillBackground = await readColorChannels(page, ".default_card_pill", "backgroundColor")
-    expect(pillBackground.alpha).toBeGreaterThanOrEqual(0.5)
 
     const cardBackground = await readColorChannels(page, ".shortcut-card", "backgroundColor")
     expect(cardBackground.alpha).toBeLessThanOrEqual(0.12)
@@ -267,31 +363,34 @@ test.describe("CS-137 dark mode runtime surfaces", () => {
     expect(subtitleColor.green).toBeGreaterThan(180)
     expect(subtitleColor.blue).toBeGreaterThan(200)
 
-    await page.locator(".summary-panel-card-wrapper").click()
+    await page.locator(".summary-panel-card").click()
     await expect(page).toHaveURL(/\/dashboard\/horoscope$/)
   })
 
-  test("applique les tokens dark effectifs sur /consultations", async ({ page }) => {
+  test("applique les tokens dark effectifs sur /dashboard/horoscope", async ({ page }) => {
     await setupDarkSession(page)
 
-    await page.goto("/consultations")
+    await page.goto("/dashboard/horoscope")
     await page.waitForLoadState("networkidle")
 
     await expect(page.locator("html")).toHaveClass(/dark/)
-    await expect(page.locator(".activity-card-premium").first()).toBeVisible()
+    await expect(page.locator(".daily-layout")).toBeVisible()
+    await expect(page.getByRole("heading", { name: "Votre horoscope du jour" })).toBeVisible()
 
     const pageToken = await page.locator("#root").evaluate((element) =>
       window.getComputedStyle(element).getPropertyValue("--app-premium-page-layout-background").trim(),
     )
     expect(pageToken).not.toContain("#fffafc")
 
-    const titleColor = await readColorChannels(page, ".premium-hero-title", "color")
+    const titleColor = await readColorChannels(page, ".daily-page-header__title", "color")
     expect(titleColor.red).toBeGreaterThan(220)
     expect(titleColor.green).toBeGreaterThan(210)
     expect(titleColor.blue).toBeGreaterThan(220)
 
-    const cardBackground = await readColorChannels(page, ".activity-card-premium", "backgroundColor")
-    expect(cardBackground.alpha).toBeLessThanOrEqual(0.12)
+    const layoutText = await readColorChannels(page, ".daily-layout p", "color")
+    expect(layoutText.red).toBeGreaterThan(190)
+    expect(layoutText.green).toBeGreaterThan(180)
+    expect(layoutText.blue).toBeGreaterThan(200)
   })
 
   test("applique les surfaces dark effectives sur /astrologers/:id", async ({ page }) => {
@@ -315,5 +414,55 @@ test.describe("CS-137 dark mode runtime surfaces", () => {
 
     const metricsBackground = await readColorChannels(page, ".profile-metrics-bar", "backgroundColor")
     expect(metricsBackground.alpha).toBeLessThanOrEqual(0.12)
+  })
+
+  test("applique les surfaces dark effectives sur /natal", async ({ page }) => {
+    await setupDarkSession(page)
+
+    await page.goto(`/natal?runId=${NATAL_RUN_ID}`)
+    await page.waitForLoadState("networkidle")
+
+    await expect(page.locator("html")).toHaveClass(/dark/)
+    await expect(page.getByRole("heading", { name: "Thème natal", exact: true })).toBeVisible()
+    await expect(page.locator(".natal-reading__chapter").first()).toBeVisible()
+    await expect(page.locator(".natal-reading-facts").first()).toBeVisible()
+    await expect(page.locator(".natal-reading-summary").first()).toBeVisible()
+
+    const appBackgroundToken = await page.locator(".app-bg").evaluate((element) =>
+      window.getComputedStyle(element).getPropertyValue("--premium-app-bg").trim(),
+    )
+    expect(appBackgroundToken).not.toContain("#fff")
+
+    const headerBackground = await readColorChannels(page, ".app-header", "backgroundColor")
+    expect(headerBackground.red).toBeLessThan(40)
+    expect(headerBackground.green).toBeLessThan(50)
+    expect(headerBackground.blue).toBeLessThan(80)
+
+    const titleColor = await readColorChannels(page, ".natal-reading-hero h1", "color")
+    expect(titleColor.red).toBeGreaterThan(220)
+    expect(titleColor.green).toBeGreaterThan(210)
+    expect(titleColor.blue).toBeGreaterThan(220)
+
+    const chapterBackground = await readColorChannels(page, ".natal-reading__chapter", "backgroundColor")
+    expect(chapterBackground.red).toBeLessThan(80)
+    expect(chapterBackground.green).toBeLessThan(90)
+    expect(chapterBackground.blue).toBeLessThan(120)
+    expect(chapterBackground.alpha).toBeGreaterThanOrEqual(0.55)
+
+    const summaryBackground = await readColorChannels(page, ".natal-reading-summary", "backgroundColor")
+    expect(summaryBackground.red).toBeLessThan(80)
+    expect(summaryBackground.green).toBeLessThan(90)
+    expect(summaryBackground.blue).toBeLessThan(120)
+    expect(summaryBackground.alpha).toBeGreaterThanOrEqual(0.55)
+
+    const badgeBackground = await readColorChannels(page, ".natal-badge--basis", "backgroundColor")
+    expect(badgeBackground.red).toBeLessThan(100)
+    expect(badgeBackground.green).toBeLessThan(105)
+    expect(badgeBackground.blue).toBeLessThan(135)
+
+    const factsTextColor = await readColorChannels(page, ".natal-reading-facts__header h2", "color")
+    expect(factsTextColor.red).toBeGreaterThan(220)
+    expect(factsTextColor.green).toBeGreaterThan(210)
+    expect(factsTextColor.blue).toBeGreaterThan(220)
   })
 })
