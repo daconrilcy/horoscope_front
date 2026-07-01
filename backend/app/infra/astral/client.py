@@ -97,7 +97,22 @@ class AstralClient:
                     params={"topic": topic},
                     headers=self._headers(accept="text/event-stream"),
                 ) as response:
-                    response.raise_for_status()
+                    if response.status_code >= 400:
+                        logger.warning(
+                            "astral_mercure_stream_rejected mercure_url=%s topic=%s status_code=%s",
+                            self.mercure_url,
+                            topic,
+                            response.status_code,
+                        )
+                        payload = json.dumps(
+                            {
+                                "code": "astral_mercure_unavailable",
+                                "message": "Astral mercure stream is unavailable",
+                            },
+                            ensure_ascii=False,
+                        )
+                        yield f"event: error\ndata: {payload}\n\n".encode("utf-8")
+                        return
                     async for chunk in response.aiter_bytes():
                         if await is_disconnected():
                             break
@@ -108,7 +123,6 @@ class AstralClient:
                 self.mercure_url,
                 topic,
                 str(error),
-                exc_info=True,
             )
             payload = json.dumps(
                 {
