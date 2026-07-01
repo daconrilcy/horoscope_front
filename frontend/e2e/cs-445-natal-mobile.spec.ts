@@ -92,6 +92,7 @@ const ASTRAL_RESULT = {
         {
           code: "identity",
           title: "Identité",
+          summary_sentence: "Une orientation personnelle claire structure la lecture.",
           body:
             "Votre lecture commence par une orientation personnelle claire. Elle met en avant une manière d'avancer qui cherche des repères concrets sans écraser les nuances du thème.\n\nLa suite du chapitre reste lisible sur mobile, sans colonne latérale ni zone de texte enfermée dans un petit scroll interne.",
           confidence: "medium",
@@ -104,6 +105,7 @@ const ASTRAL_RESULT = {
         {
           code: "daily-life",
           title: "Rythme quotidien",
+          summary_sentence: "Le rythme quotidien donne immédiatement de la matière lisible.",
           body:
             "Le deuxième chapitre reste ouvert pour donner immédiatement de la matière. Il doit se lire avec un interligne confortable et des boutons faciles à toucher.",
           confidence: "high",
@@ -112,6 +114,7 @@ const ASTRAL_RESULT = {
         {
           code: "relationships",
           title: "Relations",
+          summary_sentence: "Les relations restent disponibles après une action explicite.",
           body: "Ce chapitre secondaire reste replié jusqu'à l'action explicite de l'utilisateur.",
           confidence: "low",
           astro_basis: ["Vénus carré Saturne", "Maison VII - Relations et engagements durables"],
@@ -119,6 +122,13 @@ const ASTRAL_RESULT = {
       ],
       legal: {
         disclaimer: "Lecture symbolique et non médicale.",
+      },
+      calculation_reference: {
+        zodiacal_reference_system: "tropical",
+        coordinate_reference_system: "geocentric",
+        house_system: "placidus",
+        ephemeris_reference: "Swiss Ephemeris 2.10",
+        precision: "arc-second",
       },
     },
   },

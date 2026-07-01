@@ -12,6 +12,7 @@ export type NatalReadingStatus = "success" | "empty" | "failed" | "safety_reject
 export type NatalReadingChapterViewModel = {
   code: string | null
   title: string
+  summarySentence: string | null
   paragraphs: string[]
   confidenceLabel: string | null
   astroBasis: string[]
@@ -38,6 +39,7 @@ export type NatalCalculationMethodViewModel = {
 export type NatalCalculationFactsViewModel = {
   groups: NatalCalculationFactGroupViewModel[]
   methods: NatalCalculationMethodViewModel[]
+  calculationReferenceMethods: NatalCalculationMethodViewModel[]
   sourceLabel: string
 }
 
@@ -479,6 +481,7 @@ function buildChapters(reading: Record<string, unknown>): NatalReadingChapterVie
       return {
         code: asText(chapterRecord.code),
         title: localizedMetadataText(chapterRecord.title) ?? `Chapitre ${index + 1}`,
+        summarySentence: asText(chapterRecord.summary_sentence),
         paragraphs,
         confidenceLabel: confidenceLabel(chapterRecord.confidence),
         astroBasis: [
@@ -861,6 +864,56 @@ function buildCalculationMethods(
   return methods.filter((method) => Boolean(method.value))
 }
 
+function resolveCalculationReference(result: Record<string, unknown>): Record<string, unknown> | null {
+  const reading = asRecord(result.reading)
+  const nestedReading = asRecord(reading?.reading)
+  return (
+    asRecord(nestedReading?.calculation_reference) ??
+    asRecord(reading?.calculation_reference) ??
+    asRecord(result.calculation_reference)
+  )
+}
+
+function buildCalculationReferenceMethods(result: Record<string, unknown>): NatalCalculationMethodViewModel[] {
+  const reference = resolveCalculationReference(result)
+  if (!reference) return []
+
+  const methods: NatalCalculationMethodViewModel[] = [
+    {
+      detail: null,
+      label: "Version",
+      value: firstMethodText(reference.version) ?? "",
+    },
+    {
+      detail: null,
+      label: "Système zodiacal",
+      value: firstMethodText(reference.zodiacal_reference_system) ?? "",
+    },
+    {
+      detail: null,
+      label: "Coordonnées",
+      value: firstMethodText(reference.coordinate_reference_system) ?? "",
+    },
+    {
+      detail: null,
+      label: "Maisons",
+      value: firstMethodText(reference.house_system) ?? "",
+    },
+    {
+      detail: null,
+      label: "Éphémérides",
+      value: firstMethodText(reference.ephemeris_reference) ?? "",
+    },
+    {
+      detail: null,
+      label: "Précision",
+      value: firstMethodText(reference.precision) ?? "",
+    },
+  ]
+
+  return methods.filter((method) => Boolean(method.value))
+}
+
 function resolveCalculationProjection(result: Record<string, unknown>): Record<string, unknown> {
   const calculation = asRecord(result.calculation)
   const calculationLlmPayload = asRecord(calculation?.llm_payload)
@@ -893,6 +946,7 @@ function buildCalculationFacts(
   const aspectFacts = buildAspectFacts(projection, projection)
   const sensitivePointFacts = buildSensitivePointFacts(projection)
   const methods = buildCalculationMethods(result, projection, birthProfile)
+  const calculationReferenceMethods = buildCalculationReferenceMethods(result)
 
   const mainFacts = [...(coreFacts.length > 0 ? coreFacts : legacyPlacementFacts.slice(0, 5))]
   for (const profileFact of buildBirthProfileFacts(birthProfile)) {
@@ -907,7 +961,9 @@ function buildCalculationFacts(
   }
   if (aspectFacts.length > 0) groups.push({ title: "Aspects majeurs", items: aspectFacts })
 
-  return groups.length > 0 || methods.length > 0 ? { groups, methods, sourceLabel: "Calculs du thème natal" } : null
+  return groups.length > 0 || methods.length > 0 || calculationReferenceMethods.length > 0
+    ? { groups, methods, calculationReferenceMethods, sourceLabel: "Calculs du thème natal" }
+    : null
 }
 
 /** Sélectionne les marqueurs affichés en en-tête sans recalculer l'astrologie côté React. */

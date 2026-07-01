@@ -22,6 +22,7 @@ describe("buildNatalInterpretationViewModel", () => {
               {
                 code: "identity",
                 title: "Identite",
+                summary_sentence: "Résumé public du chapitre.",
                 body: "Premier paragraphe.\n\nSecond paragraphe.",
                 confidence: "high",
                 astro_basis: [
@@ -45,6 +46,7 @@ describe("buildNatalInterpretationViewModel", () => {
     expect(viewModel?.status).toBe("success")
     expect(viewModel?.title).toBe("Lecture Essentielle")
     expect(viewModel?.label).toBe("Essentielle")
+    expect(viewModel?.chapters[0]?.summarySentence).toBe("Résumé public du chapitre.")
     expect(viewModel?.chapters[0]?.paragraphs).toEqual(["Premier paragraphe.", "Second paragraphe."])
     expect(viewModel?.chapters[0]?.confidenceLabel).toBe("Confiance élevée")
     expect(viewModel?.chapters[0]?.astroBasis).toEqual(["Soleil en Lion", "Lune en Balance (appui)"])
@@ -125,6 +127,14 @@ describe("buildNatalInterpretationViewModel", () => {
               short_text: "Lecture approfondie.",
             },
             chapters: [],
+            calculation_reference: {
+              version: "1.2.3",
+              zodiacal_reference_system: "tropical",
+              coordinate_reference_system: "geocentric",
+              house_system: "placidus",
+              ephemeris_reference: "Swiss Ephemeris 2.10",
+              precision: "arc-second",
+            },
           },
         },
       },
@@ -151,6 +161,14 @@ describe("buildNatalInterpretationViewModel", () => {
     expect(viewModel?.calculationFacts?.methods).toEqual([
       { label: "Système", value: "Tropical", detail: "Placidus" },
       { label: "Référence", value: "astro-ref-2026.06", detail: "Astral Engine" },
+    ])
+    expect(viewModel?.calculationFacts?.calculationReferenceMethods).toEqual([
+      { label: "Version", value: "1.2.3", detail: null },
+      { label: "Système zodiacal", value: "tropical", detail: null },
+      { label: "Coordonnées", value: "geocentric", detail: null },
+      { label: "Maisons", value: "placidus", detail: null },
+      { label: "Éphémérides", value: "Swiss Ephemeris 2.10", detail: null },
+      { label: "Précision", value: "arc second", detail: null },
     ])
     expect(viewModel?.calculationFacts?.groups[1]?.items[0]).toEqual({
       label: "Maison II - Valeurs",

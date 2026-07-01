@@ -128,6 +128,51 @@
   min-width: 0;
 }
 
+.natal-reading-facts__methods-head {
+  align-items: flex-start;
+}
+
+.natal-reading-facts__methods-title {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+
+.natal-reading-facts__reference-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+}
+
+.natal-reading-facts__reference {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+  padding: 6px 9px;
+  border: 1px solid color-mix(in srgb, var(--premium-accent-purple-strong) 12%, transparent);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--premium-accent-purple-strong) 6%, var(--color-token-rgb-255-255-255));
+}
+
+.natal-reading-facts__reference dt,
+.natal-reading-facts__reference dd {
+  margin: 0;
+}
+
+.natal-reading-facts__reference dt {
+  color: var(--color-text-secondary);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.natal-reading-facts__reference dd {
+  color: var(--color-text-primary);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
 .natal-reading-facts__marker,
 .natal-reading-facts__item-icon,
 .natal-reading-facts__method-icon {

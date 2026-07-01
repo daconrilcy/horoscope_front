@@ -411,6 +411,7 @@ describe("NatalChartPage", () => {
                 {
                   code: "identity",
                   title: "Identite",
+                  summary_sentence: "Résumé court de l'identité.",
                   body: "Chapitre narratif principal conserve. Suite analytique preservee.",
                   confidence: "medium",
                   astro_basis: ["Soleil en Cancer", "Lune en Balance"],
@@ -418,15 +419,25 @@ describe("NatalChartPage", () => {
                 {
                   code: "emotions",
                   title: "Emotions",
+                  summary_sentence: "Résumé court des émotions.",
                   body:
                     "Deuxieme lecture ouverte par defaut avec une phrase volontairement longue pour verifier que le chapeau tronque ne repete pas tout le debut du paragraphe dans le detail. Elle reste accessible sans action initiale, avec une phrase volontairement etendue qui accumule plusieurs nuances successives, plusieurs indications symboliques reliees entre elles, plusieurs appuis de lecture destines a rester dans le texte complet, et plusieurs respirations internes pour verifier que le rendu cree de vrais paragraphes plus courts.",
                 },
                 {
                   code: "relations",
                   title: "Relations",
+                  summary_sentence: "Résumé court des relations.",
                   body: "Troisieme lecture secondaire repliee. Elle devient lisible apres action.",
                 },
               ],
+              calculation_reference: {
+                version: "1.2.3",
+                zodiacal_reference_system: "tropical",
+                coordinate_reference_system: "geocentric",
+                house_system: "placidus",
+                ephemeris_reference: "Swiss Ephemeris 2.10",
+                precision: "arc-second",
+              },
               legal: {
                 disclaimer: "Lecture symbolique et non medicale.",
               },
@@ -549,10 +560,13 @@ describe("NatalChartPage", () => {
     expect(scrollIntoViewMock).toHaveBeenCalledWith({ behavior: "smooth", block: "start" })
     const firstChapter = container.querySelector(".natal-reading__chapter")
     expect(firstChapter).not.toBeNull()
-    expect(within(firstChapter as HTMLElement).getByText(/Chapitre narratif principal conserve/i).closest(".natal-reading__chapter-excerpt")).not.toBeNull()
+    expect(within(firstChapter as HTMLElement).getByText("Résumé court de l'identité.").closest(".natal-reading__chapter-excerpt")).not.toBeNull()
     expect(within(firstChapter as HTMLElement).getByText("À retenir")).toBeVisible()
     expect(firstChapter?.querySelector(".natal-reading__chapter-excerpt")).toHaveTextContent(
-      /Chapitre narratif principal conserve/i,
+      "Résumé court de l'identité.",
+    )
+    expect(firstChapter?.querySelector(".natal-reading__chapter-body")).toHaveTextContent(
+      "Chapitre narratif principal conserve.",
     )
     const chapterTitle = container.querySelector(".natal-reading__chapter-title")
     expect(chapterTitle).toHaveTextContent("Identite")
@@ -560,7 +574,7 @@ describe("NatalChartPage", () => {
     expect((chapterTitle?.textContent ?? "").indexOf("Identite")).toBeLessThan(
       (chapterTitle?.textContent ?? "").indexOf("Lecture guidée"),
     )
-    expect(screen.getByText("Suite analytique preservee.")).toBeVisible()
+    expect(firstChapter?.querySelector(".natal-reading__chapter-body")).toHaveTextContent("Suite analytique preservee.")
     expect(screen.getByText(/Elle reste accessible sans action initiale/i)).toBeVisible()
     const renderedProseParagraphs = Array.from(container.querySelectorAll(".natal-reading__prose-paragraph"))
     expect(renderedProseParagraphs.length).toBeGreaterThan(3)
@@ -575,18 +589,33 @@ describe("NatalChartPage", () => {
       .map((chapter) => chapter.textContent ?? "")
       .join(" ")
     expect((chapterTexts.match(new RegExp(longExcerptStart, "g")) ?? [])).toHaveLength(1)
-    expect(screen.getByText("Elle devient lisible apres action.")).not.toBeVisible()
+    const methodsHead = container.querySelector(".natal-reading-facts__methods-head")
+    expect(methodsHead).toHaveTextContent("Version")
+    expect(methodsHead).toHaveTextContent("1.2.3")
+    expect(methodsHead).toHaveTextContent("Système zodiacal")
+    expect(methodsHead).toHaveTextContent("tropical")
+    expect(methodsHead).toHaveTextContent("Coordonnées")
+    expect(methodsHead).toHaveTextContent("geocentric")
+    expect(methodsHead).toHaveTextContent("Maisons")
+    expect(methodsHead).toHaveTextContent("placidus")
+    expect(methodsHead).toHaveTextContent("Éphémérides")
+    expect(methodsHead).toHaveTextContent("Swiss Ephemeris 2.10")
+    expect(methodsHead).toHaveTextContent("Précision")
+    expect(methodsHead).toHaveTextContent("arc second")
+    const thirdChapterBody = container.querySelectorAll(".natal-reading__chapter-body")[2]
+    expect(thirdChapterBody).toHaveTextContent("Elle devient lisible apres action.")
+    expect(thirdChapterBody).not.toBeVisible()
     expect(screen.getAllByRole("button", { name: "Réduire" })).toHaveLength(2)
     const firstChapterToggle = screen.getAllByRole("button", { name: "Réduire" })[0]
     expect(firstChapterToggle).toHaveAttribute("aria-expanded", "true")
     await user.click(firstChapterToggle)
     expect(firstChapterToggle).toHaveAttribute("aria-expanded", "false")
     expect(firstChapterToggle).toHaveTextContent("Lire la suite")
-    expect(screen.getByText("Suite analytique preservee.")).not.toBeVisible()
+    expect(firstChapter?.querySelector(".natal-reading__chapter-body")).not.toBeVisible()
     await user.click(firstChapterToggle)
     expect(firstChapterToggle).toHaveAttribute("aria-expanded", "true")
     expect(firstChapterToggle).toHaveTextContent("Réduire")
-    expect(screen.getByText("Suite analytique preservee.")).toBeVisible()
+    expect(firstChapter?.querySelector(".natal-reading__chapter-body")).toHaveTextContent("Suite analytique preservee.")
     expect(screen.getByText("Confiance moyenne")).toHaveClass("natal-badge--confidence")
     expect(screen.getByText("Repères & évidences")).toBeVisible()
     expect(screen.getByText("Soleil en Cancer")).toBeVisible()
@@ -831,6 +860,7 @@ describe("NatalChartPage", () => {
                 {
                   code: "minimal",
                   title: "Chapitre minimal",
+                  summary_sentence: "Résumé du chapitre minimal.",
                   body: "Contenu narratif sans métadonnees.",
                 },
               ],

@@ -179,6 +179,8 @@ function expandLabelForGroup(title: string, isExpanded: boolean): string {
 }
 
 function chapterExcerpt(chapter: NatalReadingChapterViewModel): string | null {
+  if (chapter.summarySentence) return chapter.summarySentence
+
   const firstParagraph = chapter.paragraphs[0]?.trim()
   if (!firstParagraph) return null
 
@@ -187,25 +189,8 @@ function chapterExcerpt(chapter: NatalReadingChapterViewModel): string | null {
   return excerpt.endsWith(".") || excerpt.endsWith("!") || excerpt.endsWith("?") ? excerpt : `${excerpt}...`
 }
 
-function chapterBodyParagraphs(chapter: NatalReadingChapterViewModel, excerpt: string | null): string[] {
-  const splitParagraphs = (paragraphs: string[]) => paragraphs.flatMap(splitProseParagraph)
-  if (!excerpt) return splitParagraphs(chapter.paragraphs)
-
-  const [firstParagraph, ...remainingParagraphs] = chapter.paragraphs
-  const normalizedFirstParagraph = firstParagraph?.trim()
-  if (!normalizedFirstParagraph) return splitParagraphs(remainingParagraphs)
-
-  if (normalizedFirstParagraph === excerpt) {
-    return splitParagraphs(remainingParagraphs)
-  }
-
-  const excerptPrefix = excerpt.replace(/\.\.\.$/, "").trim()
-  if (excerptPrefix && normalizedFirstParagraph.startsWith(excerptPrefix)) {
-    const remainder = normalizedFirstParagraph.slice(excerptPrefix.length).trim()
-    return splitParagraphs(remainder ? [remainder, ...remainingParagraphs] : remainingParagraphs)
-  }
-
-  return splitParagraphs(chapter.paragraphs)
+function chapterBodyParagraphs(chapter: NatalReadingChapterViewModel): string[] {
+  return chapter.paragraphs.flatMap(splitProseParagraph)
 }
 
 function chapterThemeTitle(chapter: NatalReadingChapterViewModel): string {
@@ -464,7 +449,8 @@ function NatalCalculationGroupPanel({ group }: { group: NatalCalculationFactsVie
 }
 
 function NatalCalculationMethodsPanel({ facts }: { facts: NatalCalculationFactsViewModel }) {
-  if (facts.methods.length === 0) return null
+  const calculationReferenceMethods = facts.calculationReferenceMethods ?? []
+  if (facts.methods.length === 0 && calculationReferenceMethods.length === 0) return null
 
   return (
     <section className="natal-reading-facts__methods" aria-label="Système et méthodes de calcul">
@@ -472,7 +458,19 @@ function NatalCalculationMethodsPanel({ facts }: { facts: NatalCalculationFactsV
         <span className="natal-reading-facts__marker" aria-hidden="true">
           <Settings size={22} strokeWidth={1.8} />
         </span>
-        <h3>Système & méthodes de calcul</h3>
+        <div className="natal-reading-facts__methods-title">
+          <h3>Système & méthodes de calcul</h3>
+          {calculationReferenceMethods.length > 0 ? (
+            <dl className="natal-reading-facts__reference-list" aria-label="Références du calcul">
+              {calculationReferenceMethods.map((method) => (
+                <div className="natal-reading-facts__reference" key={`${method.label}-${method.value}`}>
+                  <dt>{method.label}</dt>
+                  <dd>{method.value}</dd>
+                </div>
+              ))}
+            </dl>
+          ) : null}
+        </div>
       </div>
       <dl className="natal-reading-facts__methods-list">
         {facts.methods.map((method) => {
@@ -694,7 +692,7 @@ function NatalChapterCard({
   const [isExpanded, setIsExpanded] = useState(defaultExpanded)
   const [isMetaExpanded, setIsMetaExpanded] = useState(false)
   const resetKey = chapterStateKey(chapter, itemKey)
-  const bodyParagraphs = chapterBodyParagraphs(chapter, excerpt)
+  const bodyParagraphs = chapterBodyParagraphs(chapter)
   const hasMeta = Boolean(chapter.confidenceLabel) || chapter.astroBasis.length > 0 || chapter.safetyFlags.length > 0
   const panelId = chapterPanelId(baseId, itemKey)
   const metaPanelId = `${panelId}-meta`
