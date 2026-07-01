@@ -40,6 +40,7 @@ class AstralClientConfig:
     jobs_api_url: str
     gateway_url: str
     mercure_url: str
+    mercure_auth_token: str | None
     api_key: str | None
     timeout_seconds: float
 
@@ -95,7 +96,7 @@ class AstralClient:
                     "GET",
                     self.mercure_url,
                     params={"topic": topic},
-                    headers=self._headers(accept="text/event-stream"),
+                    headers=self._mercure_headers(),
                 ) as response:
                     if response.status_code >= 400:
                         logger.warning(
@@ -229,6 +230,16 @@ class AstralClient:
         headers = {"Accept": accept}
         if self._config.api_key:
             headers["Authorization"] = f"Bearer {self._config.api_key}"
+            headers["X-API-Key"] = self._config.api_key
+        return headers
+
+    def _mercure_headers(self) -> dict[str, str]:
+        """Construit les headers du hub Mercure, qui peut avoir un jeton distinct."""
+        headers = {"Accept": "text/event-stream"}
+        token = self._config.mercure_auth_token or self._config.api_key
+        if token:
+            headers["Authorization"] = f"Bearer {token}"
+        if self._config.api_key and self._config.mercure_auth_token is None:
             headers["X-API-Key"] = self._config.api_key
         return headers
 

@@ -86,6 +86,7 @@ class AstralIntegrationService:
                 jobs_api_url=settings.astral_jobs_api_url,
                 gateway_url=settings.astral_gateway_url,
                 mercure_url=settings.astral_mercure_url,
+                mercure_auth_token=settings.astral_mercure_auth_token,
                 api_key=settings.astral_api_key,
                 timeout_seconds=settings.astral_timeout_seconds,
             )

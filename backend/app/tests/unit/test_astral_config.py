@@ -36,3 +36,15 @@ def test_astral_api_key_falls_back_to_llm_env_alias(monkeypatch) -> None:
     settings = Settings()
 
     assert settings.astral_api_key == "legacy-key"
+
+
+def test_astral_mercure_auth_token_uses_dedicated_env(monkeypatch) -> None:
+    """Expose le jeton Mercure dedie sans le confondre avec la cle jobs Astral."""
+    _set_required_settings_env(monkeypatch)
+    monkeypatch.setenv("ASTRAL_API_KEY", "jobs-key")
+    monkeypatch.setenv("ASTRAL_MERCURE_AUTH_TOKEN", "mercure-token")
+
+    settings = Settings()
+
+    assert settings.astral_api_key == "jobs-key"
+    assert settings.astral_mercure_auth_token == "mercure-token"

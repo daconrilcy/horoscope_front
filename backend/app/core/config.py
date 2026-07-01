@@ -263,6 +263,7 @@ class Settings:
             "ASTRAL_MERCURE_URL",
             "http://localhost:3000/.well-known/mercure",
         ).strip()
+        self.astral_mercure_auth_token = os.getenv("ASTRAL_MERCURE_AUTH_TOKEN", "").strip() or None
         self.astral_api_key = (
             os.getenv("ASTRAL_API_KEY", "").strip()
             or os.getenv("ASTRAL_LLM_API_KEY", "").strip()

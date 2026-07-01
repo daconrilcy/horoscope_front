@@ -48,6 +48,7 @@ class _FakeMercureAsyncClient:
 
     def __init__(self, *, response: _FakeMercureResponse) -> None:
         self._response = response
+        self.request_headers: dict[str, str] = {}
 
     async def __aenter__(self) -> "_FakeMercureAsyncClient":
         return self
@@ -57,6 +58,7 @@ class _FakeMercureAsyncClient:
 
     def stream(self, method: str, url: str, **kwargs) -> _FakeMercureStream:
         """Retourne la réponse Mercure simulée."""
+        self.request_headers = kwargs.get("headers", {})
         return _FakeMercureStream(self._response)
 
 
@@ -67,9 +69,10 @@ async def test_stream_mercure_events_returns_controlled_error_event_on_unauthori
 ) -> None:
     """Un 401 Mercure ne doit pas remonter en traceback non contrôlé."""
     response = _FakeMercureResponse(status_code=401)
+    fake_client = _FakeMercureAsyncClient(response=response)
     monkeypatch.setattr(
         "app.infra.astral.client.httpx.AsyncClient",
-        lambda timeout=None: _FakeMercureAsyncClient(response=response),
+        lambda timeout=None: fake_client,
     )
 
     client = AstralClient(
@@ -77,7 +80,8 @@ async def test_stream_mercure_events_returns_controlled_error_event_on_unauthori
             jobs_api_url="http://astral.local",
             gateway_url="http://gateway.local",
             mercure_url="http://mercure.local/.well-known/mercure",
-            api_key="secret",
+            mercure_auth_token="mercure-secret",
+            api_key="jobs-secret",
             timeout_seconds=5,
         )
     )
@@ -95,13 +99,54 @@ async def test_stream_mercure_events_returns_controlled_error_event_on_unauthori
     payload = chunks[0].decode("utf-8")
     assert "event: error" in payload
     assert "astral_mercure_unavailable" in payload
+    assert fake_client.request_headers == {
+        "Accept": "text/event-stream",
+        "Authorization": "Bearer mercure-secret",
+    }
 
     warning_records = [record for record in caplog.records if record.levelno == logging.WARNING]
     assert warning_records
     assert all(record.exc_info is None for record in warning_records)
-    assert any(
-        "astral_mercure_stream_rejected" in record.message for record in warning_records
+    assert any("astral_mercure_stream_rejected" in record.message for record in warning_records)
+
+
+@pytest.mark.asyncio
+async def test_stream_mercure_events_keeps_api_key_fallback_headers(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Sans jeton Mercure dédié, le proxy conserve les headers historiques."""
+    response = _FakeMercureResponse(status_code=200, chunks=[b"data: {}\n\n"])
+    fake_client = _FakeMercureAsyncClient(response=response)
+    monkeypatch.setattr(
+        "app.infra.astral.client.httpx.AsyncClient",
+        lambda timeout=None: fake_client,
     )
+
+    client = AstralClient(
+        AstralClientConfig(
+            jobs_api_url="http://astral.local",
+            gateway_url="http://gateway.local",
+            mercure_url="http://mercure.local/.well-known/mercure",
+            mercure_auth_token=None,
+            api_key="jobs-secret",
+            timeout_seconds=5,
+        )
+    )
+
+    chunks = [
+        chunk
+        async for chunk in client.stream_mercure_events(
+            topic="tenants/14/jobs/run-123",
+            is_disconnected=lambda: _never_disconnected(),
+        )
+    ]
+
+    assert chunks == [b"data: {}\n\n"]
+    assert fake_client.request_headers == {
+        "Accept": "text/event-stream",
+        "Authorization": "Bearer jobs-secret",
+        "X-API-Key": "jobs-secret",
+    }
 
 
 async def _never_disconnected() -> bool:
