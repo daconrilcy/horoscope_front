@@ -134,26 +134,52 @@
 
 .natal-reading-facts__methods-title {
   display: grid;
-  gap: 10px;
+  gap: 12px;
   min-width: 0;
+  width: 100%;
 }
 
 .natal-reading-facts__reference-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 12px;
+  align-items: stretch;
   margin: 0;
 }
 
 .natal-reading-facts__reference {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 6px;
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr);
+  grid-template-rows: min-content min-content;
+  gap: 3px 12px;
+  align-items: center;
   min-width: 0;
-  padding: 6px 9px;
-  border: 1px solid color-mix(in srgb, var(--premium-accent-purple-strong) 12%, transparent);
-  border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--premium-accent-purple-strong) 6%, var(--color-token-rgb-255-255-255));
+  min-height: 76px;
+  padding: 14px 16px;
+  border: 1px solid color-mix(in srgb, var(--premium-accent-purple-strong) 14%, transparent);
+  border-radius: var(--radius-md);
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--color-token-rgb-255-255-255) 92%, transparent),
+      color-mix(in srgb, var(--color-token-f6f4ff) 74%, var(--color-token-rgb-255-255-255))
+    );
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--color-token-rgb-255-255-255) 88%, transparent),
+    0 10px 26px color-mix(in srgb, var(--premium-accent-purple-strong) 6%, transparent);
+}
+
+.natal-reading-facts__reference-icon {
+  grid-row: 1 / span 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid color-mix(in srgb, var(--premium-accent-purple-strong) 13%, transparent);
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--premium-accent-purple-strong) 8%, var(--color-token-rgb-255-255-255));
+  color: var(--premium-accent-purple-strong);
 }
 
 .natal-reading-facts__reference dt,
@@ -163,14 +189,19 @@
 
 .natal-reading-facts__reference dt {
   color: var(--color-text-secondary);
-  font-size: 0.78rem;
+  font-size: var(--font-size-2xs);
   font-weight: 700;
+  letter-spacing: var(--letter-spacing-wide-control);
+  line-height: 1.2;
+  text-transform: uppercase;
 }
 
 .natal-reading-facts__reference dd {
   color: var(--color-text-primary);
-  font-size: 0.82rem;
+  font-size: var(--font-size-md);
   font-weight: 800;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
 }
 
 .natal-reading-facts__marker,
@@ -486,6 +517,18 @@
   .natal-reading-facts__marker {
     width: 40px;
     height: 40px;
+  }
+
+  .natal-reading-facts__methods-head {
+    display: grid;
+    grid-template-columns: 40px minmax(0, 1fr);
+    align-items: start;
+    gap: 12px;
+  }
+
+  .natal-reading-facts__reference {
+    min-height: 68px;
+    padding: 12px 14px;
   }
 
   .natal-reading-facts__item--primary {

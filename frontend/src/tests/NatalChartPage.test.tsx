@@ -193,6 +193,79 @@ describe("NatalChartPage", () => {
     )
   })
 
+  it("affiche les references de calcul depuis la forme Astral enveloppee sans calculation_reference", async () => {
+    mockUseAstralJobStatus.mockReturnValue({
+      data: {
+        run_id: "run-real-reference",
+        status: "completed",
+        service_code: "natal_basic",
+        result: {
+          calculation: {
+            response_contract_version: "astro_engine_response_v1",
+            calculation_result: {
+              engine_version: "0.1.0",
+              ephemeris_version: "se-2026a",
+              raw_payload_contract_version: "natal_structured_v14",
+            },
+            llm_payload: {
+              chart: {
+                calculation: {
+                  zodiac: "Tropical",
+                  coordinates: "Geocentric",
+                  house_system: "Placidus",
+                },
+              },
+            },
+            audit_payload: {
+              payload: {
+                chart_context: {
+                  calculation_reliability: {
+                    birth_time_precision_required: true,
+                    house_system_sensitive: true,
+                  },
+                },
+              },
+            },
+          },
+          reading: {
+            status: "success",
+            reading: {
+              schema_version: "natal_reading_v1",
+              summary: {
+                title: "Lecture natale publique",
+                short_text: "Synthèse de test.",
+              },
+              chapters: [
+                {
+                  title: "Identité",
+                  summary_sentence: "Résumé du chapitre.",
+                  body: "Texte complet du chapitre.",
+                },
+              ],
+            },
+          },
+        },
+      },
+      isError: false,
+      isPending: false,
+    })
+
+    const { container } = renderNatalChartPage()
+
+    expect(await screen.findByRole("heading", { name: "Thème natal" })).toBeVisible()
+    const methodsHead = container.querySelector(".natal-reading-facts__methods-head")
+    expect(methodsHead).toHaveTextContent("Version")
+    expect(methodsHead).toHaveTextContent("0.1.0")
+    expect(methodsHead).toHaveTextContent("Système zodiacal")
+    expect(methodsHead).toHaveTextContent("Tropical")
+    expect(methodsHead).toHaveTextContent("Coordonnées")
+    expect(methodsHead).toHaveTextContent("Geocentric")
+    expect(methodsHead).toHaveTextContent("Maisons")
+    expect(methodsHead).toHaveTextContent("Placidus")
+    expect(methodsHead).toHaveTextContent("Éphémérides")
+    expect(methodsHead).toHaveTextContent("se-2026a")
+  })
+
   it("ne soumet pas automatiquement un job Astral au montage", async () => {
     renderNatalChartPage()
 
@@ -508,8 +581,8 @@ describe("NatalChartPage", () => {
     expect(screen.getByRole("region", { name: "Repères principaux" })).toHaveTextContent("Soleil")
     expect(screen.getByRole("region", { name: "Repères principaux" })).toHaveTextContent("Ascendant")
     expect(screen.getByRole("region", { name: "Repères principaux" })).toHaveTextContent("Descendant")
-    expect(screen.getByRole("region", { name: "Repères principaux" })).toHaveTextContent("Grenoble")
-    expect(screen.getByRole("region", { name: "Repères principaux" })).toHaveTextContent("23:17")
+    expect(screen.getByRole("region", { name: "Repères principaux" })).not.toHaveTextContent("Grenoble")
+    expect(screen.getByRole("region", { name: "Repères principaux" })).not.toHaveTextContent("23:17")
     const primaryFactIcons = container.querySelectorAll(".natal-reading-facts__group--primary .natal-reading-facts__item-icon svg")
     expect(primaryFactIcons[0]).toHaveAttribute("aria-label", "Capricorne")
     expect(primaryFactIcons[1]).toHaveAttribute("aria-label", "Poissons")
@@ -592,6 +665,12 @@ describe("NatalChartPage", () => {
     const methodsHead = container.querySelector(".natal-reading-facts__methods-head")
     expect(methodsHead).toHaveTextContent("Version")
     expect(methodsHead).toHaveTextContent("1.2.3")
+    expect(methodsHead).toHaveTextContent("Date de naissance")
+    expect(methodsHead).toHaveTextContent("12 avril 1988")
+    expect(methodsHead).toHaveTextContent("Heure de naissance")
+    expect(methodsHead).toHaveTextContent("23:17")
+    expect(methodsHead).toHaveTextContent("Lieu de naissance")
+    expect(methodsHead).toHaveTextContent("Grenoble, France")
     expect(methodsHead).toHaveTextContent("Système zodiacal")
     expect(methodsHead).toHaveTextContent("tropical")
     expect(methodsHead).toHaveTextContent("Coordonnées")
@@ -600,8 +679,6 @@ describe("NatalChartPage", () => {
     expect(methodsHead).toHaveTextContent("placidus")
     expect(methodsHead).toHaveTextContent("Éphémérides")
     expect(methodsHead).toHaveTextContent("Swiss Ephemeris 2.10")
-    expect(methodsHead).toHaveTextContent("Précision")
-    expect(methodsHead).toHaveTextContent("arc second")
     const thirdChapterBody = container.querySelectorAll(".natal-reading__chapter-body")[2]
     expect(thirdChapterBody).toHaveTextContent("Elle devient lisible apres action.")
     expect(thirdChapterBody).not.toBeVisible()

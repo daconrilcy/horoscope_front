@@ -168,7 +168,6 @@ describe("buildNatalInterpretationViewModel", () => {
       { label: "Coordonnées", value: "geocentric", detail: null },
       { label: "Maisons", value: "placidus", detail: null },
       { label: "Éphémérides", value: "Swiss Ephemeris 2.10", detail: null },
-      { label: "Précision", value: "arc second", detail: null },
     ])
     expect(viewModel?.calculationFacts?.groups[1]?.items[0]).toEqual({
       label: "Maison II - Valeurs",
@@ -199,8 +198,18 @@ describe("buildNatalInterpretationViewModel", () => {
           calculation_result: {
             status: "completed",
             chart_calculation_id: "chart-1",
+            engine_version: "0.1.0",
+            ephemeris_version: "se-2026a",
+            raw_payload_contract_version: "natal_structured_v14",
           },
           llm_payload: {
+            chart: {
+              calculation: {
+                zodiac: "Tropical",
+                coordinates: "Geocentric",
+                house_system: "Placidus",
+              },
+            },
             core_identity: {
               sun: {
                 placement: {
@@ -237,6 +246,20 @@ describe("buildNatalInterpretationViewModel", () => {
               houses: [{ number: 2, theme: "Resources", importance: "Very high" }],
             },
           },
+          audit_payload: {
+            contract_version: "natal_structured_v14",
+            payload: {
+              chart_context: {
+                calculation_reliability: {
+                  birth_time_precision_required: true,
+                  house_system_sensitive: true,
+                },
+                payload_contract: {
+                  contract_version: "natal_structured_v14",
+                },
+              },
+            },
+          },
         },
         reading: {
           status: "success",
@@ -262,6 +285,13 @@ describe("buildNatalInterpretationViewModel", () => {
       value: "Capricorne",
       detail: "Maison III - Communication",
     })
+    expect(viewModel?.calculationFacts?.calculationReferenceMethods).toEqual([
+      { label: "Version", value: "0.1.0", detail: null },
+      { label: "Système zodiacal", value: "Tropical", detail: null },
+      { label: "Coordonnées", value: "Geocentric", detail: null },
+      { label: "Maisons", value: "Placidus", detail: null },
+      { label: "Éphémérides", value: "se-2026a", detail: null },
+    ])
     expect(viewModel?.highlightFacts.map((fact) => fact.label)).toEqual(["Soleil", "Lune", "Ascendant"])
   })
 

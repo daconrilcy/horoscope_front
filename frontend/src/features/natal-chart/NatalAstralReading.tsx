@@ -166,6 +166,18 @@ function iconForMethod(label: string): LucideIcon {
   return Sparkles
 }
 
+function iconForReferenceMethod(label: string): LucideIcon {
+  if (label === "Version") return BadgeCheck
+  if (label === "Système zodiacal") return CircleDot
+  if (label === "Coordonnées") return Compass
+  if (label === "Maisons") return Home
+  if (label === "Éphémérides") return Clock
+  if (label === "Date de naissance") return CalendarDays
+  if (label === "Heure de naissance") return Clock
+  if (label === "Lieu de naissance") return MapPin
+  return Sparkles
+}
+
 function methodClassName(label: string): string {
   const modifier = METHOD_MODIFIERS[label]
   return modifier ? `natal-reading-facts__method natal-reading-facts__method--${modifier}` : "natal-reading-facts__method"
@@ -462,12 +474,18 @@ function NatalCalculationMethodsPanel({ facts }: { facts: NatalCalculationFactsV
           <h3>Système & méthodes de calcul</h3>
           {calculationReferenceMethods.length > 0 ? (
             <dl className="natal-reading-facts__reference-list" aria-label="Références du calcul">
-              {calculationReferenceMethods.map((method) => (
-                <div className="natal-reading-facts__reference" key={`${method.label}-${method.value}`}>
-                  <dt>{method.label}</dt>
-                  <dd>{method.value}</dd>
-                </div>
-              ))}
+              {calculationReferenceMethods.map((method) => {
+                const Icon = iconForReferenceMethod(method.label)
+                return (
+                  <div className="natal-reading-facts__reference" key={`${method.label}-${method.value}`}>
+                    <span className="natal-reading-facts__reference-icon" aria-hidden="true">
+                      <Icon size={22} strokeWidth={1.9} />
+                    </span>
+                    <dt>{method.label}</dt>
+                    <dd>{method.value}</dd>
+                  </div>
+                )
+              })}
             </dl>
           ) : null}
         </div>

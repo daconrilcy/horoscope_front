@@ -782,19 +782,28 @@ function buildSensitivePointFacts(projection: Record<string, unknown>): NatalCal
     .filter((item): item is NatalCalculationFactItemViewModel => Boolean(item))
 }
 
-function buildBirthProfileFacts(birthProfile?: BirthProfileData | null): NatalCalculationFactItemViewModel[] {
+function buildBirthProfileReferenceMethods(birthProfile?: BirthProfileData | null): NatalCalculationMethodViewModel[] {
   if (!birthProfile) return []
 
   const place = [birthProfile.birth_city, birthProfile.birth_country].filter(Boolean).join(", ") || birthProfile.birth_place
-  const coordinates = joinDetails([
-    formatCoordinate(birthProfile.birth_lat, "N", "S"),
-    formatCoordinate(birthProfile.birth_lon, "E", "O"),
-  ])
-  const items: NatalCalculationFactItemViewModel[] = []
-  pushUniqueFact(items, place ? { label: "Lieu", value: place, detail: coordinates } : null)
-  pushUniqueFact(items, birthProfile.birth_date ? { label: "Date", value: formatBirthDate(birthProfile.birth_date) ?? birthProfile.birth_date, detail: null } : null)
-  pushUniqueFact(items, birthProfile.birth_time ? { label: "Heure de naissance", value: birthProfile.birth_time, detail: null } : null)
-  return items
+  const methods: NatalCalculationMethodViewModel[] = [
+    {
+      detail: null,
+      label: "Date de naissance",
+      value: birthProfile.birth_date ? formatBirthDate(birthProfile.birth_date) ?? birthProfile.birth_date : "",
+    },
+    {
+      detail: null,
+      label: "Heure de naissance",
+      value: birthProfile.birth_time ?? "",
+    },
+    {
+      detail: null,
+      label: "Lieu de naissance",
+      value: place ?? "",
+    },
+  ]
+  return methods.filter((method) => Boolean(method.value))
 }
 
 function firstMethodText(...values: unknown[]): string | null {
@@ -870,8 +879,37 @@ function resolveCalculationReference(result: Record<string, unknown>): Record<st
   return (
     asRecord(nestedReading?.calculation_reference) ??
     asRecord(reading?.calculation_reference) ??
-    asRecord(result.calculation_reference)
+    asRecord(result.calculation_reference) ??
+    buildFallbackCalculationReference(result)
   )
+}
+
+function buildFallbackCalculationReference(result: Record<string, unknown>): Record<string, unknown> | null {
+  const calculation = asRecord(result.calculation)
+  const calculationResult = asRecord(calculation?.calculation_result)
+  const llmPayload = asRecord(calculation?.llm_payload)
+  const llmChart = asRecord(llmPayload?.chart)
+  const llmCalculation = asRecord(llmChart?.calculation)
+  const auditPayload = asRecord(calculation?.audit_payload)
+  const auditPayloadBody = asRecord(auditPayload?.payload)
+  const chartContext = asRecord(auditPayloadBody?.chart_context)
+  const payloadContract = asRecord(chartContext?.payload_contract)
+
+  const reference: Record<string, unknown> = {
+    version: firstRawMethodText(
+      calculationResult?.engine_version,
+      calculationResult?.raw_payload_contract_version,
+      calculation?.response_contract_version,
+      payloadContract?.contract_version,
+      auditPayload?.contract_version,
+    ),
+    zodiacal_reference_system: firstMethodText(llmCalculation?.zodiac, chartContext?.zodiacal_reference_system),
+    coordinate_reference_system: firstMethodText(llmCalculation?.coordinates, chartContext?.coordinate_reference_system),
+    house_system: firstMethodText(llmCalculation?.house_system, chartContext?.house_system),
+    ephemeris_reference: firstRawMethodText(calculationResult?.ephemeris_version),
+  }
+
+  return Object.values(reference).some(Boolean) ? reference : null
 }
 
 function buildCalculationReferenceMethods(result: Record<string, unknown>): NatalCalculationMethodViewModel[] {
@@ -902,12 +940,7 @@ function buildCalculationReferenceMethods(result: Record<string, unknown>): Nata
     {
       detail: null,
       label: "Éphémérides",
-      value: firstMethodText(reference.ephemeris_reference) ?? "",
-    },
-    {
-      detail: null,
-      label: "Précision",
-      value: firstMethodText(reference.precision) ?? "",
+      value: firstRawMethodText(reference.ephemeris_reference) ?? "",
     },
   ]
 
@@ -946,12 +979,12 @@ function buildCalculationFacts(
   const aspectFacts = buildAspectFacts(projection, projection)
   const sensitivePointFacts = buildSensitivePointFacts(projection)
   const methods = buildCalculationMethods(result, projection, birthProfile)
-  const calculationReferenceMethods = buildCalculationReferenceMethods(result)
+  const calculationReferenceMethods = [
+    ...buildCalculationReferenceMethods(result),
+    ...buildBirthProfileReferenceMethods(birthProfile),
+  ]
 
   const mainFacts = [...(coreFacts.length > 0 ? coreFacts : legacyPlacementFacts.slice(0, 5))]
-  for (const profileFact of buildBirthProfileFacts(birthProfile)) {
-    pushUniqueFact(mainFacts, profileFact)
-  }
   if (mainFacts.length > 0) groups.push({ title: "Repères principaux", items: mainFacts })
   if (houseFacts.length > 0) groups.push({ title: "Maisons", items: houseFacts })
   if (sensitivePointFacts.length > 0) {
