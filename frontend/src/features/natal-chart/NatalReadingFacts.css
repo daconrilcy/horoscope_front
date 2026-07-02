@@ -16,6 +16,7 @@
 
 .natal-reading-facts__header {
   display: flex;
+  flex-wrap: wrap;
   align-items: flex-start;
   justify-content: space-between;
   gap: 20px;
@@ -23,8 +24,10 @@
 
 .natal-reading-facts__header-copy {
   display: grid;
+  flex: 1 1 100%;
   gap: 10px;
   min-width: 0;
+  width: 100%;
 }
 
 .natal-reading-facts__header h2 {
@@ -36,11 +39,38 @@
 }
 
 .natal-reading-facts__header p {
-  max-width: 680px;
+  width: 100%;
+  max-width: none;
   margin: 0;
   color: var(--premium-text-main);
   font-size: var(--font-size-sm);
   line-height: var(--line-height-copy-loose);
+}
+
+.natal-reading-facts__header-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex: 0 0 auto;
+  gap: 10px;
+}
+
+.natal-reading-facts__toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 20px;
+  border: 1px solid color-mix(in srgb, var(--premium-accent-purple-strong) 14%, var(--natal-border-section));
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--natal-surface-chip) 82%, var(--natal-surface-reading-muted) 18%);
+  box-shadow: var(--natal-shadow-block);
+  color: var(--premium-accent-purple-strong);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-strong);
+  cursor: pointer;
 }
 
 .natal-reading-facts__profile-link {
@@ -62,6 +92,7 @@
 }
 
 .natal-reading-facts__profile-link:focus-visible,
+.natal-reading-facts__toggle:focus-visible,
 .natal-reading-facts__more:focus-visible {
   outline: var(--natal-focus-outline);
   outline-offset: 3px;
@@ -70,6 +101,10 @@
 .natal-reading-facts__content {
   display: grid;
   gap: 22px;
+}
+
+.natal-reading-facts__content[hidden] {
+  display: none;
 }
 
 .natal-reading-facts__grid {
@@ -272,6 +307,10 @@
 .natal-reading-facts__method--timezone .natal-reading-facts__method-icon,
 .natal-reading-facts__method--reference .natal-reading-facts__method-icon {
   color: var(--premium-accent-purple-strong);
+}
+
+.natal-reading-facts__method--coordinates dd {
+  gap: 6px;
 }
 
 .natal-reading-facts__group h3,
@@ -504,6 +543,13 @@
     line-height: var(--line-height-display-relaxed);
   }
 
+  .natal-reading-facts__header-actions {
+    display: grid;
+    justify-content: stretch;
+    width: 100%;
+  }
+
+  .natal-reading-facts__toggle,
   .natal-reading-facts__profile-link {
     width: 100%;
   }

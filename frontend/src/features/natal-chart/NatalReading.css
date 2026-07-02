@@ -87,7 +87,8 @@
 }
 
 .natal-reading-hero p {
-  max-width: 70ch;
+  width: 100%;
+  max-width: none;
   margin: 0;
   color: var(--premium-text-main);
   font-size: var(--font-size-sm);

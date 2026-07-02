@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest"
 
 import { buildNatalInterpretationViewModel } from "../features/natal-chart/natalAstralReadingViewModel"
 import type { AstralJobResponse } from "../api/astral"
+import type { BirthProfileData } from "../api/birthProfile"
 
 describe("buildNatalInterpretationViewModel", () => {
   it("normalise une enveloppe async V1 complete", () => {
@@ -670,6 +671,43 @@ describe("buildNatalInterpretationViewModel", () => {
     expect(viewModel?.title).toBe("Lecture Essentielle complète")
     expect(viewModel?.chapters[0]?.paragraphs).toEqual([
       "Explication complète fournie par le moteur externe.",
+    ])
+  })
+
+  it("dedoublonne le fuseau horaire et ordonne les coordonnees du profil", () => {
+    const job: AstralJobResponse = {
+      run_id: "run-birth-profile-methods",
+      status: "completed",
+      result: {
+        calculation: {
+          prepared_input: {
+            birth_timezone: "Europe/Paris",
+            timezone_used: "Europe/Paris",
+          },
+        },
+        reading: {
+          status: "success",
+          reading: {
+            summary: { title: "Lecture avec profil" },
+            chapters: [],
+          },
+        },
+      },
+    }
+    const birthProfile = {
+      birth_date: "1988-04-12",
+      birth_place: "Grenoble, France",
+      birth_time: "23:17",
+      birth_timezone: "Europe/Paris",
+      birth_lat: 45.1885,
+      birth_lon: 5.7245,
+    } as BirthProfileData
+
+    const viewModel = buildNatalInterpretationViewModel(job, "basic", birthProfile)
+
+    expect(viewModel?.calculationFacts?.methods).toEqual([
+      { label: "Fuseau horaire", value: "Europe/Paris", detail: null },
+      { label: "Coordonnées", value: "5.7245° E\n45.1885° N", detail: null },
     ])
   })
 

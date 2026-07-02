@@ -822,6 +822,16 @@ function firstRawMethodText(...values: unknown[]): string | null {
   return null
 }
 
+function methodDetailExcludingValue(value: string | null, ...details: unknown[]): string | null {
+  const normalizedValue = value?.trim().toLowerCase()
+  return joinUniqueDetails(
+    details
+      .map((detail) => firstMethodText(detail))
+      .filter((detail): detail is string => Boolean(detail))
+      .filter((detail) => detail.trim().toLowerCase() !== normalizedValue),
+  )
+}
+
 function buildCalculationMethods(
   result: Record<string, unknown>,
   projection: Record<string, unknown>,
@@ -838,10 +848,10 @@ function buildCalculationMethods(
     referenceVersion ? engine : null,
     firstRawMethodText(metadata?.ruleset_version, result.ruleset_version),
   ])
-  const coordinates = joinDetails([
-    formatCoordinate(birthProfile?.birth_lat, "N", "S"),
-    formatCoordinate(birthProfile?.birth_lon, "E", "O"),
-  ])
+  const latitude = formatCoordinate(birthProfile?.birth_lat, "N", "S")
+  const longitude = formatCoordinate(birthProfile?.birth_lon, "E", "O")
+  const coordinates = longitude && latitude ? `${longitude}\n${latitude}` : longitude ?? latitude
+  const timezone = firstMethodText(preparedInput?.timezone_used, birthProfile?.birth_timezone)
   const methods: NatalCalculationMethodViewModel[] = [
     {
       detail: zodiac ? houseSystem : null,
@@ -854,9 +864,9 @@ function buildCalculationMethods(
       value: referenceVersion ?? engine ?? "",
     },
     {
-      detail: firstMethodText(preparedInput?.timezone_used, preparedInput?.birth_timezone, birthProfile?.birth_timezone),
       label: "Fuseau horaire",
-      value: firstMethodText(preparedInput?.timezone_used, birthProfile?.birth_timezone) ?? "",
+      value: timezone ?? "",
+      detail: methodDetailExcludingValue(timezone, preparedInput?.birth_timezone, birthProfile?.birth_timezone),
     },
     {
       detail: null,

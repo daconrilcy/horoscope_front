@@ -570,6 +570,18 @@ describe("NatalChartPage", () => {
     expect(screen.getByRole("heading", { name: "Base du calcul natal" })).toBeVisible()
     expect(screen.getByText("Calculs du thème natal")).toBeVisible()
     expect(screen.getByRole("link", { name: "Mon profil de base" })).toHaveAttribute("href", "/profile")
+    const calculationFactsSection = screen.getByRole("region", { name: "Base du calcul natal" })
+    const calculationFactsToggle = within(calculationFactsSection).getByRole("button", {
+      name: "Réduire la base du calcul",
+    })
+    expect(calculationFactsToggle).toHaveAttribute("aria-expanded", "true")
+    expect(screen.getByRole("region", { name: "Système et méthodes de calcul" })).toBeVisible()
+    await user.click(calculationFactsToggle)
+    expect(calculationFactsToggle).toHaveAttribute("aria-expanded", "false")
+    expect(calculationFactsToggle).toHaveTextContent("Développer la base du calcul")
+    expect(calculationFactsSection.querySelector(".natal-reading-facts__methods")).not.toBeVisible()
+    await user.click(calculationFactsToggle)
+    expect(calculationFactsToggle).toHaveAttribute("aria-expanded", "true")
     const renderedText = document.body.textContent ?? ""
     expect(renderedText.indexOf("Thème natal")).toBeLessThan(
       renderedText.indexOf("Base du calcul natal"),
@@ -608,6 +620,15 @@ describe("NatalChartPage", () => {
     expect(screen.getByRole("region", { name: "Système et méthodes de calcul" })).toHaveTextContent("Placidus")
     expect(screen.getByRole("region", { name: "Système et méthodes de calcul" })).toHaveTextContent("Astral Engine")
     expect(screen.getByRole("region", { name: "Système et méthodes de calcul" })).toHaveTextContent("Europe/Paris")
+    const timezoneMethod = container.querySelector(".natal-reading-facts__method--timezone")
+    expect(timezoneMethod).not.toBeNull()
+    expect(timezoneMethod?.textContent?.match(/Europe\/Paris/g)).toHaveLength(1)
+    const coordinatesMethod = container.querySelector(".natal-reading-facts__method--coordinates")
+    const coordinateLines = Array.from(coordinatesMethod?.querySelectorAll("dd strong, dd span") ?? []).map(
+      (line) => line.textContent,
+    )
+    expect(coordinateLines).toEqual(["5.7245° E", "45.1885° N"])
+    expect(coordinatesMethod?.querySelector("dd strong")).toBeNull()
     expect(container.querySelector(".natal-badge--astro-sign")).toHaveTextContent("Capricorne")
     expect(container.querySelector(".natal-badge--astro-house")).toHaveTextContent("Valeurs")
     expect(container.querySelector(".natal-badge--astro-aspect")).toHaveTextContent("Jupiter - Uranus")
@@ -731,6 +752,7 @@ describe("NatalChartPage", () => {
     expect(explanationToggle).toHaveAttribute("aria-expanded", "true")
     expect(explanationToggle).toHaveTextContent("Masquer")
     expect(explanationExcerpt).toBeVisible()
+    expect(within(explanationsSection).getByText(/Ce repere detaille la maniere dont le calcul soutient/i)).toBeVisible()
     await user.click(explanationToggle)
     expect(explanationToggle).toHaveAttribute("aria-expanded", "false")
     expect(explanationExcerpt).not.toBeVisible()
@@ -939,7 +961,7 @@ describe("NatalChartPage", () => {
     await user.click(explanationToggle)
     expect(explanationToggle).toHaveAttribute("aria-expanded", "true")
     expect(explanationExcerpt).toBeVisible()
-    expect(screen.queryByText(/Cette explication detaille/i)).not.toBeInTheDocument()
+    expect(screen.getByText(/Cette explication detaille le repere/i)).toBeVisible()
     expect(screen.queryByText(/ne contient pas encore de chapitres publics/i)).not.toBeInTheDocument()
   })
 

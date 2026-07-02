@@ -28,6 +28,7 @@ import type { LucideIcon } from "lucide-react"
 import type {
   NatalCalculationFactItemViewModel,
   NatalCalculationFactsViewModel,
+  NatalCalculationMethodViewModel,
   NatalHighlightFactViewModel,
   NatalInterpretationViewModel,
   NatalReadingChapterViewModel,
@@ -46,7 +47,6 @@ type NatalAstralReadingProps = {
 
 const PUBLIC_READING_ERROR_MESSAGE =
   "La lecture Astral n'a pas pu être générée pour le moment. Veuillez réessayer plus tard."
-const EXCERPT_MAX_LENGTH = 140
 const CALCULATION_FACTS_SECTION_ID = "natal-reading-calculation-facts"
 const CALCULATION_EXPLANATIONS_SECTION_ID = "natal-reading-calculation-explanations"
 const READING_GUIDE_SECTION_ID = "natal-chart-guide"
@@ -106,14 +106,6 @@ type SummaryExtraEntry = {
 type SummaryTrackedEntry = {
   anchorId: string
   itemKey: string
-}
-
-function compactExcerpt(text: string): string {
-  if (text.length <= EXCERPT_MAX_LENGTH) return text
-
-  const rawExcerpt = text.slice(0, EXCERPT_MAX_LENGTH - 3).trimEnd()
-  const lastWordBoundary = rawExcerpt.lastIndexOf(" ")
-  return lastWordBoundary > 80 ? rawExcerpt.slice(0, lastWordBoundary) : rawExcerpt
 }
 
 function markerForGroup(title: string): LucideIcon {
@@ -189,15 +181,21 @@ function expandLabelForGroup(title: string, isExpanded: boolean): string {
   return isExpanded ? "Réduire" : "Voir tout"
 }
 
+function methodValueLines(value: string): string[] {
+  return value.split("\n").map((line) => line.trim()).filter(Boolean)
+}
+
+function isPlainMethodValue(method: NatalCalculationMethodViewModel): boolean {
+  return method.label === "Coordonnées"
+}
+
 function chapterExcerpt(chapter: NatalReadingChapterViewModel): string | null {
   if (chapter.summarySentence) return chapter.summarySentence
 
   const firstParagraph = chapter.paragraphs[0]?.trim()
   if (!firstParagraph) return null
 
-  const firstSentence = firstParagraph.match(/^(.+?[.!?])(?:\s|$)/)?.[1]
-  const excerpt = firstSentence && firstSentence.length <= EXCERPT_MAX_LENGTH ? firstSentence : compactExcerpt(firstParagraph)
-  return excerpt.endsWith(".") || excerpt.endsWith("!") || excerpt.endsWith("?") ? excerpt : `${excerpt}...`
+  return firstParagraph
 }
 
 function chapterBodyParagraphs(chapter: NatalReadingChapterViewModel): string[] {
@@ -295,7 +293,17 @@ function chapterStateKey(chapter: NatalReadingChapterViewModel, itemKey: string)
   )
 }
 
-function NatalCalculationFactsHeader({ sourceLabel }: { sourceLabel: string }) {
+function NatalCalculationFactsHeader({
+  contentId,
+  isExpanded,
+  onToggle,
+  sourceLabel,
+}: {
+  contentId: string
+  isExpanded: boolean
+  onToggle: () => void
+  sourceLabel: string
+}) {
   return (
     <div className="natal-reading-facts__header">
       <div className="natal-reading-facts__header-copy">
@@ -303,10 +311,22 @@ function NatalCalculationFactsHeader({ sourceLabel }: { sourceLabel: string }) {
         <h2 id="natal-reading-facts-title">Base du calcul natal</h2>
         <p>Paramètres astronomiques et astrologiques utilisés pour établir votre thème.</p>
       </div>
-      <Link to="/profile" className="natal-reading-facts__profile-link">
-        <UserRound size={17} aria-hidden="true" />
-        Mon profil de base
-      </Link>
+      <div className="natal-reading-facts__header-actions">
+        <button
+          aria-controls={contentId}
+          aria-expanded={isExpanded}
+          className="natal-reading-facts__toggle"
+          type="button"
+          onClick={onToggle}
+        >
+          {isExpanded ? <ChevronUp size={17} aria-hidden="true" /> : <ChevronDown size={17} aria-hidden="true" />}
+          {isExpanded ? "Réduire la base du calcul" : "Développer la base du calcul"}
+        </button>
+        <Link to="/profile" className="natal-reading-facts__profile-link">
+          <UserRound size={17} aria-hidden="true" />
+          Mon profil de base
+        </Link>
+      </div>
     </div>
   )
 }
@@ -420,6 +440,8 @@ function NatalCalculationMethodsPanel({ facts }: { facts: NatalCalculationFactsV
       <dl className="natal-reading-facts__methods-list">
         {facts.methods.map((method) => {
           const Icon = iconForMethod(method.label)
+          const valueLines = methodValueLines(method.value)
+          const hasPlainValue = isPlainMethodValue(method)
           return (
             <div className={methodClassName(method.label)} key={`${method.label}-${method.value}`}>
               <span className="natal-reading-facts__method-icon" aria-hidden="true">
@@ -427,7 +449,9 @@ function NatalCalculationMethodsPanel({ facts }: { facts: NatalCalculationFactsV
               </span>
               <dt>{method.label}</dt>
               <dd>
-                <strong>{method.value}</strong>
+                {valueLines.map((line, index) =>
+                  index === 0 && !hasPlainValue ? <strong key={line}>{line}</strong> : <span key={line}>{line}</span>,
+                )}
                 {method.detail ? <span>{method.detail}</span> : null}
               </dd>
             </div>
@@ -448,6 +472,8 @@ function NatalCalculationNotice() {
 }
 
 function NatalReadingFactsDetails({ facts }: { facts: NatalCalculationFactsViewModel }) {
+  const contentId = useId()
+  const [isExpanded, setIsExpanded] = useState(true)
   const primaryGroup = facts.groups.find((group) => group.title === "Repères principaux")
   const secondaryGroups = facts.groups.filter((group) => group.title !== "Repères principaux")
   const hasGroups = Boolean(primaryGroup) || secondaryGroups.length > 0
@@ -458,8 +484,13 @@ function NatalReadingFactsDetails({ facts }: { facts: NatalCalculationFactsViewM
 
   return (
     <section className="natal-reading-facts" aria-labelledby="natal-reading-facts-title" id={CALCULATION_FACTS_SECTION_ID}>
-      <NatalCalculationFactsHeader sourceLabel={facts.sourceLabel} />
-      <div className="natal-reading-facts__content">
+      <NatalCalculationFactsHeader
+        contentId={contentId}
+        isExpanded={isExpanded}
+        sourceLabel={facts.sourceLabel}
+        onToggle={() => setIsExpanded((current) => !current)}
+      />
+      <div className="natal-reading-facts__content" hidden={!isExpanded} id={contentId}>
         {hasGroups ? (
           <div className={gridClassName}>
             {primaryGroup ? <NatalPrimaryFactsPanel group={primaryGroup} /> : null}
