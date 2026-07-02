@@ -694,6 +694,10 @@
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--natal-theme-color, var(--premium-accent-purple-strong)) 14%, transparent);
 }
 
+.natal-reading__chapter-excerpt[hidden] {
+  display: none;
+}
+
 .natal-reading__chapter-excerpt-icon {
   display: inline-flex;
   align-items: center;

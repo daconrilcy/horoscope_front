@@ -255,6 +255,18 @@ test("garde /natal lisible et non masque a 360, 390 et 430 px", async ({ page })
     await expect(page.getByRole("region", { name: "Repères principaux" })).toContainText("Soleil")
     await expect(page.getByRole("region", { name: "Système et méthodes de calcul" })).toContainText("Paris")
     await expect(page.getByRole("button", { name: "Afficher la base" })).toHaveCount(0)
+    const explanationsSection = page.getByRole("region", { name: "Repères astrologiques" })
+    const explanationExcerpt = explanationsSection.getByText(/Ce repère explique pourquoi les routines/i)
+    const explanationToggle = explanationsSection
+      .locator(".natal-reading__chapter--excerpt-toggle .natal-reading__chapter-toggle")
+      .first()
+    await expect(explanationExcerpt).not.toBeVisible()
+    await explanationToggle.click()
+    await expect(explanationToggle).toHaveAttribute("aria-expanded", "true")
+    await expect(explanationExcerpt).toBeVisible()
+    await explanationToggle.click()
+    await expect(explanationToggle).toHaveAttribute("aria-expanded", "false")
+    await expect(explanationExcerpt).not.toBeVisible()
 
     const progressList = page.locator(".natal-reading-summary__list").first()
     const progressStyles = await progressList.evaluate((element) => {
