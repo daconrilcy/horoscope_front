@@ -47,7 +47,6 @@ type NatalAstralReadingProps = {
 const PUBLIC_READING_ERROR_MESSAGE =
   "La lecture Astral n'a pas pu être générée pour le moment. Veuillez réessayer plus tard."
 const EXCERPT_MAX_LENGTH = 140
-const PROSE_CHUNK_TARGET_LENGTH = 230
 const CALCULATION_FACTS_SECTION_ID = "natal-reading-calculation-facts"
 const CALCULATION_EXPLANATIONS_SECTION_ID = "natal-reading-calculation-explanations"
 const READING_GUIDE_SECTION_ID = "natal-chart-guide"
@@ -202,7 +201,7 @@ function chapterExcerpt(chapter: NatalReadingChapterViewModel): string | null {
 }
 
 function chapterBodyParagraphs(chapter: NatalReadingChapterViewModel): string[] {
-  return chapter.paragraphs.flatMap(splitProseParagraph)
+  return chapter.paragraphs.map((paragraph) => paragraph.trim()).filter(Boolean)
 }
 
 function chapterThemeTitle(chapter: NatalReadingChapterViewModel): string {
@@ -254,78 +253,6 @@ function buildReadingMetrics(reading: NatalInterpretationViewModel): ReadingMetr
       value: reading.label,
     },
   ]
-}
-
-function splitProseParagraph(paragraph: string): string[] {
-  const normalizedParagraph = paragraph.trim()
-  if (normalizedParagraph.length <= PROSE_CHUNK_TARGET_LENGTH) return normalizedParagraph ? [normalizedParagraph] : []
-
-  const sentences = normalizedParagraph.match(/[^.!?]+[.!?]+(?:["'»”])?|[^.!?]+$/g)
-  if (!sentences || sentences.length < 2) return splitLongProseChunk(normalizedParagraph)
-
-  const chunks: string[] = []
-  let currentChunk = ""
-  for (const sentence of sentences) {
-    const normalizedSentence = sentence.trim()
-    if (!normalizedSentence) continue
-    const nextChunk = currentChunk ? `${currentChunk} ${normalizedSentence}` : normalizedSentence
-    if (currentChunk && nextChunk.length > PROSE_CHUNK_TARGET_LENGTH) {
-      chunks.push(...splitLongProseChunk(currentChunk))
-      currentChunk = normalizedSentence
-    } else {
-      currentChunk = nextChunk
-    }
-  }
-  if (currentChunk) chunks.push(...splitLongProseChunk(currentChunk))
-  return chunks
-}
-
-function splitLongProseChunk(chunk: string): string[] {
-  if (chunk.length <= PROSE_CHUNK_TARGET_LENGTH) return chunk ? [chunk] : []
-
-  const parts = chunk.split(/([,;:]\s+)/)
-  const chunks: string[] = []
-  let currentChunk = ""
-  for (let index = 0; index < parts.length; index += 2) {
-    const part = `${parts[index] ?? ""}${parts[index + 1] ?? ""}`.trim()
-    if (!part) continue
-    if (part.length > PROSE_CHUNK_TARGET_LENGTH) {
-      if (currentChunk) {
-        chunks.push(currentChunk)
-        currentChunk = ""
-      }
-      chunks.push(...splitOverlongProsePart(part))
-      continue
-    }
-    const nextChunk = currentChunk ? `${currentChunk} ${part}` : part
-    if (currentChunk && nextChunk.length > PROSE_CHUNK_TARGET_LENGTH) {
-      chunks.push(currentChunk)
-      currentChunk = part
-    } else {
-      currentChunk = nextChunk
-    }
-  }
-  if (currentChunk) chunks.push(currentChunk)
-  return chunks.length > 0 ? chunks : [chunk]
-}
-
-function splitOverlongProsePart(part: string): string[] {
-  const words = part.split(/\s+/).filter(Boolean)
-  if (words.length < 2) return [part]
-
-  const chunks: string[] = []
-  let currentChunk = ""
-  for (const word of words) {
-    const nextChunk = currentChunk ? `${currentChunk} ${word}` : word
-    if (currentChunk && nextChunk.length > PROSE_CHUNK_TARGET_LENGTH) {
-      chunks.push(currentChunk)
-      currentChunk = word
-    } else {
-      currentChunk = nextChunk
-    }
-  }
-  if (currentChunk) chunks.push(currentChunk)
-  return chunks
 }
 
 function shortProgressTitle(title: string, index: number): string {

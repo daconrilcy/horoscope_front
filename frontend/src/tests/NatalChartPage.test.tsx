@@ -650,10 +650,8 @@ describe("NatalChartPage", () => {
     expect(firstChapter?.querySelector(".natal-reading__chapter-body")).toHaveTextContent("Suite analytique preservee.")
     expect(screen.getByText(/Elle reste accessible sans action initiale/i)).toBeVisible()
     const renderedProseParagraphs = Array.from(container.querySelectorAll(".natal-reading__prose-paragraph"))
-    expect(renderedProseParagraphs.length).toBeGreaterThan(3)
-    expect(Math.max(...renderedProseParagraphs.map((paragraph) => paragraph.textContent?.length ?? 0))).toBeLessThanOrEqual(
-      260,
-    )
+    expect(renderedProseParagraphs).toHaveLength(4)
+    expect(Math.max(...renderedProseParagraphs.map((paragraph) => paragraph.textContent?.length ?? 0))).toBeGreaterThan(260)
     expect(renderedProseParagraphs.map((paragraph) => paragraph.textContent).join(" ")).toContain(
       "Suite analytique preservee.",
     )
