@@ -621,6 +621,7 @@ function NatalChapterCard({
   itemKey: explicitItemKey,
   themeTitle: explicitThemeTitle,
   compact = false,
+  contentMode = "body",
 }: {
   chapter: NatalReadingChapterViewModel
   anchorId?: string
@@ -629,6 +630,7 @@ function NatalChapterCard({
   itemKey?: string
   themeTitle?: string
   compact?: boolean
+  contentMode?: "body" | "excerpt"
 }) {
   const baseId = useId()
   const itemKey = entry?.itemKey ?? explicitItemKey ?? "chapter"
@@ -641,12 +643,14 @@ function NatalChapterCard({
   const hasMeta = Boolean(chapter.confidenceLabel) || chapter.astroBasis.length > 0 || chapter.safetyFlags.length > 0
   const panelId = chapterPanelId(baseId, itemKey)
   const metaPanelId = `${panelId}-meta`
-  const canToggle = bodyParagraphs.length > 0
+  const usesExcerptToggle = contentMode === "excerpt"
+  const canToggle = usesExcerptToggle ? Boolean(excerpt) : bodyParagraphs.length > 0
   const chapterClassName = [
     "natal-reading__chapter",
     hasMeta ? "" : "natal-reading__chapter--no-meta",
     isExpanded ? "natal-reading__chapter--expanded" : "natal-reading__chapter--collapsed",
     compact ? "natal-reading__chapter--compact" : "",
+    usesExcerptToggle ? "natal-reading__chapter--excerpt-toggle" : "",
     entry?.themeClassName ?? "",
     hasMeta && isMetaExpanded ? "natal-reading__chapter--meta-expanded" : "",
   ]
@@ -664,8 +668,22 @@ function NatalChapterCard({
         <div className="natal-reading__chapter-head">
           {entry ? <span className="natal-reading__chapter-index" aria-hidden="true">{entry.indexLabel}</span> : null}
           <div className="natal-reading__chapter-title">
-            <h3>{themeTitle}</h3>
-            <span className="natal-section-eyebrow">Lecture guidée</span>
+            <div className="natal-reading__chapter-title-row">
+              <h3>{themeTitle}</h3>
+              {usesExcerptToggle && canToggle ? (
+                <button
+                  aria-controls={panelId}
+                  aria-expanded={isExpanded}
+                  aria-label={`${isExpanded ? "Masquer" : "Afficher"} ${chapter.title}`}
+                  className="natal-reading__chapter-toggle"
+                  type="button"
+                  onClick={() => setIsExpanded((current) => !current)}
+                >
+                  {isExpanded ? "Masquer" : "Afficher"}
+                </button>
+              ) : null}
+            </div>
+            {!usesExcerptToggle ? <span className="natal-section-eyebrow">Lecture guidée</span> : null}
           </div>
           {entry ? (
             <span className="natal-reading__chapter-time">
@@ -673,7 +691,7 @@ function NatalChapterCard({
               {entry.readTimeLabel}
             </span>
           ) : null}
-          {canToggle ? (
+          {!usesExcerptToggle && canToggle ? (
             <button
               aria-controls={panelId}
               aria-expanded={isExpanded}
@@ -687,7 +705,11 @@ function NatalChapterCard({
           ) : null}
         </div>
         {excerpt ? (
-          <p className="natal-reading__chapter-excerpt">
+          <p
+            className="natal-reading__chapter-excerpt"
+            hidden={usesExcerptToggle && !isExpanded}
+            id={usesExcerptToggle ? panelId : undefined}
+          >
             <span className="natal-reading__chapter-excerpt-icon" aria-hidden="true">
               <Lightbulb size={20} strokeWidth={1.8} />
             </span>
@@ -697,7 +719,7 @@ function NatalChapterCard({
             </span>
           </p>
         ) : null}
-        {bodyParagraphs.length > 0 ? (
+        {!usesExcerptToggle && bodyParagraphs.length > 0 ? (
           <div
             aria-hidden={!isExpanded}
             className={[
@@ -714,7 +736,7 @@ function NatalChapterCard({
             ))}
           </div>
         ) : null}
-        {canToggle ? (
+        {!usesExcerptToggle && canToggle ? (
           <button
             aria-controls={panelId}
             aria-expanded={isExpanded}
@@ -765,6 +787,8 @@ function NatalChapterCard({
 
 /** Affiche la lecture Astral sans exposer les champs techniques du moteur externe. */
 export function NatalAstralReading({ guide, reading, showSummary = true }: NatalAstralReadingProps) {
+  const explanationsListId = useId()
+  const [areExplanationsVisible, setAreExplanationsVisible] = useState(true)
   const mainChapterEntries = useMemo(
     () =>
       reading.chapters.map((chapter, index) => {
@@ -804,8 +828,8 @@ export function NatalAstralReading({ guide, reading, showSummary = true }: Natal
         anchorId: CALCULATION_EXPLANATIONS_SECTION_ID,
         indexLabel: String(startIndex + entries.length + 1),
         key: "calculation-explanations",
-        subtitle: "Logique utilisée par le moteur",
-        title: "Explications du calcul",
+        subtitle: "Signes, planètes, maisons et aspects",
+        title: "Repères astrologiques",
       })
     }
 
@@ -939,13 +963,29 @@ export function NatalAstralReading({ guide, reading, showSummary = true }: Natal
               id={CALCULATION_EXPLANATIONS_SECTION_ID}
             >
               <div className="natal-reading-explanations__header">
-                <span className="natal-section-eyebrow">Repères calculés</span>
-                <h2 id="natal-reading-explanations-title">Explications du moteur Astral</h2>
+                <div className="natal-reading-explanations__heading">
+                  <span className="natal-section-eyebrow">Repères calculés</span>
+                  <h2 id="natal-reading-explanations-title">Repères astrologiques</h2>
+                </div>
+                <button
+                  aria-controls={explanationsListId}
+                  aria-expanded={areExplanationsVisible}
+                  className="natal-reading-explanations__toggle"
+                  type="button"
+                  onClick={() => setAreExplanationsVisible((current) => !current)}
+                >
+                  {areExplanationsVisible ? "Masquer les repères" : "Afficher les repères"}
+                </button>
               </div>
-              <div className="natal-reading-explanations__list">
+              <div
+                className="natal-reading-explanations__list"
+                hidden={!areExplanationsVisible}
+                id={explanationsListId}
+              >
                 {reading.explanations.map((chapter, index) => (
                   <NatalChapterCard
                     compact
+                    contentMode="excerpt"
                     chapter={chapter}
                     defaultExpanded={false}
                     itemKey={`explanation-${chapter.code ?? chapter.title}-${index}`}

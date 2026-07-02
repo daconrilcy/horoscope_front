@@ -508,8 +508,16 @@
 }
 
 .natal-reading-explanations__header {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.natal-reading-explanations__heading {
   display: grid;
   gap: 6px;
+  min-width: 0;
 }
 
 .natal-reading-explanations__header h2 {
@@ -523,6 +531,10 @@
 .natal-reading-explanations__list {
   display: grid;
   gap: 10px;
+}
+
+.natal-reading-explanations__list[hidden] {
+  display: none;
 }
 
 .natal-reading-explanations .natal-reading__chapter {
@@ -539,16 +551,6 @@
 
 .natal-reading-explanations .natal-reading__chapter-head h3 {
   font-size: var(--natal-type-card-title-size);
-}
-
-.natal-reading-explanations .natal-reading__chapter-body {
-  max-width: none;
-  gap: 9px;
-}
-
-.natal-reading-explanations .natal-reading__chapter-body p {
-  font-size: var(--natal-type-body-size);
-  line-height: var(--natal-type-body-line-height);
 }
 
 .natal-reading__chapter {
@@ -610,12 +612,22 @@
   min-width: 0;
 }
 
+.natal-reading__chapter-title-row {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  justify-content: space-between;
+  min-width: 0;
+}
+
 .natal-reading__chapter-title .natal-section-eyebrow {
   margin-bottom: 0;
   color: var(--natal-text-reading-muted);
 }
 
 .natal-reading__chapter-head h3 {
+  flex: 1 1 auto;
+  min-width: 0;
   margin: 0;
   font-size: var(--natal-type-card-title-size);
   font-weight: var(--type-card-title-weight);
@@ -780,6 +792,7 @@
 }
 
 .natal-reading__chapter-toggle,
+.natal-reading-explanations__toggle,
 .natal-reading__meta-toggle {
   width: fit-content;
   min-height: 32px;
@@ -790,19 +803,22 @@
   cursor: pointer;
 }
 
-.natal-reading__chapter-toggle {
+.natal-reading__chapter-toggle,
+.natal-reading-explanations__toggle {
   border: 1px solid var(--natal-border-accent);
   background: color-mix(in srgb, var(--premium-accent-purple-strong) 6%, var(--color-token-rgb-255-255-255));
   color: var(--premium-accent-purple-strong);
 }
 
-.natal-reading__chapter-toggle:hover {
+.natal-reading__chapter-toggle:hover,
+.natal-reading-explanations__toggle:hover {
   background: color-mix(in srgb, var(--premium-accent-purple-strong) 8%, var(--natal-surface-reading-muted));
 }
 
 .natal-reading__progress-link:focus-visible,
 .natal-reading__chapter-toggle:focus-visible,
 .natal-reading__chapter-collapse:focus-visible,
+.natal-reading-explanations__toggle:focus-visible,
 .natal-reading__meta-toggle:focus-visible {
   outline: var(--natal-focus-outline);
   outline-offset: 2px;
@@ -831,7 +847,8 @@
   background: color-mix(in srgb, var(--natal-theme-color, var(--premium-accent-purple-strong)) 4%, var(--natal-surface-block));
 }
 
-.dark .natal-reading__chapter-toggle {
+.dark .natal-reading__chapter-toggle,
+.dark .natal-reading-explanations__toggle {
   background: color-mix(in srgb, var(--premium-accent-purple-strong) 6%, var(--natal-surface-block));
 }
 
@@ -1166,6 +1183,16 @@
       gap: 8px;
     }
 
+  .natal-reading__chapter-title-row {
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+  .natal-reading-explanations__header {
+      flex-direction: column;
+      gap: 10px;
+    }
+
   .natal-reading__chapter-index {
       width: 32px;
       height: 32px;
@@ -1198,7 +1225,8 @@
       font-size: var(--font-size-3xs);
     }
 
-  .natal-reading__chapter-toggle {
+  .natal-reading__chapter-toggle,
+  .natal-reading-explanations__toggle {
       min-height: 44px;
       padding: 0 14px;
       font-size: var(--font-size-xs);
