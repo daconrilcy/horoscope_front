@@ -149,7 +149,7 @@ describe("buildNatalInterpretationViewModel", () => {
     expect(viewModel?.isPartial).toBe(false)
     expect(viewModel?.calculationFacts?.groups.map((group) => group.title)).toEqual([
       "Repères principaux",
-      "Maisons",
+      "Maisons dominantes",
       "Aspects majeurs",
     ])
     expect(viewModel?.calculationFacts?.groups[0]?.items).toEqual([
@@ -185,6 +185,150 @@ describe("buildNatalInterpretationViewModel", () => {
       { label: "Soleil", value: "Capricorne", detail: "Maison II - Valeurs - 281.45°" },
       { label: "Lune", value: "Poissons", detail: "Maison IV - Foyer - 341.76°" },
       { label: "Ascendant", value: "Scorpion", detail: "Maison I - Identité" },
+    ])
+  })
+
+  it("affiche toutes les maisons dominantes transmises par dominant_themes.houses", () => {
+    const job: AstralJobResponse = {
+      run_id: "run-dominant-houses",
+      status: "completed",
+      result: {
+        calculation: {
+          dominant_themes: {
+            houses: [
+              { number: 2, theme: "Resources", importance: "Very high" },
+              { number: 10, theme: "Career", importance: "High" },
+              { number: 4, theme: "Home", importance: "Medium" },
+            ],
+          },
+        },
+        reading: {
+          status: "success",
+          reading: {
+            summary: { title: "Lecture avec maisons dominantes" },
+            chapters: [],
+          },
+        },
+      },
+    }
+
+    const dominantHousesGroup = buildNatalInterpretationViewModel(job, "basic")?.calculationFacts?.groups.find(
+      (group) => group.title === "Maisons dominantes",
+    )
+
+    expect(dominantHousesGroup?.items).toEqual([
+      { label: "Maison II - Valeurs", value: "Valeurs", detail: "Très élevée" },
+      { label: "Maison X - Carrière", value: "Carrière", detail: "Élevée" },
+      { label: "Maison IV - Foyer", value: "Foyer", detail: "Moyenne" },
+    ])
+  })
+
+  it("accepte dominant_houses et dedoublonne sans masquer les maisons distinctes", () => {
+    const job: AstralJobResponse = {
+      run_id: "run-dominant-houses-v2",
+      status: "completed",
+      result: {
+        calculation: {
+          dominant_houses: [
+            { house_number: 7, theme: "Relations", importance: "High" },
+            { house_number: 7, theme: "Relations", importance: "High" },
+          ],
+          dominance: {
+            dominant_houses: [
+              { house: 7, theme: "Partnerships", importance: "High" },
+              { house: 11, theme: "Community", importance: "Medium" },
+            ],
+          },
+        },
+        reading: {
+          status: "success",
+          reading: {
+            summary: { title: "Lecture avec nouveau contrat" },
+            chapters: [],
+          },
+        },
+      },
+    }
+
+    const dominantHousesGroup = buildNatalInterpretationViewModel(job, "basic")?.calculationFacts?.groups.find(
+      (group) => group.title === "Maisons dominantes",
+    )
+
+    expect(dominantHousesGroup?.items).toEqual([
+      { label: "Maison VII - Relations", value: "Relations", detail: "Élevée" },
+      { label: "Maison VII - Relations", value: "Partnerships", detail: "Élevée" },
+      { label: "Maison XI - Communauté", value: "Community", detail: "Moyenne" },
+    ])
+  })
+
+  it("lit les maisons dominantes numerotees par code depuis chart_balance", () => {
+    const job: AstralJobResponse = {
+      run_id: "run-chart-balance-dominant-houses",
+      status: "completed",
+      result: {
+        chart_balance: {
+          dominant_houses: [
+            { code: "10", score: 0.82, rank: 1, source: "house_strength" },
+            { code: "11", score: 0.76, rank: 2, source: "house_strength" },
+            { code: "4", score: 0.52, rank: 3, source: "house_strength" },
+            { code: "13", score: 0.4, rank: 4, source: "house_strength" },
+            { code: "10.5", score: 0.3, rank: 5, source: "house_strength" },
+          ],
+        },
+        reading: {
+          status: "success",
+          reading: {
+            summary: { title: "Lecture avec chart balance" },
+            chapters: [],
+          },
+        },
+      },
+    }
+
+    const dominantHousesGroup = buildNatalInterpretationViewModel(job, "basic")?.calculationFacts?.groups.find(
+      (group) => group.title === "Maisons dominantes",
+    )
+
+    expect(dominantHousesGroup?.items).toEqual([
+      { label: "Maison X - Carrière", value: "Maison dominante", detail: "Rang 1" },
+      { label: "Maison XI - Communauté", value: "Maison dominante", detail: "Rang 2" },
+      { label: "Maison IV - Foyer", value: "Maison dominante", detail: "Rang 3" },
+    ])
+  })
+
+  it("conserve les maisons techniques separees des maisons dominantes", () => {
+    const job: AstralJobResponse = {
+      run_id: "run-dominant-and-technical-houses",
+      status: "completed",
+      result: {
+        calculation: {
+          dominant_themes: {
+            houses: [{ number: 10, theme: "Career", importance: "High" }],
+          },
+          houses: [
+            { number: 1, sign: "Scorpio", cusp_longitude: 215.1 },
+            { number: 2, sign: "Sagittarius", cusp_longitude: 243.2 },
+          ],
+        },
+        reading: {
+          status: "success",
+          reading: {
+            summary: { title: "Lecture avec maisons separees" },
+            chapters: [],
+          },
+        },
+      },
+    }
+
+    const groups = buildNatalInterpretationViewModel(job, "basic")?.calculationFacts?.groups
+
+    expect(groups?.map((group) => group.title)).toEqual(["Maisons dominantes", "Maisons"])
+    expect(groups?.[0]?.items).toEqual([
+      { label: "Maison X - Carrière", value: "Carrière", detail: "Élevée" },
+    ])
+    expect(groups?.[1]?.items).toEqual([
+      { label: "Maison I - Identité", value: "Scorpion", detail: "215.10°" },
+      { label: "Maison II - Valeurs", value: "Sagittaire", detail: "243.20°" },
     ])
   })
 

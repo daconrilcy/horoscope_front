@@ -1,6 +1,7 @@
 // Orchestration du job Astral natal et projection de lecture pour la page thème natal.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useSearchParams } from "react-router-dom"
+import { useQueryClient } from "@tanstack/react-query"
 
 import {
   type AstralJobEvent,
@@ -39,6 +40,10 @@ export function mergeCurrentAstralJobState(
   }
 }
 
+function hasResultPayload(result: AstralJobResponse["result"] | undefined): boolean {
+  return Boolean(result && Object.keys(result).length > 0)
+}
+
 export type UseNatalAstralJobResult = {
   currentJob: AstralJobResponse | undefined
   natalReading: NatalInterpretationViewModel | null
@@ -53,6 +58,7 @@ export type UseNatalAstralJobResult = {
 /** Fournit l'état complet du job Astral natal sans exposer l'orchestration à la page. */
 export function useNatalAstralJob(): UseNatalAstralJobResult {
   const accessToken = useAccessTokenSnapshot()
+  const queryClient = useQueryClient()
   const [searchParams, setSearchParams] = useSearchParams()
   const initialRunId = searchParams.get("runId")
   const hasValidSession = hasUsableAccessToken(accessToken)
@@ -67,6 +73,7 @@ export function useNatalAstralJob(): UseNatalAstralJobResult {
   )
   const [runId, setRunId] = useState<string | null>(initialRunId)
   const [eventJob, setEventJob] = useState<AstralJobResponse | null>(null)
+  const [isAwaitingCompletedResult, setIsAwaitingCompletedResult] = useState(false)
   const startInFlightRef = useRef(false)
   const submitJob = useSubmitAstralJob(accessToken)
   const jobStatus = useAstralJobStatus(accessToken, runId)
@@ -78,7 +85,8 @@ export function useNatalAstralJob(): UseNatalAstralJobResult {
   const isWorking =
     submitJob.isPending ||
     currentJob?.status === "queued" ||
-    currentJob?.status === "running"
+    currentJob?.status === "running" ||
+    (isAwaitingCompletedResult && !currentJob?.result)
   const hasTransportError = submitJob.isError || jobStatus.isError
   const canStart = hasValidSession && !submitJob.isPending && !isWorking
   const canRetry = canStart
@@ -101,18 +109,28 @@ export function useNatalAstralJob(): UseNatalAstralJobResult {
 
   useEffect(() => {
     setEventJob(null)
+    setIsAwaitingCompletedResult(false)
   }, [runId])
 
   const handleAstralEvent = useCallback(
     (event: AstralJobEvent) => {
       if (typeof event.status !== "string") return
       if (typeof event.run_id === "string" && event.run_id !== runId) return
+      if (event.status === "completed" && !hasResultPayload(event.result) && runId) {
+        setIsAwaitingCompletedResult(true)
+        void queryClient
+          .refetchQueries({ queryKey: ["astral-job", runId], type: "active" })
+          .finally(() => {
+            setIsAwaitingCompletedResult(false)
+          })
+        return
+      }
       setEventJob((previous) => ({
         ...(previous ?? jobStatus.data ?? submitJob.data ?? { run_id: runId ?? "", status: "queued" }),
         ...event,
       }))
     },
-    [jobStatus.data, runId, submitJob.data],
+    [jobStatus.data, queryClient, runId, submitJob.data],
   )
 
   useAstralJobEvents(accessToken, runId, handleAstralEvent)

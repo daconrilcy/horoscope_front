@@ -169,6 +169,17 @@ function asNumber(value: unknown): number | null {
   return typeof value === "number" && Number.isFinite(value) ? value : null
 }
 
+function asNumericText(value: unknown): number | null {
+  if (typeof value !== "string" || !value.trim()) return null
+  const numericValue = Number(value)
+  return Number.isFinite(numericValue) ? numericValue : null
+}
+
+function asHouseNumber(value: unknown): number | null {
+  const number = asNumber(value) ?? asNumericText(value)
+  return number !== null && Number.isInteger(number) && number >= 1 && number <= 12 ? number : null
+}
+
 function normalizeCode(value: string): string {
   return value.trim().toLowerCase().replace(/\s+/g, "_")
 }
@@ -693,9 +704,54 @@ function buildNotablePlacementFacts(projection: Record<string, unknown>): NatalC
     .slice(0, MAX_NOTABLE_PLACEMENTS)
 }
 
-function buildHouseFacts(source: Record<string, unknown>, projection: Record<string, unknown>): NatalCalculationFactItemViewModel[] {
+function dominantHouseEntries(...sources: Record<string, unknown>[]): unknown[] {
+  const entries: unknown[] = []
+  for (const projection of sources) {
+    const dominantThemes = asRecord(projection.dominant_themes)
+    const dominance = asRecord(projection.dominance)
+    const chartBalance = asRecord(projection.chart_balance)
+    entries.push(
+      ...(Array.isArray(dominantThemes?.houses) ? dominantThemes.houses : []),
+      ...(Array.isArray(projection.dominant_houses) ? projection.dominant_houses : []),
+      ...(Array.isArray(dominance?.dominant_houses) ? dominance.dominant_houses : []),
+      ...(Array.isArray(chartBalance?.dominant_houses) ? chartBalance.dominant_houses : []),
+    )
+  }
+  return entries
+}
+
+function dominantHouseDetail(item: Record<string, unknown>): string | null {
+  const directDetail = localizedMetadataText(item.importance ?? item.rank_label ?? item.score_label)
+  if (directDetail) return directDetail
+  const rank = asNumber(item.rank)
+  if (rank !== null) return `Rang ${rank}`
+  return null
+}
+
+function buildDominantHouseFacts(...sources: Record<string, unknown>[]): NatalCalculationFactItemViewModel[] {
+  const uniqueFacts = new Map<string, NatalCalculationFactItemViewModel>()
+  for (const house of dominantHouseEntries(...sources)) {
+    const item = asRecord(house)
+    const number =
+      asHouseNumber(item?.number ?? item?.house_number ?? item?.house) ??
+      asHouseNumber(item?.code)
+    if (!item || number === null) continue
+
+    const theme = localizedMetadataText(item.theme ?? item.label ?? item.topic)
+    const fact = {
+      label: translateHouse(number, "fr"),
+      value: theme ?? "Maison dominante",
+      detail: dominantHouseDetail(item),
+    }
+    const key = `${number}:${fact.value.toLowerCase()}`
+    if (!uniqueFacts.has(key)) uniqueFacts.set(key, fact)
+  }
+  return Array.from(uniqueFacts.values())
+}
+
+function buildHouseFacts(source: Record<string, unknown>): NatalCalculationFactItemViewModel[] {
   const houses = Array.isArray(source.houses) ? source.houses : []
-  const legacyHouses = houses
+  return houses
     .map((house) => {
       const item = asRecord(house)
       const number = asNumber(item?.number ?? item?.house_number)
@@ -704,23 +760,6 @@ function buildHouseFacts(source: Record<string, unknown>, projection: Record<str
         label: translateHouse(number, "fr"),
         value: formatSign(item.sign ?? item.sign_code) ?? formatDegree(item.cusp_longitude) ?? "Disponible",
         detail: formatDegree(item.cusp_longitude ?? item.longitude_deg),
-      }
-    })
-    .filter((item): item is NatalCalculationFactItemViewModel => Boolean(item))
-
-  if (legacyHouses.length > 0) return legacyHouses
-
-  const dominantThemes = asRecord(projection.dominant_themes)
-  const dominantHouses = Array.isArray(dominantThemes?.houses) ? dominantThemes.houses : []
-  return dominantHouses
-    .map((house) => {
-      const item = asRecord(house)
-      const number = asNumber(item?.number ?? item?.house_number)
-      if (!item || number === null) return null
-      return {
-        label: translateHouse(number, "fr"),
-        value: localizedMetadataText(item.theme) ?? "Maison dominante",
-        detail: localizedMetadataText(item.importance),
       }
     })
     .filter((item): item is NatalCalculationFactItemViewModel => Boolean(item))
@@ -985,7 +1024,8 @@ function buildCalculationFacts(
   const coreFacts = buildCoreFacts(projection)
   const legacyPlacementFacts = buildLegacyPlacementFacts(projection)
   const notablePlacements = buildNotablePlacementFacts(projection)
-  const houseFacts = buildHouseFacts(projection, projection)
+  const dominantHouseFacts = buildDominantHouseFacts(projection, result)
+  const houseFacts = buildHouseFacts(projection)
   const aspectFacts = buildAspectFacts(projection, projection)
   const sensitivePointFacts = buildSensitivePointFacts(projection)
   const methods = buildCalculationMethods(result, projection, birthProfile)
@@ -996,6 +1036,7 @@ function buildCalculationFacts(
 
   const mainFacts = [...(coreFacts.length > 0 ? coreFacts : legacyPlacementFacts.slice(0, 5))]
   if (mainFacts.length > 0) groups.push({ title: "Repères principaux", items: mainFacts })
+  if (dominantHouseFacts.length > 0) groups.push({ title: "Maisons dominantes", items: dominantHouseFacts })
   if (houseFacts.length > 0) groups.push({ title: "Maisons", items: houseFacts })
   if (sensitivePointFacts.length > 0) {
     groups.push({ title: "Positions sensibles", items: sensitivePointFacts })

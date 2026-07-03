@@ -606,7 +606,7 @@ describe("NatalChartPage", () => {
     expect(screen.getByLabelText("Marqueurs clés du portrait astral")).toHaveTextContent("Ascendant")
     expect(screen.getByText("Une synthese claire du theme.")).toBeVisible()
     expect(container.querySelector(".natal-reading-facts__group--primary")).toHaveTextContent("Repères principaux")
-    expect(screen.getByRole("region", { name: "Maisons" })).toHaveTextContent("Maison II")
+    expect(screen.getByRole("region", { name: "Maisons dominantes" })).toHaveTextContent("Maison II")
     expect(screen.getByRole("region", { name: "Positions sensibles" })).toHaveTextContent("Mercure")
     expect(screen.getByRole("region", { name: "Aspects majeurs" })).toHaveTextContent("Jupiter - Uranus")
     expect(screen.queryByText("Saturne - Uranus")).not.toBeInTheDocument()
@@ -832,7 +832,7 @@ describe("NatalChartPage", () => {
 
     expect(await screen.findByRole("heading", { name: "Base du calcul natal" })).toBeVisible()
     expect(screen.getByRole("region", { name: "Repères principaux" })).toHaveTextContent("Soleil")
-    expect(screen.getByRole("region", { name: "Maisons" })).toHaveTextContent("Maison II")
+    expect(screen.getByRole("region", { name: "Maisons dominantes" })).toHaveTextContent("Maison II")
     expect(screen.queryByText("birth-data unavailable")).not.toBeInTheDocument()
     expect(screen.queryByRole("button", { name: "Afficher la base" })).not.toBeInTheDocument()
   })
@@ -879,6 +879,74 @@ describe("NatalChartPage", () => {
 
     expect(await screen.findByRole("heading", { name: "Thème natal" })).toBeVisible()
     expect(screen.getByText("Le polling garde le texte public.")).toBeVisible()
+  })
+
+  it("refetch le polling sans afficher une lecture vide quand un SSE completed arrive sans resultat", async () => {
+    const refetchSpy = vi.spyOn(queryClient, "refetchQueries").mockResolvedValue(undefined)
+    mockUseAstralJobStatus.mockReturnValue({
+      data: {
+        run_id: "run-natal-sse-race",
+        status: "running",
+        service_code: "natal_basic",
+      },
+      isError: false,
+      isPending: false,
+    })
+
+    renderNatalChartPage(["/natal?runId=run-natal-sse-race"])
+    capturedAstralEventHandler?.({ run_id: "run-natal-sse-race", status: "completed" })
+
+    expect(await screen.findByRole("status")).toHaveTextContent("Votre thème natal est en cours de génération")
+    expect(screen.queryByText("La lecture est indisponible pour ce job Astral.")).not.toBeInTheDocument()
+    await waitFor(() => {
+      expect(refetchSpy).toHaveBeenCalledWith({
+        queryKey: ["astral-job", "run-natal-sse-race"],
+        type: "active",
+      })
+    })
+    refetchSpy.mockRestore()
+  })
+
+  it("refetch aussi quand un SSE completed arrive avec un resultat vide", async () => {
+    const refetchSpy = vi.spyOn(queryClient, "refetchQueries").mockResolvedValue(undefined)
+    mockUseAstralJobStatus.mockReturnValue({
+      data: {
+        run_id: "run-natal-empty-result-event",
+        status: "running",
+        service_code: "natal_basic",
+      },
+      isError: false,
+      isPending: false,
+    })
+
+    renderNatalChartPage(["/natal?runId=run-natal-empty-result-event"])
+    capturedAstralEventHandler?.({ run_id: "run-natal-empty-result-event", status: "completed", result: {} })
+
+    expect(await screen.findByRole("status")).toHaveTextContent("Votre thème natal est en cours de génération")
+    await waitFor(() => {
+      expect(refetchSpy).toHaveBeenCalledWith({
+        queryKey: ["astral-job", "run-natal-empty-result-event"],
+        type: "active",
+      })
+    })
+    refetchSpy.mockRestore()
+  })
+
+  it("affiche un etat indisponible si le polling final reste completed sans resultat", async () => {
+    mockUseAstralJobStatus.mockReturnValue({
+      data: {
+        run_id: "run-natal-empty-completed",
+        status: "completed",
+        service_code: "natal_basic",
+      },
+      isError: false,
+      isPending: false,
+    })
+
+    renderNatalChartPage(["/natal?runId=run-natal-empty-completed"])
+
+    expect(await screen.findByText("La lecture est indisponible pour ce job Astral.")).toBeVisible()
+    expect(screen.queryByRole("status")).not.toBeInTheDocument()
   })
 
   it("ignore un evenement SSE qui cible un autre run", async () => {

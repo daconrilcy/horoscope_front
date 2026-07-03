@@ -53,12 +53,14 @@ const READING_GUIDE_SECTION_ID = "natal-chart-guide"
 
 const GROUP_MARKERS: Record<string, LucideIcon> = {
   "Repères principaux": Sun,
+  "Maisons dominantes": Home,
   Maisons: Home,
   "Positions sensibles": CircleDot,
   "Aspects majeurs": Triangle,
 }
 const GROUP_MODIFIERS: Record<string, string> = {
   "Repères principaux": "primary",
+  "Maisons dominantes": "houses",
   Maisons: "houses",
   "Positions sensibles": "sensitive",
   "Aspects majeurs": "aspects",
@@ -120,13 +122,18 @@ function groupClassName(title: string): string {
 }
 
 function primaryFactBadgeClassName(title: string): string {
-  if (title === "Maisons") return "natal-badge natal-badge--astro-data natal-badge--astro-house"
+  if (title === "Maisons" || title === "Maisons dominantes") {
+    return "natal-badge natal-badge--astro-data natal-badge--astro-house"
+  }
   if (title === "Aspects majeurs") return "natal-badge natal-badge--astro-data natal-badge--astro-aspect"
   return "natal-badge natal-badge--astro-data natal-badge--astro-sign"
 }
 
 function detailFactBadgeClassName(title: string): string {
-  const modifier = title === "Maisons" || title === "Aspects majeurs" ? " natal-badge--astro-intensity" : ""
+  const modifier =
+    title === "Maisons" || title === "Maisons dominantes" || title === "Aspects majeurs"
+      ? " natal-badge--astro-intensity"
+      : ""
   return `natal-badge natal-badge--fact-detail${modifier}`
 }
 
