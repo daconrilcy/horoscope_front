@@ -629,9 +629,14 @@ describe("NatalChartPage", () => {
     const heroLogo = container.querySelector(".natal-reading-hero__symbol .natal-reading-hero__logo")
     expect(heroLogo).toHaveAttribute("src", expect.stringContaining("Natal_Logo02"))
     expect(screen.getByRole("heading", { name: "Base du calcul natal" })).toBeVisible()
-    expect(screen.getByText("Calculs du thème natal")).toBeVisible()
     expect(screen.getByRole("link", { name: "Mon profil de base" })).toHaveAttribute("href", "/profile")
     const calculationFactsSection = screen.getByRole("region", { name: "Base du calcul natal" })
+    const titleRow = calculationFactsSection.querySelector(".natal-reading-facts__header-title-row")
+    expect(titleRow).not.toBeNull()
+    expect(titleRow).toHaveTextContent("Base du calcul natal")
+    expect(titleRow).toHaveTextContent("Réduire la base du calcul")
+    expect(calculationFactsSection).toHaveTextContent("Paramètres astronomiques et astrologiques utilisés pour établir votre thème.")
+    expect(calculationFactsSection).not.toHaveTextContent(/Score\s+\d/)
     const calculationFactsToggle = within(calculationFactsSection).getByRole("button", {
       name: "Réduire la base du calcul",
     })

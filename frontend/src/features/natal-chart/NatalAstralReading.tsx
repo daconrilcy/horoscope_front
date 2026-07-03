@@ -307,31 +307,32 @@ function NatalCalculationFactsHeader({
   contentId,
   isExpanded,
   onToggle,
-  sourceLabel,
 }: {
   contentId: string
   isExpanded: boolean
   onToggle: () => void
-  sourceLabel: string
 }) {
   return (
     <div className="natal-reading-facts__header">
       <div className="natal-reading-facts__header-copy">
-        <span className="natal-section-eyebrow">{sourceLabel}</span>
-        <h2 id="natal-reading-facts-title">Base du calcul natal</h2>
-        <p>Paramètres astronomiques et astrologiques utilisés pour établir votre thème.</p>
+        <div className="natal-reading-facts__header-title-row">
+          <h2 id="natal-reading-facts-title">Base du calcul natal</h2>
+          <button
+            aria-controls={contentId}
+            aria-expanded={isExpanded}
+            className="natal-reading-facts__toggle"
+            type="button"
+            onClick={onToggle}
+          >
+            {isExpanded ? <ChevronUp size={17} aria-hidden="true" /> : <ChevronDown size={17} aria-hidden="true" />}
+            {isExpanded ? "Réduire la base du calcul" : "Développer la base du calcul"}
+          </button>
+        </div>
+        <p className="natal-reading-facts__header-subtitle">
+          Paramètres astronomiques et astrologiques utilisés pour établir votre thème.
+        </p>
       </div>
       <div className="natal-reading-facts__header-actions">
-        <button
-          aria-controls={contentId}
-          aria-expanded={isExpanded}
-          className="natal-reading-facts__toggle"
-          type="button"
-          onClick={onToggle}
-        >
-          {isExpanded ? <ChevronUp size={17} aria-hidden="true" /> : <ChevronDown size={17} aria-hidden="true" />}
-          {isExpanded ? "Réduire la base du calcul" : "Développer la base du calcul"}
-        </button>
         <Link to="/profile" className="natal-reading-facts__profile-link">
           <UserRound size={17} aria-hidden="true" />
           Mon profil de base
@@ -515,7 +516,6 @@ function NatalReadingFactsDetails({ facts }: { facts: NatalCalculationFactsViewM
       <NatalCalculationFactsHeader
         contentId={contentId}
         isExpanded={isExpanded}
-        sourceLabel={facts.sourceLabel}
         onToggle={() => setIsExpanded((current) => !current)}
       />
       <div className="natal-reading-facts__content" hidden={!isExpanded} id={contentId}>

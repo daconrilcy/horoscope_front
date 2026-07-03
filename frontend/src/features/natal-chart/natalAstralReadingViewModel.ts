@@ -41,7 +41,6 @@ export type NatalCalculationFactsViewModel = {
   groups: NatalCalculationFactGroupViewModel[]
   methods: NatalCalculationMethodViewModel[]
   calculationReferenceMethods: NatalCalculationMethodViewModel[]
-  sourceLabel: string
 }
 
 export type NatalHighlightFactViewModel = NatalCalculationFactItemViewModel
@@ -661,11 +660,6 @@ function compactFact(item: NatalCalculationFactItemViewModel): NatalCalculationF
   return item.details && item.details.length === 0 ? { label: item.label, value: item.value, detail: item.detail } : item
 }
 
-function scoreDetail(value: unknown): string | null {
-  const score = asNumber(value)
-  return score === null ? null : `Score ${score}`
-}
-
 function detailParts(...values: Array<string | null>): string | null {
   const parts = values.filter((value): value is string => Boolean(value))
   return parts.length > 0 ? parts.join(" - ") : null
@@ -700,7 +694,6 @@ function axisHouseEvidenceDetail(value: unknown): string | null {
   return detailParts(
     sourceText(item.house_label),
     sourceText(item.strength_label),
-    scoreDetail(item.score),
   )
 }
 
@@ -724,7 +717,7 @@ function buildEvidenceSummaryGroups(
       return compactFact({
         label,
         value: sourceText(item.strength_label) ?? "Maison dominante",
-        detail: detailParts(sourceText(item.theme_label), scoreDetail(item.score)),
+        detail: detailParts(sourceText(item.theme_label)),
         details: publicEvidenceLabels(item.evidence),
       })
     })
@@ -739,10 +732,7 @@ function buildEvidenceSummaryGroups(
       return compactFact({
         label,
         value: sourceText(item.strength_label) ?? sourceText(item.primary_house_label) ?? "Axe de maisons",
-        detail: detailParts(
-          sourceText(item.primary_house_label) ? `Maison primaire ${sourceText(item.primary_house_label)}` : null,
-          scoreDetail(item.score),
-        ),
+        detail: detailParts(sourceText(item.primary_house_label) ? `Maison primaire ${sourceText(item.primary_house_label)}` : null),
         details: [
           ...houses.map(axisHouseEvidenceDetail).filter((detail): detail is string => Boolean(detail)),
           ...publicEvidenceLabels(item.evidence),
@@ -1026,7 +1016,7 @@ function buildCalculationFacts(
   groups.push(...evidenceGroups.filter((group) => group.title === "Aspects majeurs"))
 
   return groups.length > 0 || methods.length > 0 || calculationReferenceMethods.length > 0
-    ? { groups, methods, calculationReferenceMethods, sourceLabel: "Calculs du thème natal" }
+    ? { groups, methods, calculationReferenceMethods }
     : null
 }
 

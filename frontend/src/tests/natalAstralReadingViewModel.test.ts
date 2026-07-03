@@ -251,18 +251,14 @@ describe("buildNatalInterpretationViewModel", () => {
     expect(viewModel?.calculationFacts?.groups[1]?.items[0]).toEqual({
       label: "Maison II - Valeurs publiques",
       value: "Très fort",
-      detail: "Ressources localisées - Score 0.8587",
+      detail: "Ressources localisées",
       details: ["Soleil en maison II", "Lune en maison II"],
     })
     expect(viewModel?.calculationFacts?.groups[2]?.items[0]).toEqual({
       label: "Maison IV - Foyer / Maison X - Carrière",
       value: "Fort",
-      detail: "Maison primaire Maison X - Carrière - Score 0.8946",
-      details: [
-        "Maison IV - Foyer - Modéré - Score 0.505",
-        "Maison X - Carrière - Très fort - Score 1",
-        "Axe privé/public activé",
-      ],
+      detail: "Maison primaire Maison X - Carrière",
+      details: ["Maison IV - Foyer - Modéré", "Maison X - Carrière - Très fort", "Axe privé/public activé"],
     })
     expect(viewModel?.calculationFacts?.groups[3]?.items[0]).toEqual({
       label: "Mercure",
@@ -319,7 +315,7 @@ describe("buildNatalInterpretationViewModel", () => {
       {
         label: "Maison III - Communication",
         value: "Forte",
-        detail: "Communication localisée - Score 0.72",
+        detail: "Communication localisée",
         details: ["Mercure en maison III"],
       },
     ])

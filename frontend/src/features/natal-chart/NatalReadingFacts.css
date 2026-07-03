@@ -15,30 +15,34 @@
 }
 
 .natal-reading-facts__header {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 20px;
+  display: grid;
+  gap: 18px;
 }
 
 .natal-reading-facts__header-copy {
   display: grid;
-  flex: 1 1 100%;
-  gap: 10px;
+  gap: 12px;
   min-width: 0;
   width: 100%;
+}
+
+.natal-reading-facts__header-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-width: 0;
 }
 
 .natal-reading-facts__header h2 {
   margin: 0;
   color: var(--premium-text-strong);
-  font-size: clamp(var(--font-size-xl), 2.6vw, var(--type-page-title-size));
+  font-size: var(--font-size-lg);
   font-weight: var(--font-weight-bold);
-  line-height: var(--type-page-title-line-height);
+  line-height: var(--type-card-title-line-height);
 }
 
-.natal-reading-facts__header p {
+.natal-reading-facts__header-subtitle {
   width: 100%;
   max-width: none;
   margin: 0;
@@ -51,7 +55,6 @@
   display: inline-flex;
   align-items: center;
   justify-content: flex-end;
-  flex: 0 0 auto;
   gap: 10px;
 }
 
@@ -552,6 +555,11 @@
   .natal-reading-facts__header {
     display: grid;
     gap: 14px;
+  }
+
+  .natal-reading-facts__header-title-row {
+    align-items: flex-start;
+    flex-wrap: wrap;
   }
 
   .natal-reading-facts__header h2 {
