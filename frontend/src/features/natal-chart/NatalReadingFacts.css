@@ -16,12 +16,12 @@
 
 .natal-reading-facts__header {
   display: grid;
-  gap: 18px;
+  gap: 14px;
 }
 
 .natal-reading-facts__header-copy {
   display: grid;
-  gap: 12px;
+  gap: 10px;
   min-width: 0;
   width: 100%;
 }
@@ -30,7 +30,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: 14px;
   min-width: 0;
 }
 
@@ -54,7 +54,7 @@
 .natal-reading-facts__header-actions {
   display: inline-flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: flex-start;
   gap: 10px;
 }
 
@@ -103,7 +103,7 @@
 
 .natal-reading-facts__content {
   display: grid;
-  gap: 22px;
+  gap: 20px;
 }
 
 .natal-reading-facts__content[hidden] {
@@ -112,44 +112,37 @@
 
 .natal-reading-facts__grid {
   display: grid;
-  grid-template-columns: minmax(310px, 1fr) minmax(0, 1.92fr);
-  gap: 20px;
+  grid-template-columns: minmax(280px, 0.92fr) minmax(0, 1.08fr);
+  gap: 16px;
+  align-items: start;
 }
 
 .natal-reading-facts__grid--single {
-  grid-template-columns: minmax(310px, 0.56fr);
+  grid-template-columns: minmax(280px, 0.62fr);
   justify-content: start;
 }
 
 .natal-reading-facts__secondary-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  overflow: hidden;
-  border: 1px solid var(--natal-border-section);
-  border-radius: var(--natal-radius-section);
-  background: color-mix(in srgb, var(--natal-surface-data) 94%, transparent);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  align-items: stretch;
 }
 
 .natal-reading-facts__group {
   display: grid;
   align-content: start;
-  gap: 24px;
+  gap: 18px;
   min-width: 0;
   min-height: 0;
-  padding: 30px 28px 28px;
-}
-
-.natal-reading-facts__secondary-grid .natal-reading-facts__group {
-  border-right: 1px solid color-mix(in srgb, var(--natal-border-section) 74%, transparent);
-}
-
-.natal-reading-facts__secondary-grid .natal-reading-facts__group:last-child {
-  border-right: 0;
+  padding: 24px 24px 22px;
+  border: 1px solid var(--natal-border-section);
+  border-radius: var(--natal-radius-section);
+  background: color-mix(in srgb, var(--natal-surface-data) 94%, transparent);
 }
 
 .natal-reading-facts__group--primary {
-  border: 1px solid var(--natal-border-section);
-  border-radius: var(--natal-radius-section);
+  box-shadow: var(--natal-shadow-section);
   background: radial-gradient(
       circle at 45% 52%,
       color-mix(in srgb, var(--premium-accent-purple-strong) 7%, transparent) 0,
@@ -162,7 +155,7 @@
 .natal-reading-facts__methods-head {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
   min-width: 0;
 }
 
@@ -337,9 +330,9 @@
 
 .natal-reading-facts__item {
   display: grid;
-  gap: 10px;
+  gap: 8px;
   min-width: 0;
-  padding: 18px 0;
+  padding: 16px 0;
   border-bottom: 1px solid color-mix(in srgb, var(--natal-border-section) 64%, transparent);
 }
 
@@ -386,7 +379,7 @@
 
 .natal-reading-facts__detail-line {
   display: block;
-  padding-left: 10px;
+  padding-left: 8px;
   border-left: 2px solid color-mix(in srgb, var(--premium-accent-purple-strong) 18%, transparent);
   color: color-mix(in srgb, var(--premium-text-main) 82%, var(--premium-text-meta) 18%);
   overflow-wrap: anywhere;
@@ -439,8 +432,8 @@
 
 .natal-reading-facts__methods {
   display: grid;
-  gap: 24px;
-  padding: 28px;
+  gap: 20px;
+  padding: 24px;
   border: 1px solid var(--natal-border-section);
   border-radius: var(--natal-radius-section);
   background: color-mix(in srgb, var(--natal-surface-data) 95%, var(--natal-surface-reading-muted) 5%);
@@ -526,6 +519,10 @@
     grid-template-columns: 1fr;
   }
 
+  .natal-reading-facts__secondary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .natal-reading-facts__methods-list {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
@@ -534,15 +531,6 @@
 @media (max-width: 900px) {
   .natal-reading-facts__secondary-grid {
     grid-template-columns: 1fr;
-  }
-
-  .natal-reading-facts__secondary-grid .natal-reading-facts__group {
-    border-right: 0;
-    border-bottom: 1px solid color-mix(in srgb, var(--natal-border-section) 74%, transparent);
-  }
-
-  .natal-reading-facts__secondary-grid .natal-reading-facts__group:last-child {
-    border-bottom: 0;
   }
 }
 
