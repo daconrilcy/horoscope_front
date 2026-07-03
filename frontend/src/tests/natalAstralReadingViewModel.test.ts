@@ -1,4 +1,6 @@
 // Verifie la normalisation publique des contrats Astral natals.
+import { readFileSync } from "node:fs"
+
 import { describe, expect, it } from "vitest"
 
 import { buildNatalInterpretationViewModel } from "../features/natal-chart/natalAstralReadingViewModel"
@@ -128,6 +130,80 @@ describe("buildNatalInterpretationViewModel", () => {
               short_text: "Lecture approfondie.",
             },
             chapters: [],
+            evidence_summary: {
+              language: "fr",
+              score_scale_version: "score-scale-v1",
+              dominant_houses: [
+                {
+                  house_label: "Maison II - Valeurs publiques",
+                  theme_label: "Ressources localisées",
+                  score: 0.8587,
+                  strength_label: "Très fort",
+                  evidence: [
+                    { label: "Soleil en maison II" },
+                    { label: "Lune en maison II" },
+                  ],
+                },
+              ],
+              house_axes: [
+                {
+                  axis_label: "Maison IV - Foyer / Maison X - Carrière",
+                  primary_house_label: "Maison X - Carrière",
+                  score: 0.8946,
+                  strength_label: "Fort",
+                  houses: [
+                    { house_label: "Maison IV - Foyer", score: 0.505, strength_label: "Modéré" },
+                    { house_label: "Maison X - Carrière", score: 1, strength_label: "Très fort" },
+                  ],
+                  evidence: [{ label: "Axe privé/public activé" }],
+                },
+              ],
+              sensitive_positions: [
+                {
+                  object_label: "Mercure",
+                  sign_label: "Bélier",
+                  house_label: "Maison X - Carrière",
+                },
+              ],
+              major_aspects: [
+                {
+                  label: "Mars trigone Uranus",
+                  source_object_label: "Mars",
+                  target_object_label: "Uranus",
+                  aspect_label: "Trigone",
+                  quality_label: "Fluide",
+                  phase_label: "Séparant",
+                  orb_degrees: 0.2,
+                },
+                {
+                  label: "Vénus sextile Jupiter",
+                  source_object_label: "Vénus",
+                  target_object_label: "Jupiter",
+                  aspect_label: "Sextile",
+                  quality_label: "Soutien",
+                  phase_label: "Appliquant",
+                  orb_degrees: 2.34,
+                },
+                {
+                  label: "Saturne opposition Uranus",
+                  source_object_label: "Saturne",
+                  target_object_label: "Uranus",
+                  aspect_label: "Opposition",
+                  quality_label: "Tension",
+                  phase_label: "Séparant",
+                  orb_degrees: 3.45,
+                },
+                {
+                  label: "Lune trigone Vénus",
+                  source_object_label: "Lune",
+                  target_object_label: "Vénus",
+                  aspect_label: "Trigone",
+                  quality_label: "Fluide",
+                  phase_label: "Appliquant",
+                  orb_degrees: 5.67,
+                },
+              ],
+            },
             calculation_reference: {
               version: "1.2.3",
               zodiacal_reference_system: "tropical",
@@ -150,6 +226,8 @@ describe("buildNatalInterpretationViewModel", () => {
     expect(viewModel?.calculationFacts?.groups.map((group) => group.title)).toEqual([
       "Repères principaux",
       "Maisons dominantes",
+      "Axes de maisons",
+      "Positions sensibles",
       "Aspects majeurs",
     ])
     expect(viewModel?.calculationFacts?.groups[0]?.items).toEqual([
@@ -171,16 +249,35 @@ describe("buildNatalInterpretationViewModel", () => {
       { label: "Éphémérides", value: "Swiss Ephemeris 2.10", detail: null },
     ])
     expect(viewModel?.calculationFacts?.groups[1]?.items[0]).toEqual({
-      label: "Maison II - Valeurs",
-      value: "Resources",
-      detail: "Very high",
+      label: "Maison II - Valeurs publiques",
+      value: "Très fort",
+      detail: "Ressources localisées - Score 0.8587",
+      details: ["Soleil en maison II", "Lune en maison II"],
     })
     expect(viewModel?.calculationFacts?.groups[2]?.items[0]).toEqual({
-      label: "Sun square Moon",
-      value: "Soleil - Lune",
-      detail: "0.76° - Tension",
+      label: "Maison IV - Foyer / Maison X - Carrière",
+      value: "Fort",
+      detail: "Maison primaire Maison X - Carrière - Score 0.8946",
+      details: [
+        "Maison IV - Foyer - Modéré - Score 0.505",
+        "Maison X - Carrière - Très fort - Score 1",
+        "Axe privé/public activé",
+      ],
     })
-    expect(viewModel?.calculationFacts?.groups[2]?.items).toHaveLength(6)
+    expect(viewModel?.calculationFacts?.groups[3]?.items[0]).toEqual({
+      label: "Mercure",
+      value: "Bélier",
+      detail: "Maison X - Carrière",
+    })
+    expect(viewModel?.calculationFacts?.groups[4]?.items[0]).toEqual({
+      label: "Mars trigone Uranus",
+      value: "Mars - Uranus",
+      detail: "Trigone - 0.20° - Fluide - Séparant",
+    })
+    expect(viewModel?.calculationFacts?.groups[4]?.items).toHaveLength(4)
+    expect(JSON.stringify(viewModel)).not.toContain("Sun square Moon")
+    expect(JSON.stringify(viewModel)).not.toContain("Very high")
+    expect(JSON.stringify(viewModel)).not.toContain("Resources")
     expect(viewModel?.highlightFacts).toEqual([
       { label: "Soleil", value: "Capricorne", detail: "Maison II - Valeurs - 281.45°" },
       { label: "Lune", value: "Poissons", detail: "Maison IV - Foyer - 341.76°" },
@@ -188,7 +285,88 @@ describe("buildNatalInterpretationViewModel", () => {
     ])
   })
 
-  it("affiche toutes les maisons dominantes transmises par dominant_themes.houses", () => {
+  it("lit evidence_summary depuis result.reading quand il n'est pas imbrique dans reading.reading", () => {
+    const job: AstralJobResponse = {
+      run_id: "run-reading-evidence-summary",
+      status: "completed",
+      result: {
+        reading: {
+          status: "success",
+          reading: {
+            summary: { title: "Lecture publique" },
+            chapters: [],
+          },
+          evidence_summary: {
+            dominant_houses: [
+              {
+                house_label: "Maison III - Communication",
+                strength_label: "Forte",
+                theme_label: "Communication localisée",
+                score: 0.72,
+                evidence: [{ label: "Mercure en maison III" }],
+              },
+            ],
+          },
+        },
+      },
+    }
+
+    const group = buildNatalInterpretationViewModel(job, "basic")?.calculationFacts?.groups.find(
+      (item) => item.title === "Maisons dominantes",
+    )
+
+    expect(group?.items).toEqual([
+      {
+        label: "Maison III - Communication",
+        value: "Forte",
+        detail: "Communication localisée - Score 0.72",
+        details: ["Mercure en maison III"],
+      },
+    ])
+  })
+
+  it("lit evidence_summary depuis result quand aucune enveloppe reading ne le porte", () => {
+    const job: AstralJobResponse = {
+      run_id: "run-root-evidence-summary",
+      status: "completed",
+      result: {
+        reading: {
+          status: "success",
+          reading: {
+            summary: { title: "Lecture publique" },
+            chapters: [],
+          },
+        },
+        evidence_summary: {
+          major_aspects: [
+            {
+              label: "Soleil sextile Mars",
+              source_object_label: "Soleil",
+              target_object_label: "Mars",
+              aspect_label: "Sextile",
+              quality_label: "Soutien",
+              phase_label: "Appliquant",
+              orb_degrees: 1.5,
+            },
+          ],
+        },
+      },
+    }
+
+    const group = buildNatalInterpretationViewModel(job, "basic")?.calculationFacts?.groups.find(
+      (item) => item.title === "Aspects majeurs",
+    )
+
+    expect(group?.items).toEqual([
+      {
+        label: "Soleil sextile Mars",
+        value: "Soleil - Mars",
+        detail: "Sextile - 1.50° - Soutien - Appliquant",
+      },
+    ])
+  })
+
+  it("ne reconstruit pas les maisons dominantes depuis dominant_themes.houses sans evidence_summary", () => {
     const job: AstralJobResponse = {
       run_id: "run-dominant-houses",
       status: "completed",
@@ -216,14 +394,10 @@ describe("buildNatalInterpretationViewModel", () => {
       (group) => group.title === "Maisons dominantes",
     )
 
-    expect(dominantHousesGroup?.items).toEqual([
-      { label: "Maison II - Valeurs", value: "Resources", detail: "Very high" },
-      { label: "Maison X - Carrière", value: "Career", detail: "High" },
-      { label: "Maison IV - Foyer", value: "Home", detail: "Medium" },
-    ])
+    expect(dominantHousesGroup).toBeUndefined()
   })
 
-  it("accepte dominant_houses et dedoublonne sans masquer les maisons distinctes", () => {
+  it("ne reconstruit pas les maisons dominantes depuis dominant_houses sans evidence_summary", () => {
     const job: AstralJobResponse = {
       run_id: "run-dominant-houses-v2",
       status: "completed",
@@ -254,14 +428,10 @@ describe("buildNatalInterpretationViewModel", () => {
       (group) => group.title === "Maisons dominantes",
     )
 
-    expect(dominantHousesGroup?.items).toEqual([
-      { label: "Maison VII - Relations", value: "Relations", detail: "High" },
-      { label: "Maison VII - Relations", value: "Partnerships", detail: "High" },
-      { label: "Maison XI - Communauté", value: "Community", detail: "Medium" },
-    ])
+    expect(dominantHousesGroup).toBeUndefined()
   })
 
-  it("lit les maisons dominantes numerotees par code depuis chart_balance", () => {
+  it("ne reconstruit pas les maisons dominantes depuis chart_balance sans evidence_summary", () => {
     const job: AstralJobResponse = {
       run_id: "run-chart-balance-dominant-houses",
       status: "completed",
@@ -289,14 +459,10 @@ describe("buildNatalInterpretationViewModel", () => {
       (group) => group.title === "Maisons dominantes",
     )
 
-    expect(dominantHousesGroup?.items).toEqual([
-      { label: "Maison X - Carrière", value: "Maison dominante", detail: "Rang 1", details: ["Score 0.82", "house_strength"] },
-      { label: "Maison XI - Communauté", value: "Maison dominante", detail: "Rang 2", details: ["Score 0.76", "house_strength"] },
-      { label: "Maison IV - Foyer", value: "Maison dominante", detail: "Rang 3", details: ["Score 0.52", "house_strength"] },
-    ])
+    expect(dominantHousesGroup).toBeUndefined()
   })
 
-  it("complete les maisons dominantes depuis chart_emphasis sans traduire le contenu source", () => {
+  it("ne reconstruit pas les maisons dominantes depuis chart_emphasis sans evidence_summary", () => {
     const job: AstralJobResponse = {
       run_id: "run-audit-dominant-houses",
       status: "completed",
@@ -347,16 +513,8 @@ describe("buildNatalInterpretationViewModel", () => {
       (group) => group.title === "Maisons dominantes",
     )
 
-    expect(dominantHousesGroup?.items).toEqual([
-      {
-        label: "Maison X - Carrière",
-        value: "Career",
-        detail: "Very high",
-        details: ["Midheaven in house", "Sun in house", "Score 0.8587", "object_in_house - mc", "object_in_house - sun"],
-      },
-      { label: "Maison VI - Routines / hygiène de vie", value: "Maison dominante", detail: "Score 0.3152" },
-      { label: "Maison I - Identité", value: "Maison dominante", detail: "Score 0.2174" },
-    ])
+    expect(dominantHousesGroup).toBeUndefined()
+    expect(JSON.stringify(buildNatalInterpretationViewModel(job, "basic"))).not.toContain("object_in_house - mc")
   })
 
   it("preserve le texte source sans normalisation intrusive", () => {
@@ -381,7 +539,7 @@ describe("buildNatalInterpretationViewModel", () => {
     expect(viewModel?.chapters[0]?.paragraphs[0]).toBe("Alpha — beta")
   })
 
-  it("expose les axes de maisons depuis house_axis_emphasis", () => {
+  it("ne reconstruit pas les axes de maisons depuis house_axis_emphasis sans evidence_summary", () => {
     const job: AstralJobResponse = {
       run_id: "run-house-axis-emphasis",
       status: "completed",
@@ -432,26 +590,7 @@ describe("buildNatalInterpretationViewModel", () => {
       (group) => group.title === "Axes de maisons",
     )
 
-    expect(axesGroup?.items).toEqual([
-      {
-        label: "Axe",
-        value: "private_public",
-        detail: "Maison IV - Foyer / Maison X - Carrière - Maison primaire Maison X - Carrière",
-        details: ["Maison IV - Foyer: Score 0.505", "Maison X - Carrière: Score 1"],
-      },
-      {
-        label: "Axe",
-        value: "control_surrender",
-        detail: "Maison VI - Routines / hygiène de vie / Maison XII - Inconscient - Maison primaire Maison VI - Routines / hygiène de vie",
-        details: ["Maison VI - Routines / hygiène de vie: Score 0.8946"],
-      },
-      {
-        label: "Axe",
-        value: "self_relationship",
-        detail: "Maison I - Identité / Maison VII - Relations - Maison primaire Maison I - Identité",
-        details: ["Maison I - Identité: Score 0.5252", "Maison VII - Relations: Score 0.428"],
-      },
-    ])
+    expect(axesGroup).toBeUndefined()
   })
 
   it("conserve les maisons techniques separees des maisons dominantes", () => {
@@ -480,11 +619,8 @@ describe("buildNatalInterpretationViewModel", () => {
 
     const groups = buildNatalInterpretationViewModel(job, "basic")?.calculationFacts?.groups
 
-    expect(groups?.map((group) => group.title)).toEqual(["Maisons dominantes", "Maisons"])
+    expect(groups?.map((group) => group.title)).toEqual(["Maisons"])
     expect(groups?.[0]?.items).toEqual([
-      { label: "Maison X - Carrière", value: "Career", detail: "High" },
-    ])
-    expect(groups?.[1]?.items).toEqual([
       { label: "Maison I - Identité", value: "Scorpion", detail: "215.10°" },
       { label: "Maison II - Valeurs", value: "Sagittaire", detail: "243.20°" },
     ])
@@ -583,11 +719,7 @@ describe("buildNatalInterpretationViewModel", () => {
       { label: "Descendant", value: "Taureau", detail: "Maison VII - Relations" },
       { label: "Milieu du Ciel", value: "Lion", detail: "Maison X - Carrière" },
     ])
-    expect(viewModel?.calculationFacts?.groups[2]?.items[0]).toEqual({
-      label: "Mercure",
-      value: "Capricorne",
-      detail: "Maison III - Communication",
-    })
+    expect(viewModel?.calculationFacts?.groups.find((group) => group.title === "Positions sensibles")).toBeUndefined()
     expect(viewModel?.calculationFacts?.calculationReferenceMethods).toEqual([
       { label: "Version", value: "0.1.0", detail: null },
       { label: "Système zodiacal", value: "Tropical", detail: null },
@@ -1099,5 +1231,21 @@ describe("buildNatalInterpretationViewModel", () => {
     expect(viewModel?.label).toBe("Lecture")
     expect(viewModel?.shortText).toContain("forme publique")
     expect(JSON.stringify(viewModel)).not.toContain("hidden")
+  })
+
+  it("ne conserve pas de reconstructeurs legacy pour les groupes de preuves publiques", () => {
+    const source = readFileSync(
+      "src/features/natal-chart/natalAstralReadingViewModel.ts",
+      "utf8",
+    )
+
+    expect(source).not.toMatch(/function\s+buildDominantHouseFacts/)
+    expect(source).not.toMatch(/function\s+buildHouseAxisFacts/)
+    expect(source).not.toMatch(/function\s+buildAspectFacts/)
+    expect(source).not.toMatch(/function\s+buildSensitivePointFacts/)
+    expect(source).not.toMatch(/function\s+dominantHouseEntries/)
+    expect(source).not.toContain("reason_details")
+    expect(source).not.toContain("supporting_factors")
+    expect(source).not.toContain("chart_emphasis")
   })
 })

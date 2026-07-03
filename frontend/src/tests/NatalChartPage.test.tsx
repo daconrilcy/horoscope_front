@@ -503,6 +503,67 @@ describe("NatalChartPage", () => {
                   body: "Troisieme lecture secondaire repliee. Elle devient lisible apres action.",
                 },
               ],
+              evidence_summary: {
+                language: "fr",
+                score_scale_version: "score-scale-v1",
+                dominant_houses: [
+                  {
+                    house_label: "Maison II - Valeurs publiques",
+                    theme_label: "Ressources localisées",
+                    score: 0.8587,
+                    strength_label: "Très fort",
+                    evidence: [
+                      { label: "Soleil en maison II" },
+                      { label: "Lune en maison II" },
+                    ],
+                  },
+                ],
+                sensitive_positions: [
+                  {
+                    object_label: "Mercure",
+                    sign_label: "Capricorne",
+                    house_label: "Maison III - Communication",
+                  },
+                ],
+                major_aspects: [
+                  {
+                    label: "Jupiter opposition Uranus",
+                    source_object_label: "Jupiter",
+                    target_object_label: "Uranus",
+                    aspect_label: "Opposition",
+                    quality_label: "Tension localisée",
+                    phase_label: "Appliquant",
+                    orb_degrees: 0.76,
+                  },
+                  {
+                    label: "Mercure trigone Mars",
+                    source_object_label: "Mercure",
+                    target_object_label: "Mars",
+                    aspect_label: "Trigone",
+                    quality_label: "Fluide",
+                    phase_label: "Séparant",
+                    orb_degrees: 1.12,
+                  },
+                  {
+                    label: "Vénus sextile Jupiter",
+                    source_object_label: "Vénus",
+                    target_object_label: "Jupiter",
+                    aspect_label: "Sextile",
+                    quality_label: "Soutien",
+                    phase_label: "Appliquant",
+                    orb_degrees: 2.34,
+                  },
+                  {
+                    label: "Saturne opposition Uranus",
+                    source_object_label: "Saturne",
+                    target_object_label: "Uranus",
+                    aspect_label: "Opposition",
+                    quality_label: "Tension",
+                    phase_label: "Séparant",
+                    orb_degrees: 3.45,
+                  },
+                ],
+              },
               calculation_reference: {
                 version: "1.2.3",
                 zodiacal_reference_system: "tropical",
@@ -606,7 +667,10 @@ describe("NatalChartPage", () => {
     expect(screen.getByLabelText("Marqueurs clés du portrait astral")).toHaveTextContent("Ascendant")
     expect(screen.getByText("Une synthese claire du theme.")).toBeVisible()
     expect(container.querySelector(".natal-reading-facts__group--primary")).toHaveTextContent("Repères principaux")
-    expect(screen.getByRole("region", { name: "Maisons dominantes" })).toHaveTextContent("Maison II")
+    expect(screen.getByRole("region", { name: "Maisons dominantes" })).toHaveTextContent("Maison II - Valeurs publiques")
+    expect(screen.getByRole("region", { name: "Maisons dominantes" })).toHaveTextContent("Très fort")
+    expect(screen.getByRole("region", { name: "Maisons dominantes" })).toHaveTextContent("Soleil en maison II")
+    expect(screen.getByRole("region", { name: "Maisons dominantes" })).not.toHaveTextContent("Resources")
     expect(screen.getByRole("region", { name: "Positions sensibles" })).toHaveTextContent("Mercure")
     expect(screen.getByRole("region", { name: "Aspects majeurs" })).toHaveTextContent("Jupiter - Uranus")
     expect(screen.queryByText("Saturne - Uranus")).not.toBeInTheDocument()
@@ -630,9 +694,10 @@ describe("NatalChartPage", () => {
     expect(coordinateLines).toEqual(["5.7245° E", "45.1885° N"])
     expect(coordinatesMethod?.querySelector("dd strong")).toBeNull()
     expect(container.querySelector(".natal-badge--astro-sign")).toHaveTextContent("Capricorne")
-    expect(container.querySelector(".natal-badge--astro-house")).toHaveTextContent("Resources")
+    expect(container.querySelector(".natal-badge--astro-house")).toHaveTextContent("Très fort")
     expect(container.querySelector(".natal-badge--astro-aspect")).toHaveTextContent("Jupiter - Uranus")
-    expect(container.querySelector(".natal-badge--astro-intensity")).toHaveTextContent("Very high")
+    expect(container.querySelector(".natal-badge--astro-intensity")).toHaveTextContent("Ressources localisées")
+    expect(document.body).not.toHaveTextContent("Very high")
     expect(screen.getAllByText("Une synthese claire du theme.")).toHaveLength(1)
     expect(container.querySelector(".natal-badge--report-status")).toHaveTextContent("Essentielle")
     expect(screen.getByRole("heading", { name: "Identite" })).toBeVisible()
@@ -739,8 +804,8 @@ describe("NatalChartPage", () => {
     expect(firstMetaToggle).toHaveTextContent("Masquer les repères")
     const explanationsSection = screen.getByRole("region", { name: "Repères astrologiques" })
     expect(explanationsSection).toHaveTextContent("Sun en taurus maison 10")
-    expect(screen.getByText("Very high")).toBeVisible()
-    expect(screen.getByText("Resources")).toBeVisible()
+    expect(document.body).not.toHaveTextContent("Very high")
+    expect(document.body).not.toHaveTextContent("Resources")
     expect(explanationsSection.querySelector(".natal-reading__chapter-body")).toBeNull()
     const explanationExcerpt = within(explanationsSection).getByText(/dynamique personnelle stable/i)
     expect(explanationExcerpt).not.toBeVisible()
@@ -832,7 +897,7 @@ describe("NatalChartPage", () => {
 
     expect(await screen.findByRole("heading", { name: "Base du calcul natal" })).toBeVisible()
     expect(screen.getByRole("region", { name: "Repères principaux" })).toHaveTextContent("Soleil")
-    expect(screen.getByRole("region", { name: "Maisons dominantes" })).toHaveTextContent("Maison II")
+    expect(screen.queryByRole("region", { name: "Maisons dominantes" })).not.toBeInTheDocument()
     expect(screen.queryByText("birth-data unavailable")).not.toBeInTheDocument()
     expect(screen.queryByRole("button", { name: "Afficher la base" })).not.toBeInTheDocument()
   })

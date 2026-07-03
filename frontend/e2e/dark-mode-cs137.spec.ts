@@ -165,6 +165,30 @@ const NATAL_JOB_RESPONSE = {
             body: "La lecture émotionnelle reste progressive et conserve des repères accessibles.",
           },
         ],
+        evidence_summary: {
+          language: "fr",
+          score_scale_version: "score-scale-v1",
+          dominant_houses: [
+            {
+              house_label: "Maison I - Identité",
+              theme_label: "Identité",
+              score: 0.7,
+              strength_label: "Forte",
+              evidence: [{ label: "Soleil en maison I" }],
+            },
+          ],
+          major_aspects: [
+            {
+              label: "Soleil trigone Lune",
+              source_object_label: "Soleil",
+              target_object_label: "Lune",
+              aspect_label: "Trigone",
+              quality_label: "Fluide",
+              phase_label: "Appliquant",
+              orb_degrees: 1.2,
+            },
+          ],
+        },
         calculation_reference: {
           version: "dark-test",
           zodiacal_reference_system: "tropical",

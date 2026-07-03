@@ -120,6 +120,40 @@ const ASTRAL_RESULT = {
           astro_basis: ["Vénus carré Saturne", "Maison VII - Relations et engagements durables"],
         },
       ],
+      evidence_summary: {
+        language: "fr",
+        score_scale_version: "score-scale-v1",
+        dominant_houses: [
+          {
+            house_label: "Maison VI - Routines / hygiène de vie",
+            theme_label: "Routines / hygiène de vie",
+            score: 0.82,
+            strength_label: "Très haute",
+            evidence: [
+              { label: "Soleil en maison VI" },
+              { label: "Mercure en maison VI" },
+            ],
+          },
+        ],
+        sensitive_positions: [
+          {
+            object_label: "Mercure",
+            sign_label: "Lion",
+            house_label: "Maison VI - Routines / hygiène de vie",
+          },
+        ],
+        major_aspects: [
+          {
+            label: "Vénus carré Saturne",
+            source_object_label: "Vénus",
+            target_object_label: "Saturne",
+            aspect_label: "Carré",
+            quality_label: "Tension constructive",
+            phase_label: "Appliquant",
+            orb_degrees: 1.2,
+          },
+        ],
+      },
       legal: {
         disclaimer: "Lecture symbolique et non médicale.",
       },
