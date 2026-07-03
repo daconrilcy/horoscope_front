@@ -45,7 +45,7 @@ describe("buildNatalInterpretationViewModel", () => {
     const viewModel = buildNatalInterpretationViewModel(job, "basic")
 
     expect(viewModel?.status).toBe("success")
-    expect(viewModel?.title).toBe("Lecture Essentielle")
+    expect(viewModel?.title).toBe("Lecture basic")
     expect(viewModel?.label).toBe("Essentielle")
     expect(viewModel?.chapters[0]?.summarySentence).toBe("Résumé public du chapitre.")
     expect(viewModel?.chapters[0]?.paragraphs).toEqual(["Premier paragraphe.", "Second paragraphe."])
@@ -172,11 +172,11 @@ describe("buildNatalInterpretationViewModel", () => {
     ])
     expect(viewModel?.calculationFacts?.groups[1]?.items[0]).toEqual({
       label: "Maison II - Valeurs",
-      value: "Valeurs",
-      detail: "Très élevée",
+      value: "Resources",
+      detail: "Very high",
     })
     expect(viewModel?.calculationFacts?.groups[2]?.items[0]).toEqual({
-      label: "Soleil Carré Lune",
+      label: "Sun square Moon",
       value: "Soleil - Lune",
       detail: "0.76° - Tension",
     })
@@ -217,9 +217,9 @@ describe("buildNatalInterpretationViewModel", () => {
     )
 
     expect(dominantHousesGroup?.items).toEqual([
-      { label: "Maison II - Valeurs", value: "Valeurs", detail: "Très élevée" },
-      { label: "Maison X - Carrière", value: "Carrière", detail: "Élevée" },
-      { label: "Maison IV - Foyer", value: "Foyer", detail: "Moyenne" },
+      { label: "Maison II - Valeurs", value: "Resources", detail: "Very high" },
+      { label: "Maison X - Carrière", value: "Career", detail: "High" },
+      { label: "Maison IV - Foyer", value: "Home", detail: "Medium" },
     ])
   })
 
@@ -255,9 +255,9 @@ describe("buildNatalInterpretationViewModel", () => {
     )
 
     expect(dominantHousesGroup?.items).toEqual([
-      { label: "Maison VII - Relations", value: "Relations", detail: "Élevée" },
-      { label: "Maison VII - Relations", value: "Partnerships", detail: "Élevée" },
-      { label: "Maison XI - Communauté", value: "Community", detail: "Moyenne" },
+      { label: "Maison VII - Relations", value: "Relations", detail: "High" },
+      { label: "Maison VII - Relations", value: "Partnerships", detail: "High" },
+      { label: "Maison XI - Communauté", value: "Community", detail: "Medium" },
     ])
   })
 
@@ -290,9 +290,167 @@ describe("buildNatalInterpretationViewModel", () => {
     )
 
     expect(dominantHousesGroup?.items).toEqual([
-      { label: "Maison X - Carrière", value: "Maison dominante", detail: "Rang 1" },
-      { label: "Maison XI - Communauté", value: "Maison dominante", detail: "Rang 2" },
-      { label: "Maison IV - Foyer", value: "Maison dominante", detail: "Rang 3" },
+      { label: "Maison X - Carrière", value: "Maison dominante", detail: "Rang 1", details: ["Score 0.82", "house_strength"] },
+      { label: "Maison XI - Communauté", value: "Maison dominante", detail: "Rang 2", details: ["Score 0.76", "house_strength"] },
+      { label: "Maison IV - Foyer", value: "Maison dominante", detail: "Rang 3", details: ["Score 0.52", "house_strength"] },
+    ])
+  })
+
+  it("complete les maisons dominantes depuis chart_emphasis sans traduire le contenu source", () => {
+    const job: AstralJobResponse = {
+      run_id: "run-audit-dominant-houses",
+      status: "completed",
+      result: {
+        calculation: {
+          llm_payload: {
+            dominant_themes: {
+              houses: [
+                {
+                  importance: "Very high",
+                  number: 10,
+                  supporting_factors: ["Midheaven in house", "Sun in house"],
+                  theme: "Career",
+                },
+              ],
+            },
+          },
+          audit_payload: {
+            payload: {
+              chart_emphasis: {
+                dominant_houses: [
+                  {
+                    house_number: 10,
+                    score: 0.8587,
+                    reason_details: [
+                      { reason_code: "object_in_house", object_code: "mc" },
+                      { reason_code: "object_in_house", object_code: "sun" },
+                    ],
+                  },
+                  { house_number: 6, score: 0.3152 },
+                  { house_number: 1, score: 0.2174 },
+                ],
+              },
+            },
+          },
+        },
+        reading: {
+          status: "success",
+          reading: {
+            summary: { title: "Lecture avec audit" },
+            chapters: [],
+          },
+        },
+      },
+    }
+
+    const dominantHousesGroup = buildNatalInterpretationViewModel(job, "basic")?.calculationFacts?.groups.find(
+      (group) => group.title === "Maisons dominantes",
+    )
+
+    expect(dominantHousesGroup?.items).toEqual([
+      {
+        label: "Maison X - Carrière",
+        value: "Career",
+        detail: "Very high",
+        details: ["Midheaven in house", "Sun in house", "Score 0.8587", "object_in_house - mc", "object_in_house - sun"],
+      },
+      { label: "Maison VI - Routines / hygiène de vie", value: "Maison dominante", detail: "Score 0.3152" },
+      { label: "Maison I - Identité", value: "Maison dominante", detail: "Score 0.2174" },
+    ])
+  })
+
+  it("preserve le texte source sans normalisation intrusive", () => {
+    const job: AstralJobResponse = {
+      run_id: "run-source-text-preserved",
+      status: "completed",
+      result: {
+        reading: {
+          status: "success",
+          reading: {
+            summary: { title: "Career — public" },
+            chapters: [{ title: "Sun — Taurus", paragraphs: ["Alpha — beta"] }],
+          },
+        },
+      },
+    }
+
+    const viewModel = buildNatalInterpretationViewModel(job, "basic")
+
+    expect(viewModel?.title).toBe("Career — public")
+    expect(viewModel?.chapters[0]?.title).toBe("Sun — Taurus")
+    expect(viewModel?.chapters[0]?.paragraphs[0]).toBe("Alpha — beta")
+  })
+
+  it("expose les axes de maisons depuis house_axis_emphasis", () => {
+    const job: AstralJobResponse = {
+      run_id: "run-house-axis-emphasis",
+      status: "completed",
+      result: {
+        calculation: {
+          audit_payload: {
+            payload: {
+              house_axis_emphasis: [
+                {
+                  axis_code: "private_public",
+                  houses: [4, 10],
+                  primary_house: 10,
+                  house_scores: [
+                    { house_number: 4, score: 0.505 },
+                    { house_number: 10, score: 1 },
+                  ],
+                },
+                {
+                  axis_code: "control_surrender",
+                  houses: [6, 12],
+                  primary_house: 6,
+                  house_scores: [{ house_number: 6, score: 0.8946 }],
+                },
+                {
+                  axis_code: "self_relationship",
+                  houses: [1, 7],
+                  primary_house: 1,
+                  house_scores: [
+                    { house_number: 1, score: 0.5252 },
+                    { house_number: 7, score: 0.428 },
+                  ],
+                },
+              ],
+            },
+          },
+        },
+        reading: {
+          status: "success",
+          reading: {
+            summary: { title: "Lecture avec axes" },
+            chapters: [],
+          },
+        },
+      },
+    }
+
+    const axesGroup = buildNatalInterpretationViewModel(job, "basic")?.calculationFacts?.groups.find(
+      (group) => group.title === "Axes de maisons",
+    )
+
+    expect(axesGroup?.items).toEqual([
+      {
+        label: "Axe",
+        value: "private_public",
+        detail: "Maison IV - Foyer / Maison X - Carrière - Maison primaire Maison X - Carrière",
+        details: ["Maison IV - Foyer: Score 0.505", "Maison X - Carrière: Score 1"],
+      },
+      {
+        label: "Axe",
+        value: "control_surrender",
+        detail: "Maison VI - Routines / hygiène de vie / Maison XII - Inconscient - Maison primaire Maison VI - Routines / hygiène de vie",
+        details: ["Maison VI - Routines / hygiène de vie: Score 0.8946"],
+      },
+      {
+        label: "Axe",
+        value: "self_relationship",
+        detail: "Maison I - Identité / Maison VII - Relations - Maison primaire Maison I - Identité",
+        details: ["Maison I - Identité: Score 0.5252", "Maison VII - Relations: Score 0.428"],
+      },
     ])
   })
 
@@ -324,7 +482,7 @@ describe("buildNatalInterpretationViewModel", () => {
 
     expect(groups?.map((group) => group.title)).toEqual(["Maisons dominantes", "Maisons"])
     expect(groups?.[0]?.items).toEqual([
-      { label: "Maison X - Carrière", value: "Carrière", detail: "Élevée" },
+      { label: "Maison X - Carrière", value: "Career", detail: "High" },
     ])
     expect(groups?.[1]?.items).toEqual([
       { label: "Maison I - Identité", value: "Scorpion", detail: "215.10°" },
@@ -582,15 +740,15 @@ describe("buildNatalInterpretationViewModel", () => {
 
     const viewModel = buildNatalInterpretationViewModel(job, "basic")
 
-    expect(viewModel?.title).toBe("Comment lire ton thème natal")
+    expect(viewModel?.title).toBe("How to read your natal chart")
     expect(viewModel?.shortText).toBe("Résumé issu du moteur externe.")
     expect(viewModel?.chapters.map((chapter) => chapter.paragraphs[0])).toEqual([
       "Explication top-level fournie par result.explanations.items.",
       "Deuxième explication top-level conservée.",
     ])
     expect(viewModel?.chapters.map((chapter) => chapter.title)).toEqual([
-      "Soleil en Taureau maison 10",
-      "Lune en Capricorne maison 6",
+      "sun_in_taurus_house_10",
+      "Moon en capricorn maison 6",
     ])
     expect(JSON.stringify(viewModel)).not.toContain("placement:sun:taurus:house:10")
     expect(JSON.stringify(viewModel)).not.toContain("cache")
@@ -671,7 +829,7 @@ describe("buildNatalInterpretationViewModel", () => {
 
     expect(viewModel?.chapters.map((chapter) => chapter.title)).toEqual(["Identité structurée"])
     expect(viewModel?.chapters.map((chapter) => chapter.paragraphs[0])).toEqual(["Chapitre narratif principal."])
-    expect(viewModel?.explanations.map((chapter) => chapter.title)).toEqual(["Soleil en Taureau maison 10"])
+    expect(viewModel?.explanations.map((chapter) => chapter.title)).toEqual(["Sun en taurus maison 10"])
     expect(viewModel?.explanations.map((chapter) => chapter.paragraphs[0])).toEqual([
       "Le Soleil en Taureau en maison 10 indique une orientation stable.",
     ])
@@ -708,7 +866,7 @@ describe("buildNatalInterpretationViewModel", () => {
     const viewModel = buildNatalInterpretationViewModel(job, "basic")
 
     expect(viewModel?.status).toBe("success")
-    expect(viewModel?.title).toBe("Lecture Essentielle publique")
+    expect(viewModel?.title).toBe("Lecture Basic publique")
     expect(viewModel?.shortText).toBe("Résumé Basic public.")
     expect(viewModel?.chapters.map((chapter) => chapter.title)).toEqual([
       "Introduction",
@@ -747,7 +905,7 @@ describe("buildNatalInterpretationViewModel", () => {
 
     const viewModel = buildNatalInterpretationViewModel(job, "basic")
 
-    expect(viewModel?.title).toBe("Lecture Essentielle imbriquée")
+    expect(viewModel?.title).toBe("Lecture Basic imbriquée")
     expect(viewModel?.chapters[0]?.paragraphs).toEqual([
       "Introduction Basic imbriquée fournie par Astral.",
     ])
@@ -778,7 +936,7 @@ describe("buildNatalInterpretationViewModel", () => {
 
     const viewModel = buildNatalInterpretationViewModel(job, "basic")
 
-    expect(viewModel?.title).toBe("Lecture Essentielle publique")
+    expect(viewModel?.title).toBe("Lecture Basic publique")
     expect(viewModel?.chapters[0]?.paragraphs).toEqual([
       "Texte public de secours fourni par Astral.",
     ])
@@ -812,7 +970,7 @@ describe("buildNatalInterpretationViewModel", () => {
 
     const viewModel = buildNatalInterpretationViewModel(job, "basic")
 
-    expect(viewModel?.title).toBe("Lecture Essentielle complète")
+    expect(viewModel?.title).toBe("Lecture Basic complète")
     expect(viewModel?.chapters[0]?.paragraphs).toEqual([
       "Explication complète fournie par le moteur externe.",
     ])

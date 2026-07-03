@@ -630,9 +630,9 @@ describe("NatalChartPage", () => {
     expect(coordinateLines).toEqual(["5.7245° E", "45.1885° N"])
     expect(coordinatesMethod?.querySelector("dd strong")).toBeNull()
     expect(container.querySelector(".natal-badge--astro-sign")).toHaveTextContent("Capricorne")
-    expect(container.querySelector(".natal-badge--astro-house")).toHaveTextContent("Valeurs")
+    expect(container.querySelector(".natal-badge--astro-house")).toHaveTextContent("Resources")
     expect(container.querySelector(".natal-badge--astro-aspect")).toHaveTextContent("Jupiter - Uranus")
-    expect(container.querySelector(".natal-badge--astro-intensity")).toHaveTextContent("Très élevée")
+    expect(container.querySelector(".natal-badge--astro-intensity")).toHaveTextContent("Very high")
     expect(screen.getAllByText("Une synthese claire du theme.")).toHaveLength(1)
     expect(container.querySelector(".natal-badge--report-status")).toHaveTextContent("Essentielle")
     expect(screen.getByRole("heading", { name: "Identite" })).toBeVisible()
@@ -738,14 +738,14 @@ describe("NatalChartPage", () => {
     expect(firstMetaToggle).toHaveAttribute("aria-expanded", "true")
     expect(firstMetaToggle).toHaveTextContent("Masquer les repères")
     const explanationsSection = screen.getByRole("region", { name: "Repères astrologiques" })
-    expect(explanationsSection).toHaveTextContent("Soleil en Taureau maison 10")
-    expect(screen.queryByText("Very high")).not.toBeInTheDocument()
-    expect(screen.queryByText("Resources")).not.toBeInTheDocument()
+    expect(explanationsSection).toHaveTextContent("Sun en taurus maison 10")
+    expect(screen.getByText("Very high")).toBeVisible()
+    expect(screen.getByText("Resources")).toBeVisible()
     expect(explanationsSection.querySelector(".natal-reading__chapter-body")).toBeNull()
     const explanationExcerpt = within(explanationsSection).getByText(/dynamique personnelle stable/i)
     expect(explanationExcerpt).not.toBeVisible()
     const explanationToggle = within(explanationsSection).getByRole("button", {
-      name: "Afficher Soleil en Taureau maison 10",
+      name: "Afficher Sun en taurus maison 10",
     })
     expect(explanationToggle).toHaveAttribute("aria-expanded", "false")
     await user.click(explanationToggle)
@@ -763,9 +763,9 @@ describe("NatalChartPage", () => {
     await user.click(explanationsToggle)
     expect(explanationsToggle).toHaveAttribute("aria-expanded", "false")
     expect(explanationsToggle).toHaveTextContent("Afficher les repères")
-    expect(within(explanationsSection).getByText("Soleil en Taureau maison 10")).not.toBeVisible()
+    expect(within(explanationsSection).getByText("Sun en taurus maison 10")).not.toBeVisible()
     await user.click(explanationsToggle)
-    expect(within(explanationsSection).getByText("Soleil en Taureau maison 10")).toBeVisible()
+    expect(within(explanationsSection).getByText("Sun en taurus maison 10")).toBeVisible()
     expect(screen.queryByText("placement:sun:taurus:house:10")).not.toBeInTheDocument()
     expect(screen.queryByText("cache")).not.toBeInTheDocument()
     for (const forbiddenText of ["fact_id", "source_paths", "audit_input", "undefined", "null"]) {
@@ -1018,10 +1018,10 @@ describe("NatalChartPage", () => {
 
     expect(await screen.findByRole("heading", { name: "Thème natal" })).toBeVisible()
     const explanationsSection = screen.getByRole("region", { name: "Repères astrologiques" })
-    expect(explanationsSection).toHaveTextContent("Soleil en Taureau maison 10")
+    expect(explanationsSection).toHaveTextContent("Sun en taurus maison 10")
     expect(explanationsSection.querySelector(".natal-reading__chapter-body")).toBeNull()
     const explanationToggle = within(explanationsSection).getByRole("button", {
-      name: "Afficher Soleil en Taureau maison 10",
+      name: "Afficher Sun en taurus maison 10",
     })
     expect(explanationToggle).toHaveAttribute("aria-expanded", "false")
     const explanationExcerpt = screen.getByText(/orientation stable/i)
@@ -1217,7 +1217,7 @@ describe("NatalChartPage", () => {
 
     expect(await screen.findByRole("heading", { name: "Thème natal" })).toBeVisible()
     expect(screen.getAllByText("Premium").length).toBeGreaterThanOrEqual(1)
-    expect(screen.getByText("Milieu du Ciel en Taureau (central)")).toBeVisible()
+    expect(screen.getByText("Midheaven in Taurus (central)")).toBeVisible()
     expect(screen.queryByText(/signal:mc:taurus/i)).not.toBeInTheDocument()
     expect(screen.queryByText(/hidden gateway/i)).not.toBeInTheDocument()
     expect(screen.queryByLabelText("Resultat Astral")).not.toBeInTheDocument()

@@ -54,6 +54,7 @@ const READING_GUIDE_SECTION_ID = "natal-chart-guide"
 const GROUP_MARKERS: Record<string, LucideIcon> = {
   "Repères principaux": Sun,
   "Maisons dominantes": Home,
+  "Axes de maisons": Home,
   Maisons: Home,
   "Positions sensibles": CircleDot,
   "Aspects majeurs": Triangle,
@@ -61,6 +62,7 @@ const GROUP_MARKERS: Record<string, LucideIcon> = {
 const GROUP_MODIFIERS: Record<string, string> = {
   "Repères principaux": "primary",
   "Maisons dominantes": "houses",
+  "Axes de maisons": "houses",
   Maisons: "houses",
   "Positions sensibles": "sensitive",
   "Aspects majeurs": "aspects",
@@ -122,7 +124,7 @@ function groupClassName(title: string): string {
 }
 
 function primaryFactBadgeClassName(title: string): string {
-  if (title === "Maisons" || title === "Maisons dominantes") {
+  if (title === "Maisons" || title === "Maisons dominantes" || title === "Axes de maisons") {
     return "natal-badge natal-badge--astro-data natal-badge--astro-house"
   }
   if (title === "Aspects majeurs") return "natal-badge natal-badge--astro-data natal-badge--astro-aspect"
@@ -131,7 +133,7 @@ function primaryFactBadgeClassName(title: string): string {
 
 function detailFactBadgeClassName(title: string): string {
   const modifier =
-    title === "Maisons" || title === "Maisons dominantes" || title === "Aspects majeurs"
+    title === "Maisons" || title === "Maisons dominantes" || title === "Axes de maisons" || title === "Aspects majeurs"
       ? " natal-badge--astro-intensity"
       : ""
   return `natal-badge natal-badge--fact-detail${modifier}`
@@ -183,6 +185,7 @@ function methodClassName(label: string): string {
 
 function expandLabelForGroup(title: string, isExpanded: boolean): string {
   if (title === "Maisons") return isExpanded ? "Réduire les maisons" : "Voir toutes les maisons"
+  if (title === "Axes de maisons") return isExpanded ? "Réduire les axes" : "Voir tous les axes"
   if (title === "Aspects majeurs") return isExpanded ? "Réduire les aspects" : "Voir tous les aspects"
   if (title === "Positions sensibles") return isExpanded ? "Réduire les positions" : "Voir toutes les positions"
   return isExpanded ? "Réduire" : "Voir tout"
@@ -361,6 +364,15 @@ function NatalPrimaryFactsPanel({ group }: { group: NatalCalculationFactsViewMod
                   <strong>{item.value}</strong>
                 </span>
                 {item.detail ? <span className={detailFactBadgeClassName(group.title)}>{item.detail}</span> : null}
+                {item.details && item.details.length > 0 ? (
+                  <span className="natal-reading-facts__details">
+                    {item.details.map((detail, detailIndex) => (
+                      <span className="natal-reading-facts__detail-line" key={`${item.label}-${detail}-${detailIndex}`}>
+                        {detail}
+                      </span>
+                    ))}
+                  </span>
+                ) : null}
               </dd>
             </div>
           )
@@ -394,6 +406,15 @@ function NatalCalculationGroupPanel({ group }: { group: NatalCalculationFactsVie
                 <strong>{item.value}</strong>
               </span>
               {item.detail ? <span className={detailFactBadgeClassName(group.title)}>{item.detail}</span> : null}
+              {item.details && item.details.length > 0 ? (
+                <span className="natal-reading-facts__details">
+                  {item.details.map((detail, detailIndex) => (
+                    <span className="natal-reading-facts__detail-line" key={`${item.label}-${detail}-${detailIndex}`}>
+                      {detail}
+                    </span>
+                  ))}
+                </span>
+              ) : null}
             </dd>
           </div>
         ))}

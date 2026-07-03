@@ -23,6 +23,7 @@ export type NatalCalculationFactItemViewModel = {
   label: string
   value: string
   detail: string | null
+  details?: string[]
 }
 
 export type NatalCalculationFactGroupViewModel = {
@@ -198,6 +199,15 @@ function localizedMetadataText(value: unknown): string | null {
   return ASTRAL_METADATA_TRANSLATIONS[text.toLowerCase()] ?? localizeAstralDisplayText(text)
 }
 
+function sourceText(value: unknown): string | null {
+  return typeof value === "string" && value.trim() ? value.trim() : null
+}
+
+function sourceTextArray(value: unknown): string[] {
+  if (!Array.isArray(value)) return []
+  return value.map(sourceText).filter((item): item is string => Boolean(item))
+}
+
 function formatDegree(value: unknown): string | null {
   const degree = asNumber(value)
   return degree === null ? null : `${degree.toFixed(2)}°`
@@ -272,11 +282,11 @@ function roleLabel(value: unknown): string | null {
 }
 
 function astroBasisLabel(value: unknown): string | null {
-  const directText = asText(value)
-  if (directText) return localizeAstralDisplayText(directText)
+  const directText = sourceText(value)
+  if (directText) return directText
 
   const basis = asRecord(value)
-  const label = localizedMetadataText(basis?.label) ?? localizedMetadataText(basis?.factor)
+  const label = sourceText(basis?.label) ?? sourceText(basis?.factor)
   if (!label) return null
 
   const role = roleLabel(basis?.interpretive_role)
@@ -323,7 +333,7 @@ function confidenceLabel(value: unknown): string | null {
 }
 
 function splitParagraphs(value: unknown): string[] {
-  const text = asText(value)
+  const text = sourceText(value)
   if (!text) return []
   return text
     .split(/\n{2,}/)
@@ -331,20 +341,20 @@ function splitParagraphs(value: unknown): string[] {
     .filter(Boolean)
 }
 
-function firstText(...values: unknown[]): string | null {
+function firstSourceText(...values: unknown[]): string | null {
   for (const value of values) {
-    const text = asText(value)
+    const text = sourceText(value)
     if (text) return text
   }
   return null
 }
 
 function chapterParagraphs(chapter: Record<string, unknown>): string[] {
-  const directParagraphs = asTextArray(chapter.paragraphs)
+  const directParagraphs = sourceTextArray(chapter.paragraphs)
   if (directParagraphs.length > 0) return directParagraphs
 
   return splitParagraphs(
-    firstText(
+    firstSourceText(
       chapter.body,
       chapter.explanation,
       chapter.narrative,
@@ -361,9 +371,9 @@ function evidenceLabels(value: unknown): string[] {
   return value
     .map((item) => {
       const record = asRecord(item)
-      if (!record) return localizedMetadataText(item)
-      const label = localizedMetadataText(record.label)
-      const meaning = localizedMetadataText(record.meaning)
+      if (!record) return sourceText(item)
+      const label = sourceText(record.label)
+      const meaning = sourceText(record.meaning)
       if (label && meaning) return `${label}: ${meaning}`
       return label ?? meaning
     })
@@ -391,7 +401,7 @@ function resolveChapterItems(reading: Record<string, unknown>): unknown[] {
 }
 
 function explanationItems(value: unknown): Record<string, unknown>[] {
-  const text = asText(value)
+  const text = sourceText(value)
   if (text) return [{ title: "Explications", body: text }]
 
   if (Array.isArray(value)) {
@@ -419,8 +429,8 @@ function explanationItems(value: unknown): Record<string, unknown>[] {
   return Object.entries(record)
     .filter(([key]) => key !== "language_code" && key !== "status")
     .map<Record<string, unknown> | null>(([key, entry]) => {
-      const entryText = asText(entry)
-      return entryText ? { title: localizeAstralDisplayText(key), body: entryText } : null
+      const entryText = sourceText(entry)
+      return entryText ? { title: key, body: entryText } : null
     })
     .filter((item): item is Record<string, unknown> => Boolean(item))
 }
@@ -491,15 +501,15 @@ function buildChapters(reading: Record<string, unknown>): NatalReadingChapterVie
       const paragraphs = chapterParagraphs(chapterRecord)
       return {
         code: asText(chapterRecord.code),
-        title: localizedMetadataText(chapterRecord.title) ?? `Chapitre ${index + 1}`,
-        summarySentence: asText(chapterRecord.summary_sentence),
+        title: sourceText(chapterRecord.title) ?? `Chapitre ${index + 1}`,
+        summarySentence: sourceText(chapterRecord.summary_sentence),
         paragraphs,
         confidenceLabel: confidenceLabel(chapterRecord.confidence),
         astroBasis: [
           ...asAstroBasisLabels(chapterRecord.astro_basis),
           ...evidenceLabels(chapterRecord.public_evidence),
         ],
-        safetyFlags: asTextArray(chapterRecord.safety_flags),
+        safetyFlags: sourceTextArray(chapterRecord.safety_flags),
       }
     })
     .filter((chapter): chapter is NatalReadingChapterViewModel => Boolean(chapter))
@@ -522,8 +532,8 @@ function resultExplanationsContainer(result: Record<string, unknown>): Record<st
   const summary = asRecord(result.summary)
   return {
     summary: {
-      title: asText(summary?.title) ?? asText(result.title) ?? "Lecture natale",
-      short_text: asText(summary?.short_text) ?? asText(summary?.text) ?? asText(result.short_text),
+      title: sourceText(summary?.title) ?? sourceText(result.title) ?? "Lecture natale",
+      short_text: sourceText(summary?.short_text) ?? sourceText(summary?.text) ?? sourceText(result.short_text),
     },
     chapters: explanations,
   }
@@ -539,7 +549,7 @@ function legacyBasicReading(result: Record<string, unknown>): Record<string, unk
   if (!payload || !interpretation) return null
 
   const chapters: Record<string, unknown>[] = []
-  const introduction = asText(interpretation.introduction)
+  const introduction = sourceText(interpretation.introduction)
   if (introduction) {
     chapters.push({
       code: "introduction",
@@ -555,13 +565,13 @@ function legacyBasicReading(result: Record<string, unknown>): Record<string, unk
     if (!themeRecord) continue
     chapters.push({
       code: asText(themeRecord.code),
-      title: asText(themeRecord.title) ?? "Thème",
+      title: sourceText(themeRecord.title) ?? "Thème",
       narrative: themeRecord.narrative,
       public_evidence: themeRecord.public_evidence,
     })
   }
 
-  const conclusion = asText(interpretation.conclusion)
+  const conclusion = sourceText(interpretation.conclusion)
   if (conclusion) {
     chapters.push({
       code: "conclusion",
@@ -577,7 +587,7 @@ function legacyBasicReading(result: Record<string, unknown>): Record<string, unk
     },
     chapters,
     legal: {
-      disclaimer: asTextArray(payload.disclaimers).join(" "),
+      disclaimer: sourceTextArray(payload.disclaimers).join(" "),
     },
   }
 }
@@ -710,26 +720,84 @@ function dominantHouseEntries(...sources: Record<string, unknown>[]): unknown[] 
     const dominantThemes = asRecord(projection.dominant_themes)
     const dominance = asRecord(projection.dominance)
     const chartBalance = asRecord(projection.chart_balance)
+    const calculation = asRecord(projection.calculation)
+    const auditPayload = asRecord(calculation?.audit_payload)
+    const auditPayloadBody = asRecord(auditPayload?.payload)
+    const chartEmphasis = asRecord(auditPayloadBody?.chart_emphasis)
     entries.push(
       ...(Array.isArray(dominantThemes?.houses) ? dominantThemes.houses : []),
       ...(Array.isArray(projection.dominant_houses) ? projection.dominant_houses : []),
       ...(Array.isArray(dominance?.dominant_houses) ? dominance.dominant_houses : []),
       ...(Array.isArray(chartBalance?.dominant_houses) ? chartBalance.dominant_houses : []),
+      ...(Array.isArray(chartEmphasis?.dominant_houses) ? chartEmphasis.dominant_houses : []),
     )
   }
   return entries
 }
 
 function dominantHouseDetail(item: Record<string, unknown>): string | null {
-  const directDetail = localizedMetadataText(item.importance ?? item.rank_label ?? item.score_label)
+  const directDetail = sourceText(item.importance ?? item.rank_label ?? item.score_label)
   if (directDetail) return directDetail
   const rank = asNumber(item.rank)
   if (rank !== null) return `Rang ${rank}`
+  const score = asNumber(item.score)
+  if (score !== null) return `Score ${score}`
   return null
 }
 
+function detailFromReasonEntry(value: unknown): string | null {
+  const item = asRecord(value)
+  if (!item) return sourceText(value)
+
+  return joinDetails(Object.values(item).map(sourceText).filter((detail): detail is string => Boolean(detail)))
+}
+
+function dominantHouseDetails(item: Record<string, unknown>): string[] {
+  return [
+    ...sourceTextArray([item.importance, item.rank_label, item.score_label]),
+    ...(asNumber(item.rank) !== null ? [`Rang ${asNumber(item.rank)}`] : []),
+    ...(asNumber(item.score) !== null ? [`Score ${asNumber(item.score)}`] : []),
+    ...sourceTextArray(item.supporting_factors),
+    ...sourceTextArray([item.source]),
+    ...(Array.isArray(item.reason_details)
+      ? item.reason_details.map(detailFromReasonEntry).filter((detail): detail is string => Boolean(detail))
+      : []),
+  ]
+}
+
+function factIdentity(item: NatalCalculationFactItemViewModel): string {
+  return JSON.stringify({
+    detail: item.detail,
+    details: item.details ?? [],
+    label: item.label,
+    value: item.value,
+  })
+}
+
+function mergeFactDetails(
+  current: NatalCalculationFactItemViewModel,
+  addition: NatalCalculationFactItemViewModel,
+): NatalCalculationFactItemViewModel {
+  const details = [
+    ...(current.detail ? [current.detail] : []),
+    ...(current.details ?? []),
+    ...(addition.detail ? [addition.detail] : []),
+    ...(addition.details ?? []),
+  ].filter((detail, index, allDetails) => allDetails.indexOf(detail) === index)
+
+  return {
+    ...current,
+    detail: details[0] ?? null,
+    details: details.length > 1 ? details.slice(1) : undefined,
+  }
+}
+
+function compactFact(item: NatalCalculationFactItemViewModel): NatalCalculationFactItemViewModel {
+  return item.details && item.details.length === 0 ? { label: item.label, value: item.value, detail: item.detail } : item
+}
+
 function buildDominantHouseFacts(...sources: Record<string, unknown>[]): NatalCalculationFactItemViewModel[] {
-  const uniqueFacts = new Map<string, NatalCalculationFactItemViewModel>()
+  const facts: NatalCalculationFactItemViewModel[] = []
   for (const house of dominantHouseEntries(...sources)) {
     const item = asRecord(house)
     const number =
@@ -737,16 +805,93 @@ function buildDominantHouseFacts(...sources: Record<string, unknown>[]): NatalCa
       asHouseNumber(item?.code)
     if (!item || number === null) continue
 
-    const theme = localizedMetadataText(item.theme ?? item.label ?? item.topic)
-    const fact = {
+    const theme = sourceText(item.theme ?? item.label ?? item.topic)
+    const details = dominantHouseDetails(item)
+    const fact = compactFact({
       label: translateHouse(number, "fr"),
       value: theme ?? "Maison dominante",
-      detail: dominantHouseDetail(item),
+      detail: details.shift() ?? dominantHouseDetail(item),
+      details,
+    })
+    const duplicate = facts.some((candidate) => factIdentity(candidate) === factIdentity(fact))
+    if (duplicate) continue
+
+    const compatibleFactIndex = facts.findIndex(
+      (candidate) =>
+        candidate.label === fact.label &&
+        (candidate.value === fact.value ||
+          (candidate.value !== "Maison dominante" && fact.value === "Maison dominante") ||
+          (candidate.value === "Maison dominante" && fact.value !== "Maison dominante")) &&
+        (candidate.detail !== fact.detail || (fact.details?.length ?? 0) > 0),
+    )
+    if (compatibleFactIndex >= 0) {
+      facts[compatibleFactIndex] = mergeFactDetails(facts[compatibleFactIndex], fact)
+      continue
     }
-    const key = `${number}:${fact.value.toLowerCase()}`
-    if (!uniqueFacts.has(key)) uniqueFacts.set(key, fact)
+
+    facts.push(fact)
   }
-  return Array.from(uniqueFacts.values())
+  return facts
+}
+
+function houseAxisEntries(...sources: Record<string, unknown>[]): unknown[] {
+  const entries: unknown[] = []
+  for (const projection of sources) {
+    const calculation = asRecord(projection.calculation)
+    const auditPayload = asRecord(calculation?.audit_payload)
+    const auditPayloadBody = asRecord(auditPayload?.payload)
+    entries.push(
+      ...(Array.isArray(projection.house_axis_emphasis) ? projection.house_axis_emphasis : []),
+      ...(Array.isArray(auditPayloadBody?.house_axis_emphasis) ? auditPayloadBody.house_axis_emphasis : []),
+    )
+  }
+  return entries
+}
+
+function formatHouseList(value: unknown): string | null {
+  if (!Array.isArray(value)) return null
+  const houses = value.map(asHouseNumber).filter((number): number is number => number !== null)
+  return houses.length > 0 ? houses.map((number) => translateHouse(number, "fr")).join(" / ") : null
+}
+
+function axisHouseScoreDetail(value: unknown): string | null {
+  const item = asRecord(value)
+  if (!item) return null
+  const number = asHouseNumber(item.house_number ?? item.house ?? item.number)
+  const score = asNumber(item.score)
+  if (number === null || score === null) return null
+  return `${translateHouse(number, "fr")}: Score ${score}`
+}
+
+function buildHouseAxisFacts(...sources: Record<string, unknown>[]): NatalCalculationFactItemViewModel[] {
+  const facts: NatalCalculationFactItemViewModel[] = []
+  for (const axis of houseAxisEntries(...sources)) {
+    const item = asRecord(axis)
+    if (!item) continue
+
+    const value = sourceText(item.label) ?? sourceText(item.axis_code) ?? sourceText(item.axis)
+    if (!value) continue
+
+    const primaryHouse = asHouseNumber(item.primary_house ?? item.primary_house_number ?? item.primary ?? item.house_number)
+    const detail = joinDetails([
+      formatHouseList(item.houses),
+      primaryHouse !== null ? `Maison primaire ${translateHouse(primaryHouse, "fr")}` : null,
+    ])
+    const houseScores = item.house_scores ?? item.scores
+    const details = Array.isArray(houseScores)
+      ? houseScores
+          .map(axisHouseScoreDetail)
+          .filter((axisDetail): axisDetail is string => Boolean(axisDetail))
+      : []
+    const fact = {
+      label: "Axe",
+      value,
+      detail,
+      details,
+    }
+    if (!facts.some((candidate) => factIdentity(candidate) === factIdentity(fact))) facts.push(fact)
+  }
+  return facts
 }
 
 function buildHouseFacts(source: Record<string, unknown>): NatalCalculationFactItemViewModel[] {
@@ -783,9 +928,9 @@ function buildAspectFacts(source: Record<string, unknown>, projection: Record<st
             formatObject(item.planet_a ?? item.source_object_code),
             formatObject(item.planet_b ?? item.target_object_code),
           ].filter((object): object is string => Boolean(object))
-      const directAspect = asText(item.aspect)
+      const directAspect = sourceText(item.aspect)
       const aspectCode = asText(item.aspect_code ?? item.type)
-      const aspectLabel = aspectCode ? translateAspect(aspectCode, "fr") : directAspect ? localizeAstralDisplayText(directAspect) : null
+      const aspectLabel = aspectCode ? translateAspect(aspectCode, "fr") : directAspect
       if (!aspectLabel || objects.length < 2) return null
 
       return {
@@ -1025,6 +1170,7 @@ function buildCalculationFacts(
   const legacyPlacementFacts = buildLegacyPlacementFacts(projection)
   const notablePlacements = buildNotablePlacementFacts(projection)
   const dominantHouseFacts = buildDominantHouseFacts(projection, result)
+  const houseAxisFacts = buildHouseAxisFacts(projection, result)
   const houseFacts = buildHouseFacts(projection)
   const aspectFacts = buildAspectFacts(projection, projection)
   const sensitivePointFacts = buildSensitivePointFacts(projection)
@@ -1037,6 +1183,7 @@ function buildCalculationFacts(
   const mainFacts = [...(coreFacts.length > 0 ? coreFacts : legacyPlacementFacts.slice(0, 5))]
   if (mainFacts.length > 0) groups.push({ title: "Repères principaux", items: mainFacts })
   if (dominantHouseFacts.length > 0) groups.push({ title: "Maisons dominantes", items: dominantHouseFacts })
+  if (houseAxisFacts.length > 0) groups.push({ title: "Axes de maisons", items: houseAxisFacts })
   if (houseFacts.length > 0) groups.push({ title: "Maisons", items: houseFacts })
   if (sensitivePointFacts.length > 0) {
     groups.push({ title: "Positions sensibles", items: sensitivePointFacts })
@@ -1112,8 +1259,8 @@ function successViewModel(
 
   return {
     status: "success",
-    title: localizedMetadataText(summary?.title) ?? "Lecture natale",
-    shortText: asText(summary?.short_text),
+    title: sourceText(summary?.title) ?? "Lecture natale",
+    shortText: sourceText(summary?.short_text),
     tier: metadata.tier,
     variant: metadata.variant,
     label: labelForReading(metadata.tier),
@@ -1123,7 +1270,7 @@ function successViewModel(
     explanations,
     calculationFacts,
     highlightFacts: buildHighlightFacts(calculationFacts),
-    disclaimer: asText(legal?.disclaimer),
+    disclaimer: sourceText(legal?.disclaimer),
     error: null,
   }
 }
@@ -1156,7 +1303,7 @@ export function buildNatalInterpretationViewModel(
       return {
         status: "success",
         title: "Lecture natale",
-        shortText: asText(result.reading),
+        shortText: sourceText(result.reading),
         tier: metadata.tier,
         variant: metadata.variant,
         label: labelForReading(metadata.tier),
