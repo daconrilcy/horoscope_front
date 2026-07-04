@@ -7,8 +7,8 @@
 
 .natal-reading__layout {
   display: grid;
-  grid-template-columns: minmax(212px, 232px) minmax(0, 1fr);
-  gap: 22px;
+  grid-template-columns: minmax(196px, 222px) minmax(0, 1fr);
+  gap: 24px;
   align-items: start;
 }
 
@@ -21,10 +21,19 @@
 
 .natal-reading-hero {
   display: grid;
-  grid-template-columns: 104px minmax(0, 1fr);
-  gap: 20px;
+  grid-template-columns: 138px minmax(0, 1fr);
+  gap: 24px;
   align-items: start;
   min-width: 0;
+  padding: 28px 32px;
+  border: 1px solid var(--natal-border-liquid, var(--natal-border-section));
+  border-radius: var(--natal-radius-section);
+  background:
+    linear-gradient(145deg, color-mix(in srgb, var(--color-token-rgb-255-255-255) 64%, transparent), transparent 54%),
+    var(--natal-surface-canvas);
+  box-shadow: var(--natal-shadow-float), var(--premium-inner-light);
+  backdrop-filter: var(--natal-glass-filter);
+  -webkit-backdrop-filter: var(--natal-glass-filter);
 }
 
 .natal-reading-hero__symbol {
@@ -33,8 +42,8 @@
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
-  width: 96px;
-  height: 96px;
+  width: 118px;
+  height: 118px;
   border: 1px solid var(--natal-liquid-edge, var(--natal-border-section));
   border-radius: var(--natal-radius-section);
   background:
@@ -60,8 +69,8 @@
 
 .natal-reading-hero__logo {
   display: block;
-  width: 74px;
-  height: 74px;
+  width: 92px;
+  height: 92px;
   object-fit: contain;
 }
 
@@ -95,7 +104,7 @@
 .natal-reading-hero h1 {
   margin: 0;
   color: var(--premium-text-strong);
-  font-size: clamp(2rem, 3vw, 2.72rem);
+  font-size: clamp(2.45rem, 4.2vw, 4.15rem);
   font-weight: var(--type-page-title-weight);
   letter-spacing: 0;
   line-height: var(--type-page-title-line-height);
@@ -103,22 +112,21 @@
 
 .natal-reading-hero p {
   width: 100%;
-  max-width: 78ch;
+  max-width: 74ch;
   margin: 0;
   color: var(--premium-text-main);
-  font-size: var(--font-size-sm);
-  line-height: var(--line-height-relaxed);
+  font-size: var(--font-size-md);
+  line-height: var(--line-height-prose);
 }
 
 .natal-reading-metrics {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  border: 1px solid var(--natal-border-section);
-  border-color: color-mix(in srgb, var(--premium-glass-border-strong) 52%, transparent);
+  border: 1px solid var(--natal-border-liquid, var(--natal-border-section));
   border-radius: var(--natal-radius-section);
-  background: color-mix(in srgb, var(--natal-panel-background) 72%, var(--color-token-rgb-255-255-255) 28%);
-  background-color: color-mix(in srgb, var(--color-token-rgb-255-255-255) 84%, var(--premium-glass-surface-2) 16%);
-  box-shadow: var(--premium-shadow-card), var(--premium-inner-light);
+  background: var(--natal-surface-facts);
+  background-color: var(--natal-surface-facts);
+  box-shadow: 0 12px 30px color-mix(in srgb, var(--premium-text-strong) 5%, transparent), var(--premium-inner-light);
   backdrop-filter: var(--natal-glass-filter);
   -webkit-backdrop-filter: var(--natal-glass-filter);
   gap: 0;
@@ -131,10 +139,10 @@
   gap: 2px 12px;
   align-items: center;
   min-width: 0;
-  padding: 14px 18px;
+  padding: 13px 18px;
   border-right: 1px solid color-mix(in srgb, var(--natal-border-section) 72%, transparent);
   border-radius: var(--natal-radius-block);
-  background: color-mix(in srgb, var(--color-token-rgb-255-255-255) 42%, transparent);
+  background: transparent;
 }
 
 .natal-reading-metrics__item:last-child {
@@ -207,14 +215,14 @@
   min-width: 0;
   max-height: calc(100vh - 90px);
   padding: 0;
-  border: 1px solid color-mix(in srgb, var(--premium-glass-border) 58%, transparent);
+  border: 1px solid var(--natal-border-liquid, color-mix(in srgb, var(--premium-glass-border) 58%, transparent));
   border-radius: var(--natal-radius-section);
   background:
-    linear-gradient(145deg, color-mix(in srgb, var(--color-token-rgb-255-255-255) 60%, transparent), transparent 44%),
-    var(--natal-panel-background);
-  background-color: color-mix(in srgb, var(--color-token-rgb-255-255-255) 88%, var(--premium-glass-surface-2) 12%);
+    linear-gradient(145deg, color-mix(in srgb, var(--color-token-rgb-255-255-255) 58%, transparent), transparent 46%),
+    var(--natal-surface-rail);
+  background-color: var(--natal-surface-rail);
   box-shadow:
-    0 18px 44px color-mix(in srgb, var(--premium-text-strong) 7%, transparent),
+    0 18px 44px color-mix(in srgb, var(--premium-text-strong) 6%, transparent),
     var(--premium-inner-light);
   backdrop-filter: var(--natal-glass-filter);
   -webkit-backdrop-filter: var(--natal-glass-filter);
@@ -234,8 +242,8 @@
 
 .natal-reading-summary__header {
   display: grid;
-  gap: 8px;
-  padding: 18px 18px 15px;
+  gap: 7px;
+  padding: 17px 17px 14px;
   border-bottom: 1px solid var(--natal-border-section);
 }
 
@@ -283,14 +291,14 @@
   display: grid;
   gap: 0;
   margin: 0;
-  padding: 18px 18px 4px;
+  padding: 16px 16px 2px;
   list-style: none;
 }
 
 .natal-reading-summary__item {
   position: relative;
   min-width: 0;
-  padding: 0 0 22px;
+  padding: 0 0 19px;
   border-bottom: none;
 }
 
@@ -309,7 +317,7 @@
 .natal-reading-summary__extra-link {
   display: grid;
   grid-template-columns: 40px minmax(0, 1fr);
-  gap: 12px;
+  gap: 10px;
   width: 100%;
   min-height: 44px;
   padding: 0;
@@ -381,7 +389,7 @@
 
 .natal-reading-summary__title {
   color: var(--premium-text-strong);
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-xs);
   font-weight: var(--font-weight-bold);
   line-height: var(--type-label-line-height);
 }
@@ -389,7 +397,7 @@
 .natal-reading-summary__excerpt {
   display: -webkit-box;
   color: var(--natal-text-reading-muted);
-  font-size: var(--font-size-xs);
+  font-size: var(--font-size-2xs);
   line-height: var(--line-height-normal);
   overflow: hidden;
   -webkit-box-orient: vertical;
@@ -446,13 +454,13 @@
 .natal-reading__summary {
   display: flex;
   align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
+  justify-content: flex-start;
+  gap: 12px;
 }
 
 .natal-reading__summary h1,
 .natal-reading__summary h2 {
-  flex: 1 1 auto;
+  flex: 0 1 auto;
   min-width: 0;
 }
 
@@ -628,15 +636,15 @@
   position: relative;
   display: grid;
   grid-template-columns: 1fr;
-  gap: 12px;
+  gap: 13px;
   align-items: start;
   justify-content: space-between;
-  padding: 18px 22px 16px;
-  border: 1px solid color-mix(in srgb, var(--natal-theme-color, var(--premium-accent-purple-strong)) 18%, var(--natal-liquid-edge));
-  border-left: 0;
-  background: color-mix(in srgb, var(--natal-surface-reading-solid) 92%, var(--natal-theme-color, var(--premium-accent-purple-strong)) 3%, transparent);
+  padding: 20px 24px 18px;
+  border: 1px solid color-mix(in srgb, var(--natal-theme-color, var(--premium-accent-purple-strong)) 16%, var(--natal-liquid-edge));
+  border-left: 4px solid color-mix(in srgb, var(--natal-theme-color, var(--premium-accent-purple-strong)) 78%, var(--premium-accent-purple-strong) 22%);
+  background: color-mix(in srgb, var(--natal-surface-reading-solid) 96%, var(--natal-theme-color, var(--premium-accent-purple-strong)) 2%, transparent);
   box-shadow:
-    0 16px 36px color-mix(in srgb, var(--premium-text-strong) 6%, transparent),
+    0 18px 38px color-mix(in srgb, var(--premium-text-strong) 5%, transparent),
     var(--premium-inner-light);
 }
 
@@ -645,11 +653,11 @@
   position: absolute;
   top: 18px;
   bottom: 18px;
-  left: 4px;
-  width: 24px;
+  left: -4px;
+  width: 4px;
   border-radius: var(--radius-full);
-  background: linear-gradient(180deg, color-mix(in srgb, var(--natal-theme-color, var(--natal-border-accent)) 18%, transparent), transparent 72%);
-  opacity: 0.52;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--natal-theme-color, var(--natal-border-accent)) 92%, var(--premium-accent-purple-strong) 8%), color-mix(in srgb, var(--natal-theme-color, var(--natal-border-accent)) 34%, transparent));
+  opacity: 0.72;
   pointer-events: none;
 }
 
@@ -771,10 +779,10 @@
   gap: 10px;
   align-items: start;
   margin: 0;
-  padding: 11px 14px;
+  padding: 12px 14px;
   border: 1px solid color-mix(in srgb, var(--natal-theme-color, var(--premium-accent-purple-strong)) 30%, var(--natal-liquid-edge));
   border-radius: var(--natal-radius-block);
-  background: color-mix(in srgb, var(--color-token-rgb-255-255-255) 72%, var(--natal-theme-color, var(--premium-accent-purple-strong)) 8%, var(--premium-glass-surface-2) 20%);
+  background: color-mix(in srgb, var(--color-token-rgb-255-255-255) 86%, var(--natal-theme-color, var(--premium-accent-purple-strong)) 6%, var(--premium-glass-surface-2) 8%);
   color: color-mix(in srgb, var(--premium-text-strong) 88%, var(--premium-text-main) 12%);
   font-size: var(--natal-type-reading-text-size);
   font-weight: var(--natal-type-reading-text-weight);
@@ -823,6 +831,11 @@
   display: grid;
   gap: 14px;
   width: 100%;
+  box-sizing: border-box;
+  padding: 12px 14px;
+  border: 1px solid color-mix(in srgb, var(--premium-glass-border-strong) 42%, transparent);
+  border-radius: var(--natal-radius-block);
+  background: color-mix(in srgb, var(--color-token-rgb-255-255-255) 92%, var(--premium-glass-surface-2) 8%);
   color: var(--natal-text-reading);
   font-size: var(--natal-type-reading-text-size);
   font-weight: var(--natal-type-reading-text-weight);
@@ -1035,6 +1048,7 @@
   .natal-reading-summary {
       position: static;
       gap: 12px;
+      max-height: none;
     }
 
   .natal-reading-summary__list {
@@ -1072,6 +1086,7 @@
   .natal-reading-hero {
       grid-template-columns: 64px minmax(0, 1fr);
       gap: 9px;
+      padding: 14px;
     }
 
   .natal-reading-hero__symbol {
@@ -1093,8 +1108,8 @@
   .natal-reading-hero p {
       display: -webkit-box;
       -webkit-box-orient: vertical;
-      -webkit-line-clamp: 6;
-      line-clamp: 6;
+      -webkit-line-clamp: 5;
+      line-clamp: 5;
       overflow: hidden;
       font-size: var(--font-size-sm);
       line-height: var(--line-height-normal);
@@ -1124,32 +1139,43 @@
     }
 
   .natal-reading-summary {
-      gap: 6px;
-      padding: 8px;
+      gap: 4px;
+      padding: 7px;
       border-radius: var(--radius-lg);
     }
 
   .natal-reading-summary__header {
-      gap: 4px;
-      padding: 10px 12px 6px;
+      grid-template-columns: auto 1fr;
+      gap: 5px 8px;
+      align-items: center;
+      padding: 8px 10px 5px;
+    }
+
+  .natal-reading-summary__header h2 {
+      font-size: var(--font-size-sm);
+    }
+
+  .natal-reading-summary__header span {
+      justify-self: start;
     }
 
   .natal-reading-summary__bar {
+      grid-column: 1 / -1;
       height: 4px;
     }
 
   .natal-reading-summary__list {
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 4px 6px;
-      padding: 6px 8px 0;
+      padding: 5px 6px 0;
     }
 
   .natal-reading-summary__button,
     .natal-reading-summary__extra-link {
       grid-template-columns: 24px minmax(0, 1fr);
       gap: 6px;
-      min-height: 32px;
-      padding: 4px 6px;
+      min-height: 30px;
+      padding: 4px 5px;
     }
 
   .natal-reading-summary__item--extra::before {
@@ -1168,8 +1194,9 @@
     }
 
   .natal-reading-summary__guide {
-      min-height: 34px;
-      margin: 3px 8px 8px;
+      min-height: 32px;
+      margin: 2px 6px 6px;
+      font-size: var(--font-size-xs);
     }
 
   .natal-reading__summary {
@@ -1261,7 +1288,7 @@
   .natal-reading__chapter {
       grid-template-columns: 1fr;
       gap: 8px;
-      padding: 12px;
+      padding: 12px 12px 12px 14px;
       scroll-margin-top: 76px;
       scroll-margin-bottom: 130px;
     }
@@ -1273,6 +1300,7 @@
   .natal-reading__chapter-body {
       gap: 14px;
       max-width: none;
+      padding: 10px 11px;
     }
 
   .natal-reading__prose-paragraph {
@@ -1351,7 +1379,7 @@
   .natal-reading__chapter-excerpt {
       gap: 3px;
       padding: 8px 9px;
-      background: color-mix(in srgb, var(--natal-theme-color, var(--premium-accent-purple-strong)) 8%, var(--natal-surface-reading-solid, var(--color-token-rgb-255-255-255)));
+      background: color-mix(in srgb, var(--color-token-rgb-255-255-255) 90%, var(--natal-theme-color, var(--premium-accent-purple-strong)) 6%, var(--premium-glass-surface-2) 4%);
       color: color-mix(in srgb, var(--premium-text-strong) 82%, var(--premium-text-main) 18%);
       font-size: var(--natal-type-reading-text-size);
       font-weight: var(--natal-type-reading-text-weight);
@@ -1425,7 +1453,7 @@
 
 @media (max-width: 380px) {
   .natal-reading-summary {
-      max-height: 326px;
+      max-height: none;
     }
 
   .natal-reading-hero {

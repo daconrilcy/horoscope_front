@@ -44,7 +44,9 @@
   box-sizing: border-box;
   padding: 22px var(--layout-padding-inline) 44px;
   background:
-    linear-gradient(135deg, color-mix(in srgb, var(--natal-surface-page) 94%, var(--color-token-rgb-255-255-255) 6%), var(--natal-surface-page));
+    radial-gradient(circle at 18% 8%, color-mix(in srgb, var(--color-token-rgb-255-255-255) 82%, transparent) 0 18%, transparent 42%),
+    radial-gradient(circle at 86% 12%, color-mix(in srgb, var(--premium-accent-purple-strong) 5%, transparent) 0 16%, transparent 38%),
+    linear-gradient(135deg, color-mix(in srgb, var(--natal-surface-page) 90%, var(--color-token-rgb-255-255-255) 10%), var(--natal-surface-page));
 }
 
 .page-layout.natal-page-container {
@@ -55,15 +57,17 @@ body:has(.is-natal-page) .app-header {
   position: relative;
   height: 54px;
   padding: 0 18px;
-  background: color-mix(in srgb, var(--glass-card-premium-bg) 88%, var(--color-token-rgb-255-255-255) 12%);
-  border-bottom: 1px solid color-mix(in srgb, var(--premium-glass-border-strong) 66%, transparent);
-  box-shadow: 0 8px 24px color-mix(in srgb, var(--premium-text-strong) 5%, transparent);
+  background: color-mix(in srgb, var(--color-token-rgb-255-255-255) 76%, var(--glass-card-premium-bg) 24%);
+  border-bottom: 1px solid color-mix(in srgb, var(--premium-glass-border-strong) 44%, transparent);
+  box-shadow: 0 8px 22px color-mix(in srgb, var(--premium-text-strong) 4%, transparent);
   backdrop-filter: var(--glass-card-backdrop-filter);
   -webkit-backdrop-filter: var(--glass-card-backdrop-filter);
 }
 
 body:has(.is-natal-page) .app-bg {
-  background: var(--premium-app-bg);
+  background:
+    radial-gradient(circle at 52% 0%, color-mix(in srgb, var(--color-token-rgb-255-255-255) 48%, transparent) 0 20%, transparent 48%),
+    var(--premium-app-bg);
 }
 
 body:has(.is-natal-page) .app-bg::before,
@@ -88,7 +92,7 @@ body:has(.is-natal-page) .app-header-language-toggle {
   padding: 0;
   border: 1px solid color-mix(in srgb, var(--premium-glass-border-strong) 48%, transparent);
   border-radius: var(--radius-control);
-  background: color-mix(in srgb, var(--premium-glass-surface-2) 74%, transparent);
+  background: color-mix(in srgb, var(--color-token-rgb-255-255-255) 68%, var(--premium-glass-surface-2) 32%);
   box-shadow: var(--premium-inner-light);
   color: var(--premium-text-strong);
 }

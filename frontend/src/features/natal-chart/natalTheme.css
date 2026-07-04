@@ -7,14 +7,18 @@
   --natal-surface-container: color-mix(in srgb, var(--premium-glass-surface-1) 84%, var(--color-token-rgb-255-255-255) 16%);
   --natal-surface-section: color-mix(in srgb, var(--glass-card-premium-bg) 88%, var(--color-token-rgb-255-255-255) 12%);
   --natal-surface-block: color-mix(in srgb, var(--premium-glass-surface-2) 82%, var(--color-token-rgb-255-255-255) 18%);
+  --natal-surface-canvas: color-mix(in srgb, var(--color-token-rgb-255-255-255) 88%, var(--premium-glass-surface-2) 12%);
+  --natal-surface-rail: color-mix(in srgb, var(--color-token-rgb-255-255-255) 82%, var(--premium-glass-surface-2) 18%);
+  --natal-surface-facts: color-mix(in srgb, var(--color-token-rgb-255-255-255) 92%, var(--premium-glass-surface-2) 8%);
   --natal-surface-data: color-mix(in srgb, var(--premium-glass-surface-2) 78%, var(--color-token-rgb-255-255-255) 22%);
   --natal-surface-data-strong: color-mix(in srgb, var(--premium-glass-surface-3) 78%, var(--premium-accent-purple-strong) 5%, var(--color-token-rgb-255-255-255) 17%);
   --natal-surface-chip: color-mix(in srgb, var(--premium-glass-surface-3) 72%, var(--color-token-rgb-255-255-255) 28%);
   --natal-surface-reading: color-mix(in srgb, var(--color-token-rgb-255-255-255) 90%, var(--premium-glass-surface-2) 10%);
-  --natal-surface-reading-solid: color-mix(in srgb, var(--color-token-rgb-255-255-255) 94%, var(--premium-glass-surface-2) 6%);
+  --natal-surface-reading-solid: color-mix(in srgb, var(--color-token-rgb-255-255-255) 97%, var(--premium-glass-surface-2) 3%);
   --natal-surface-reading-soft: color-mix(in srgb, var(--color-token-rgb-255-255-255) 86%, var(--premium-glass-surface-2) 14%);
   --natal-surface-reading-muted: color-mix(in srgb, var(--color-token-rgb-255-255-255) 82%, var(--natal-theme-color, var(--premium-accent-purple-strong)) 8%, var(--premium-glass-surface-2) 10%);
   --natal-liquid-edge: color-mix(in srgb, var(--color-token-rgb-255-255-255) 76%, var(--premium-glass-border-strong) 24%);
+  --natal-border-liquid: color-mix(in srgb, var(--premium-glass-border-strong) 58%, var(--color-token-rgb-255-255-255) 42%);
   --natal-inner-light: var(--premium-inner-light);
   --natal-border-data: color-mix(in srgb, var(--premium-accent-purple-strong) 14%, var(--premium-glass-border-strong) 56%, transparent);
   --natal-border-reading: color-mix(in srgb, var(--premium-accent-purple-strong) 12%, var(--premium-glass-border-strong) 60%, transparent);
@@ -25,6 +29,7 @@
   --natal-radius-block: var(--radius-card-md);
   --natal-radius-badge: var(--radius-full);
   --natal-shadow-section: var(--premium-shadow-card);
+  --natal-shadow-float: 0 20px 54px color-mix(in srgb, var(--premium-text-strong) 8%, transparent);
   --natal-shadow-block: 0 10px 26px color-mix(in srgb, var(--premium-accent-purple-strong) 8%, transparent);
   --natal-glass-filter: var(--glass-card-backdrop-filter);
   --natal-panel-background: var(--glass-card-premium-bg);
@@ -65,6 +70,9 @@
   --natal-surface-container: var(--glass-card-premium-bg);
   --natal-surface-section: var(--glass-card-premium-bg);
   --natal-surface-block: var(--premium-glass-surface-2);
+  --natal-surface-canvas: var(--glass-card-premium-bg);
+  --natal-surface-rail: var(--glass-card-premium-bg);
+  --natal-surface-facts: var(--premium-glass-surface-2);
   --natal-surface-data: var(--premium-glass-surface-2);
   --natal-surface-data-strong: color-mix(in srgb, var(--premium-accent-purple-strong) 10%, var(--premium-glass-surface-2));
   --natal-surface-chip: var(--premium-glass-surface-3);
@@ -76,7 +84,9 @@
   --natal-border-section: color-mix(in srgb, var(--glass-border) 88%, transparent);
   --natal-border-block: color-mix(in srgb, var(--glass-border) 72%, transparent);
   --natal-border-accent: color-mix(in srgb, var(--premium-accent-purple-strong) 22%, var(--glass-border-strong) 64%, transparent);
+  --natal-border-liquid: color-mix(in srgb, var(--glass-border-strong) 72%, transparent);
   --natal-shadow-section: var(--premium-shadow-card);
+  --natal-shadow-float: var(--premium-shadow-card);
   --natal-shadow-block: var(--shadow-card);
   --natal-glass-filter: var(--glass-card-backdrop-filter);
   --natal-panel-background: var(--glass-card-premium-bg);
@@ -119,6 +129,9 @@
 @media (max-width: 768px) {
   .natal-page-container {
       --layout-padding-inline: 10px;
+      --natal-surface-canvas: color-mix(in srgb, var(--color-token-rgb-255-255-255) 90%, var(--premium-glass-surface-2) 10%);
+      --natal-surface-rail: color-mix(in srgb, var(--color-token-rgb-255-255-255) 84%, var(--premium-glass-surface-2) 16%);
+      --natal-surface-facts: color-mix(in srgb, var(--color-token-rgb-255-255-255) 94%, var(--premium-glass-surface-2) 6%);
       --natal-surface-data: color-mix(in srgb, var(--color-token-rgb-255-255-255) 28%, transparent);
       --natal-surface-data-strong: color-mix(in srgb, var(--premium-accent-purple-strong) 4%, var(--premium-glass-surface-2));
       --natal-surface-chip: color-mix(in srgb, var(--premium-accent-purple-strong) 4%, var(--premium-glass-surface-2));
