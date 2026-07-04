@@ -39,7 +39,7 @@
   --natal-badge-meta-surface: color-mix(in srgb, var(--premium-text-meta) 2%, var(--natal-surface-reading-muted));
   --natal-badge-meta-border: color-mix(in srgb, var(--premium-text-meta) 4%, var(--natal-border-block));
   --natal-text-reading: color-mix(in srgb, var(--premium-text-strong) 78%, var(--premium-text-main) 22%);
-  --natal-text-reading-muted: color-mix(in srgb, var(--premium-text-meta) 82%, var(--premium-text-main) 18%);
+  --natal-text-reading-muted: color-mix(in srgb, var(--premium-text-meta) 88%, var(--premium-text-main) 12%);
   --natal-tone-sun: var(--color-energy-g2);
   --natal-tone-moon: color-mix(in srgb, var(--color-token-255f9f) 84%, var(--color-work-g2) 16%);
   --natal-tone-ascendant: var(--premium-accent-purple-strong);

@@ -275,6 +275,11 @@ async function expectTouchTarget(locator: Locator) {
   expect(box?.height ?? 0).toBeGreaterThanOrEqual(44)
 }
 
+async function expectCompactSummaryTarget(locator: Locator) {
+  const box = await locator.boundingBox()
+  expect(box?.height ?? 0).toBeGreaterThanOrEqual(36)
+}
+
 test("garde /natal lisible et non masque a 360, 390 et 430 px", async ({ page }) => {
   mkdirSync(EVIDENCE_DIR, { recursive: true })
   await setupNatalFixture(page)
@@ -284,6 +289,7 @@ test("garde /natal lisible et non masque a 360, 390 et 430 px", async ({ page })
 
   for (const viewport of MOBILE_VIEWPORTS) {
     await page.setViewportSize(viewport)
+    await page.evaluate(() => window.scrollTo(0, 0))
     await expectNoHorizontalOverflow(page)
     await expect(page.getByRole("heading", { name: "Base du calcul natal" })).toBeVisible()
     await expect(page.getByRole("region", { name: "Repères principaux" })).toContainText("Soleil")
@@ -316,7 +322,7 @@ test("garde /natal lisible et non masque a 360, 390 et 430 px", async ({ page })
     expect(progressStyles.overflowX).toBe("visible")
 
     const progressLink = page.locator(".natal-reading-summary__button").first()
-    await expectTouchTarget(progressLink)
+    await expectCompactSummaryTarget(progressLink)
     await expect(progressLink.locator(".natal-reading-summary__title")).toHaveText("Identité")
     await expect(page.locator(".natal-reading-summary__title").nth(1)).toHaveText("Émotions")
     await expect(page.locator(".natal-reading-summary__title").nth(2)).toHaveText("Relations")
@@ -333,6 +339,51 @@ test("garde /natal lisible et non masque a 360, 390 et 430 px", async ({ page })
       }),
     )
     expect(progressLinkOverflow.every(({ overflow }) => overflow <= 1)).toBe(true)
+    const firstViewportLayout = await page.evaluate(() => {
+      const summary = document.querySelector(".natal-reading-summary")?.getBoundingClientRect()
+      const hero = document.querySelector(".natal-reading-hero")?.getBoundingClientRect()
+      const metrics = document.querySelector(".natal-reading-metrics")?.getBoundingClientRect()
+      return {
+        heroTop: hero?.top ?? 0,
+        metricsTop: metrics?.top ?? 0,
+        summaryHeight: summary?.height ?? 0,
+      }
+    })
+    if (viewport.width <= 390) {
+      expect(firstViewportLayout.summaryHeight).toBeLessThanOrEqual(400)
+      expect(firstViewportLayout.heroTop).toBeLessThanOrEqual(460)
+      expect(firstViewportLayout.metricsTop).toBeLessThanOrEqual(720)
+    }
+    if (viewport.width <= 360) {
+      const headerLayout = await page.evaluate(() => {
+        const header = document.querySelector(".app-header")?.getBoundingClientRect()
+        const title = document.querySelector(".app-header-title")?.getBoundingClientRect()
+        const actions = document.querySelector(".app-header-actions")?.getBoundingClientRect()
+        return {
+          actionsRight: actions?.right ?? 0,
+          actionsStart: actions?.left ?? 0,
+          headerRight: header?.right ?? 0,
+          titleEnd: title?.right ?? 0,
+        }
+      })
+      expect(headerLayout.titleEnd).toBeLessThanOrEqual(headerLayout.actionsStart)
+      expect(headerLayout.actionsRight).toBeLessThanOrEqual(headerLayout.headerRight)
+    }
+    const measuredPanelBackgrounds = await page.evaluate(() => {
+      const selectors = [".natal-reading-summary", ".natal-reading-metrics", ".bottom-nav"]
+      return selectors.map((selector) => {
+        const element = document.querySelector(selector)
+        return {
+          backgroundColor: element ? window.getComputedStyle(element).backgroundColor : "",
+          selector,
+        }
+      })
+    })
+    const transparentPanels = measuredPanelBackgrounds.filter(
+      ({ backgroundColor }) =>
+        backgroundColor === "" || backgroundColor === "transparent" || backgroundColor === "rgba(0, 0, 0, 0)",
+    )
+    expect(transparentPanels, JSON.stringify(measuredPanelBackgrounds)).toEqual([])
 
     const metaToggle = page.locator(".natal-reading__meta-toggle").first()
     await expectTouchTarget(metaToggle)

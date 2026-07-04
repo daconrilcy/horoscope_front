@@ -409,6 +409,6 @@ test("capture les preuves desktop et mobile d'une lecture Basic V2 lisible", asy
   expect(metricsColumns.trim().split(/\s+/)).toHaveLength(2)
   expect(metricsOverflow.every(({ leftOverflow, rightOverflow }) => leftOverflow <= 1 && rightOverflow <= 1)).toBe(true)
   expect(guideToggleHeight).toBeGreaterThanOrEqual(44)
-  expect(bottomPadding).toBeGreaterThanOrEqual(184)
+  expect(bottomPadding).toBeGreaterThanOrEqual(132)
   await page.screenshot({ path: resolve(EVIDENCE_DIR, "basic-readable-mobile-after.png"), fullPage: true })
 })

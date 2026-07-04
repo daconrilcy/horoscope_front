@@ -3,15 +3,21 @@
 @media (max-width: 768px) {
   body:has(.is-natal-page) .bottom-nav {
       bottom: calc(var(--app-mobile-nav-inset) + env(safe-area-inset-bottom));
-      border-color: color-mix(in srgb, var(--color-nav-border) 46%, transparent);
-      background: color-mix(in srgb, var(--glass-card-premium-bg) 82%, transparent);
+      border: 1px solid color-mix(in srgb, var(--premium-glass-border-strong) 42%, transparent);
+      background: color-mix(in srgb, var(--color-token-rgb-255-255-255) 74%, var(--color-nav-glass) 26%);
+      background-color: color-mix(in srgb, var(--color-token-rgb-255-255-255) 74%, var(--color-nav-glass) 26%);
       box-shadow: 0 10px 30px color-mix(in srgb, var(--premium-text-strong) 9%, transparent);
-      backdrop-filter: var(--glass-card-backdrop-filter);
-      -webkit-backdrop-filter: var(--glass-card-backdrop-filter);
+      backdrop-filter: blur(18px) saturate(150%);
+      -webkit-backdrop-filter: blur(18px) saturate(150%);
     }
 
   body:has(.is-natal-page) .bottom-nav__item--active {
       background: color-mix(in srgb, var(--color-nav-active-bg) 48%, var(--premium-glass-surface-2));
+    }
+
+  .dark body:has(.is-natal-page) .bottom-nav {
+      background: color-mix(in srgb, var(--premium-glass-surface-2) 78%, var(--color-nav-glass) 22%);
+      background-color: color-mix(in srgb, var(--premium-glass-surface-2) 78%, var(--color-nav-glass) 22%);
     }
 }
 
@@ -256,7 +262,7 @@ body:has(.is-natal-page) .app-header-actions {
 
 @media (max-width: 768px) {
   .page-layout.natal-page-container .page-layout__main {
-      padding: 10px var(--layout-padding-inline) calc(260px + env(safe-area-inset-bottom) + var(--app-mobile-nav-inset));
+      padding: 10px var(--layout-padding-inline) calc(132px + env(safe-area-inset-bottom) + var(--app-mobile-nav-inset));
     }
 
   .natal-page-header__title {
@@ -316,4 +322,39 @@ body:has(.is-natal-page) .app-header-actions {
       font-size: var(--font-size-xs);
     }
 
+}
+
+@media (max-width: 380px) {
+  body:has(.is-natal-page) .app-header {
+      padding: 0 10px;
+    }
+
+  body:has(.is-natal-page) .app-header-brand {
+      gap: 5px;
+      min-width: 0;
+      padding-left: 4px;
+    }
+
+  body:has(.is-natal-page) .app-header-logo {
+      height: 30px;
+    }
+
+  body:has(.is-natal-page) .app-header-title {
+      max-width: 58px;
+      overflow: hidden;
+      font-size: var(--font-size-sm);
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+  body:has(.is-natal-page) .app-header-actions {
+      gap: 5px;
+    }
+
+  body:has(.is-natal-page) .app-header-hamburger,
+  body:has(.is-natal-page) .app-header-theme-toggle,
+  body:has(.is-natal-page) .app-header-language-toggle {
+      min-width: 34px;
+      min-height: 34px;
+    }
 }
