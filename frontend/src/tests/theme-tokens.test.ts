@@ -180,10 +180,10 @@ describe("theme.css validation (Static Analysis)", () => {
     expect(natalCssContent).toMatch(/\.natal-card--completed\s*\{[\s\S]*background:\s*transparent[\s\S]*box-shadow:\s*none/)
     expect(natalCssContent).toMatch(/\.natal-badge--astro-data\s*\{[\s\S]*background:\s*var\(--natal-badge-key-surface\)/)
     expect(natalCssContent).toMatch(
-      /\.natal-badge--basis\s*\{[\s\S]*border-color:\s*color-mix\(in srgb,\s*var\(--natal-theme-color,\s*var\(--premium-accent-purple-strong\)\)\s*16%,\s*var\(--natal-liquid-edge\)\)/,
+      /\.natal-badge--basis\s*\{[\s\S]*border-color:\s*color-mix\(in srgb,\s*var\(--natal-theme-color,\s*var\(--premium-accent-purple-strong\)\)\s*12%,\s*var\(--natal-liquid-edge\)\)/,
     )
     expect(natalCssContent).toMatch(
-      /\.natal-badge--basis\s*\{[\s\S]*background:\s*color-mix\(in srgb,\s*var\(--color-token-rgb-255-255-255\)\s*76%,\s*var\(--natal-theme-color,\s*var\(--premium-accent-purple-strong\)\)\s*4%,\s*transparent\)/,
+      /\.natal-badge--basis\s*\{[\s\S]*background:\s*color-mix\(in srgb,\s*var\(--natal-theme-color,\s*var\(--premium-accent-purple-strong\)\)\s*5%,\s*var\(--natal-surface-chip\)\)/,
     )
     expect(natalCssContent).toMatch(
       /\.natal-badge--basis\s*\{[\s\S]*box-shadow:\s*inset\s*0\s*1px\s*0\s*color-mix\(in srgb,\s*var\(--color-token-rgb-255-255-255\)\s*68%,\s*transparent\)/,

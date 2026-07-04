@@ -3,9 +3,9 @@
 @media (max-width: 768px) {
   body:has(.is-natal-page) .bottom-nav {
       bottom: calc(var(--app-mobile-nav-inset) + env(safe-area-inset-bottom));
-      min-height: 64px;
+      min-height: 60px;
       height: auto;
-      padding: 5px 7px;
+      padding: 4px 7px;
       border-radius: 20px;
       border: 1px solid color-mix(in srgb, var(--premium-glass-border-strong) 42%, transparent);
       background: color-mix(in srgb, var(--color-token-rgb-255-255-255) 74%, var(--color-nav-glass) 26%);
@@ -16,8 +16,8 @@
     }
 
   body:has(.is-natal-page) .bottom-nav__item {
-      min-height: 46px;
-      padding: 4px 8px;
+      min-height: 44px;
+      padding: 3px 8px;
       gap: 1px;
     }
 

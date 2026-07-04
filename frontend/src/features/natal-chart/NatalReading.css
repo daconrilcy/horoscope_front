@@ -180,7 +180,17 @@
   overflow-wrap: anywhere;
 }
 
+.natal-reading-metrics__label {
+  display: block;
+  margin-bottom: 2px;
+}
+
+.natal-reading-metrics__detail {
+  margin-top: 2px;
+}
+
 .natal-reading-metrics__item strong {
+  display: block;
   min-width: 0;
   color: var(--premium-text-strong);
   font-size: var(--font-size-sm);
@@ -197,7 +207,7 @@
   min-width: 0;
   max-height: calc(100vh - 90px);
   padding: 0;
-  border: 1px solid color-mix(in srgb, var(--natal-liquid-edge) 64%, transparent);
+  border: 1px solid color-mix(in srgb, var(--premium-glass-border) 58%, transparent);
   border-radius: var(--natal-radius-section);
   background:
     linear-gradient(145deg, color-mix(in srgb, var(--color-token-rgb-255-255-255) 60%, transparent), transparent 44%),
@@ -292,7 +302,7 @@
   left: 19px;
   width: 1px;
   border-radius: var(--radius-full);
-  background: color-mix(in srgb, var(--natal-liquid-edge) 56%, transparent);
+  background: color-mix(in srgb, var(--natal-liquid-edge) 42%, transparent);
 }
 
 .natal-reading-summary__button,
@@ -317,7 +327,7 @@
 .natal-reading-summary__button[aria-current="step"],
 .natal-reading-summary__extra-link.is-active,
 .natal-reading-summary__extra-link[aria-current="step"] {
-  border-color: color-mix(in srgb, var(--natal-theme-color, var(--premium-accent-purple-strong)) 28%, var(--natal-liquid-edge));
+  border-color: color-mix(in srgb, var(--natal-theme-color, var(--premium-accent-purple-strong)) 18%, var(--natal-liquid-edge));
   background: color-mix(in srgb, var(--natal-theme-color, var(--premium-accent-purple-strong)) 10%, var(--color-token-rgb-255-255-255) 58%, transparent);
   box-shadow: var(--natal-inner-light, inset 0 1px 0 rgba(255, 255, 255, 0.5));
 }
@@ -1414,21 +1424,46 @@
 }
 
 @media (max-width: 380px) {
+  .natal-reading-summary {
+      max-height: 326px;
+    }
+
+  .natal-reading-hero {
+      grid-template-columns: 58px minmax(0, 1fr);
+      gap: 10px;
+    }
+
+  .natal-reading-hero__symbol {
+      width: 54px;
+      height: 54px;
+    }
+
+  .natal-reading-hero__logo {
+      width: 42px;
+      height: 42px;
+    }
+
+  .natal-reading-hero p {
+      -webkit-line-clamp: 4;
+      line-clamp: 4;
+      line-height: 1.5;
+    }
+
   .natal-reading-metrics {
-      gap: 5px;
-      padding: 5px;
+      gap: 4px;
+      padding: 4px;
     }
 
   .natal-reading-metrics__item {
-      grid-template-columns: 28px minmax(0, 1fr);
-      min-height: 58px;
-      padding: 6px;
-      gap: 1px 7px;
+      grid-template-columns: 24px minmax(0, 1fr);
+      min-height: 48px;
+      padding: 5px;
+      gap: 0 6px;
     }
 
   .natal-reading-metrics__icon {
-      width: 28px;
-      height: 28px;
+      width: 24px;
+      height: 24px;
     }
 
   .natal-reading-metrics__label,
