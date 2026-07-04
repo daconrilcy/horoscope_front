@@ -16,7 +16,9 @@
 .natal-card,
 .natal-reading-facts {
   border: 1px solid var(--natal-border-section);
-  background: var(--natal-panel-background);
+  background:
+    linear-gradient(145deg, color-mix(in srgb, var(--color-token-rgb-255-255-255) 52%, transparent), transparent 48%),
+    var(--natal-panel-background);
 }
 
 .natal-card {

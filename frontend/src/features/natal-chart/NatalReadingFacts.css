@@ -9,9 +9,12 @@
   overflow: hidden;
   background: linear-gradient(
     135deg,
-    color-mix(in srgb, var(--natal-surface-section) 97%, var(--natal-surface-reading-muted) 3%),
-    color-mix(in srgb, var(--natal-surface-section) 91%, var(--natal-surface-data) 9%)
+    color-mix(in srgb, var(--natal-surface-section) 88%, var(--natal-surface-reading-muted) 12%),
+    color-mix(in srgb, var(--natal-surface-section) 76%, var(--natal-surface-data) 24%)
   );
+  box-shadow:
+    var(--natal-inner-light, inset 0 1px 0 rgba(255, 255, 255, 0.5)),
+    var(--natal-shadow-section);
 }
 
 .natal-reading-facts__header {
@@ -68,7 +71,7 @@
   padding: 0 20px;
   border: 1px solid color-mix(in srgb, var(--premium-accent-purple-strong) 14%, var(--natal-border-section));
   border-radius: var(--radius-full);
-  background: color-mix(in srgb, var(--natal-surface-chip) 82%, var(--natal-surface-reading-muted) 18%);
+  background: color-mix(in srgb, var(--natal-surface-chip) 74%, var(--natal-surface-reading-muted) 26%);
   box-shadow: var(--natal-shadow-block);
   color: var(--premium-accent-purple-strong);
   font-size: var(--font-size-sm);
@@ -86,7 +89,7 @@
   padding: 0 20px;
   border: 1px solid color-mix(in srgb, var(--premium-accent-purple-strong) 14%, var(--natal-border-section));
   border-radius: var(--radius-full);
-  background: color-mix(in srgb, var(--natal-surface-chip) 82%, var(--natal-surface-reading-muted) 18%);
+  background: color-mix(in srgb, var(--natal-surface-chip) 74%, var(--natal-surface-reading-muted) 26%);
   box-shadow: var(--natal-shadow-block);
   color: var(--premium-accent-purple-strong);
   font-size: var(--font-size-sm);
@@ -138,7 +141,8 @@
   padding: 24px 24px 22px;
   border: 1px solid var(--natal-border-section);
   border-radius: var(--natal-radius-section);
-  background: color-mix(in srgb, var(--natal-surface-data) 94%, transparent);
+  background: color-mix(in srgb, var(--natal-surface-data) 88%, transparent);
+  box-shadow: var(--natal-inner-light, inset 0 1px 0 rgba(255, 255, 255, 0.5));
 }
 
 .natal-reading-facts__group--primary {
@@ -148,7 +152,7 @@
       color-mix(in srgb, var(--premium-accent-purple-strong) 7%, transparent) 0,
       transparent 34%
     ),
-    color-mix(in srgb, var(--natal-surface-data) 90%, var(--natal-surface-reading-muted) 10%);
+    color-mix(in srgb, var(--natal-surface-data) 82%, var(--natal-surface-reading-muted) 18%);
 }
 
 .natal-reading-facts__group-head,
@@ -192,8 +196,8 @@
   background:
     linear-gradient(
       135deg,
-      color-mix(in srgb, var(--natal-surface-chip) 92%, transparent),
-      color-mix(in srgb, var(--natal-surface-reading-muted) 74%, var(--natal-surface-chip))
+      color-mix(in srgb, var(--natal-surface-chip) 84%, transparent),
+      color-mix(in srgb, var(--natal-surface-reading-muted) 78%, var(--natal-surface-chip))
     );
   box-shadow:
     inset 0 1px 0 color-mix(in srgb, var(--natal-surface-chip) 88%, transparent),
@@ -436,7 +440,8 @@
   padding: 24px;
   border: 1px solid var(--natal-border-section);
   border-radius: var(--natal-radius-section);
-  background: color-mix(in srgb, var(--natal-surface-data) 95%, var(--natal-surface-reading-muted) 5%);
+  background: color-mix(in srgb, var(--natal-surface-data) 86%, var(--natal-surface-reading-muted) 14%);
+  box-shadow: var(--natal-inner-light, inset 0 1px 0 rgba(255, 255, 255, 0.5));
 }
 
 .natal-reading-facts__methods-list {

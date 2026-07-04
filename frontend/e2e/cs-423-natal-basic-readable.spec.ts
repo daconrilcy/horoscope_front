@@ -378,6 +378,16 @@ test("capture les preuves desktop et mobile d'une lecture Basic V2 lisible", asy
   const guideToggleHeight = await mobileGuideToggle.evaluate((element) => element.getBoundingClientRect().height)
   const metaDisplay = await mobileChapterMeta.evaluate((element) => window.getComputedStyle(element).display)
   const metricsColumns = await mobileMetrics.evaluate((element) => window.getComputedStyle(element).gridTemplateColumns)
+  const metricsOverflow = await mobileMetrics.evaluate((element) => {
+    const containerBox = element.getBoundingClientRect()
+    return Array.from(element.querySelectorAll(".natal-reading-metrics__item")).map((item) => {
+      const itemBox = item.getBoundingClientRect()
+      return {
+        leftOverflow: containerBox.left - itemBox.left,
+        rightOverflow: itemBox.right - containerBox.right,
+      }
+    })
+  })
   const bottomPadding = await mobilePageMain.evaluate((element) =>
     Number.parseFloat(window.getComputedStyle(element).paddingBottom),
   )
@@ -396,8 +406,9 @@ test("capture les preuves desktop et mobile d'une lecture Basic V2 lisible", asy
   expect(basisListStyles.flexWrap).toBe("wrap")
   expect(basisListStyles.overflowX).toBe("visible")
   await expect(mobileMetricCards).toHaveCount(4)
-  expect(metricsColumns.trim().split(/\s+/)).toHaveLength(1)
+  expect(metricsColumns.trim().split(/\s+/)).toHaveLength(2)
+  expect(metricsOverflow.every(({ leftOverflow, rightOverflow }) => leftOverflow <= 1 && rightOverflow <= 1)).toBe(true)
   expect(guideToggleHeight).toBeGreaterThanOrEqual(44)
-  expect(bottomPadding).toBeGreaterThanOrEqual(140)
+  expect(bottomPadding).toBeGreaterThanOrEqual(184)
   await page.screenshot({ path: resolve(EVIDENCE_DIR, "basic-readable-mobile-after.png"), fullPage: true })
 })

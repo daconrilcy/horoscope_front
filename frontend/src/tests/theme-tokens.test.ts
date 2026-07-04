@@ -162,8 +162,11 @@ describe("theme.css validation (Static Analysis)", () => {
 
   it("raccorde les surfaces et badges de /natal aux roles visuels de page", () => {
     expect(natalCssContent).toContain("--natal-radius-section: var(--radius-card-md)")
-    expect(natalCssContent).toContain("--natal-surface-reading: var(--color-token-rgb-255-255-255)")
-    expect(natalCssContent).toContain("--natal-panel-background: var(--natal-surface-section)")
+    expect(natalCssContent).toContain("--natal-surface-reading: color-mix(in srgb, var(--color-token-rgb-255-255-255) 90%, var(--premium-glass-surface-2) 10%)")
+    expect(natalCssContent).toContain("--natal-surface-reading-solid:")
+    expect(natalCssContent).toContain("--natal-panel-background: var(--glass-card-premium-bg)")
+    expect(natalCssContent).toContain("--natal-glass-filter: var(--glass-card-backdrop-filter)")
+    expect(natalCssContent).toContain("--natal-liquid-edge:")
     expect(natalCssContent).toContain("--natal-tone-sun: var(--color-energy-g2)")
     expect(natalCssContent).toContain("--natal-type-reading-text-line-height: var(--line-height-prose-loose)")
     expect(natalCssContent).toMatch(/\.dark \.natal-page-container\s*\{[\s\S]*--natal-surface-page:\s*transparent/)
@@ -180,9 +183,11 @@ describe("theme.css validation (Static Analysis)", () => {
       /\.natal-badge--basis\s*\{[\s\S]*border-color:\s*color-mix\(in srgb,\s*var\(--natal-theme-color,\s*var\(--premium-accent-purple-strong\)\)\s*74%,\s*var\(--natal-border-block\)\)/,
     )
     expect(natalCssContent).toMatch(
-      /\.natal-badge--basis\s*\{[\s\S]*background:\s*color-mix\(in srgb,\s*var\(--natal-theme-color,\s*var\(--premium-accent-purple-strong\)\)\s*9%,\s*var\(--natal-surface-chip\)\)/,
+      /\.natal-badge--basis\s*\{[\s\S]*background:\s*color-mix\(in srgb,\s*var\(--natal-theme-color,\s*var\(--premium-accent-purple-strong\)\)\s*8%,\s*var\(--natal-surface-chip\)\)/,
     )
     expect(natalCssContent).toMatch(/\.natal-reading-metrics__item--moon\s*\{[\s\S]*--natal-metric-tone:\s*var\(--natal-tone-moon\)/)
+    expect(natalCssContent).toMatch(/\.natal-reading-metrics\s*\{[\s\S]*backdrop-filter:\s*var\(--natal-glass-filter\)/)
+    expect(natalCssContent).toMatch(/\.natal-reading__chapter\s*\{[\s\S]*var\(--natal-surface-reading-solid/)
     expect(natalCssContent).toMatch(/\.natal-data-pill\s*\{[\s\S]*background:\s*var\(--natal-badge-meta-surface\)/)
     expect(natalCssContent).toMatch(/\.natal-data-card\s*\{[\s\S]*background:\s*var\(--natal-surface-block\)/)
     expect(natalCssContent).toMatch(
@@ -211,12 +216,15 @@ describe("theme.css validation (Static Analysis)", () => {
     expect(natalCssContent).toMatch(
       /\.natal-reading__progress-link\s*\{[\s\S]*box-sizing:\s*border-box[\s\S]*max-width:\s*100%/,
     )
-    expect(natalBottomNavRule).toContain("border-color: color-mix(in srgb, var(--color-nav-border) 30%, transparent)")
-    expect(natalBottomNavRule).toContain("background: color-mix(in srgb, var(--color-nav-glass) 28%, transparent)")
-    expect(natalBottomNavRule).toContain("box-shadow: 0 4px 14px color-mix(in srgb, var(--premium-text-strong) 4%, transparent)")
+    expect(natalCssContent).toMatch(
+      /\.natal-reading-metrics\s*\{[\s\S]*grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)/,
+    )
+    expect(natalBottomNavRule).toContain("border-color: color-mix(in srgb, var(--color-nav-border) 46%, transparent)")
+    expect(natalBottomNavRule).toContain("background: color-mix(in srgb, var(--glass-card-premium-bg) 82%, transparent)")
+    expect(natalBottomNavRule).toContain("box-shadow: 0 10px 30px color-mix(in srgb, var(--premium-text-strong) 9%, transparent)")
     expect(natalBottomNavRule).not.toContain("opacity:")
     expect(natalChartPageCssContent).toMatch(
-      /body:has\(\.is-natal-page\) \.bottom-nav__item--active\s*\{[\s\S]*background:\s*color-mix\(in srgb,\s*var\(--color-nav-active-bg\)\s*34%,\s*transparent\)/,
+      /body:has\(\.is-natal-page\) \.bottom-nav__item--active\s*\{[\s\S]*background:\s*color-mix\(in srgb,\s*var\(--color-nav-active-bg\)\s*48%,\s*var\(--premium-glass-surface-2\)\)/,
     )
   })
 
