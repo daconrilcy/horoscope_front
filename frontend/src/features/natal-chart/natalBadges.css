@@ -91,14 +91,14 @@
 
 .natal-badge--basis {
   min-height: 28px;
-  padding: 4px 13px;
-  border-color: color-mix(in srgb, var(--natal-theme-color, var(--premium-accent-purple-strong)) 32%, var(--natal-border-block));
+  padding: 4px 9px;
+  border-color: color-mix(in srgb, var(--natal-theme-color, var(--premium-accent-purple-strong)) 16%, var(--natal-liquid-edge));
   border-radius: var(--radius-control);
-  background: color-mix(in srgb, var(--natal-theme-color, var(--premium-accent-purple-strong)) 5%, var(--natal-surface-reading-solid));
+  background: color-mix(in srgb, var(--color-token-rgb-255-255-255) 76%, var(--natal-theme-color, var(--premium-accent-purple-strong)) 4%, transparent);
   color: color-mix(in srgb, var(--premium-text-main) 72%, var(--natal-theme-color, var(--premium-accent-purple-strong)) 28%);
   font-size: var(--font-size-2xs);
   font-weight: var(--font-weight-semibold);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--natal-theme-color, var(--premium-accent-purple-strong)) 12%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--color-token-rgb-255-255-255) 68%, transparent);
 }
 
 @media (max-width: 768px) {

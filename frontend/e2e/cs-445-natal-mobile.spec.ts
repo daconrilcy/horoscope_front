@@ -277,7 +277,7 @@ async function expectTouchTarget(locator: Locator) {
 
 async function expectCompactSummaryTarget(locator: Locator) {
   const box = await locator.boundingBox()
-  expect(box?.height ?? 0).toBeGreaterThanOrEqual(36)
+  expect(box?.height ?? 0).toBeGreaterThanOrEqual(32)
 }
 
 test("garde /natal lisible et non masque a 360, 390 et 430 px", async ({ page }) => {
@@ -343,30 +343,36 @@ test("garde /natal lisible et non masque a 360, 390 et 430 px", async ({ page })
       const summary = document.querySelector(".natal-reading-summary")?.getBoundingClientRect()
       const hero = document.querySelector(".natal-reading-hero")?.getBoundingClientRect()
       const metrics = document.querySelector(".natal-reading-metrics")?.getBoundingClientRect()
+      const bottomNav = document.querySelector(".bottom-nav")?.getBoundingClientRect()
       return {
         heroTop: hero?.top ?? 0,
+        metricsBottom: metrics?.bottom ?? 0,
         metricsTop: metrics?.top ?? 0,
+        navHeight: bottomNav?.height ?? 0,
         summaryHeight: summary?.height ?? 0,
       }
     })
     if (viewport.width <= 390) {
-      expect(firstViewportLayout.summaryHeight).toBeLessThanOrEqual(400)
+      expect(firstViewportLayout.summaryHeight).toBeLessThanOrEqual(390)
       expect(firstViewportLayout.heroTop).toBeLessThanOrEqual(460)
-      expect(firstViewportLayout.metricsTop).toBeLessThanOrEqual(720)
+      expect(firstViewportLayout.metricsTop).toBeLessThanOrEqual(705)
+      expect(firstViewportLayout.navHeight).toBeLessThanOrEqual(68)
     }
     if (viewport.width <= 360) {
+      expect(firstViewportLayout.metricsBottom).toBeLessThanOrEqual(650)
       const headerLayout = await page.evaluate(() => {
         const header = document.querySelector(".app-header")?.getBoundingClientRect()
         const title = document.querySelector(".app-header-title")?.getBoundingClientRect()
+        const titleDisplay = title ? window.getComputedStyle(document.querySelector(".app-header-title") as Element).display : "none"
         const actions = document.querySelector(".app-header-actions")?.getBoundingClientRect()
         return {
           actionsRight: actions?.right ?? 0,
           actionsStart: actions?.left ?? 0,
           headerRight: header?.right ?? 0,
-          titleEnd: title?.right ?? 0,
+          titleDisplay,
         }
       })
-      expect(headerLayout.titleEnd).toBeLessThanOrEqual(headerLayout.actionsStart)
+      expect(headerLayout.titleDisplay).toBe("none")
       expect(headerLayout.actionsRight).toBeLessThanOrEqual(headerLayout.headerRight)
     }
     const measuredPanelBackgrounds = await page.evaluate(() => {
@@ -428,6 +434,17 @@ test("garde /natal lisible et non masque a 360, 390 et 430 px", async ({ page })
       return { metaTop: metaBox.top, mainBottom: mainBox?.bottom ?? 0 }
     })
     expect(metaTop.metaTop).toBeGreaterThanOrEqual(metaTop.mainBottom - 1)
+
+    await page.evaluate(() => window.scrollTo(0, 430))
+    const chapterNavGap = await page.evaluate(() => {
+      const excerpt = document.querySelector(".natal-reading__chapter-excerpt")?.getBoundingClientRect()
+      const nav = document.querySelector(".bottom-nav")?.getBoundingClientRect()
+      return {
+        excerptBottom: excerpt?.bottom ?? 0,
+        navTop: nav?.top ?? 0,
+      }
+    })
+    expect(chapterNavGap.navTop - chapterNavGap.excerptBottom).toBeGreaterThanOrEqual(12)
 
     await metaToggle.click()
     await expect(metaToggle).toHaveAttribute("aria-expanded", "false")
