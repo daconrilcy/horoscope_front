@@ -234,13 +234,10 @@ class AstralClient:
         return headers
 
     def _mercure_headers(self) -> dict[str, str]:
-        """Construit les headers du hub Mercure, qui peut avoir un jeton distinct."""
+        """Construit les headers du hub Mercure sans imposer d'auth aux abonnements anonymes."""
         headers = {"Accept": "text/event-stream"}
-        token = self._config.mercure_auth_token or self._config.api_key
-        if token:
-            headers["Authorization"] = f"Bearer {token}"
-        if self._config.api_key and self._config.mercure_auth_token is None:
-            headers["X-API-Key"] = self._config.api_key
+        if self._config.mercure_auth_token:
+            headers["Authorization"] = f"Bearer {self._config.mercure_auth_token}"
         return headers
 
     def _client(self) -> httpx.AsyncClient:

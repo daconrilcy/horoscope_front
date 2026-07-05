@@ -35,6 +35,28 @@ Note:
 - En environnement local SQLite, le bootstrap runtime répare désormais le schéma manquant au démarrage et ré-amorce automatiquement la référence/ruleset actifs si `2.0.0` est absent ou partiellement seedé.
 - Si `/dashboard` ou `/v1/predictions/daily` échouait auparavant avec `version_missing`, `ruleset_missing` ou `compute_failed` sur une base locale partiellement seedée, un simple redémarrage du backend suffit maintenant dans la majorité des cas pour remettre la base locale en état.
 
+### Proxy Astral Mercure/SSE local
+
+Le backend expose `/v1/astral/jobs/{run_id}/events` comme proxy SSE vers le hub Mercure Astral, afin de ne pas exposer de secret au navigateur. En local, le hub Mercure est attendu sur :
+
+```text
+http://localhost:3000/.well-known/mercure
+```
+
+Le topic écouté par le backend suit le format :
+
+```text
+tenants/{tenant_id}/jobs/{run_id}
+```
+
+Avec le `docker-compose.yml` Astral local, Mercure est configuré en abonnement anonyme (`anonymous`). `ASTRAL_MERCURE_AUTH_TOKEN` doit donc rester vide en local, et le backend n'envoie pas `Authorization` pour l'abonnement SSE. Vérification directe :
+
+```bash
+curl -N "http://localhost:3000/.well-known/mercure?topic=tenants/<tenant_id>/jobs/<run_id>"
+```
+
+Ne pas confondre cet abonnement externe avec la publication interne : le worker Astral publie vers Mercure avec son JWT publisher (`ASTRAL_LLM_MERCURE_PUBLISHER_JWT`, alimenté par `MERCURE_PUBLISHER_JWT_KEY` ou par la valeur locale par défaut du hub). Ce token publisher ne doit pas être configuré dans `ASTRAL_MERCURE_AUTH_TOKEN`.
+
 ### Compte QA natal local
 
 Pour préparer le compte QA documenté `daconrilcy@hotmail.com` / `admin123`, activer

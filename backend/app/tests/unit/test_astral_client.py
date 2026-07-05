@@ -111,10 +111,10 @@ async def test_stream_mercure_events_returns_controlled_error_event_on_unauthori
 
 
 @pytest.mark.asyncio
-async def test_stream_mercure_events_keeps_api_key_fallback_headers(
+async def test_stream_mercure_events_omits_auth_without_dedicated_token(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Sans jeton Mercure dédié, le proxy conserve les headers historiques."""
+    """Sans jeton Mercure dédié, le proxy laisse les abonnements anonymes fonctionner."""
     response = _FakeMercureResponse(status_code=200, chunks=[b"data: {}\n\n"])
     fake_client = _FakeMercureAsyncClient(response=response)
     monkeypatch.setattr(
@@ -142,11 +142,7 @@ async def test_stream_mercure_events_keeps_api_key_fallback_headers(
     ]
 
     assert chunks == [b"data: {}\n\n"]
-    assert fake_client.request_headers == {
-        "Accept": "text/event-stream",
-        "Authorization": "Bearer jobs-secret",
-        "X-API-Key": "jobs-secret",
-    }
+    assert fake_client.request_headers == {"Accept": "text/event-stream"}
 
 
 async def _never_disconnected() -> bool:
