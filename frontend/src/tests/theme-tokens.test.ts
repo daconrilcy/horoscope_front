@@ -222,13 +222,21 @@ describe("theme.css validation (Static Analysis)", () => {
     expect(natalCssContent).toMatch(
       /\.natal-reading-metrics\s*\{[\s\S]*grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)/,
     )
+    expect(natalCssContent).toMatch(
+      /@media \(max-width: 768px\)\s*\{[\s\S]*\.natal-reading__chapters\s*\{[\s\S]*margin-top:\s*16px/,
+    )
     expect(natalBottomNavRule).toContain("border: 1px solid color-mix(in srgb, var(--premium-glass-border-strong) 42%, transparent)")
-    expect(natalBottomNavRule).toContain("background: color-mix(in srgb, var(--color-token-rgb-255-255-255) 74%, var(--color-nav-glass) 26%)")
+    expect(natalBottomNavRule).toContain("background: color-mix(in srgb, var(--color-token-rgb-255-255-255) 82%, var(--color-nav-glass) 18%)")
     expect(natalBottomNavRule).toContain("backdrop-filter: blur(18px) saturate(150%)")
-    expect(natalBottomNavRule).toContain("box-shadow: 0 10px 30px color-mix(in srgb, var(--premium-text-strong) 9%, transparent)")
+    expect(natalBottomNavRule).toContain("box-shadow:")
+    expect(natalBottomNavRule).toContain("0 12px 34px color-mix(in srgb, var(--premium-text-strong) 11%, transparent)")
+    expect(natalBottomNavRule).toContain("inset 0 1px 0 color-mix(in srgb, var(--color-token-rgb-255-255-255) 62%, transparent)")
     expect(natalBottomNavRule).not.toContain("opacity:")
     expect(natalChartPageCssContent).toMatch(
       /\.dark body:has\(\.is-natal-page\) \.bottom-nav\s*\{[\s\S]*background:\s*color-mix\(in srgb,\s*var\(--premium-glass-surface-2\)\s*78%,\s*var\(--color-nav-glass\)\s*22%\)/,
+    )
+    expect(natalChartPageCssContent).toMatch(
+      /\.dark body:has\(\.is-natal-page\) \.bottom-nav\s*\{[\s\S]*box-shadow:\s*0\s*10px\s*30px\s*color-mix\(in srgb,\s*var\(--premium-text-strong\)\s*9%,\s*transparent\)/,
     )
     expect(natalChartPageCssContent).toMatch(
       /body:has\(\.is-natal-page\) \.bottom-nav__item--active\s*\{[\s\S]*background:\s*color-mix\(in srgb,\s*var\(--color-nav-active-bg\)\s*48%,\s*var\(--premium-glass-surface-2\)\)/,

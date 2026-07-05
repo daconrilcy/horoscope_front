@@ -335,8 +335,8 @@
 .natal-reading-summary__button[aria-current="step"],
 .natal-reading-summary__extra-link.is-active,
 .natal-reading-summary__extra-link[aria-current="step"] {
-  border-color: color-mix(in srgb, var(--natal-theme-color, var(--premium-accent-purple-strong)) 14%, var(--natal-liquid-edge));
-  background: color-mix(in srgb, var(--natal-theme-color, var(--premium-accent-purple-strong)) 7%, var(--color-token-rgb-255-255-255) 62%, transparent);
+  border-color: color-mix(in srgb, var(--natal-theme-color, var(--premium-accent-purple-strong)) 10%, var(--natal-liquid-edge));
+  background: color-mix(in srgb, var(--natal-theme-color, var(--premium-accent-purple-strong)) 5%, var(--color-token-rgb-255-255-255) 66%, transparent);
   box-shadow: var(--natal-inner-light, inset 0 1px 0 rgba(255, 255, 255, 0.5));
 }
 
@@ -1234,7 +1234,7 @@
 
   .natal-reading__chapters {
       gap: 10px;
-      margin-top: 8px;
+      margin-top: 16px;
     }
 
   .natal-reading__progress {
