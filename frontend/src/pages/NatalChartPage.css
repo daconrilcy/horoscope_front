@@ -2,42 +2,8 @@
 
 @media (max-width: 768px) {
   body:has(.is-natal-page) .bottom-nav {
-      display: none;
-      bottom: calc(var(--app-mobile-nav-inset) + env(safe-area-inset-bottom));
-      min-height: 60px;
-      height: auto;
-      padding: 4px 7px;
-      border-radius: 20px;
-      border: 1px solid color-mix(in srgb, var(--premium-glass-border-strong) 42%, transparent);
-      background: color-mix(in srgb, var(--color-token-rgb-255-255-255) 82%, var(--color-nav-glass) 18%);
-      background-color: color-mix(in srgb, var(--color-token-rgb-255-255-255) 82%, var(--color-nav-glass) 18%);
-      box-shadow:
-        0 12px 34px color-mix(in srgb, var(--premium-text-strong) 11%, transparent),
-        inset 0 1px 0 color-mix(in srgb, var(--color-token-rgb-255-255-255) 62%, transparent);
-      backdrop-filter: blur(18px) saturate(150%);
-      -webkit-backdrop-filter: blur(18px) saturate(150%);
-    }
-
-  body:has(.is-natal-page) .bottom-nav__item {
-      min-height: 44px;
-      padding: 3px 8px;
-      gap: 1px;
-    }
-
-  body:has(.is-natal-page) .bottom-nav__item--active {
-      background: color-mix(in srgb, var(--color-nav-active-bg) 48%, var(--premium-glass-surface-2));
-    }
-
-  body:has(.is-natal-page) .bottom-nav__label {
-      font-size: var(--font-size-3xs);
-      line-height: 1;
-    }
-
-  .dark body:has(.is-natal-page) .bottom-nav {
-      background: color-mix(in srgb, var(--premium-glass-surface-2) 78%, var(--color-nav-glass) 22%);
-      background-color: color-mix(in srgb, var(--premium-glass-surface-2) 78%, var(--color-nav-glass) 22%);
-      box-shadow: 0 10px 30px color-mix(in srgb, var(--premium-text-strong) 9%, transparent);
-    }
+    display: none;
+  }
 }
 
 .page-layout.natal-page-container .page-layout__main {
