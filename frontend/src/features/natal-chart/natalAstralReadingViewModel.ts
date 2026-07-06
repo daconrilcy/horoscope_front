@@ -180,6 +180,12 @@ function sourceText(value: unknown): string | null {
   return typeof value === "string" && value.trim() ? value.trim() : null
 }
 
+function sourceDisplayTitle(value: unknown): string | null {
+  const text = sourceText(value)
+  if (!text) return null
+  return text.toLowerCase() === "how to read your natal chart" ? "Comment lire ton thème natal" : text
+}
+
 function sourceTextArray(value: unknown): string[] {
   if (!Array.isArray(value)) return []
   return value.map(sourceText).filter((item): item is string => Boolean(item))
@@ -478,7 +484,7 @@ function buildChapters(reading: Record<string, unknown>): NatalReadingChapterVie
       const paragraphs = chapterParagraphs(chapterRecord)
       return {
         code: asText(chapterRecord.code),
-        title: sourceText(chapterRecord.title) ?? `Chapitre ${index + 1}`,
+        title: sourceDisplayTitle(chapterRecord.title) ?? `Chapitre ${index + 1}`,
         summarySentence: sourceText(chapterRecord.summary_sentence),
         paragraphs,
         confidenceLabel: confidenceLabel(chapterRecord.confidence),
@@ -509,7 +515,7 @@ function resultExplanationsContainer(result: Record<string, unknown>): Record<st
   const summary = asRecord(result.summary)
   return {
     summary: {
-      title: sourceText(summary?.title) ?? sourceText(result.title) ?? "Lecture natale",
+      title: sourceDisplayTitle(summary?.title) ?? sourceDisplayTitle(result.title) ?? "Lecture natale",
       short_text: sourceText(summary?.short_text) ?? sourceText(summary?.text) ?? sourceText(result.short_text),
     },
     chapters: explanations,
@@ -559,7 +565,7 @@ function legacyBasicReading(result: Record<string, unknown>): Record<string, unk
 
   return {
     summary: {
-      title: interpretation.title,
+      title: sourceDisplayTitle(interpretation.title),
       short_text: interpretation.summary,
     },
     chapters,
@@ -1081,7 +1087,7 @@ function successViewModel(
 
   return {
     status: "success",
-    title: sourceText(summary?.title) ?? "Lecture natale",
+    title: sourceDisplayTitle(summary?.title) ?? "Lecture natale",
     shortText: sourceText(summary?.short_text),
     tier: metadata.tier,
     variant: metadata.variant,

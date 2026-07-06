@@ -868,7 +868,7 @@ describe("buildNatalInterpretationViewModel", () => {
 
     const viewModel = buildNatalInterpretationViewModel(job, "basic")
 
-    expect(viewModel?.title).toBe("How to read your natal chart")
+    expect(viewModel?.title).toBe("Comment lire ton thème natal")
     expect(viewModel?.shortText).toBe("Résumé issu du moteur externe.")
     expect(viewModel?.chapters.map((chapter) => chapter.paragraphs[0])).toEqual([
       "Explication top-level fournie par result.explanations.items.",
@@ -878,6 +878,7 @@ describe("buildNatalInterpretationViewModel", () => {
       "sun_in_taurus_house_10",
       "Moon en capricorn maison 6",
     ])
+    expect(JSON.stringify(viewModel)).not.toContain("How to read your natal chart")
     expect(JSON.stringify(viewModel)).not.toContain("placement:sun:taurus:house:10")
     expect(JSON.stringify(viewModel)).not.toContain("cache")
   })

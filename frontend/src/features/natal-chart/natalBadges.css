@@ -41,14 +41,17 @@
   width: fit-content;
   min-height: 28px;
   padding: 4px 11px;
-  border-color: color-mix(in srgb, var(--natal-theme-color, var(--premium-accent-purple-strong)) 34%, var(--natal-border-block));
-  border-radius: var(--radius-control);
-  background: color-mix(in srgb, var(--natal-surface-chip) 86%, transparent);
-  color: color-mix(in srgb, var(--premium-text-strong) 76%, var(--natal-theme-color, var(--premium-accent-purple-strong)) 24%);
+  border-color: color-mix(in srgb, var(--natal-theme-color, var(--premium-accent-purple-strong)) 14%, var(--natal-border-liquid-bright));
+  border-radius: var(--natal-radius-badge);
+  background: color-mix(in srgb, var(--natal-theme-color, var(--premium-accent-purple-strong)) 6%, var(--natal-surface-glass-lifted));
+  color: var(--premium-text-strong);
   font-size: var(--font-size-2xs);
   font-weight: var(--font-weight-semibold);
   letter-spacing: 0;
   text-transform: none;
+  box-shadow:
+    var(--natal-inner-highlight),
+    0 8px 18px color-mix(in srgb, var(--premium-text-strong) 4%, transparent);
 }
 
 .natal-badge--astro-data {
@@ -92,13 +95,13 @@
 .natal-badge--basis {
   min-height: 26px;
   padding: 3px 8px;
-  border-color: color-mix(in srgb, var(--natal-theme-color, var(--premium-accent-purple-strong)) 12%, var(--natal-liquid-edge));
-  border-radius: var(--radius-control);
-  background: color-mix(in srgb, var(--natal-theme-color, var(--premium-accent-purple-strong)) 5%, var(--natal-surface-chip));
+  border-color: color-mix(in srgb, var(--natal-theme-color, var(--premium-accent-purple-strong)) 12%, var(--natal-border-liquid-bright));
+  border-radius: var(--natal-radius-badge);
+  background: color-mix(in srgb, var(--natal-theme-color, var(--premium-accent-purple-strong)) 5%, var(--natal-surface-glass-lifted));
   color: color-mix(in srgb, var(--premium-text-main) 86%, var(--premium-text-meta));
   font-size: var(--font-size-2xs);
   font-weight: var(--font-weight-semibold);
-  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--color-token-rgb-255-255-255) 68%, transparent);
+  box-shadow: var(--natal-inner-highlight);
 }
 
 @media (max-width: 768px) {

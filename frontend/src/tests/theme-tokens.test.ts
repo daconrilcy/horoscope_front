@@ -178,16 +178,14 @@ describe("theme.css validation (Static Analysis)", () => {
       /\.natal-page-portrait,\s*\.natal-card,\s*\.natal-reading-facts,\s*\.natal-reading__chapter\s*\{[\s\S]*box-sizing:\s*border-box[\s\S]*box-shadow:\s*var\(--natal-shadow-section\)/,
     )
     expect(natalCssContent).toMatch(/\.natal-card--completed\s*\{[\s\S]*background:\s*transparent[\s\S]*box-shadow:\s*none/)
-    expect(natalCssContent).toMatch(/\.natal-badge--astro-data\s*\{[\s\S]*background:\s*var\(--natal-badge-key-surface\)/)
+    expect(natalCssContent).toMatch(/\.natal-badge--astro-data\s*\{[\s\S]*background:\s*color-mix\(in srgb,\s*var\(--natal-badge-key-surface\)\s*88%,\s*transparent\)/)
     expect(natalCssContent).toMatch(
-      /\.natal-badge--basis\s*\{[\s\S]*border-color:\s*color-mix\(in srgb,\s*var\(--natal-theme-color,\s*var\(--premium-accent-purple-strong\)\)\s*12%,\s*var\(--natal-liquid-edge\)\)/,
+      /\.natal-badge--basis\s*\{[\s\S]*border-color:\s*color-mix\(in srgb,\s*var\(--natal-theme-color,\s*var\(--premium-accent-purple-strong\)\)\s*12%,\s*var\(--natal-border-liquid-bright\)\)/,
     )
     expect(natalCssContent).toMatch(
-      /\.natal-badge--basis\s*\{[\s\S]*background:\s*color-mix\(in srgb,\s*var\(--natal-theme-color,\s*var\(--premium-accent-purple-strong\)\)\s*5%,\s*var\(--natal-surface-chip\)\)/,
+      /\.natal-badge--basis\s*\{[\s\S]*background:\s*color-mix\(in srgb,\s*var\(--natal-theme-color,\s*var\(--premium-accent-purple-strong\)\)\s*5%,\s*var\(--natal-surface-glass-lifted\)\)/,
     )
-    expect(natalCssContent).toMatch(
-      /\.natal-badge--basis\s*\{[\s\S]*box-shadow:\s*inset\s*0\s*1px\s*0\s*color-mix\(in srgb,\s*var\(--color-token-rgb-255-255-255\)\s*68%,\s*transparent\)/,
-    )
+    expect(natalCssContent).toMatch(/\.natal-badge--basis\s*\{[\s\S]*box-shadow:\s*var\(--natal-inner-highlight\)/)
     expect(natalCssContent).toMatch(/\.natal-reading-metrics__item--moon\s*\{[\s\S]*--natal-metric-tone:\s*var\(--natal-tone-moon\)/)
     expect(natalCssContent).toMatch(/\.natal-reading-metrics\s*\{[\s\S]*backdrop-filter:\s*var\(--natal-glass-filter\)/)
     expect(natalCssContent).toMatch(/\.natal-reading__chapter\s*\{[\s\S]*var\(--natal-surface-reading-solid/)
@@ -208,7 +206,7 @@ describe("theme.css validation (Static Analysis)", () => {
     expect(darkAfterBlocks.join("\n")).toContain("display: none")
   })
 
-  it("conserve la grille mobile du parcours /natal et attenue la bottom nav", () => {
+  it("conserve la grille mobile du parcours /natal et masque la bottom nav", () => {
     const natalBottomNavRule = natalChartPageCssContent.match(
       /body:has\(\.is-natal-page\) \.bottom-nav\s*\{([^}]*)\}/,
     )?.[1]
@@ -225,22 +223,10 @@ describe("theme.css validation (Static Analysis)", () => {
     expect(natalCssContent).toMatch(
       /@media \(max-width: 768px\)\s*\{[\s\S]*\.natal-reading__chapters\s*\{[\s\S]*margin-top:\s*16px/,
     )
-    expect(natalBottomNavRule).toContain("border: 1px solid color-mix(in srgb, var(--premium-glass-border-strong) 42%, transparent)")
-    expect(natalBottomNavRule).toContain("background: color-mix(in srgb, var(--color-token-rgb-255-255-255) 82%, var(--color-nav-glass) 18%)")
-    expect(natalBottomNavRule).toContain("backdrop-filter: blur(18px) saturate(150%)")
-    expect(natalBottomNavRule).toContain("box-shadow:")
-    expect(natalBottomNavRule).toContain("0 12px 34px color-mix(in srgb, var(--premium-text-strong) 11%, transparent)")
-    expect(natalBottomNavRule).toContain("inset 0 1px 0 color-mix(in srgb, var(--color-token-rgb-255-255-255) 62%, transparent)")
+    expect(natalBottomNavRule).toContain("display: none")
     expect(natalBottomNavRule).not.toContain("opacity:")
-    expect(natalChartPageCssContent).toMatch(
-      /\.dark body:has\(\.is-natal-page\) \.bottom-nav\s*\{[\s\S]*background:\s*color-mix\(in srgb,\s*var\(--premium-glass-surface-2\)\s*78%,\s*var\(--color-nav-glass\)\s*22%\)/,
-    )
-    expect(natalChartPageCssContent).toMatch(
-      /\.dark body:has\(\.is-natal-page\) \.bottom-nav\s*\{[\s\S]*box-shadow:\s*0\s*10px\s*30px\s*color-mix\(in srgb,\s*var\(--premium-text-strong\)\s*9%,\s*transparent\)/,
-    )
-    expect(natalChartPageCssContent).toMatch(
-      /body:has\(\.is-natal-page\) \.bottom-nav__item--active\s*\{[\s\S]*background:\s*color-mix\(in srgb,\s*var\(--color-nav-active-bg\)\s*48%,\s*var\(--premium-glass-surface-2\)\)/,
-    )
+    expect(natalChartPageCssContent).not.toMatch(/body:has\(\.is-natal-page\) \.bottom-nav__item/)
+    expect(natalChartPageCssContent).not.toMatch(/\.dark body:has\(\.is-natal-page\) \.bottom-nav/)
   })
 
   it("garde NatalChartPage.css limite au shell de page natal", () => {
