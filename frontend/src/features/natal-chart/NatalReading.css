@@ -199,11 +199,9 @@
   grid-row: span 3;
   width: 48px;
   height: 48px;
-  border: 1px solid color-mix(in srgb, var(--natal-metric-tone, var(--premium-accent-purple-strong)) 22%, var(--natal-border-liquid-bright));
+  border: 1px solid color-mix(in srgb, var(--natal-metric-tone, var(--premium-accent-purple-strong)) 28%, var(--premium-glass-border-strong));
   border-radius: var(--radius-full);
-  background:
-    radial-gradient(circle at 34% 24%, color-mix(in srgb, var(--color-token-rgb-255-255-255) 72%, transparent), transparent 42%),
-    color-mix(in srgb, var(--natal-metric-tone, var(--premium-accent-purple-strong)) 14%, var(--color-token-rgb-255-255-255));
+  background: color-mix(in srgb, var(--natal-metric-tone, var(--premium-accent-purple-strong)) 18%, var(--color-token-rgb-255-255-255) 82%);
   color: var(--natal-metric-tone, var(--premium-accent-purple-strong));
   box-shadow:
     var(--natal-inner-highlight),
@@ -229,7 +227,7 @@
 .natal-reading-metrics__label,
 .natal-reading-metrics__detail {
   min-width: 0;
-  color: var(--premium-text-meta);
+  color: color-mix(in srgb, var(--premium-text-meta) 84%, var(--premium-text-strong) 16%);
   font-size: var(--font-size-2xs);
   line-height: var(--line-height-normal);
   overflow-wrap: anywhere;
@@ -697,7 +695,7 @@
     radial-gradient(ellipse at 100% 0, color-mix(in srgb, var(--color-token-rgb-255-255-255) 42%, transparent) 0 18%, transparent 42%),
     color-mix(in srgb, var(--natal-surface-glass-solid, var(--natal-surface-reading-solid)) 97%, var(--natal-theme-color, var(--premium-accent-purple-strong)) 3%);
   box-shadow:
-    0 18px 46px color-mix(in srgb, var(--premium-text-strong) 5%, transparent),
+    0 16px 44px color-mix(in srgb, var(--premium-text-strong) 6%, transparent),
     var(--natal-inner-highlight);
   overflow: hidden;
 }
@@ -711,8 +709,8 @@
   width: 3px;
   border-radius: var(--radius-full);
   background: linear-gradient(180deg, color-mix(in srgb, var(--natal-theme-color, var(--natal-border-accent)) 60%, transparent), color-mix(in srgb, var(--natal-theme-color, var(--natal-border-accent)) 16%, transparent));
-  box-shadow: 0 0 22px color-mix(in srgb, var(--natal-theme-color, var(--premium-accent-purple-strong)) 24%, transparent);
-  opacity: 0.82;
+  box-shadow: 0 0 18px color-mix(in srgb, var(--natal-theme-color, var(--premium-accent-purple-strong)) 18%, transparent);
+  opacity: 0.46;
   pointer-events: none;
 }
 
@@ -835,11 +833,9 @@
   align-items: start;
   margin: 0;
   padding: 12px 14px;
-  border: 1px solid color-mix(in srgb, var(--natal-theme-color, var(--premium-accent-purple-strong)) 18%, var(--natal-border-liquid-bright));
+  border: 1px solid color-mix(in srgb, var(--natal-theme-color, var(--premium-accent-purple-strong)) 14%, var(--natal-border-liquid-bright));
   border-radius: var(--natal-radius-block);
-  background:
-    linear-gradient(135deg, color-mix(in srgb, var(--color-token-rgb-255-255-255) 58%, transparent), transparent 64%),
-    color-mix(in srgb, var(--color-token-rgb-255-255-255) 78%, var(--natal-theme-color, var(--premium-accent-purple-strong)) 5%, var(--premium-glass-surface-2) 17%);
+  background: color-mix(in srgb, var(--color-token-rgb-255-255-255) 68%, var(--natal-theme-color, var(--premium-accent-purple-strong)) 4%, transparent);
   color: color-mix(in srgb, var(--premium-text-strong) 88%, var(--premium-text-main) 12%);
   font-size: var(--natal-type-reading-text-size);
   font-weight: var(--natal-type-reading-text-weight);
@@ -889,11 +885,12 @@
   display: grid;
   gap: 14px;
   width: 100%;
+  max-width: 84ch;
   box-sizing: border-box;
-  padding: 10px 2px 2px;
-  border: 0;
+  padding: 16px 18px;
+  border: 1px solid color-mix(in srgb, var(--premium-glass-border-strong) 34%, transparent);
   border-radius: var(--natal-radius-block);
-  background: transparent;
+  background: color-mix(in srgb, var(--color-token-rgb-255-255-255) 70%, transparent);
   color: var(--natal-text-reading);
   font-size: var(--natal-type-reading-text-size);
   font-weight: var(--natal-type-reading-text-weight);
@@ -919,7 +916,7 @@
 }
 
 .natal-reading__prose-paragraph {
-  max-width: none;
+  max-width: 84ch;
 }
 
 .natal-reading__chapter-meta {
@@ -1029,6 +1026,11 @@
 
 .dark .natal-reading__chapter-excerpt {
   background: color-mix(in srgb, var(--natal-theme-color, var(--premium-accent-purple-strong)) 10%, var(--natal-surface-reading-muted));
+}
+
+.dark .natal-reading__chapter-body {
+  border-color: color-mix(in srgb, var(--glass-border) 42%, transparent);
+  background: color-mix(in srgb, var(--natal-surface-reading) 82%, transparent);
 }
 
 .dark .natal-reading__chapter-excerpt-icon {
@@ -1242,26 +1244,24 @@
     }
 
   .natal-reading-summary__list {
-      display: flex;
-      grid-template-columns: none;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 6px;
-      padding: 5px 6px 2px;
-      overflow-x: auto;
-      overscroll-behavior-x: contain;
-      scroll-snap-type: x proximity;
+      padding: 6px;
+      overflow: visible;
     }
 
   .natal-reading-summary__button,
     .natal-reading-summary__extra-link {
       grid-template-columns: 24px minmax(0, 1fr);
       gap: 6px;
-      min-height: 44px;
+      min-height: 40px;
       padding: 4px 5px;
     }
 
   .natal-reading-summary__item {
-      flex: 0 0 132px;
-      scroll-snap-align: start;
+      flex: initial;
+      min-width: 0;
     }
 
   .natal-reading-summary__item--extra::before {
@@ -1275,8 +1275,14 @@
     }
 
   .natal-reading-summary__title {
+      display: -webkit-box;
+      overflow: hidden;
       font-size: var(--font-size-3xs);
       line-height: 1.15;
+      white-space: normal;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+      line-clamp: 2;
     }
 
   .natal-reading-summary__guide {
@@ -1387,7 +1393,7 @@
   .natal-reading__chapter-body {
       gap: 14px;
       max-width: none;
-      padding: 8px 0 0;
+      padding: 12px;
     }
 
   .natal-reading__prose-paragraph {

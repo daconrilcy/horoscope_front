@@ -2,6 +2,7 @@
 
 @media (max-width: 768px) {
   body:has(.is-natal-page) .bottom-nav {
+      display: none;
       bottom: calc(var(--app-mobile-nav-inset) + env(safe-area-inset-bottom));
       min-height: 60px;
       height: auto;
@@ -284,7 +285,7 @@ body:has(.is-natal-page) .app-header-actions {
 
 @media (max-width: 768px) {
   .page-layout.natal-page-container .page-layout__main {
-      padding: 10px var(--layout-padding-inline) calc(196px + env(safe-area-inset-bottom) + var(--app-mobile-nav-inset));
+      padding: 10px var(--layout-padding-inline) calc(32px + env(safe-area-inset-bottom));
     }
 
   .natal-page-header__title {
