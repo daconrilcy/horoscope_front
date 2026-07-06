@@ -20,40 +20,77 @@
 }
 
 .natal-reading-hero {
+  position: relative;
   display: grid;
-  grid-template-columns: 138px minmax(0, 1fr);
-  gap: 24px;
-  align-items: start;
+  grid-template-columns: 158px minmax(0, 1fr);
+  gap: 28px;
+  align-items: center;
   min-width: 0;
-  padding: 28px 32px;
-  border: 1px solid var(--natal-border-liquid, var(--natal-border-section));
+  padding: 34px 38px;
+  border: 1px solid var(--natal-border-liquid-bright, var(--natal-border-section));
   border-radius: var(--natal-radius-section);
   background:
-    linear-gradient(145deg, color-mix(in srgb, var(--color-token-rgb-255-255-255) 64%, transparent), transparent 54%),
-    var(--natal-surface-canvas);
-  box-shadow: var(--natal-shadow-float), var(--premium-inner-light);
+    radial-gradient(ellipse at 92% 18%, color-mix(in srgb, var(--color-token-rgb-255-255-255) 72%, transparent) 0 15%, transparent 38%),
+    radial-gradient(ellipse at 4% 88%, color-mix(in srgb, var(--premium-accent-purple-soft) 13%, transparent) 0 18%, transparent 42%),
+    linear-gradient(145deg, color-mix(in srgb, var(--color-token-rgb-255-255-255) 76%, transparent), transparent 58%),
+    var(--natal-surface-glass-deep, var(--natal-surface-canvas));
+  box-shadow: var(--natal-shadow-float), var(--natal-inner-highlight);
   backdrop-filter: var(--natal-glass-filter);
   -webkit-backdrop-filter: var(--natal-glass-filter);
+  overflow: hidden;
+}
+
+.natal-reading-hero::before,
+.natal-reading-hero::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+}
+
+.natal-reading-hero::before {
+  top: -118px;
+  right: -38px;
+  width: 430px;
+  height: 232px;
+  border: 1px solid color-mix(in srgb, var(--color-token-rgb-255-255-255) 58%, transparent);
+  border-radius: 44% 56% 49% 51% / 62% 44% 56% 38%;
+  background: radial-gradient(ellipse at 46% 72%, color-mix(in srgb, var(--color-token-rgb-255-255-255) 46%, transparent), transparent 68%);
+  box-shadow:
+    inset 0 -12px 28px color-mix(in srgb, var(--premium-accent-purple-soft) 8%, transparent),
+    0 18px 42px color-mix(in srgb, var(--premium-text-strong) 4%, transparent);
+  opacity: 0.74;
+}
+
+.natal-reading-hero::after {
+  right: 22px;
+  bottom: 22px;
+  width: 166px;
+  height: 126px;
+  border-radius: 54% 46% 39% 61% / 42% 54% 46% 58%;
+  background: radial-gradient(ellipse at 50% 48%, color-mix(in srgb, var(--color-token-rgb-255-255-255) 34%, transparent), transparent 72%);
+  filter: blur(1px);
+  opacity: 0.45;
 }
 
 .natal-reading-hero__symbol {
   position: relative;
+  z-index: 1;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
-  width: 118px;
-  height: 118px;
-  border: 1px solid var(--natal-liquid-edge, var(--natal-border-section));
-  border-radius: var(--natal-radius-section);
+  width: 130px;
+  height: 130px;
+  border: 1px solid var(--natal-border-liquid-bright, var(--natal-border-section));
+  border-radius: calc(var(--natal-radius-section) + 4px);
   background:
-    radial-gradient(circle at center, color-mix(in srgb, var(--premium-accent-purple-strong) 18%, transparent) 0 34%, transparent 52%),
-    linear-gradient(135deg, color-mix(in srgb, var(--color-token-rgb-255-255-255) 70%, transparent), transparent),
-    var(--natal-panel-background);
+    radial-gradient(circle at center, color-mix(in srgb, var(--premium-accent-purple-strong) 16%, transparent) 0 32%, transparent 56%),
+    linear-gradient(135deg, color-mix(in srgb, var(--color-token-rgb-255-255-255) 82%, transparent), transparent 62%),
+    var(--natal-surface-glass-lifted, var(--natal-panel-background));
   color: var(--premium-accent-purple-strong);
   box-shadow:
-    var(--natal-inner-light, inset 0 1px 0 rgba(255, 255, 255, 0.5)),
-    var(--natal-shadow-block);
+    var(--natal-inner-highlight),
+    0 18px 44px color-mix(in srgb, var(--premium-accent-purple-strong) 12%, transparent);
   backdrop-filter: var(--natal-glass-filter);
   -webkit-backdrop-filter: var(--natal-glass-filter);
 }
@@ -69,14 +106,17 @@
 
 .natal-reading-hero__logo {
   display: block;
-  width: 92px;
-  height: 92px;
+  width: 100px;
+  height: 100px;
   object-fit: contain;
+  filter: drop-shadow(0 10px 16px color-mix(in srgb, var(--premium-text-strong) 10%, transparent));
 }
 
 .natal-reading-hero__content {
+  position: relative;
+  z-index: 1;
   display: grid;
-  gap: 7px;
+  gap: 10px;
   min-width: 0;
   padding-top: 2px;
 }
@@ -122,25 +162,28 @@
 .natal-reading-metrics {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  border: 1px solid var(--natal-border-liquid, var(--natal-border-section));
+  border: 1px solid var(--natal-border-liquid-bright, var(--natal-border-section));
   border-radius: var(--natal-radius-section);
-  background: var(--natal-surface-facts);
-  background-color: var(--natal-surface-facts);
-  box-shadow: 0 12px 30px color-mix(in srgb, var(--premium-text-strong) 5%, transparent), var(--premium-inner-light);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--color-token-rgb-255-255-255) 66%, transparent), transparent 58%),
+    var(--natal-surface-glass-lifted, var(--natal-surface-facts));
+  background-color: var(--natal-surface-glass-lifted, var(--natal-surface-facts));
+  box-shadow: 0 16px 42px color-mix(in srgb, var(--premium-text-strong) 6%, transparent), var(--natal-inner-highlight);
   backdrop-filter: var(--natal-glass-filter);
   -webkit-backdrop-filter: var(--natal-glass-filter);
   gap: 0;
-  padding: 14px;
+  padding: 16px;
 }
 
 .natal-reading-metrics__item {
+  position: relative;
   display: grid;
-  grid-template-columns: 46px minmax(0, 1fr);
-  gap: 2px 12px;
+  grid-template-columns: 54px minmax(0, 1fr);
+  gap: 3px 14px;
   align-items: center;
   min-width: 0;
-  padding: 13px 18px;
-  border-right: 1px solid color-mix(in srgb, var(--natal-border-section) 72%, transparent);
+  padding: 14px 20px;
+  border-right: 1px solid var(--natal-border-hairline);
   border-radius: var(--natal-radius-block);
   background: transparent;
 }
@@ -154,13 +197,17 @@
   align-items: center;
   justify-content: center;
   grid-row: span 3;
-  width: 44px;
-  height: 44px;
-  border: 1px solid color-mix(in srgb, var(--natal-metric-tone, var(--premium-accent-purple-strong)) 28%, var(--natal-badge-key-border));
+  width: 48px;
+  height: 48px;
+  border: 1px solid color-mix(in srgb, var(--natal-metric-tone, var(--premium-accent-purple-strong)) 22%, var(--natal-border-liquid-bright));
   border-radius: var(--radius-full);
-  background: color-mix(in srgb, var(--natal-metric-tone, var(--premium-accent-purple-strong)) 16%, var(--color-token-rgb-255-255-255));
+  background:
+    radial-gradient(circle at 34% 24%, color-mix(in srgb, var(--color-token-rgb-255-255-255) 72%, transparent), transparent 42%),
+    color-mix(in srgb, var(--natal-metric-tone, var(--premium-accent-purple-strong)) 14%, var(--color-token-rgb-255-255-255));
   color: var(--natal-metric-tone, var(--premium-accent-purple-strong));
-  box-shadow: 0 8px 18px color-mix(in srgb, var(--natal-metric-tone, var(--premium-accent-purple-strong)) 13%, transparent);
+  box-shadow:
+    var(--natal-inner-highlight),
+    0 10px 24px color-mix(in srgb, var(--natal-metric-tone, var(--premium-accent-purple-strong)) 14%, transparent);
 }
 
 .natal-reading-metrics__item--sun {
@@ -191,6 +238,7 @@
 .natal-reading-metrics__label {
   display: block;
   margin-bottom: 2px;
+  font-weight: var(--font-weight-semibold);
 }
 
 .natal-reading-metrics__detail {
@@ -201,7 +249,7 @@
   display: block;
   min-width: 0;
   color: var(--premium-text-strong);
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-md);
   font-weight: var(--font-weight-bold);
   line-height: var(--type-label-line-height);
   overflow-wrap: anywhere;
@@ -215,15 +263,16 @@
   min-width: 0;
   max-height: calc(100vh - 90px);
   padding: 0;
-  border: 1px solid var(--natal-border-liquid, color-mix(in srgb, var(--premium-glass-border) 58%, transparent));
+  border: 1px solid var(--natal-border-liquid-bright, color-mix(in srgb, var(--premium-glass-border) 58%, transparent));
   border-radius: var(--natal-radius-section);
   background:
-    linear-gradient(145deg, color-mix(in srgb, var(--color-token-rgb-255-255-255) 58%, transparent), transparent 46%),
-    var(--natal-surface-rail);
-  background-color: var(--natal-surface-rail);
+    radial-gradient(ellipse at 0 8%, color-mix(in srgb, var(--color-token-rgb-255-255-255) 64%, transparent) 0 18%, transparent 44%),
+    linear-gradient(145deg, color-mix(in srgb, var(--color-token-rgb-255-255-255) 54%, transparent), transparent 52%),
+    var(--natal-surface-glass-lifted, var(--natal-surface-rail));
+  background-color: var(--natal-surface-glass-lifted, var(--natal-surface-rail));
   box-shadow:
     0 18px 44px color-mix(in srgb, var(--premium-text-strong) 6%, transparent),
-    var(--premium-inner-light);
+    var(--natal-inner-highlight);
   backdrop-filter: var(--natal-glass-filter);
   -webkit-backdrop-filter: var(--natal-glass-filter);
   overflow-y: auto;
@@ -243,8 +292,8 @@
 .natal-reading-summary__header {
   display: grid;
   gap: 7px;
-  padding: 17px 17px 14px;
-  border-bottom: 1px solid var(--natal-border-section);
+  padding: 20px 20px 16px;
+  border-bottom: 1px solid var(--natal-border-hairline);
 }
 
 .natal-reading-summary__header h2 {
@@ -264,10 +313,10 @@
   appearance: none;
   -webkit-appearance: none;
   width: 100%;
-  height: 5px;
+  height: 6px;
   border: 0;
   border-radius: var(--radius-full);
-  background: color-mix(in srgb, var(--premium-accent-purple-strong) 12%, var(--natal-badge-meta-surface));
+  background: color-mix(in srgb, var(--premium-accent-purple-strong) 10%, var(--color-token-rgb-255-255-255) 58%, transparent);
   accent-color: var(--premium-accent-purple-strong);
   overflow: hidden;
 }
@@ -280,7 +329,7 @@
 .natal-reading-summary__bar::-webkit-progress-value,
 .natal-reading-summary__bar::-moz-progress-bar {
   border-radius: var(--radius-full);
-  background: var(--premium-accent-purple-strong);
+  background: linear-gradient(90deg, var(--premium-accent-purple-strong), var(--premium-accent-purple-soft));
 }
 
 .natal-reading-summary__bar::-webkit-progress-inner-element {
@@ -320,7 +369,7 @@
   gap: 10px;
   width: 100%;
   min-height: 44px;
-  padding: 0;
+  padding: 8px;
   border: 1px solid transparent;
   border-radius: var(--natal-radius-block);
   background: transparent;
@@ -335,9 +384,11 @@
 .natal-reading-summary__button[aria-current="step"],
 .natal-reading-summary__extra-link.is-active,
 .natal-reading-summary__extra-link[aria-current="step"] {
-  border-color: color-mix(in srgb, var(--natal-theme-color, var(--premium-accent-purple-strong)) 10%, var(--natal-liquid-edge));
-  background: color-mix(in srgb, var(--natal-theme-color, var(--premium-accent-purple-strong)) 5%, var(--color-token-rgb-255-255-255) 66%, transparent);
-  box-shadow: var(--natal-inner-light, inset 0 1px 0 rgba(255, 255, 255, 0.5));
+  border-color: color-mix(in srgb, var(--natal-theme-color, var(--premium-accent-purple-strong)) 20%, var(--natal-liquid-edge));
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--color-token-rgb-255-255-255) 62%, transparent), transparent 62%),
+    color-mix(in srgb, var(--natal-theme-color, var(--premium-accent-purple-strong)) 7%, var(--color-token-rgb-255-255-255) 68%, transparent);
+  box-shadow: var(--natal-inner-highlight), 0 10px 22px color-mix(in srgb, var(--natal-theme-color, var(--premium-accent-purple-strong)) 8%, transparent);
 }
 
 .natal-reading-summary__index,
@@ -396,7 +447,7 @@
 
 .natal-reading-summary__excerpt {
   display: -webkit-box;
-  color: var(--natal-text-reading-muted);
+  color: color-mix(in srgb, var(--natal-text-reading-muted) 82%, transparent);
   font-size: var(--font-size-2xs);
   line-height: var(--line-height-normal);
   overflow: hidden;
@@ -453,7 +504,7 @@
 
 .natal-reading__summary {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: flex-start;
   gap: 12px;
 }
@@ -639,13 +690,16 @@
   gap: 13px;
   align-items: start;
   justify-content: space-between;
-  padding: 20px 24px 18px;
-  border: 1px solid color-mix(in srgb, var(--natal-theme-color, var(--premium-accent-purple-strong)) 16%, var(--natal-liquid-edge));
-  border-left: 4px solid color-mix(in srgb, var(--natal-theme-color, var(--premium-accent-purple-strong)) 78%, var(--premium-accent-purple-strong) 22%);
-  background: color-mix(in srgb, var(--natal-surface-reading-solid) 96%, var(--natal-theme-color, var(--premium-accent-purple-strong)) 2%, transparent);
+  padding: 22px 26px 20px 28px;
+  border: 1px solid color-mix(in srgb, var(--natal-theme-color, var(--premium-accent-purple-strong)) 12%, var(--natal-border-liquid-bright));
+  border-left: 1px solid color-mix(in srgb, var(--natal-theme-color, var(--premium-accent-purple-strong)) 18%, var(--natal-border-liquid-bright));
+  background:
+    radial-gradient(ellipse at 100% 0, color-mix(in srgb, var(--color-token-rgb-255-255-255) 42%, transparent) 0 18%, transparent 42%),
+    color-mix(in srgb, var(--natal-surface-glass-solid, var(--natal-surface-reading-solid)) 97%, var(--natal-theme-color, var(--premium-accent-purple-strong)) 3%);
   box-shadow:
-    0 18px 38px color-mix(in srgb, var(--premium-text-strong) 5%, transparent),
-    var(--premium-inner-light);
+    0 18px 46px color-mix(in srgb, var(--premium-text-strong) 5%, transparent),
+    var(--natal-inner-highlight);
+  overflow: hidden;
 }
 
 .natal-reading__chapter::before {
@@ -653,11 +707,12 @@
   position: absolute;
   top: 18px;
   bottom: 18px;
-  left: -4px;
-  width: 4px;
+  left: 0;
+  width: 3px;
   border-radius: var(--radius-full);
-  background: linear-gradient(180deg, color-mix(in srgb, var(--natal-theme-color, var(--natal-border-accent)) 92%, var(--premium-accent-purple-strong) 8%), color-mix(in srgb, var(--natal-theme-color, var(--natal-border-accent)) 34%, transparent));
-  opacity: 0.72;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--natal-theme-color, var(--natal-border-accent)) 60%, transparent), color-mix(in srgb, var(--natal-theme-color, var(--natal-border-accent)) 16%, transparent));
+  box-shadow: 0 0 22px color-mix(in srgb, var(--natal-theme-color, var(--premium-accent-purple-strong)) 24%, transparent);
+  opacity: 0.82;
   pointer-events: none;
 }
 
@@ -780,16 +835,18 @@
   align-items: start;
   margin: 0;
   padding: 12px 14px;
-  border: 1px solid color-mix(in srgb, var(--natal-theme-color, var(--premium-accent-purple-strong)) 30%, var(--natal-liquid-edge));
+  border: 1px solid color-mix(in srgb, var(--natal-theme-color, var(--premium-accent-purple-strong)) 18%, var(--natal-border-liquid-bright));
   border-radius: var(--natal-radius-block);
-  background: color-mix(in srgb, var(--color-token-rgb-255-255-255) 86%, var(--natal-theme-color, var(--premium-accent-purple-strong)) 6%, var(--premium-glass-surface-2) 8%);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--color-token-rgb-255-255-255) 58%, transparent), transparent 64%),
+    color-mix(in srgb, var(--color-token-rgb-255-255-255) 78%, var(--natal-theme-color, var(--premium-accent-purple-strong)) 5%, var(--premium-glass-surface-2) 17%);
   color: color-mix(in srgb, var(--premium-text-strong) 88%, var(--premium-text-main) 12%);
   font-size: var(--natal-type-reading-text-size);
   font-weight: var(--natal-type-reading-text-weight);
   line-height: var(--natal-type-reading-text-line-height);
   box-shadow:
-    inset 0 0 0 1px color-mix(in srgb, var(--color-token-rgb-255-255-255) 58%, transparent),
-    0 8px 20px color-mix(in srgb, var(--natal-theme-color, var(--premium-accent-purple-strong)) 7%, transparent);
+    var(--natal-inner-highlight),
+    0 8px 18px color-mix(in srgb, var(--natal-theme-color, var(--premium-accent-purple-strong)) 5%, transparent);
 }
 
 .natal-reading__chapter-excerpt[hidden] {
@@ -803,7 +860,8 @@
   width: 28px;
   height: 28px;
   border-radius: var(--radius-full);
-  background: color-mix(in srgb, var(--natal-theme-color, var(--premium-accent-purple-strong)) 10%, var(--natal-surface-chip));
+  border: 1px solid color-mix(in srgb, var(--natal-theme-color, var(--premium-accent-purple-strong)) 14%, var(--natal-border-liquid-bright));
+  background: color-mix(in srgb, var(--natal-theme-color, var(--premium-accent-purple-strong)) 8%, var(--color-token-rgb-255-255-255));
   color: var(--natal-theme-color, var(--premium-accent-purple-strong));
 }
 
@@ -832,10 +890,10 @@
   gap: 14px;
   width: 100%;
   box-sizing: border-box;
-  padding: 12px 14px;
-  border: 1px solid color-mix(in srgb, var(--premium-glass-border-strong) 42%, transparent);
+  padding: 10px 2px 2px;
+  border: 0;
   border-radius: var(--natal-radius-block);
-  background: color-mix(in srgb, var(--color-token-rgb-255-255-255) 92%, var(--premium-glass-surface-2) 8%);
+  background: transparent;
   color: var(--natal-text-reading);
   font-size: var(--natal-type-reading-text-size);
   font-weight: var(--natal-type-reading-text-weight);
@@ -872,9 +930,9 @@
   align-items: start;
   align-self: start;
   padding: 10px 12px;
-  border: 1px solid color-mix(in srgb, var(--natal-theme-color, var(--premium-accent-purple-strong)) 30%, var(--natal-border-block));
+  border: 1px solid color-mix(in srgb, var(--natal-theme-color, var(--premium-accent-purple-strong)) 16%, var(--natal-border-block));
   border-radius: var(--natal-radius-block);
-  background: color-mix(in srgb, var(--natal-theme-color, var(--premium-accent-purple-strong)) 5%, var(--natal-surface-reading-solid, var(--color-token-rgb-255-255-255)));
+  background: color-mix(in srgb, var(--natal-theme-color, var(--premium-accent-purple-strong)) 4%, var(--color-token-rgb-255-255-255) 74%, transparent);
   color: color-mix(in srgb, var(--natal-text-reading-muted) 92%, var(--premium-text-meta) 8%);
 }
 
@@ -940,7 +998,16 @@
 }
 
 .dark .natal-reading__chapter {
-  background: color-mix(in srgb, var(--natal-surface-reading) 88%, var(--natal-theme-color, var(--natal-border-accent)) 12%);
+  background:
+    radial-gradient(ellipse at 100% 0, color-mix(in srgb, var(--color-token-rgb-255-255-255) 10%, transparent) 0 18%, transparent 42%),
+    color-mix(in srgb, var(--natal-surface-reading) 88%, var(--natal-theme-color, var(--natal-border-accent)) 12%);
+}
+
+.dark .natal-reading-hero,
+.dark .natal-reading-summary {
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--color-token-rgb-255-255-255) 8%, transparent), transparent 58%),
+    var(--natal-surface-glass-deep, var(--natal-panel-background));
 }
 
 .dark .natal-reading-metrics {
@@ -962,6 +1029,10 @@
 
 .dark .natal-reading__chapter-excerpt {
   background: color-mix(in srgb, var(--natal-theme-color, var(--premium-accent-purple-strong)) 10%, var(--natal-surface-reading-muted));
+}
+
+.dark .natal-reading__chapter-excerpt-icon {
+  background: color-mix(in srgb, var(--natal-theme-color, var(--premium-accent-purple-strong)) 10%, var(--natal-surface-block));
 }
 
 .dark .natal-reading__chapter-meta {
@@ -1084,20 +1155,20 @@
     }
 
   .natal-reading-hero {
-      grid-template-columns: 64px minmax(0, 1fr);
-      gap: 9px;
-      padding: 14px;
+      grid-template-columns: 68px minmax(0, 1fr);
+      gap: 12px;
+      padding: 15px;
     }
 
   .natal-reading-hero__symbol {
-      width: 60px;
-      height: 60px;
+      width: 64px;
+      height: 64px;
       border-radius: var(--radius-lg);
     }
 
   .natal-reading-hero__logo {
-      width: 46px;
-      height: 46px;
+      width: 48px;
+      height: 48px;
     }
 
   .natal-reading-hero h1 {
@@ -1122,7 +1193,7 @@
   .natal-reading-metrics {
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 6px;
-      padding: 6px;
+      padding: 7px;
     }
 
   .natal-reading-metrics__item {
@@ -1131,6 +1202,11 @@
       padding: 8px;
       border-right: 0;
       border-bottom: 0;
+      background: color-mix(in srgb, var(--color-token-rgb-255-255-255) 34%, transparent);
+    }
+
+  .dark .natal-reading-metrics__item {
+      background: var(--premium-glass-surface-3);
     }
 
   .natal-reading-metrics__icon {
@@ -1142,6 +1218,7 @@
       gap: 4px;
       padding: 7px;
       border-radius: var(--radius-lg);
+      max-height: none;
     }
 
   .natal-reading-summary__header {
@@ -1165,21 +1242,30 @@
     }
 
   .natal-reading-summary__list {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 4px 6px;
-      padding: 5px 6px 0;
+      display: flex;
+      grid-template-columns: none;
+      gap: 6px;
+      padding: 5px 6px 2px;
+      overflow-x: auto;
+      overscroll-behavior-x: contain;
+      scroll-snap-type: x proximity;
     }
 
   .natal-reading-summary__button,
     .natal-reading-summary__extra-link {
       grid-template-columns: 24px minmax(0, 1fr);
       gap: 6px;
-      min-height: 30px;
+      min-height: 44px;
       padding: 4px 5px;
     }
 
+  .natal-reading-summary__item {
+      flex: 0 0 132px;
+      scroll-snap-align: start;
+    }
+
   .natal-reading-summary__item--extra::before {
-      left: 36px;
+      display: none;
     }
 
   .natal-reading-summary__index {
@@ -1289,7 +1375,7 @@
   .natal-reading__chapter {
       grid-template-columns: 1fr;
       gap: 8px;
-      padding: 12px 12px 12px 14px;
+      padding: 13px 12px 13px 15px;
       scroll-margin-top: 76px;
       scroll-margin-bottom: 130px;
     }
@@ -1301,7 +1387,7 @@
   .natal-reading__chapter-body {
       gap: 14px;
       max-width: none;
-      padding: 10px 11px;
+      padding: 8px 0 0;
     }
 
   .natal-reading__prose-paragraph {
@@ -1380,11 +1466,15 @@
   .natal-reading__chapter-excerpt {
       gap: 3px;
       padding: 8px 9px;
-      background: color-mix(in srgb, var(--color-token-rgb-255-255-255) 90%, var(--natal-theme-color, var(--premium-accent-purple-strong)) 6%, var(--premium-glass-surface-2) 4%);
+      background: color-mix(in srgb, var(--color-token-rgb-255-255-255) 84%, var(--natal-theme-color, var(--premium-accent-purple-strong)) 6%, var(--premium-glass-surface-2) 10%);
       color: color-mix(in srgb, var(--premium-text-strong) 82%, var(--premium-text-main) 18%);
       font-size: var(--natal-type-reading-text-size);
       font-weight: var(--natal-type-reading-text-weight);
       line-height: var(--natal-type-reading-text-line-height);
+    }
+
+  .dark .natal-reading__chapter-excerpt {
+      background: color-mix(in srgb, var(--natal-theme-color, var(--premium-accent-purple-strong)) 10%, var(--natal-surface-reading-muted));
     }
 
   .natal-reading__chapter-excerpt-label {
@@ -1409,6 +1499,7 @@
       min-height: 44px;
       padding: 0 14px;
       font-size: var(--font-size-xs);
+      scroll-margin-bottom: 148px;
     }
 
   .natal-reading-metrics__detail {

@@ -7,10 +7,14 @@
   box-sizing: border-box;
   width: 100%;
   padding: 16px 18px;
-  background: var(--natal-surface-reading);
-  border: 1px solid var(--natal-border-reading);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--color-token-rgb-255-255-255) 48%, transparent), transparent 62%),
+    var(--natal-surface-glass-solid, var(--natal-surface-reading));
+  border: 1px solid color-mix(in srgb, var(--natal-border-liquid-bright, var(--natal-border-reading)) 82%, transparent);
   border-radius: var(--natal-radius-section);
   box-shadow: var(--natal-shadow-block);
+  backdrop-filter: var(--natal-glass-filter);
+  -webkit-backdrop-filter: var(--natal-glass-filter);
 }
 
 .natal-chart-guide__header {
@@ -37,7 +41,7 @@
   padding: 0 12px;
   border: 1px solid var(--natal-border-accent);
   border-radius: var(--natal-radius-badge);
-  background: var(--natal-badge-key-surface);
+  background: color-mix(in srgb, var(--premium-accent-purple-strong) 6%, var(--natal-surface-chip));
   color: var(--premium-accent-purple-strong);
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-bold);
@@ -86,7 +90,7 @@
   display: grid;
   gap: 7px;
   padding-top: 12px;
-  border-top: 1px solid var(--premium-glass-border-soft);
+  border-top: 1px solid var(--natal-border-hairline);
 }
 
 .natal-chart-guide__section h3 {
@@ -126,8 +130,18 @@
 
 .natal-chart-guide__missing-time {
   padding: 12px 14px;
-  border: 1px solid var(--natal-border-accent);
+  border: 1px solid color-mix(in srgb, var(--natal-border-accent) 64%, var(--natal-border-liquid-bright));
   border-radius: var(--natal-radius-block);
+  background: color-mix(in srgb, var(--natal-surface-reading-muted) 76%, var(--color-token-rgb-255-255-255) 24%);
+}
+
+.dark .natal-chart-guide {
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--color-token-rgb-255-255-255) 8%, transparent), transparent 62%),
+    var(--natal-surface-glass-solid, var(--natal-surface-reading));
+}
+
+.dark .natal-chart-guide__missing-time {
   background: var(--natal-surface-reading-muted);
 }
 
