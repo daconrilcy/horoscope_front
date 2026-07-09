@@ -236,31 +236,21 @@ function metricIcon(label: string): LucideIcon {
   if (label === "Soleil") return Sun
   if (label === "Lune") return Moon
   if (label === "Ascendant") return Compass
-  return BadgeCheck
+  return CircleDot
 }
 
 function metricToneClassName(label: string): string {
   if (label === "Soleil") return "natal-reading-metrics__item--sun"
   if (label === "Lune") return "natal-reading-metrics__item--moon"
   if (label === "Ascendant") return "natal-reading-metrics__item--ascendant"
-  return "natal-reading-metrics__item--status"
+  return ""
 }
 
 function buildReadingMetrics(reading: NatalInterpretationViewModel): ReadingMetric[] {
-  const metrics = METRIC_LABELS.flatMap((label) => {
+  return METRIC_LABELS.flatMap((label) => {
     const fact = reading.highlightFacts.find((item) => item.label === label)
     return fact ? [{ ...fact, icon: metricIcon(label) }] : []
   })
-
-  return [
-    ...metrics,
-    {
-      detail: reading.completeness === "partial" ? "Lecture partielle" : "Lecture complète",
-      icon: BadgeCheck,
-      label: "Statut",
-      value: reading.label,
-    },
-  ]
 }
 
 function shortProgressTitle(title: string, index: number): string {
@@ -825,7 +815,7 @@ function NatalChapterCard({
           ) : null}
           {chapter.astroBasis.length > 0 ? (
             <div className="natal-reading__basis" aria-label={`Repères utilisés pour ${chapter.title}`}>
-              <span>Repères & évidences</span>
+              <span className="natal-reading__basis-title">Repères & évidences</span>
               <ul>
                 {chapter.astroBasis.map((basis, basisIndex) => (
                   <li className="natal-badge natal-badge--basis" key={`${itemKey}-basis-${basisIndex}`}>
