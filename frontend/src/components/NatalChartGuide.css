@@ -344,7 +344,7 @@
   background:
     radial-gradient(
       ellipse at 94% 4%,
-      color-mix(in srgb, var(--premium-accent-purple) 9%, transparent),
+      color-mix(in srgb, var(--premium-accent-purple) 6%, transparent),
       transparent 38%
     ),
     linear-gradient(145deg, var(--natal-specular-soft), transparent 58%),

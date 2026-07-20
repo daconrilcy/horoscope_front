@@ -225,8 +225,10 @@ describe("theme.css validation (Static Analysis)", () => {
     expect(natalCssContent).toContain("--natal-tone-sun: var(--color-energy-g2)")
     expect(natalCssContent).toContain("--natal-type-reading-text-line-height: var(--line-height-prose-loose)")
     expect(natalCssContent).toMatch(/\.dark \.natal-page-container\s*\{[\s\S]*--natal-surface-page:\s*transparent/)
-    expect(natalCssContent).toMatch(/\.dark \.natal-page-container\s*\{[\s\S]*--natal-surface-section:\s*color-mix\(in srgb,\s*color-mix\(in srgb,\s*var\(--premium-glass-surface-2\)/)
-    expect(natalCssContent).toMatch(/\.dark \.natal-page-container\s*\{[\s\S]*--natal-panel-background:\s*color-mix\(in srgb,\s*color-mix\(in srgb,\s*var\(--premium-glass-surface-2\)/)
+    expect(getTokenValue(natalThemeCssContent, ".dark .natal-page-container", "--natal-surface-section"))
+      .toContain("var(--natal-dark-surface-2)")
+    expect(getTokenValue(natalThemeCssContent, ".dark .natal-page-container", "--natal-panel-background"))
+      .toContain("var(--natal-dark-surface-2)")
     expect(natalCssContent).toMatch(/\.dark \.natal-page-container\s*\{[\s\S]*--natal-glass-filter:\s*var\(--glass-card-backdrop-filter\)/)
     expect(natalCssContent).toContain("--natal-badge-key-surface: var(--natal-surface-chip)")
     expect(natalCssContent).toMatch(
@@ -287,6 +289,19 @@ describe("theme.css validation (Static Analysis)", () => {
       expect(darkNatalTokens).toMatch(new RegExp(`${escapeRegex(token)}\\s*:`))
     })
     expect(darkNatalTokens).toContain("--premium-accent-purple-strong: var(--premium-accent-purple)")
+    expect(darkNatalTokens).toContain(
+      "--natal-dark-surface-2: color-mix(in srgb, var(--premium-glass-surface-2) 50%, var(--color-token-rgb-0-0-0) 50%)",
+    )
+    expect(darkNatalTokens).toContain(
+      "--natal-dark-surface-3: color-mix(in srgb, var(--premium-glass-surface-3) 50%, var(--color-token-rgb-0-0-0) 50%)",
+    )
+    expect(darkNatalTokens).toContain(
+      "--natal-specular-soft: color-mix(in srgb, var(--color-token-rgb-255-255-255) 7%, transparent)",
+    )
+    expect(darkNatalTokens).not.toContain(
+      "var(--premium-glass-surface-2) 70%, var(--color-token-rgb-0-0-0) 30%",
+    )
+    expect(getSelectorBlocks(natalThemeCssContent, ".dark .natal-page-container")).toHaveLength(1)
     expect(darkNatalTokens).toContain("--natal-tone-sun: var(--starfield-star-gold)")
     expect(getTokenValue(natalThemeCssContent, ".natal-page-container", "--natal-surface-reading-solid"))
       .toContain("var(--color-token-rgb-255-255-255) 97%")

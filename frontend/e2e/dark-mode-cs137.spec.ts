@@ -636,8 +636,25 @@ test.describe("CS-137 dark mode runtime surfaces", () => {
     await collapseButton.click()
     await expect(page.locator(".natal-reading__chapter-body").first()).toBeVisible()
 
+    const readNatalDataSurfaceTokens = () => page.locator(".natal-page-container").evaluate((element) => {
+      const styles = window.getComputedStyle(element)
+      return ["--natal-surface-data", "--natal-surface-data-strong", "--natal-surface-chip"].map((token) =>
+        styles.getPropertyValue(token).trim(),
+      )
+    })
+    await page.setViewportSize({ width: 1440, height: 900 })
+    const desktopDataSurfaceTokens = await readNatalDataSurfaceTokens()
+    await page.setViewportSize({ width: 390, height: 844 })
+    expect(await readNatalDataSurfaceTokens()).toEqual(desktopDataSurfaceTokens)
+
     if (process.env.NATAL_DARK_CAPTURE === "1") {
       mkdirSync(NATAL_DARK_EVIDENCE_DIR, { recursive: true })
+      if (await guideToggle.getAttribute("aria-expanded") === "true") {
+        await guideToggle.evaluate((element) => {
+          (element as HTMLButtonElement).click()
+        })
+      }
+      await expect(guideToggle).toHaveAttribute("aria-expanded", "false")
       for (const viewport of [
         { width: 1440, height: 900 },
         { width: 430, height: 900 },

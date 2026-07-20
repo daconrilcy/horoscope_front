@@ -1093,13 +1093,13 @@
 .dark .natal-reading__chapter {
   border-color: color-mix(in srgb, var(--glass-border) 48%, transparent);
   background:
-    radial-gradient(ellipse at 100% 0, color-mix(in srgb, var(--color-token-rgb-255-255-255) 10%, transparent) 0 18%, transparent 42%),
-    color-mix(in srgb, var(--natal-surface-reading) 88%, var(--natal-theme-color, var(--natal-border-accent)) 12%);
+    radial-gradient(ellipse at 100% 0, color-mix(in srgb, var(--color-token-rgb-255-255-255) 7%, transparent) 0 18%, transparent 42%),
+    color-mix(in srgb, var(--natal-surface-reading) 93%, var(--natal-theme-color, var(--natal-border-accent)) 7%);
 }
 
 .dark .natal-reading-hero {
   background:
-    radial-gradient(ellipse at 88% 12%, color-mix(in srgb, var(--premium-accent-purple) 10%, transparent), transparent 42%),
+    radial-gradient(ellipse at 88% 12%, color-mix(in srgb, var(--premium-accent-purple) 7%, transparent), transparent 42%),
     linear-gradient(135deg, var(--natal-specular-soft), transparent 54%),
     var(--natal-surface-glass-deep, var(--natal-panel-background));
 }
@@ -1112,15 +1112,15 @@
 
 .dark .natal-reading-hero::before {
   border-color: var(--natal-specular-strong);
-  background: radial-gradient(ellipse at 48% 72%, color-mix(in srgb, var(--premium-accent-purple) 9%, transparent), transparent 68%);
+  background: radial-gradient(ellipse at 48% 72%, color-mix(in srgb, var(--premium-accent-purple) 6%, transparent), transparent 68%);
   box-shadow:
-    inset 0 -12px 30px color-mix(in srgb, var(--premium-accent-purple) 7%, transparent),
+    inset 0 -12px 30px color-mix(in srgb, var(--premium-accent-purple) 5%, transparent),
     0 18px 44px color-mix(in srgb, var(--color-token-rgb-0-0-0) 24%, transparent);
   opacity: 0.58;
 }
 
 .dark .natal-reading-hero::after {
-  background: radial-gradient(ellipse at 50% 48%, color-mix(in srgb, var(--premium-accent-purple) 8%, transparent), transparent 72%);
+  background: radial-gradient(ellipse at 50% 48%, color-mix(in srgb, var(--premium-accent-purple) 5%, transparent), transparent 72%);
   opacity: 0.34;
 }
 
@@ -1191,12 +1191,12 @@
   background:
     radial-gradient(
       ellipse at 100% 0,
-      color-mix(in srgb, var(--premium-accent-purple) 12%, transparent) 0 18%,
+      color-mix(in srgb, var(--premium-accent-purple) 8%, transparent) 0 18%,
       transparent 44%
     ),
     linear-gradient(
       145deg,
-      color-mix(in srgb, var(--color-token-rgb-255-255-255) 5%, transparent),
+      color-mix(in srgb, var(--color-token-rgb-255-255-255) 4%, transparent),
       transparent 58%
     ),
     var(--natal-surface-glass-lifted);
@@ -1207,10 +1207,10 @@
   background:
     linear-gradient(
       145deg,
-      color-mix(in srgb, var(--color-token-rgb-255-255-255) 5%, transparent),
+      color-mix(in srgb, var(--color-token-rgb-255-255-255) 4%, transparent),
       transparent 64%
     ),
-    color-mix(in srgb, var(--premium-accent-purple) 4%, var(--premium-glass-surface-3));
+    color-mix(in srgb, var(--premium-accent-purple) 3%, var(--natal-dark-surface-3));
   box-shadow:
     var(--natal-inner-highlight),
     0 8px 22px color-mix(in srgb, var(--color-token-rgb-0-0-0) 22%, transparent);
@@ -1221,15 +1221,15 @@
   background:
     linear-gradient(
       145deg,
-      color-mix(in srgb, var(--color-token-rgb-255-255-255) 7%, transparent),
+      color-mix(in srgb, var(--color-token-rgb-255-255-255) 5%, transparent),
       transparent 64%
     ),
-    color-mix(in srgb, var(--premium-accent-purple) 10%, var(--premium-glass-surface-3));
+    color-mix(in srgb, var(--premium-accent-purple) 6%, var(--natal-dark-surface-3));
 }
 
 .dark .natal-reading-explanations .natal-reading__chapter-excerpt {
   border-color: color-mix(in srgb, var(--premium-accent-purple) 24%, var(--glass-border));
-  background: color-mix(in srgb, var(--premium-accent-purple) 8%, var(--premium-glass-surface-3));
+  background: color-mix(in srgb, var(--premium-accent-purple) 5%, var(--natal-dark-surface-3));
 }
 
 :root:not(.dark) .natal-reading-explanations .natal-reading__chapter-toggle,
