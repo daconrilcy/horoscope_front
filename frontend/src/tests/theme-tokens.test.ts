@@ -310,6 +310,10 @@ describe("theme.css validation (Static Analysis)", () => {
   })
 
   it("garde le menu top de /natal fixe sans recouvrir le contenu", () => {
+    const natalBody = getScopeBlock(
+      natalChartPageCssContent,
+      "body:has(.is-natal-page)",
+    )
     const natalHeader = getScopeBlock(
       natalChartPageCssContent,
       "body:has(.is-natal-page) .app-header",
@@ -319,9 +323,19 @@ describe("theme.css validation (Static Analysis)", () => {
       "body:has(.is-natal-page) .app-shell-body",
     )
 
+    expect(natalBody).toContain("--natal-fixed-header-height: 54px")
+    expect(natalBody).toContain(
+      "--natal-section-anchor-offset: calc(var(--natal-fixed-header-height) + 16px)",
+    )
     expect(natalHeader).toContain("position: fixed")
     expect(natalHeader).toContain("top: 0")
-    expect(natalShellBody).toContain("padding-top: 54px")
+    expect(natalHeader).toContain("height: var(--natal-fixed-header-height)")
+    expect(natalShellBody).toContain("padding-top: var(--natal-fixed-header-height)")
+    expect(natalReadingCssContent).toMatch(
+      /\.natal-reading__chapter,\s*\.natal-reading-facts,\s*\.natal-reading-explanations\s*\{[\s\S]*scroll-margin-top:\s*var\(--natal-section-anchor-offset\)/,
+    )
+    expect(getScopeBlock(natalChartGuideCssContent, "#natal-chart-guide"))
+      .toContain("scroll-margin-top: var(--natal-section-anchor-offset)")
   })
 
   it("protege les surfaces dark des etats secondaires de /natal", () => {

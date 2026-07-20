@@ -500,6 +500,14 @@ test.describe("CS-137 dark mode runtime surfaces", () => {
       .toBe(0)
     await page.evaluate(() => window.scrollTo(0, 0))
 
+    await page.getByRole("button", { name: "Émotions", exact: true }).evaluate((element) => {
+      (element as HTMLButtonElement).click()
+    })
+    await expect
+      .poll(() => page.locator(".natal-reading__chapter").nth(1).evaluate((element) => element.getBoundingClientRect().top))
+      .toBeGreaterThanOrEqual(70)
+    await page.evaluate(() => window.scrollTo(0, 0))
+
     const headerControlBackground = await readColorChannels(page, ".app-header-theme-toggle", "backgroundColor")
     expect(headerControlBackground.red).toBeLessThan(80)
     expect(headerControlBackground.green).toBeLessThan(85)

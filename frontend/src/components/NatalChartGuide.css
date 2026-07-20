@@ -1,5 +1,9 @@
 /* Styles du parcours pedagogique du theme natal, alignes sur la lecture publique. */
 
+#natal-chart-guide {
+  scroll-margin-top: var(--natal-section-anchor-offset);
+}
+
 .natal-chart-guide {
   box-sizing: border-box;
   display: grid;

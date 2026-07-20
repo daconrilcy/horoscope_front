@@ -532,6 +532,12 @@
   gap: 14px;
 }
 
+.natal-reading__chapter,
+.natal-reading-facts,
+.natal-reading-explanations {
+  scroll-margin-top: var(--natal-section-anchor-offset);
+}
+
 @media (min-width: 769px) {
   .natal-reading__chapters {
     margin-top: 3px;
