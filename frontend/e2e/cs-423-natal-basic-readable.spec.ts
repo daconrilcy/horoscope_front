@@ -2,14 +2,10 @@
 import { expect, test, type Page } from "@playwright/test"
 import { mkdirSync, writeFileSync } from "node:fs"
 import { resolve } from "node:path"
+import { fileURLToPath } from "node:url"
 
-const EVIDENCE_DIR = resolve(
-  process.cwd(),
-  "..",
-  "_condamad",
-  "stories",
-  "CS-423-qa-live-lecture-basic-natal-lisible",
-  "evidence",
+const EVIDENCE_DIR = fileURLToPath(
+  new URL("../../output/playwright/cs-423-natal-basic-readable/", import.meta.url),
 )
 
 const ACCESS_TOKEN =
@@ -304,11 +300,13 @@ test("capture les preuves desktop et mobile d'une lecture Basic V2 lisible", asy
   await guideToggle.click()
   await expect(guideToggle).toHaveAttribute("aria-expanded", "true")
   await expect(guideToggle).toHaveText("Réduire le guide")
-  await expect(page.getByText(/Ton thème natal est une représentation géométrique/i)).toBeVisible()
+  await expect(page.getByText(/Pas besoin de tout connaître pour commencer/i)).toBeVisible()
+  await expect(page.getByRole("heading", { name: "La formule magique en 4 clés" })).toBeVisible()
+  await page.screenshot({ path: resolve(EVIDENCE_DIR, "natal-guide-desktop-expanded.png"), fullPage: true })
   await guideToggle.click()
   await expect(guideToggle).toHaveAttribute("aria-expanded", "false")
   await expect(guideToggle).toHaveText("Lire le guide")
-  await expect(page.getByText(/Ton thème natal est une représentation géométrique/i)).not.toBeVisible()
+  await expect(page.getByText(/Pas besoin de tout connaître pour commencer/i)).not.toBeVisible()
 
   const publicBody = (await page.locator(".natal-reading").innerText()).trim()
   expect(publicBody).not.toMatch(

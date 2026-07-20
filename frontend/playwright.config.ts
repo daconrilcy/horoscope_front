@@ -1,12 +1,16 @@
-// Configure les tests navigateur avec un port local surchargeable pour isoler les validations.
+// Configure les tests navigateur et centralise leurs artefacts dans le dossier autorise.
 import { defineConfig } from "@playwright/test"
+import { resolve } from "node:path"
+import { fileURLToPath } from "node:url"
 
 const playwrightPort = process.env.PLAYWRIGHT_PORT ?? "4173"
 const playwrightBaseUrl = `http://127.0.0.1:${playwrightPort}`
 const skipWebServer = process.env.PLAYWRIGHT_SKIP_WEBSERVER === "1"
+const repositoryRoot = fileURLToPath(new URL("../", import.meta.url))
 
 export default defineConfig({
   testDir: "./e2e",
+  outputDir: resolve(repositoryRoot, "output", "playwright", "test-results"),
   fullyParallel: false,
   retries: 0,
   use: {

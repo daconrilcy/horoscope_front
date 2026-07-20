@@ -34,6 +34,10 @@ const natalThemeCssContent = fs.readFileSync(
   path.resolve(__dirname, "../features/natal-chart/natalTheme.css"),
   "utf-8",
 )
+const natalChartGuideCssContent = fs.readFileSync(
+  path.resolve(__dirname, "../components/NatalChartGuide.css"),
+  "utf-8",
+)
 const natalPublicTypographyCssContent = [
   "../features/natal-chart/natalBadges.css",
   "../features/natal-chart/natalCards.css",
@@ -273,6 +277,16 @@ describe("theme.css validation (Static Analysis)", () => {
     expect(natalReadingCssContent).toMatch(
       /\.natal-reading__chapter-head h3\s*\{[\s\S]*font-size:\s*var\(--natal-type-card-title-size\)/,
     )
+  })
+
+  it("garde les espacements et effets du guide natal raccordes aux tokens existants", () => {
+    expect(natalChartGuideCssContent).not.toMatch(
+      /(?:gap|padding(?:-top)?|margin(?:-top|-left)?|min-height):[^;]*\d+px/,
+    )
+    expect(natalChartGuideCssContent).not.toMatch(/letter-spacing:\s*-?\d/)
+    expect(natalChartGuideCssContent).not.toMatch(/box-shadow:\s*(?:-?\d|rgba|#)/)
+    expect(natalChartGuideCssContent).toContain("gap: var(--space-3)")
+    expect(natalChartGuideCssContent).toContain("box-shadow: var(--natal-shadow-block)")
   })
 
   it("garde le fond cosmique actif sur /natal en dark sans reactiver le bruit", () => {

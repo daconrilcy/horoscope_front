@@ -1,37 +1,50 @@
 // Traductions applicatives du theme natal, y compris les libelles des lectures publiques.
 import type { AstrologyLang } from "./astrology"
 
-export type NatalChartFaqItem = {
-  question: string
-  answer: string
+type NatalChartGuideCard = {
+  cue: string
+  title: string
+  description: string
+  example: string
+}
+
+type NatalChartGuideStep = {
+  title: string
+  description: string
+}
+
+type NatalChartGuideGlossaryItem = {
+  term: string
+  definition: string
 }
 
 export const DEFAULT_ASTRO_LANG: AstrologyLang = "fr"
 
 export type NatalChartGuideTranslations = {
   title: string
+  openLabel: string
+  closeLabel: string
   intro: string
-  signsTitle: string
-  signsDesc: string
-  signExample: string
-  planetsTitle: string
-  planetsDesc: string
-  planetsRetrogradeTip: string
-  housesTitle: string
-  housesIntervalTitle: string
-  housesIntervalDesc: string
-  wrapTitle: string
-  wrapDesc: string
-  wrapExample: string
-  anglesTitle: string
-  anglesDesc: string
-  sunAscendantTitle: string
-  sunAscendantDesc: string
-  ascendantMissing: string
+  takeawayLabel: string
+  takeaway: string
+  formulaTitle: string
+  formulaIntro: string
+  formulaCards: NatalChartGuideCard[]
+  firstMarkersTitle: string
+  firstMarkersDescription: string
+  partialReadingNote: string
+  readingPathTitle: string
+  readingPath: NatalChartGuideStep[]
+  interpretationTitle: string
+  interpretationCards: NatalChartGuideCard[]
   aspectsTitle: string
-  aspectsDesc: string
-  faqTitle: string
-  faq: NatalChartFaqItem[]
+  aspectsDescription: string
+  aspectsExample: string
+  confidenceTitle: string
+  confidenceDescription: string
+  glossaryTitle: string
+  glossary: NatalChartGuideGlossaryItem[]
+  closingTip: string
 }
 
 export type NatalChartPageCopy = {
@@ -376,79 +389,131 @@ const natalChartTranslationsBase: Record<Exclude<AstrologyLang, "de">, NatalChar
     },
     guide: {
       title: "Comment lire ton thème natal",
+      openLabel: "Lire le guide",
+      closeLabel: "Réduire le guide",
       intro:
-        "Ton thème natal est une représentation géométrique du ciel au moment et au lieu de ta naissance. Les calculs placent des points (planètes) sur un cercle de 360°. Ensuite, on traduit ces positions en repères lisibles : signes, maisons, angles et aspects.",
-      signsTitle: "Les signes astrologiques",
-      signsDesc:
-        "Le zodiaque est divisé en 12 signes de 30° chacun. Un signe n'est pas une planète : c'est une zone du cercle qui sert de grille de lecture pour exprimer une position. Chaque position astronomique est d'abord une longitude écliptique entre 0° et 360°. Cette longitude est ensuite convertie en un signe (dans quel segment de 30° on se situe) et un degré à l'intérieur du signe (de 0°00' à 29°59'). Les minutes (') sont des sous-unités du degré (1° = 60').",
-      signExample: "Soleil 34,08° → Taureau 4°05′ (car Taureau commence à 30°)",
-      planetsTitle: "Les planètes",
-      planetsDesc:
-        "Les planètes (et, en astrologie, le Soleil et la Lune) sont des points placés sur le cercle zodiacal à une longitude précise. Pour chaque planète, l'affichage donne : sa position en signe + degré (lecture humaine), sa longitude brute (valeur de calcul) et la maison dans laquelle elle se situe (secteur du thème).",
-      planetsRetrogradeTip:
-        "Le symbole ℞ signifie que la planète est en mouvement rétrograde apparent : vue depuis la Terre, elle semble reculer temporairement dans le zodiaque. C'est un état de mouvement apparent, pas un objet supplémentaire.",
-      housesTitle: "Les maisons",
-      housesIntervalTitle: "Convention d'appartenance : intervalle semi-ouvert [début, fin)",
-      housesIntervalDesc:
-        "Les maisons découpent le cercle en 12 secteurs calculés à partir du lieu et de l'heure de naissance. Chaque maison commence à une cuspide (son point d'ouverture) et s'étend jusqu'à la cuspide de la maison suivante. Si une planète est exactement sur la cuspide de fin d'une maison, elle appartient à la maison suivante. Le système utilisé est affiché en en-tête, car il change les cuspides et donc la répartition des planètes dans les maisons.",
-      wrapTitle: "Passage par 0° (wrap 360°)",
-      wrapDesc:
-        "Certaines maisons traversent la jonction 360° → 0°. Dans ce cas, l'intervalle boucle : il couvre la fin du cercle puis reprend au début.",
-      wrapExample: "Exemple: 348,46° → 360° puis 0° → 18,46°",
-      anglesTitle: "Les angles",
-      anglesDesc:
-        "Les angles sont quatre points de référence majeurs issus des cuspides de maisons clés. Ascendant (ASC) : cuspide de la Maison I, point où le zodiaque coupe l'horizon Est à la naissance. Descendant (DSC) : cuspide de la Maison VII, opposé à l'Ascendant (~180°). Milieu du Ciel (MC) : cuspide de la Maison X, lié au méridien supérieur. Fond du Ciel (IC) : cuspide de la Maison IV, opposé au MC (~180°). En pratique, \"Ascendant\" correspond au signe qui contient la cuspide de la Maison I, et MC au signe qui contient la cuspide de la Maison X.",
-      sunAscendantTitle: "Signe solaire et ascendant",
-      sunAscendantDesc:
-        "Le signe solaire est le signe dans lequel se trouve le Soleil au moment de la naissance. L'ascendant est le signe de la cuspide de la Maison I. Ce sont deux repères très utilisés, mais ils proviennent des mêmes données de base : des positions en degrés sur le cercle (pour le Soleil) et des cuspides calculées (pour l'Ascendant).",
-      ascendantMissing:
-        "L'heure de naissance n'est pas renseignée\u00a0: l'ascendant n'est pas calculé.",
-      aspectsTitle: "Les aspects",
-      aspectsDesc:
-        "Les aspects sont des angles géométriques entre deux planètes, mesurés sur le cercle zodiacal. Chaque aspect correspond à un angle de référence (0°, 60°, 90°, 120°...). L'orbe est l'écart maximal accepté autour de l'angle théorique pour considérer l'aspect comme valide. L'orbe effective (orbe eff.) indique l'écart réel mesuré pour cet aspect spécifique.",
-      faqTitle: "FAQ",
-      faq: [
+        "Pas besoin de tout connaître pour commencer. Ton thème natal se lit comme une histoire : chaque chapitre rassemble plusieurs indices pour éclairer une facette de ta personnalité et de ton parcours.",
+      takeawayLabel: "À retenir",
+      takeaway:
+        "Une interprétation astrologique propose des pistes symboliques, pas une étiquette ni une prédiction certaine. Garde ce qui t'aide à réfléchir et laisse le reste de côté.",
+      formulaTitle: "La formule magique en 4 clés",
+      formulaIntro:
+        "Quand une phrase semble compliquée, découpe-la avec ces quatre questions. Elles transforment le jargon en une petite scène facile à imaginer.",
+      formulaCards: [
         {
-          question: "Pourquoi parle-t-on de 360° ?",
-          answer:
-            "Parce que le thème est représenté comme un cercle complet. Les positions des planètes et des cuspides sont exprimées en degrés sur ce cercle, ce qui permet de calculer facilement maisons et aspects.",
+          cue: "Quoi ?",
+          title: "La planète",
+          description:
+            "Elle représente une fonction intérieure : le Soleil parle d'élan personnel, la Lune des besoins émotionnels, Mercure de la façon de penser.",
+          example: "Exemple : Mars décrit la manière d'agir et de défendre son énergie.",
         },
         {
-          question: "Pourquoi y a-t-il deux découpages (signes et maisons) ?",
-          answer:
-            "Les signes sont un découpage fixe du zodiaque (12 x 30°), identique pour tout le monde. Les maisons sont un découpage local calculé à partir du lieu et de l'heure de naissance, donc spécifique à chaque personne.",
+          cue: "Comment ?",
+          title: "Le signe",
+          description:
+            "Il donne le style de cette fonction. Un même besoin peut s'exprimer avec spontanéité, prudence, curiosité ou intensité selon le signe.",
+          example: "Exemple : une énergie en Taureau avance avec constance et recherche du concret.",
         },
         {
-          question: "Qu'est-ce qu'une longitude brute ?",
-          answer:
-            "C'est la valeur numérique (0-360°) utilisée pour les calculs. L'affichage signe + degré est une conversion plus lisible de cette même valeur.",
+          cue: "Où ?",
+          title: "La maison",
+          description:
+            "Elle indique le domaine de vie où l'énergie se joue : identité, relations, foyer, activité, projets ou vie collective.",
+          example: "Exemple : la Maison X met l'accent sur la vocation et la place publique.",
         },
         {
-          question: "Qu'est-ce qu'une cuspide ?",
-          answer:
-            "C'est le point de départ d'une maison. Les cuspides sont des repères calculés sur le cercle, qui définissent les limites des secteurs (maisons).",
-        },
-        {
-          question: "Pourquoi certaines maisons semblent bizarres ou traversent 0° ?",
-          answer:
-            "Parce que le cercle n'a pas de début réel : 360° et 0° sont le même point. Si une maison démarre près de la fin du cercle, elle peut continuer après 0°.",
-        },
-        {
-          question: "À quoi sert l'orbe dans les aspects ?",
-          answer:
-            "L'orbe sert de tolérance. Sans orbe, presque aucun aspect ne serait exact. Avec l'orbe, on retient les angles proches d'un angle de référence.",
-        },
-        {
-          question: "Que signifie le symbole ℞ ?",
-          answer:
-            "℞ indique une rétrogradation apparente : depuis la Terre, la planète semble reculer temporairement dans le zodiaque. C'est une information de mouvement apparent issue des éphémérides.",
-        },
-        {
-          question: "Pourquoi le signe solaire et l'ascendant sont-ils mis en avant ?",
-          answer:
-            "Parce que ce sont deux repères très utilisés : l'un est la position du Soleil (un point), l'autre est un angle issu des maisons (une cuspide). Ils résument des éléments différents de la structure du thème, sans être une interprétation à eux seuls.",
+          cue: "Quel dialogue ?",
+          title: "L'aspect",
+          description:
+            "Il relie deux planètes. Leur dialogue peut être fluide, stimulant ou demander des ajustements, comme deux personnages qui apprennent à jouer ensemble.",
+          example: "Exemple : un carré crée une tension féconde, un trigone facilite la circulation.",
         },
       ],
+      firstMarkersTitle: "Tes trois premiers repères",
+      firstMarkersDescription:
+        "Commence par le Soleil pour l'élan d'identité, la Lune pour les besoins émotionnels et l'Ascendant pour la manière d'entrer en relation avec le monde. Ils ouvrent la lecture, mais aucun ne résume une personne à lui seul.",
+      partialReadingNote:
+        "Quand l'heure de naissance manque, ou que les données sont partielles ou peu précises, l'Ascendant, les maisons, la Lune et certains aspects peuvent manquer ou être moins fiables. Lis les repères disponibles comme des indications à nuancer.",
+      readingPathTitle: "Ton parcours de lecture",
+      readingPath: [
+        {
+          title: "Lis la synthèse",
+          description: "Elle donne le fil rouge général avant d'entrer dans les détails.",
+        },
+        {
+          title: "Repère Soleil, Lune et Ascendant",
+          description: "Ces trois portes d'entrée aident à situer identité, émotions et présence.",
+        },
+        {
+          title: "Choisis un chapitre",
+          description: "Relations, vocation, talents ou croissance : commence par le thème qui t'attire.",
+        },
+        {
+          title: "Regarde ses bases astrologiques",
+          description: "Elles montrent quels placements, maisons et aspects soutiennent l'interprétation.",
+        },
+      ],
+      interpretationTitle: "Comment la lecture construit une idée",
+      interpretationCards: [
+        {
+          cue: "Zoom",
+          title: "Dominantes et axes",
+          description:
+            "Une dominante signale qu'un thème revient souvent. Un axe relie deux domaines complémentaires, comme identité et relation ou vie privée et vie publique.",
+          example: "Ce n'est pas un destin imposé : c'est une zone particulièrement mise en lumière.",
+        },
+        {
+          cue: "Fil rouge",
+          title: "Le maître d'une maison",
+          description:
+            "Chaque maison commence dans un signe. La planète associée à ce signe devient son maître et relie le domaine de la maison à une autre partie du thème.",
+          example: "Imagine un guide qui transporte l'histoire d'une maison vers la scène où il se trouve.",
+        },
+        {
+          cue: "Équipe",
+          title: "Cœur, appui et nuance",
+          description:
+            "Le facteur principal porte l'idée, les appuis la renforcent et les nuances évitent une lecture trop simple. Plusieurs indices sont croisés avant de former un chapitre.",
+          example: "Comme une équipe : un moteur, des soutiens et un regard qui modère.",
+        },
+      ],
+      aspectsTitle: "Les aspects : ni bons ni mauvais",
+      aspectsDescription:
+        "Les trigones et sextiles montrent souvent ce qui circule facilement. Les carrés et oppositions révèlent plutôt des besoins qui tirent dans des directions différentes. La conjonction fusionne deux énergies. Une tension peut devenir une force lorsqu'elle est reconnue et apprivoisée.",
+      aspectsExample:
+        "Astuce : remplace « problème » par « dialogue à ajuster ». La lecture devient tout de suite plus vivante et moins fataliste.",
+      confidenceTitle: "Que veut dire le niveau de confiance ?",
+      confidenceDescription:
+        "Il indique à quel point plusieurs indices astrologiques soutiennent le chapitre. Une confiance élevée signifie que les indices convergent ; elle ne transforme pas l'interprétation en vérité absolue sur toi.",
+      glossaryTitle: "Mini-glossaire",
+      glossary: [
+        {
+          term: "Dominante",
+          definition: "Un signe, une planète ou une maison qui revient fortement dans plusieurs indices.",
+        },
+        {
+          term: "Axe",
+          definition: "Deux maisons opposées qui invitent à équilibrer deux domaines de vie.",
+        },
+        {
+          term: "Maître de maison",
+          definition: "La planète associée au signe qui ouvre une maison et qui en prolonge l'histoire.",
+        },
+        {
+          term: "Orbe",
+          definition: "La marge autour de l'angle exact qui permet de considérer un aspect actif.",
+        },
+        {
+          term: "Rétrograde",
+          definition: "Le mouvement apparent d'une planète qui semble reculer depuis la Terre.",
+        },
+        {
+          term: "Cuspide",
+          definition: "Le point de départ calculé d'une maison sur le cercle natal.",
+        },
+      ],
+      closingTip:
+        "Lis ton thème comme une conversation, pas comme un verdict. Les répétitions donnent le tempo ; les contradictions donnent du relief.",
     },
   },
   en: {
@@ -632,78 +697,131 @@ const natalChartTranslationsBase: Record<Exclude<AstrologyLang, "de">, NatalChar
     },
     guide: {
       title: "How to read your natal chart",
+      openLabel: "Read the guide",
+      closeLabel: "Collapse the guide",
       intro:
-        "Your natal chart is a geometric snapshot of the sky at the moment and place of your birth. Calculations place points (planets) on a 360° circle, then translate positions into readable markers: signs, houses, angles and aspects.",
-      signsTitle: "Zodiac signs",
-      signsDesc:
-        "The zodiac is divided into 12 signs of 30° each. A sign is not a planet: it is a zone of the circle used as a reading grid to express a position. Each astronomical position is first an ecliptic longitude between 0° and 360°, then converted into a sign (which 30° segment) and a degree within the sign (0°00' to 29°59').",
-      signExample: "Sun 34.08° → Taurus 4°05′ (Taurus starts at 30°)",
-      planetsTitle: "Planets",
-      planetsDesc:
-        "Planets (including the Sun and Moon in astrology) are points placed on the zodiacal circle at a precise longitude. For each planet, the display shows: its position in sign + degree (human-readable), its raw longitude (calculation value) and the house it occupies (chart sector).",
-      planetsRetrogradeTip:
-        "The ℞ symbol means the planet is in apparent retrograde motion: seen from Earth, it appears to temporarily move backwards through the zodiac. It is a state of apparent motion, not an additional object.",
-      housesTitle: "Houses",
-      housesIntervalTitle: "Membership convention: semi-open interval [start, end)",
-      housesIntervalDesc:
-        "Houses divide the circle into 12 sectors calculated from the birth place and time. Each house begins at a cusp (its opening point) and extends to the next house cusp. If a planet falls exactly on the end cusp of a house, it belongs to the next house. The house system is shown in the header, as it changes the cusps and the distribution of planets.",
-      wrapTitle: "Crossing 360°",
-      wrapDesc:
-        "Some houses cross the 360° → 0° junction. In this case, the interval wraps: it covers the end of the circle then continues from the beginning.",
-      wrapExample: "Example: 348.46° → 360° then 0° → 18.46°",
-      anglesTitle: "Angles",
-      anglesDesc:
-        "Angles are four major reference points derived from key house cusps. Ascendant (ASC): House I cusp, the point where the zodiac crosses the eastern horizon at birth. Descendant (DSC): House VII cusp, opposite the Ascendant (~180°). Midheaven (MC): House X cusp, linked to the upper meridian. Imum Coeli (IC): House IV cusp, opposite the MC (~180°). In practice, 'Ascendant' refers to the sign containing House I cusp, and MC to the sign containing House X cusp.",
-      sunAscendantTitle: "Sun sign and ascendant",
-      sunAscendantDesc:
-        "The sun sign is the sign where the Sun is located at birth. The ascendant is the sign of House I cusp. These are two widely used markers, but they come from the same base data: degree positions on the circle (for the Sun) and calculated cusps (for the Ascendant).",
-      ascendantMissing: "Birth time is not provided: the ascendant is not calculated.",
-      aspectsTitle: "Aspects",
-      aspectsDesc:
-        "Aspects are geometric angles between two planets, measured on the zodiacal circle. Each aspect corresponds to a reference angle (0°, 60°, 90°, 120°...). The orb is the maximum deviation accepted around the theoretical angle for an aspect to be considered valid. The effective orb (eff. orb) indicates the actual measured deviation for this specific aspect.",
-      faqTitle: "FAQ",
-      faq: [
+        "You do not need to know everything to begin. Read your natal chart like a story: each chapter gathers several clues to shed light on one part of your personality and journey.",
+      takeawayLabel: "Key idea",
+      takeaway:
+        "An astrological interpretation offers symbolic prompts, not a label or a certain prediction. Keep what helps you reflect and leave the rest aside.",
+      formulaTitle: "The 4-key formula",
+      formulaIntro:
+        "When a sentence feels complicated, break it down with these four questions. They turn jargon into a small scene you can picture.",
+      formulaCards: [
         {
-          question: "Why do we talk about 360°?",
-          answer:
-            "Because the chart is represented as a complete circle. Planet and cusp positions are expressed in degrees on this circle, making it easy to calculate houses and aspects.",
+          cue: "What?",
+          title: "The planet",
+          description:
+            "It represents an inner function: the Sun speaks to personal drive, the Moon to emotional needs and Mercury to the way you think.",
+          example: "Example: Mars describes how you act and stand up for your energy.",
         },
         {
-          question: "Why are there two divisions (signs and houses)?",
-          answer:
-            "Signs are a fixed zodiac division (12 × 30°), the same for everyone. Houses are a local division calculated from the birth place and time, specific to each person.",
+          cue: "How?",
+          title: "The sign",
+          description:
+            "It gives that function its style. The same need can appear spontaneous, careful, curious or intense depending on the sign.",
+          example: "Example: energy in Taurus moves steadily and looks for tangible results.",
         },
         {
-          question: "What is a raw longitude?",
-          answer:
-            "It is the numerical value (0-360°) used for calculations. The sign + degree display is a more readable conversion of that same value.",
+          cue: "Where?",
+          title: "The house",
+          description:
+            "It points to the life area where the energy plays out: identity, relationships, home, work, projects or community.",
+          example: "Example: House X highlights vocation and public life.",
         },
         {
-          question: "What is a cusp?",
-          answer:
-            "It is the starting point of a house. Cusps are calculated markers on the circle that define the boundaries of the sectors (houses).",
-        },
-        {
-          question: "Why do some houses look unusual or cross 0°?",
-          answer:
-            "Because the circle has no real beginning: 360° and 0° are the same point. If a house starts near the end of the circle, it can continue after 0°.",
-        },
-        {
-          question: "What is the orb used for in aspects?",
-          answer:
-            "The orb serves as a tolerance. Without an orb, almost no aspect would be exact. With the orb, angles close to a reference angle are included.",
-        },
-        {
-          question: "What does the ℞ symbol mean?",
-          answer:
-            "℞ indicates apparent retrograde motion: from Earth, the planet appears to temporarily move backwards through the zodiac. It is apparent motion information from the ephemeris.",
-        },
-        {
-          question: "Why are the sun sign and ascendant highlighted?",
-          answer:
-            "Because they are two widely used markers: one is the Sun's position (a point), the other is an angle from the houses (a cusp). They summarize different elements of the chart structure, not interpretations by themselves.",
+          cue: "What dialogue?",
+          title: "The aspect",
+          description:
+            "It connects two planets. Their dialogue may flow, stimulate or require adjustment, like two characters learning to play together.",
+          example: "Example: a square creates productive tension, while a trine helps energy flow.",
         },
       ],
+      firstMarkersTitle: "Your first three markers",
+      firstMarkersDescription:
+        "Start with the Sun for identity and drive, the Moon for emotional needs and the Ascendant for how you meet the world. They open the reading, but none of them sums up a whole person.",
+      partialReadingNote:
+        "When the birth time is missing, or birth data is incomplete or imprecise, the Ascendant, houses, Moon and some aspects may be missing or less reliable. Read the available markers as clues that deserve nuance.",
+      readingPathTitle: "Your reading path",
+      readingPath: [
+        {
+          title: "Read the overview",
+          description: "It gives you the main thread before you enter the details.",
+        },
+        {
+          title: "Find the Sun, Moon and Ascendant",
+          description: "These three entry points locate identity, emotions and presence.",
+        },
+        {
+          title: "Choose one chapter",
+          description: "Relationships, vocation, talents or growth: begin with what draws you in.",
+        },
+        {
+          title: "Check its astrological basis",
+          description: "It shows which placements, houses and aspects support the interpretation.",
+        },
+      ],
+      interpretationTitle: "How the reading builds an idea",
+      interpretationCards: [
+        {
+          cue: "Zoom",
+          title: "Dominants and axes",
+          description:
+            "A dominant means a theme appears repeatedly. An axis connects two complementary areas, such as self and relationship or private and public life.",
+          example: "This is not a fixed destiny: it is an area receiving extra emphasis.",
+        },
+        {
+          cue: "Thread",
+          title: "A house ruler",
+          description:
+            "Each house begins in a sign. The planet linked to that sign becomes its ruler and connects the house's life area to another part of the chart.",
+          example: "Picture a guide carrying one house's story to the place where it stands.",
+        },
+        {
+          cue: "Team",
+          title: "Core, support and nuance",
+          description:
+            "The core factor carries the idea, supporting factors strengthen it and nuances prevent an overly simple reading. Several clues are combined to form a chapter.",
+          example: "Like a team: a driving force, supporters and a moderating voice.",
+        },
+      ],
+      aspectsTitle: "Aspects: neither good nor bad",
+      aspectsDescription:
+        "Trines and sextiles often show what flows easily. Squares and oppositions reveal needs pulling in different directions. A conjunction blends two energies. Tension can become a strength once it is noticed and handled.",
+      aspectsExample:
+        "Tip: replace “problem” with “dialogue to adjust.” The reading immediately feels more alive and less fatalistic.",
+      confidenceTitle: "What does confidence mean?",
+      confidenceDescription:
+        "It shows how strongly several astrological clues support a chapter. High confidence means the clues converge; it does not turn the interpretation into an absolute truth about you.",
+      glossaryTitle: "Mini glossary",
+      glossary: [
+        {
+          term: "Dominant",
+          definition: "A sign, planet or house that stands out across several clues.",
+        },
+        {
+          term: "Axis",
+          definition: "Two opposite houses inviting balance between two areas of life.",
+        },
+        {
+          term: "House ruler",
+          definition: "The planet linked to the sign opening a house, carrying its story further.",
+        },
+        {
+          term: "Orb",
+          definition: "The margin around an exact angle used to consider an aspect active.",
+        },
+        {
+          term: "Retrograde",
+          definition: "A planet's apparent motion backwards as seen from Earth.",
+        },
+        {
+          term: "Cusp",
+          definition: "The calculated starting point of a house on the natal circle.",
+        },
+      ],
+      closingTip:
+        "Read your chart as a conversation, not a verdict. Repetition sets the rhythm; contradictions add depth.",
     },
   },
   es: {
@@ -887,78 +1005,131 @@ const natalChartTranslationsBase: Record<Exclude<AstrologyLang, "de">, NatalChar
     },
     guide: {
       title: "Cómo leer tu carta natal",
+      openLabel: "Leer la guía",
+      closeLabel: "Cerrar la guía",
       intro:
-        "Tu carta natal es una representación geométrica del cielo en el momento y lugar de tu nacimiento. Los cálculos sitúan puntos (planetas) en un círculo de 360°. Luego, estas posiciones se traducen en referencias legibles: signos, casas, ángulos y aspectos.",
-      signsTitle: "Los signos zodiacales",
-      signsDesc:
-        "El zodíaco está dividido en 12 signos de 30° cada uno. Un signo no es un planeta: es una zona del círculo que sirve de cuadrícula para expresar una posición. Cada posición astronómica es primero una longitud eclíptica entre 0° et 360°, que luego se convierte en un signo (en qué segmento de 30°) et un grado dentro del signo (de 0°00' a 29°59').",
-      signExample: "Sol 34,08° → Tauro 4°05′ (Tauro comienza en 30°)",
-      planetsTitle: "Los planetas",
-      planetsDesc:
-        "Los planetas (y, en astrología, el Sol y la Luna) sont puntos situados en el círculo zodiacal a una longitud precisa. Para cada planeta, se muestra: su posición en signo + grado (lectura humana), su longitud bruta (valor de cálculo) y la casa en la que se encuentra (sector del tema).",
-      planetsRetrogradeTip:
-        "El símbolo ℞ indica que el planeta está en movimiento retrógrado aparente: visto desde la Tierra, parece retroceder temporalmente en el zodíaco. Es un estado de movimiento aparente, no un objeto adicional.",
-      housesTitle: "Las casas",
-      housesIntervalTitle: "Convención de pertenencia: intervalo semiabierto [inicio, fin)",
-      housesIntervalDesc:
-        "Las casas dividen el círculo en 12 sectores calculados a partir del lugar y la hora de nacimiento. Cada casa comienza en una cúspide (su punto de apertura) y se extiende hasta la cúspide de la siguiente casa. Si un planeta cae exactamente en la cúspide de fin de una casa, pertenece a la siguiente. El sistema de casas se indica en el encabezado, ya que cambia las cúspides y la distribución de los planetas.",
-      wrapTitle: "Cruce de 360°",
-      wrapDesc:
-        "Algunas casas atraviesan la unión 360° → 0°. En ese caso, el intervalo da la vuelta: cubre el final del círculo y continúa desde el principio.",
-      wrapExample: "Ejemplo: 348,46° → 360° luego 0° → 18,46°",
-      anglesTitle: "Los ángulos",
-      anglesDesc:
-        "Los ángulos son cuatro puntos de referencia principales derivados de las cúspides de las casas clave. Ascendente (ASC): cúspide de la Casa I, punto donde el zodíaco cruza el horizonte Este al nacer. Descendente (DSC): cúspide de la Casa VII, opuesto al Ascendente (~180°). Medio Cielo (MC): cúspide de la Casa X, ligado al meridiano superior. Fondo del Cielo (IC): cúspide de la Casa IV, opuesto al MC (~180°). En la práctica, 'Ascendente' es el signo que contiene la cúspide de la Casa I, y MC el signo que contiene la cúspide de la Casa X.",
-      sunAscendantTitle: "Signo solar y ascendente",
-      sunAscendantDesc:
-        "El signo solar es el signo donde se encuentra el Sol en el momento del nacimiento. El ascendente es el signo de la cúspide de la Casa I. Son dos referencias muy usadas, pero provienen de los mismos datos base: posiciones en grados sobre el círculo (para el Sol) y cúspides calculadas (para el Ascendente).",
-      ascendantMissing: "La hora de nacimiento no está registrada: el ascendente no se calcula.",
-      aspectsTitle: "Los aspectos",
-      aspectsDesc:
-        "Los aspectos son ángulos geométricos entre dos planetas, medidos en el círculo zodiacal. Cada aspecto corresponde a un ángulo de referencia (0°, 60°, 90°, 120°...). El orbe es la desviación máxima aceptada alrededor del ángulo teórico para que un aspecto sea válido. El orbe efectivo (orbe efec.) indica la desviación real medida para ese aspecto específico.",
-      faqTitle: "FAQ",
-      faq: [
+        "No necesitas saberlo todo para empezar. Lee tu carta natal como una historia: cada capítulo reúne varias pistas para iluminar una faceta de tu personalidad y de tu recorrido.",
+      takeawayLabel: "Idea clave",
+      takeaway:
+        "Una interpretación astrológica ofrece pistas simbólicas, no una etiqueta ni una predicción segura. Conserva lo que te ayude a reflexionar y deja a un lado lo demás.",
+      formulaTitle: "La fórmula de las 4 claves",
+      formulaIntro:
+        "Cuando una frase parezca complicada, divídela con estas cuatro preguntas. Así el vocabulario técnico se convierte en una escena fácil de imaginar.",
+      formulaCards: [
         {
-          question: "¿Por qué se habla de 360°?",
-          answer:
-            "Porque la carta se representa como un círculo completo. Las posiciones de los planetas y las cúspides se expresan en grados sobre ese círculo, lo que facilita calcular casas y aspectos.",
+          cue: "¿Qué?",
+          title: "El planeta",
+          description:
+            "Representa una función interior: el Sol habla del impulso personal, la Luna de las necesidades emocionales y Mercurio de la forma de pensar.",
+          example: "Ejemplo: Marte describe cómo actúas y defiendes tu energía.",
         },
         {
-          question: "¿Por qué hay dos divisiones (signos y casas)?",
-          answer:
-            "Los signos son una división fija del zodíaco (12 × 30°), igual para todos. Las casas son una división local calculada a partir del lugar y la hora de nacimiento, específica para cada persona.",
+          cue: "¿Cómo?",
+          title: "El signo",
+          description:
+            "Da estilo a esa función. Una misma necesidad puede expresarse con espontaneidad, prudencia, curiosidad o intensidad según el signo.",
+          example: "Ejemplo: una energía en Tauro avanza con constancia y busca lo concreto.",
         },
         {
-          question: "¿Qué es una longitud bruta?",
-          answer:
-            "Es el valor numérique (0-360°) utilizado para los cálculos. La representación signo + grado es una conversión más legible de ese mismo valor.",
+          cue: "¿Dónde?",
+          title: "La casa",
+          description:
+            "Indica el ámbito de vida donde actúa la energía: identidad, relaciones, hogar, actividad, proyectos o vida colectiva.",
+          example: "Ejemplo: la Casa X destaca la vocación y la vida pública.",
         },
         {
-          question: "¿Qué es una cúspide?",
-          answer:
-            "Es el punto de inicio de una casa. Las cúspides son referencias calculadas sobre el círculo que definen los límites de los sectores (casas).",
-        },
-        {
-          question: "¿Por qué algunas casas parecen extrañas o cruzan el 0°?",
-          answer:
-            "Porque el círculo no tiene un inicio real: 360° y 0° sont el mismo punto. Si una casa empieza cerca del final del círculo, puede continuar después del 0°.",
-        },
-        {
-          question: "¿Para qué sirve el orbe en los aspectos?",
-          answer:
-            "El orbe sirve de tolerancia. Sin orbe, casi ningún aspecto sería exacto. Con el orbe, se incluyen los ángulos próximos a un ángulo de referencia.",
-        },
-        {
-          question: "¿Qué significa el símbolo ℞?",
-          answer:
-            "℞ indica un movimiento retrógrado aparente: visto desde la Tierra, el planeta parece retroceder temporalmente en el zodíaco. Es información de movimiento aparente procedente de las efemérides.",
-        },
-        {
-          question: "¿Por qué se destacan el signo solar y el ascendente?",
-          answer:
-            "Porque son dos referencias muy usadas: una es la posición del Sol (un punto), la otra es un ángulo de las casas (una cúspide). Resumen elementos differentes de la estructura de la carta, sin ser interpretaciones por sí solos.",
+          cue: "¿Qué diálogo?",
+          title: "El aspecto",
+          description:
+            "Conecta dos planetas. Su diálogo puede ser fluido, estimulante o pedir ajustes, como dos personajes que aprenden a tocar juntos.",
+          example: "Ejemplo: una cuadratura crea tensión fértil y un trígono facilita el flujo.",
         },
       ],
+      firstMarkersTitle: "Tus tres primeras referencias",
+      firstMarkersDescription:
+        "Empieza por el Sol para la identidad y el impulso, la Luna para las necesidades emocionales y el Ascendente para la forma de entrar en contacto con el mundo. Abren la lectura, pero ninguno resume a una persona.",
+      partialReadingNote:
+        "Cuando falta la hora de nacimiento, o los datos son incompletos o poco precisos, el Ascendente, las casas, la Luna y algunos aspectos pueden faltar o ser menos fiables. Lee las referencias disponibles como indicios que conviene matizar.",
+      readingPathTitle: "Tu recorrido de lectura",
+      readingPath: [
+        {
+          title: "Lee la síntesis",
+          description: "Te da el hilo general antes de entrar en los detalles.",
+        },
+        {
+          title: "Localiza Sol, Luna y Ascendente",
+          description: "Estas tres entradas sitúan identidad, emociones y presencia.",
+        },
+        {
+          title: "Elige un capítulo",
+          description: "Relaciones, vocación, talentos o crecimiento: empieza por lo que te atraiga.",
+        },
+        {
+          title: "Consulta sus bases astrológicas",
+          description: "Muestran qué posiciones, casas y aspectos sostienen la interpretación.",
+        },
+      ],
+      interpretationTitle: "Cómo construye una idea la lectura",
+      interpretationCards: [
+        {
+          cue: "Zoom",
+          title: "Dominantes y ejes",
+          description:
+            "Una dominante indica que un tema se repite. Un eje conecta dos ámbitos complementarios, como identidad y relación o vida privada y vida pública.",
+          example: "No es un destino fijo: es una zona especialmente iluminada.",
+        },
+        {
+          cue: "Hilo",
+          title: "El regente de una casa",
+          description:
+            "Cada casa comienza en un signo. El planeta asociado a ese signo se convierte en su regente y conecta el ámbito de la casa con otra parte de la carta.",
+          example: "Imagina un guía que lleva la historia de una casa hasta el lugar donde se encuentra.",
+        },
+        {
+          cue: "Equipo",
+          title: "Núcleo, apoyo y matiz",
+          description:
+            "El factor principal sostiene la idea, los apoyos la refuerzan y los matices evitan una lectura demasiado simple. Varias pistas forman cada capítulo.",
+          example: "Como un equipo: un motor, varios apoyos y una voz que modera.",
+        },
+      ],
+      aspectsTitle: "Los aspectos: ni buenos ni malos",
+      aspectsDescription:
+        "Los trígonos y sextiles suelen mostrar lo que fluye con facilidad. Las cuadraturas y oposiciones revelan necesidades que tiran en direcciones distintas. La conjunción mezcla dos energías. Una tensión puede convertirse en fuerza cuando se reconoce y se trabaja.",
+      aspectsExample:
+        "Consejo: cambia «problema» por «diálogo que ajustar». La lectura se vuelve más viva y menos fatalista.",
+      confidenceTitle: "¿Qué significa el nivel de confianza?",
+      confidenceDescription:
+        "Indica hasta qué punto varias pistas astrológicas sostienen un capítulo. Una confianza alta significa que las pistas convergen; no convierte la interpretación en una verdad absoluta sobre ti.",
+      glossaryTitle: "Mini glosario",
+      glossary: [
+        {
+          term: "Dominante",
+          definition: "Un signo, planeta o casa que destaca en varias pistas.",
+        },
+        {
+          term: "Eje",
+          definition: "Dos casas opuestas que invitan a equilibrar dos ámbitos de vida.",
+        },
+        {
+          term: "Regente de casa",
+          definition: "El planeta asociado al signo que abre una casa y prolonga su historia.",
+        },
+        {
+          term: "Orbe",
+          definition: "El margen alrededor del ángulo exacto que permite considerar activo un aspecto.",
+        },
+        {
+          term: "Retrógrado",
+          definition: "El movimiento aparente de un planeta que parece retroceder visto desde la Tierra.",
+        },
+        {
+          term: "Cúspide",
+          definition: "El punto de inicio calculado de una casa en el círculo natal.",
+        },
+      ],
+      closingTip:
+        "Lee tu carta como una conversación, no como un veredicto. Las repeticiones marcan el ritmo y las contradicciones aportan relieve.",
     },
   },
 }

@@ -26,7 +26,7 @@ export function NatalChartPage() {
   const showIntroHeader = viewState !== "completed"
   const natalGuide = (
     <div id="natal-chart-guide">
-      <NatalChartGuide lang={lang} missingBirthTime={Boolean(natalJob.natalReading?.isPartial)} />
+      <NatalChartGuide lang={lang} partialReading={Boolean(natalJob.natalReading?.isPartial)} />
     </div>
   )
 

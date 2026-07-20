@@ -2,14 +2,10 @@
 import { expect, test, type Locator, type Page } from "@playwright/test"
 import { mkdirSync } from "node:fs"
 import { resolve } from "node:path"
+import { fileURLToPath } from "node:url"
 
-const EVIDENCE_DIR = resolve(
-  process.cwd(),
-  "..",
-  "_condamad",
-  "stories",
-  "CS-445-optimiser-page-natal-mobile",
-  "evidence",
+const EVIDENCE_DIR = fileURLToPath(
+  new URL("../../output/playwright/cs-445-natal-mobile/", import.meta.url),
 )
 
 const ACCESS_TOKEN =
@@ -520,6 +516,34 @@ test("garde /natal lisible et non masque a 360, 390 et 430 px", async ({ page })
     await guideToggle.click()
     await expect(guideToggle).toHaveAttribute("aria-expanded", "true")
     await expect(page.locator(".natal-chart-guide__content").first()).toBeVisible()
+    await expect(page.locator(".natal-chart-guide__card-grid--formula .natal-chart-guide__card")).toHaveCount(4)
+    const singleColumnGuideSelectors = [
+      ".natal-chart-guide__card-grid--formula",
+      ".natal-chart-guide__card-grid--interpretation",
+      ".natal-chart-guide__path",
+      ".natal-chart-guide__insights",
+      ".natal-chart-guide__glossary dl",
+    ]
+    for (const selector of singleColumnGuideSelectors) {
+      const guideColumns = await page
+        .locator(selector)
+        .evaluate((element) => window.getComputedStyle(element).gridTemplateColumns)
+      expect(guideColumns.trim().split(/\s+/), selector).toHaveLength(1)
+    }
+    const guideBodyTypography = await page.locator(".natal-chart-guide__card p").first().evaluate((element) => {
+      const styles = window.getComputedStyle(element)
+      return {
+        fontSize: Number.parseFloat(styles.fontSize),
+        lineHeight: Number.parseFloat(styles.lineHeight),
+      }
+    })
+    expect(guideBodyTypography.fontSize).toBeGreaterThanOrEqual(12)
+    expect(guideBodyTypography.lineHeight).toBeGreaterThanOrEqual(18)
+    await expectNoHorizontalOverflow(page)
+    await page.screenshot({
+      path: resolve(EVIDENCE_DIR, `natal-guide-expanded-${viewport.width}.png`),
+      fullPage: true,
+    })
     await guideToggle.click()
     await expect(guideToggle).toHaveAttribute("aria-expanded", "false")
     await expect(page.locator(".natal-chart-guide__content").first()).not.toBeVisible()
@@ -553,21 +577,35 @@ test("conserve les reperes contrastes et distincts en clair, sombre et mobile", 
   const explanationCard = explanationsSection.locator(".natal-reading__chapter--excerpt-toggle").first()
   const explanationToggle = explanationCard.locator(".natal-reading__chapter-toggle")
   const sectionToggle = explanationsSection.getByRole("button", { name: "Masquer les repères" })
+  const guide = page.locator(".natal-chart-guide").first()
+  const guideToggle = guide.locator(".natal-chart-guide__toggle")
   await expect(explanationsSection).toBeVisible()
   await expect(explanationToggle).toHaveAttribute("aria-expanded", "false")
 
   const lightClosedBackground = await explanationCard.evaluate(
     (element) => window.getComputedStyle(element).background,
   )
+  const lightGuideBackground = await guide.evaluate((element) => window.getComputedStyle(element).background)
   await expect
     .poll(() => explanationToggle.evaluate((element) => window.getComputedStyle(element).backgroundColor))
     .toBe("rgb(255, 255, 255)")
   const lightClosedContrast = await readControlContrast(explanationToggle)
   const lightSectionContrast = await readControlContrast(sectionToggle)
+  const lightGuideToggleContrast = await readControlContrast(guideToggle)
   expect(lightClosedContrast.backgroundImage).toBe("none")
   expect(lightSectionContrast.backgroundImage).toBe("none")
   expect(lightClosedContrast.ratio, JSON.stringify(lightClosedContrast)).toBeGreaterThanOrEqual(4.5)
   expect(lightSectionContrast.ratio, JSON.stringify(lightSectionContrast)).toBeGreaterThanOrEqual(4.5)
+  expect(lightGuideToggleContrast.ratio, JSON.stringify(lightGuideToggleContrast)).toBeGreaterThanOrEqual(4.5)
+
+  await guideToggle.click()
+  await expect(guideToggle).toHaveAttribute("aria-expanded", "true")
+  for (const selector of [".natal-chart-guide__eyebrow", ".natal-chart-guide__cue"]) {
+    const labelContrast = await readControlContrast(guide.locator(selector).first())
+    expect(labelContrast.ratio, `${selector}: ${JSON.stringify(labelContrast)}`).toBeGreaterThanOrEqual(4.5)
+  }
+  await guideToggle.click()
+  await expect(guideToggle).toHaveAttribute("aria-expanded", "false")
 
   await explanationToggle.hover()
   await expect
@@ -615,6 +653,22 @@ test("conserve les reperes contrastes et distincts en clair, sombre et mobile", 
   expect(sectionToggleContrast.backgroundImage).toBe("none")
   expect(explanationToggleContrast.ratio, JSON.stringify(explanationToggleContrast)).toBeGreaterThanOrEqual(4.5)
   expect(sectionToggleContrast.ratio, JSON.stringify(sectionToggleContrast)).toBeGreaterThanOrEqual(4.5)
+  await guideToggle.click()
+  await expect(guideToggle).toHaveAttribute("aria-expanded", "true")
+  await expect(guideToggle).toHaveText("Réduire le guide")
+  const darkGuideBackground = await guide.evaluate((element) => window.getComputedStyle(element).background)
+  expect(darkGuideBackground).not.toBe(lightGuideBackground)
+  const darkGuideToggleContrast = await readControlContrast(guideToggle)
+  expect(darkGuideToggleContrast.ratio, JSON.stringify(darkGuideToggleContrast)).toBeGreaterThanOrEqual(4.5)
+  await expect(guide.locator(".natal-chart-guide__card")).toHaveCount(7)
+  for (const selector of [".natal-chart-guide__eyebrow", ".natal-chart-guide__cue"]) {
+    const labelContrast = await readControlContrast(guide.locator(selector).first())
+    expect(labelContrast.ratio, `${selector}: ${JSON.stringify(labelContrast)}`).toBeGreaterThanOrEqual(4.5)
+  }
+  await page.screenshot({
+    path: resolve(EVIDENCE_DIR, "natal-guide-dark-expanded.png"),
+    fullPage: true,
+  })
 
   await explanationToggle.hover()
   await expect
