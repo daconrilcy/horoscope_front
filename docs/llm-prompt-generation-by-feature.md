@@ -22,6 +22,11 @@ Les objectifs de ce pipeline sont :
 
 Le document suit le code réel, pas une architecture cible théorique.
 
+Les chemins `backend/scripts/*` cités plus bas décrivent le périmètre historique
+de la chaîne LLM documentée ici. Dans ce checkout, les wrappers d'orchestration
+opérationnelle visibles au niveau racine restent les scripts PowerShell sous
+`scripts/`.
+
 ## Maintenance de cette documentation
 
 La maintenance de cette documentation est **obligatoire** lors de tout changement du pipeline décrit ici (gateway, assemblies, profils, releases). Les mises à jour doivent rester **traçables** via le bloc « Dernière vérification manuelle » (référence stable, date). En cas d’absence de mise à jour du document alors que le code change, une **justification d’absence de changement** est requise ; l’équipe peut aussi **justifier explicitement** pourquoi le document reste inchangé.
@@ -538,6 +543,10 @@ Artefacts d'environnement produits par cette chaîne :
 
 Ces artefacts ne sont pas des sources de configuration. Ils sont des preuves corrélées, propres à un environnement d'exécution donné.
 
+Le passage de préproduction cité plus bas est un exemple historisé. Il ne doit
+pas être interprété comme la validation durable d'un snapshot unique pour tous
+les runs futurs.
+
 ## Cible validée et ajustements runtime associés
 
 La cible utilisée pour stabiliser la chaîne de promotion est :
@@ -581,7 +590,7 @@ Séquence opératoire minimale désormais attendue avant promotion :
 7. appeler `scripts/activate-llm-release.ps1` contre l'API cible ;
 8. relire `artifacts/llm-activation-response.json` puis `release_health`.
 
-Le dernier passage validé en préproduction a abouti à une activation du snapshot `e2e7191a-b403-42b9-911a-43c6f442420e` (`release-candidate-ready`) avec :
+Le dernier passage historisé en préproduction a abouti à une activation du snapshot `e2e7191a-b403-42b9-911a-43c6f442420e` (`release-candidate-ready`) avec :
 
 - une qualification corrélée `go-with-constraints` à cause d'une latence `p95` supérieure au seuil SLO ;
 - une golden corrélée `pass` ;

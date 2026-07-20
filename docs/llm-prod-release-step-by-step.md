@@ -2,6 +2,10 @@
 
 Ce document est conçu pour un opérateur qui ne connaît pas l'application. Suivre les étapes dans l'ordre exact.
 
+Les commandes `backend/scripts/*` ci-dessous reprennent la chaîne historique de
+release telle qu'elle a été documentée. Vérifier l'arborescence effective du
+checkout avant toute exécution.
+
 ## 1. Préparer l'environnement
 
 Ouvrir PowerShell à la racine du dépôt :
@@ -136,6 +140,7 @@ Get-Content artifacts\llm-activation-response.json
 Attendu :
 
 - `status = active`
+- `candidate_snapshot.id` du lot activé doit correspondre aux preuves de qualification, golden et smoke utilisées pour l'appel
 
 ## 10. Contrôler l'état post-activation
 
@@ -183,4 +188,3 @@ Puis vérifier :
 - ne jamais laisser `<preprod-url>` ou tout autre placeholder dans une commande PowerShell ;
 - ne jamais pousser en prod sur un autre `manifest_entry_id` que celui qualifié ;
 - ne jamais interpréter un artefact local ancien sans regarder son `generated_at`.
-

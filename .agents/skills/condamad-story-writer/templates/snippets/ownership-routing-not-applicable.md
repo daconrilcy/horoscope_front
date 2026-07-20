@@ -1,2 +1,0 @@
-- Ownership routing: not applicable
-- Reason: no responsibility moves or boundary rules are affected.

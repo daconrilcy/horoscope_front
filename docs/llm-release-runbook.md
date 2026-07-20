@@ -12,7 +12,13 @@ Les travaux opérés dans ce dépôt ont été menés sur le manifest cible :
 
 - `natal:interpretation:premium:fr-FR`
 
-Le snapshot candidat utilisé pendant la stabilisation est :
+Le snapshot candidat mentionné ici est un exemple de stabilisation historique.
+Il ne doit pas être confondu avec les artefacts courants du dépôt, qui peuvent
+correspondre à un autre run de release.
+
+Les commandes `backend/scripts/*` ci-dessous reflètent la chaîne historique de
+release documentée ici. Vérifier l'arborescence effective du checkout avant de
+les rejouer.
 
 - `active_snapshot_id`: `e2e7191a-b403-42b9-911a-43c6f442420e`
 - `active_snapshot_version`: `release-candidate-ready`
@@ -60,7 +66,12 @@ Le dossier de preuve standard est constitué de :
 - `artifacts/llm-release-readiness-premium.json`
 - `artifacts/llm-activation-response.json`
 
-Ces fichiers sont des preuves d'environnement. Ils ne doivent pas être utilisés comme référence de configuration dans le code source.
+Ces fichiers sont des preuves d'environnement. Ils ne doivent pas être utilisés
+comme référence de configuration dans le code source.
+
+La réponse d'activation est la réponse brute du endpoint d'activation. Elle peut
+correspondre à un snapshot différent de celui contenu dans un `candidate` local
+si les artefacts ont été produits par des runs séparés.
 
 ## Commandes de construction du dossier de preuve
 
@@ -160,6 +171,7 @@ Succès attendu :
 
 - création de `artifacts/llm-activation-response.json`
 - `status = active`
+- `candidate_snapshot.id` du lot courant corrélé avec les preuves fournies au moment de l'activation
 
 ## Lecture minimale post-activation
 

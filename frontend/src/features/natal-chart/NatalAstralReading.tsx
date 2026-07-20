@@ -33,7 +33,7 @@ import type {
   NatalInterpretationViewModel,
   NatalReadingChapterViewModel,
 } from "./natalAstralReadingViewModel"
-import natalLogoSrc from "../../assets/Natal_Logo02.png"
+import natalLogoSrc from "../../assets/new_astral_wheels.png"
 import { getZodiacIcon } from "../../components/zodiacSignIconMap"
 import { EditorialText } from "../../components/ui/EditorialText/EditorialText"
 import { normalizeSignCode } from "../../i18n/astrology"

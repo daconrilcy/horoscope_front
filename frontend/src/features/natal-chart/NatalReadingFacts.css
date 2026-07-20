@@ -49,7 +49,7 @@
 .natal-reading-facts__header h2 {
   margin: 0;
   color: var(--premium-text-strong);
-  font-size: var(--font-size-lg);
+  font-size: var(--natal-type-section-title-size);
   font-weight: var(--font-weight-bold);
   line-height: var(--type-card-title-line-height);
 }
@@ -59,7 +59,7 @@
   max-width: none;
   margin: 0;
   color: var(--premium-text-main);
-  font-size: var(--font-size-sm);
+  font-size: var(--natal-type-supporting-size);
   line-height: var(--line-height-copy-loose);
 }
 
@@ -83,7 +83,7 @@
   background: color-mix(in srgb, var(--natal-surface-chip) 74%, var(--natal-surface-reading-muted) 26%);
   box-shadow: var(--natal-shadow-block);
   color: var(--premium-accent-purple-strong);
-  font-size: var(--font-size-sm);
+  font-size: var(--natal-type-control-size);
   font-weight: var(--font-weight-strong);
   cursor: pointer;
 }
@@ -101,7 +101,7 @@
   background: color-mix(in srgb, var(--natal-surface-chip) 74%, var(--natal-surface-reading-muted) 26%);
   box-shadow: var(--natal-shadow-block);
   color: var(--premium-accent-purple-strong);
-  font-size: var(--font-size-sm);
+  font-size: var(--natal-type-control-size);
   font-weight: var(--font-weight-strong);
   text-decoration: none;
 }
@@ -246,7 +246,7 @@
 
 .natal-reading-facts__reference dt {
   color: var(--color-text-secondary);
-  font-size: var(--font-size-2xs);
+  font-size: var(--natal-type-metadata-size);
   font-weight: 700;
   letter-spacing: var(--letter-spacing-wide-control);
   line-height: 1.2;
@@ -255,7 +255,7 @@
 
 .natal-reading-facts__reference dd {
   color: var(--color-text-primary);
-  font-size: var(--font-size-md);
+  font-size: var(--natal-type-subsection-title-size);
   font-weight: 800;
   line-height: 1.25;
   overflow-wrap: anywhere;
@@ -341,7 +341,7 @@
 .natal-reading-facts__methods h3 {
   margin: 0;
   color: var(--premium-text-strong);
-  font-size: var(--font-size-lg);
+  font-size: var(--natal-type-card-title-size);
   font-weight: var(--font-weight-bold);
   line-height: var(--type-card-title-line-height);
 }
@@ -384,7 +384,7 @@
 .natal-reading-facts__item dt {
   min-width: 0;
   color: color-mix(in srgb, var(--premium-text-main) 76%, var(--premium-text-meta) 24%);
-  font-size: var(--font-size-xs);
+  font-size: var(--natal-type-metadata-size);
   font-weight: var(--font-weight-bold);
   letter-spacing: var(--letter-spacing-wide-control);
   text-transform: uppercase;
@@ -416,19 +416,19 @@
 }
 
 .natal-reading-facts__item strong {
-  font-size: var(--font-size-sm);
+  font-size: var(--natal-type-subsection-title-size);
   line-height: var(--line-height-normal);
 }
 
 .natal-reading-facts__item span {
   min-width: 0;
   color: var(--premium-text-main);
-  font-size: var(--font-size-xs);
+  font-size: var(--natal-type-supporting-size);
   line-height: var(--line-height-normal);
 }
 
 .natal-reading-facts__group--primary .natal-reading-facts__item strong {
-  font-size: var(--font-size-lg);
+  font-size: var(--natal-type-card-title-size);
   line-height: var(--type-card-title-line-height);
 }
 
@@ -447,7 +447,7 @@
   border: 0;
   background: transparent;
   color: var(--premium-accent-purple-strong);
-  font-size: var(--font-size-sm);
+  font-size: var(--natal-type-control-size);
   font-weight: var(--font-weight-strong);
   cursor: pointer;
 }
@@ -499,7 +499,7 @@
 
 .natal-reading-facts__method dt {
   color: color-mix(in srgb, var(--premium-text-main) 72%, var(--premium-text-meta) 28%);
-  font-size: var(--font-size-2xs);
+  font-size: var(--natal-type-metadata-size);
   font-weight: var(--font-weight-bold);
   letter-spacing: var(--letter-spacing-wide-control);
   text-transform: uppercase;
@@ -516,7 +516,7 @@
 .natal-reading-facts__method span {
   min-width: 0;
   color: var(--premium-text-strong);
-  font-size: var(--font-size-xs);
+  font-size: var(--natal-type-supporting-size);
   line-height: var(--line-height-normal);
   overflow-wrap: anywhere;
 }
@@ -536,7 +536,7 @@
   border-radius: 0 0 var(--natal-radius-section) var(--natal-radius-section);
   background: color-mix(in srgb, var(--natal-surface-reading-muted) 34%, transparent);
   color: var(--premium-text-meta);
-  font-size: var(--font-size-xs);
+  font-size: var(--natal-type-supporting-size);
   line-height: var(--line-height-copy);
   text-align: center;
 }
@@ -602,7 +602,7 @@
   }
 
   .natal-reading-facts__header h2 {
-    font-size: var(--font-size-xl);
+    font-size: var(--natal-type-section-title-size);
     line-height: var(--line-height-display-relaxed);
   }
 

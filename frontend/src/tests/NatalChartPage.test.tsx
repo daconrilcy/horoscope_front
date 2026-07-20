@@ -627,7 +627,7 @@ describe("NatalChartPage", () => {
 
     expect(await screen.findByRole("heading", { name: "Thème natal" })).toBeVisible()
     const heroLogo = container.querySelector(".natal-reading-hero__symbol .natal-reading-hero__logo")
-    expect(heroLogo).toHaveAttribute("src", expect.stringContaining("Natal_Logo02"))
+    expect(heroLogo).toHaveAttribute("src", expect.stringContaining("new_astral_wheels"))
     expect(screen.getByRole("heading", { name: "Base du calcul natal" })).toBeVisible()
     expect(screen.getByRole("link", { name: "Mon profil de base" })).toHaveAttribute("href", "/profile")
     const calculationFactsSection = screen.getByRole("region", { name: "Base du calcul natal" })

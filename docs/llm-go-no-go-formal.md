@@ -10,6 +10,10 @@ Décision formelle pour la promotion du runtime `LLM prompt generation`.
 - version : `release-candidate-ready`
 - manifest cible : `natal:interpretation:premium:fr-FR`
 
+Ce CR formalise un passage historique de préproduction. Il ne doit pas être
+réutilisé tel quel pour un autre snapshot sans recalculer les preuves
+corrélées.
+
 ## Preuves retenues
 
 - qualification corrélée : `go-with-constraints`
@@ -51,4 +55,3 @@ La promotion production est autorisable si l'équipe d'exploitation accepte expl
 - surveiller la latence `p95` après activation ;
 - déclencher rollback si les seuils `release_health` sont franchis ;
 - ne pas réutiliser ce CR pour un autre snapshot.
-

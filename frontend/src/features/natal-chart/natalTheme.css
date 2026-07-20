@@ -56,10 +56,13 @@
   --natal-tone-ascendant: var(--premium-accent-purple-strong);
   --natal-tone-status: var(--color-cta-right);
   --natal-type-page-title-size: var(--type-page-title-size);
-  --natal-type-section-title-size: var(--font-size-xl);
+  --natal-type-section-title-size: var(--font-size-2xl);
   --natal-type-card-title-size: var(--font-size-lg);
-  --natal-type-subsection-title-size: var(--font-size-sm);
+  --natal-type-subsection-title-size: var(--font-size-md);
   --natal-type-body-size: var(--type-body-size);
+  --natal-type-supporting-size: var(--type-body-muted-size);
+  --natal-type-metadata-size: var(--type-metadata-size);
+  --natal-type-control-size: var(--type-label-size);
   --natal-type-body-line-height: var(--line-height-prose);
   --natal-type-reading-text-size: var(--natal-type-body-size);
   --natal-type-reading-text-weight: var(--type-body-weight);
@@ -147,6 +150,14 @@
       --natal-surface-data: color-mix(in srgb, var(--color-token-rgb-255-255-255) 28%, transparent);
       --natal-surface-data-strong: color-mix(in srgb, var(--premium-accent-purple-strong) 4%, var(--premium-glass-surface-2));
       --natal-surface-chip: color-mix(in srgb, var(--premium-accent-purple-strong) 4%, var(--premium-glass-surface-2));
+      --natal-type-page-title-size: var(--font-size-2xl);
+      --natal-type-section-title-size: var(--font-size-xl);
+      --natal-type-card-title-size: var(--font-size-lg);
+      --natal-type-subsection-title-size: var(--font-size-md);
+      --natal-type-body-size: var(--font-size-sm);
+      --natal-type-supporting-size: var(--font-size-sm);
+      --natal-type-metadata-size: var(--font-size-xs);
+      --natal-type-control-size: var(--font-size-sm);
       --natal-type-reading-text-size: var(--font-size-sm);
     }
 

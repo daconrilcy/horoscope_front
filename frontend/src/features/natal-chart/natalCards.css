@@ -62,7 +62,7 @@
 .natal-section-eyebrow {
   display: block;
   margin-bottom: 6px;
-  font-size: var(--font-size-2xs);
+  font-size: var(--natal-type-metadata-size);
   font-weight: var(--font-weight-strong);
   color: var(--premium-text-meta);
   text-transform: uppercase;
@@ -88,7 +88,7 @@
 
   .natal-section-eyebrow {
       margin-bottom: 4px;
-      font-size: var(--font-size-3xs);
+      font-size: var(--natal-type-metadata-size);
       letter-spacing: var(--letter-spacing-wide-control);
     }
 }

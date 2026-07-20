@@ -439,12 +439,13 @@ test("garde /natal lisible et non masque a 360, 390 et 430 px", async ({ page })
     const chapterNavGap = await page.evaluate(() => {
       const excerpt = document.querySelector(".natal-reading__chapter-excerpt")?.getBoundingClientRect()
       const nav = document.querySelector(".bottom-nav")?.getBoundingClientRect()
+      const lowerBoundary = nav && nav.height > 0 ? nav.top : window.innerHeight
       return {
         excerptBottom: excerpt?.bottom ?? 0,
-        navTop: nav?.top ?? 0,
+        lowerBoundary,
       }
     })
-    expect(chapterNavGap.navTop - chapterNavGap.excerptBottom).toBeGreaterThanOrEqual(12)
+    expect(chapterNavGap.lowerBoundary - chapterNavGap.excerptBottom).toBeGreaterThanOrEqual(12)
 
     await metaToggle.click()
     await expect(metaToggle).toHaveAttribute("aria-expanded", "false")
@@ -475,8 +476,9 @@ test("garde /natal lisible et non masque a 360, 390 et 430 px", async ({ page })
       const nav = document.querySelector(".bottom-nav")
       const guideBox = guide?.getBoundingClientRect()
       const navBox = nav?.getBoundingClientRect()
-      if (!guideBox || !navBox) return 0
-      return navBox.top - guideBox.bottom
+      if (!guideBox) return 0
+      const lowerBoundary = navBox && navBox.height > 0 ? navBox.top : window.innerHeight
+      return lowerBoundary - guideBox.bottom
     })
     expect(bottomGap).toBeGreaterThanOrEqual(8)
 

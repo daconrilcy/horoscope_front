@@ -29,7 +29,7 @@
   margin: 0;
   min-width: 0;
   flex: 1 1 auto;
-  font-size: var(--font-size-lg);
+  font-size: var(--natal-type-section-title-size);
   font-weight: var(--type-section-title-weight);
   line-height: var(--type-section-title-line-height);
   color: var(--premium-text-strong);
@@ -43,7 +43,7 @@
   border-radius: var(--natal-radius-badge);
   background: color-mix(in srgb, var(--premium-accent-purple-strong) 6%, var(--natal-surface-chip));
   color: var(--premium-accent-purple-strong);
-  font-size: var(--font-size-xs);
+  font-size: var(--natal-type-control-size);
   font-weight: var(--font-weight-bold);
   cursor: pointer;
 }
@@ -158,24 +158,24 @@
     }
 
   .natal-chart-guide__title {
-      font-size: var(--font-size-md);
-      line-height: var(--type-label-line-height);
+      font-size: var(--natal-type-section-title-size);
+      line-height: var(--type-section-title-line-height);
     }
 
   .natal-chart-guide__toggle {
       min-height: 46px;
       padding: 0 14px;
-      font-size: var(--font-size-xs);
+      font-size: var(--natal-type-control-size);
       line-height: var(--type-label-line-height);
     }
 
   .natal-chart-guide__content {
-      font-size: var(--font-size-xs);
+      font-size: var(--natal-type-body-size);
       line-height: var(--line-height-relaxed);
     }
 
   .natal-chart-guide__section p {
-      font-size: var(--font-size-xs);
+      font-size: var(--natal-type-body-size);
       line-height: var(--line-height-relaxed);
     }
 }

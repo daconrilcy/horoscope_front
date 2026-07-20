@@ -117,7 +117,7 @@ body:has(.is-natal-page) .app-header-actions {
 
 .natal-page-header__meta {
   display: block;
-  font-size: var(--font-size-2xs);
+  font-size: var(--natal-type-metadata-size);
   font-weight: var(--font-weight-strong);
   color: var(--premium-text-meta);
   text-transform: uppercase;
@@ -137,7 +137,7 @@ body:has(.is-natal-page) .app-header-actions {
 .natal-page-header__context {
   max-width: 62ch;
   margin: 0;
-  font-size: var(--font-size-md);
+  font-size: var(--natal-type-body-size);
   line-height: var(--line-height-relaxed);
   color: var(--premium-text-main);
 }
@@ -188,7 +188,7 @@ body:has(.is-natal-page) .app-header-actions {
   margin: 0;
   overflow: hidden;
   color: var(--premium-text-main);
-  font-size: var(--font-size-md);
+  font-size: var(--natal-type-body-size);
   line-height: var(--line-height-prose);
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 3;
@@ -219,7 +219,7 @@ body:has(.is-natal-page) .app-header-actions {
 
 .natal-page-portrait__label {
   color: var(--premium-text-meta);
-  font-size: var(--font-size-2xs);
+  font-size: var(--natal-type-metadata-size);
   font-weight: var(--font-weight-bold);
   letter-spacing: var(--letter-spacing-wide-control);
   text-transform: uppercase;
@@ -227,13 +227,13 @@ body:has(.is-natal-page) .app-header-actions {
 
 .natal-page-portrait__fact strong {
   color: var(--premium-text-strong);
-  font-size: var(--font-size-sm);
+  font-size: var(--natal-type-subsection-title-size);
   line-height: var(--type-label-line-height);
 }
 
 .natal-page-portrait__detail {
   color: var(--premium-text-meta);
-  font-size: var(--font-size-2xs);
+  font-size: var(--natal-type-metadata-size);
   line-height: var(--line-height-normal);
 }
 
@@ -255,7 +255,7 @@ body:has(.is-natal-page) .app-header-actions {
     }
 
   .natal-page-header__title {
-      font-size: var(--font-size-xl);
+      font-size: var(--natal-type-page-title-size);
       line-height: var(--type-section-title-line-height);
     }
 
@@ -265,7 +265,7 @@ body:has(.is-natal-page) .app-header-actions {
     }
 
   .natal-page-header__context {
-      font-size: var(--font-size-sm);
+      font-size: var(--natal-type-body-size);
       line-height: var(--line-height-normal);
     }
 
@@ -282,7 +282,7 @@ body:has(.is-natal-page) .app-header-actions {
     }
 
   .natal-page-portrait__copy p {
-      font-size: var(--font-size-xs);
+      font-size: var(--natal-type-body-size);
       line-height: var(--line-height-normal);
       -webkit-line-clamp: 3;
       line-clamp: 3;
@@ -304,11 +304,11 @@ body:has(.is-natal-page) .app-header-actions {
 
   .natal-page-portrait__label,
   .natal-page-portrait__detail {
-      font-size: var(--font-size-2xs);
+      font-size: var(--natal-type-metadata-size);
     }
 
   .natal-page-portrait__fact strong {
-      font-size: var(--font-size-xs);
+      font-size: var(--natal-type-subsection-title-size);
     }
 
 }

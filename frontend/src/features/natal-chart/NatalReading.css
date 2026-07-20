@@ -22,8 +22,8 @@
 .natal-reading-hero {
   position: relative;
   display: grid;
-  grid-template-columns: 158px minmax(0, 1fr);
-  gap: 28px;
+  grid-template-columns: 228px minmax(0, 1fr);
+  gap: 34px;
   align-items: center;
   min-width: 0;
   padding: 34px 38px;
@@ -79,37 +79,36 @@
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
-  width: 130px;
-  height: 130px;
-  border: 1px solid var(--natal-border-liquid-bright, var(--natal-border-section));
-  border-radius: calc(var(--natal-radius-section) + 4px);
-  background:
-    radial-gradient(circle at center, color-mix(in srgb, var(--premium-accent-purple-strong) 16%, transparent) 0 32%, transparent 56%),
-    linear-gradient(135deg, color-mix(in srgb, var(--color-token-rgb-255-255-255) 82%, transparent), transparent 62%),
-    var(--natal-surface-glass-lifted, var(--natal-panel-background));
+  width: 220px;
+  height: 220px;
   color: var(--premium-accent-purple-strong);
-  box-shadow:
-    var(--natal-inner-highlight),
-    0 18px 44px color-mix(in srgb, var(--premium-accent-purple-strong) 12%, transparent);
-  backdrop-filter: var(--natal-glass-filter);
-  -webkit-backdrop-filter: var(--natal-glass-filter);
 }
 
 .natal-reading-hero__symbol::before {
   content: "";
   position: absolute;
-  inset: 12px;
+  inset: 4%;
   border-radius: var(--radius-full);
-  background: radial-gradient(circle, color-mix(in srgb, var(--premium-accent-purple-strong) 16%, transparent), transparent 68%);
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--premium-accent-purple-strong) 14%, transparent) 0 42%,
+    transparent 72%
+  );
+  filter: blur(18px);
   pointer-events: none;
 }
 
 .natal-reading-hero__logo {
+  position: relative;
+  z-index: 1;
   display: block;
-  width: 100px;
-  height: 100px;
+  width: 220px;
+  height: 220px;
+  border-radius: var(--radius-full);
   object-fit: contain;
-  filter: drop-shadow(0 10px 16px color-mix(in srgb, var(--premium-text-strong) 10%, transparent));
+  filter:
+    drop-shadow(0 18px 26px color-mix(in srgb, var(--premium-accent-purple-strong) 16%, transparent))
+    drop-shadow(0 3px 8px color-mix(in srgb, var(--premium-text-strong) 8%, transparent));
 }
 
 .natal-reading-hero__content {
@@ -131,7 +130,7 @@
   flex-wrap: wrap;
   gap: 8px;
   color: var(--premium-text-meta);
-  font-size: var(--font-size-2xs);
+  font-size: var(--natal-type-metadata-size);
   font-weight: var(--font-weight-semibold);
 }
 
@@ -144,7 +143,7 @@
 .natal-reading-hero h1 {
   margin: 0;
   color: var(--premium-text-strong);
-  font-size: clamp(2.45rem, 4.2vw, 4.15rem);
+  font-size: var(--natal-type-page-title-size);
   font-weight: var(--type-page-title-weight);
   letter-spacing: 0;
   line-height: var(--type-page-title-line-height);
@@ -155,7 +154,7 @@
   max-width: 74ch;
   margin: 0;
   color: var(--premium-text-main);
-  font-size: var(--font-size-md);
+  font-size: var(--natal-type-body-size);
   line-height: var(--line-height-prose);
 }
 
@@ -224,7 +223,7 @@
 .natal-reading-metrics__detail {
   min-width: 0;
   color: color-mix(in srgb, var(--premium-text-meta) 84%, var(--premium-text-strong) 16%);
-  font-size: var(--font-size-2xs);
+  font-size: var(--natal-type-metadata-size);
   line-height: var(--line-height-normal);
   overflow-wrap: anywhere;
 }
@@ -243,7 +242,7 @@
   display: block;
   min-width: 0;
   color: var(--premium-text-strong);
-  font-size: var(--font-size-md);
+  font-size: var(--natal-type-subsection-title-size);
   font-weight: var(--font-weight-bold);
   line-height: var(--type-label-line-height);
   overflow-wrap: anywhere;
@@ -293,13 +292,13 @@
 .natal-reading-summary__header h2 {
   margin: 0;
   color: var(--premium-text-strong);
-  font-size: var(--font-size-md);
+  font-size: var(--natal-type-card-title-size);
   line-height: var(--type-label-line-height);
 }
 
 .natal-reading-summary__header span {
   color: var(--premium-accent-purple-strong);
-  font-size: var(--font-size-2xs);
+  font-size: var(--natal-type-metadata-size);
   font-weight: var(--font-weight-bold);
 }
 
@@ -395,7 +394,7 @@
   border-radius: var(--radius-full);
   background: var(--natal-theme-color, var(--premium-accent-purple-strong));
   color: var(--color-token-rgb-255-255-255);
-  font-size: var(--font-size-md);
+  font-size: var(--natal-type-subsection-title-size);
   font-weight: var(--font-weight-bold);
   box-shadow: 0 8px 18px color-mix(in srgb, var(--natal-theme-color, var(--premium-accent-purple-strong)) 24%, transparent);
 }
@@ -434,7 +433,7 @@
 
 .natal-reading-summary__title {
   color: var(--premium-text-strong);
-  font-size: var(--font-size-xs);
+  font-size: var(--natal-type-metadata-size);
   font-weight: var(--font-weight-bold);
   line-height: var(--type-label-line-height);
 }
@@ -442,7 +441,7 @@
 .natal-reading-summary__excerpt {
   display: -webkit-box;
   color: color-mix(in srgb, var(--natal-text-reading-muted) 82%, transparent);
-  font-size: var(--font-size-2xs);
+  font-size: var(--natal-type-metadata-size);
   line-height: var(--line-height-normal);
   overflow: hidden;
   -webkit-box-orient: vertical;
@@ -478,7 +477,7 @@
   border-radius: var(--natal-radius-block);
   background: color-mix(in srgb, var(--natal-surface-chip) 70%, transparent);
   color: var(--premium-text-strong);
-  font-size: var(--font-size-sm);
+  font-size: var(--natal-type-control-size);
   font-weight: var(--font-weight-bold);
   text-decoration: none;
 }
@@ -574,7 +573,7 @@
   border-radius: var(--natal-radius-badge);
   background: var(--natal-badge-meta-surface);
   color: var(--natal-text-reading-muted);
-  font-size: var(--font-size-2xs);
+  font-size: var(--natal-type-metadata-size);
   font-weight: var(--font-weight-semibold);
   line-height: var(--line-height-normal);
   text-align: left;
@@ -591,7 +590,7 @@
   border-radius: var(--radius-full);
   background: color-mix(in srgb, var(--premium-text-meta) 8%, var(--natal-surface-block));
   color: var(--premium-text-meta);
-  font-size: var(--font-size-3xs);
+  font-size: var(--natal-type-metadata-size);
   font-weight: var(--font-weight-bold);
 }
 
@@ -790,7 +789,7 @@
   border: 1px solid var(--natal-badge-meta-border);
   border-radius: var(--natal-radius-badge);
   color: var(--natal-text-reading-muted);
-  font-size: var(--font-size-2xs);
+  font-size: var(--natal-type-metadata-size);
   font-weight: var(--font-weight-semibold);
   white-space: nowrap;
 }
@@ -864,7 +863,7 @@
 
 .natal-reading__chapter-excerpt-label {
   color: var(--premium-text-strong);
-  font-size: var(--font-size-2xs);
+  font-size: var(--natal-type-metadata-size);
   font-weight: var(--font-weight-bold);
   letter-spacing: 0;
   line-height: var(--line-height-normal);
@@ -973,7 +972,7 @@
   min-height: 32px;
   padding: 0 12px;
   border-radius: var(--natal-radius-badge);
-  font-size: var(--font-size-xs);
+  font-size: var(--natal-type-control-size);
   font-weight: var(--font-weight-bold);
   cursor: pointer;
 }
@@ -1082,7 +1081,7 @@
 
 .natal-reading__precision-note {
   color: var(--premium-text-meta);
-  font-size: var(--font-size-xs);
+  font-size: var(--natal-type-supporting-size);
   font-weight: var(--font-weight-semibold);
 }
 
@@ -1116,7 +1115,7 @@
   padding: 0 0 8px;
   border-bottom: 1px solid color-mix(in srgb, var(--natal-theme-color, var(--premium-accent-purple-strong)) 18%, transparent);
   color: var(--premium-text-strong);
-  font-size: var(--font-size-xs);
+  font-size: var(--natal-type-metadata-size);
   font-weight: var(--font-weight-bold);
   letter-spacing: 0;
   line-height: var(--line-height-normal);
@@ -1142,12 +1141,12 @@
 }
 
 .natal-reading__safety {
-  font-size: var(--font-size-xs);
+  font-size: var(--natal-type-supporting-size);
   color: var(--natal-text-reading-muted);
 }
 
 .natal-reading__disclaimer {
-  font-size: var(--font-size-xs);
+  font-size: var(--natal-type-supporting-size);
   color: var(--natal-text-reading-muted);
 }
 
@@ -1225,16 +1224,16 @@
   .natal-reading-hero__symbol {
       width: 64px;
       height: 64px;
-      border-radius: var(--radius-lg);
     }
 
   .natal-reading-hero__logo {
-      width: 48px;
-      height: 48px;
+      width: 64px;
+      height: 64px;
+      filter: drop-shadow(0 6px 10px color-mix(in srgb, var(--premium-accent-purple-strong) 14%, transparent));
     }
 
   .natal-reading-hero h1 {
-      font-size: var(--font-size-xl);
+      font-size: var(--natal-type-page-title-size);
       line-height: var(--type-section-title-line-height);
     }
 
@@ -1244,7 +1243,7 @@
       -webkit-line-clamp: 5;
       line-clamp: 5;
       overflow: hidden;
-      font-size: var(--font-size-sm);
+      font-size: var(--natal-type-body-size);
       line-height: var(--line-height-normal);
     }
 
@@ -1291,7 +1290,7 @@
     }
 
   .natal-reading-summary__header h2 {
-      font-size: var(--font-size-sm);
+      font-size: var(--natal-type-card-title-size);
     }
 
   .natal-reading-summary__header span {
@@ -1331,13 +1330,13 @@
   .natal-reading-summary__index {
       width: 22px;
       height: 22px;
-      font-size: var(--font-size-2xs);
+      font-size: var(--natal-type-metadata-size);
     }
 
   .natal-reading-summary__title {
       display: -webkit-box;
       overflow: hidden;
-      font-size: var(--font-size-3xs);
+      font-size: var(--natal-type-metadata-size);
       line-height: 1.15;
       white-space: normal;
       -webkit-box-orient: vertical;
@@ -1348,7 +1347,7 @@
   .natal-reading-summary__guide {
       min-height: 32px;
       margin: 2px 6px 6px;
-      font-size: var(--font-size-xs);
+      font-size: var(--natal-type-control-size);
     }
 
   .natal-reading__summary {
@@ -1368,19 +1367,19 @@
     }
 
   .natal-reading__header h2 {
-      font-size: var(--font-size-17);
-      line-height: var(--type-label-line-height);
+      font-size: var(--natal-type-section-title-size);
+      line-height: var(--type-section-title-line-height);
     }
 
   .natal-reading__header p,
     .natal-reading__safety,
     .natal-reading__disclaimer {
-      font-size: var(--font-size-sm);
+      font-size: var(--natal-type-body-size);
       line-height: var(--line-height-relaxed);
     }
 
   .natal-reading__chapter-body p {
-      font-size: var(--font-size-sm);
+      font-size: var(--natal-type-reading-text-size);
       line-height: var(--line-height-copy-loose);
     }
 
@@ -1419,7 +1418,7 @@
       max-width: 100%;
       min-height: 44px;
       padding: 6px 10px 6px 8px;
-      font-size: var(--font-size-2xs);
+      font-size: var(--natal-type-metadata-size);
       white-space: nowrap;
       overflow: hidden;
     }
@@ -1481,7 +1480,7 @@
     }
 
   .natal-reading__chapter-head h3 {
-      font-size: var(--font-size-lg);
+      font-size: var(--natal-type-card-title-size);
       line-height: var(--type-label-line-height);
     }
 
@@ -1509,7 +1508,7 @@
   .natal-reading__chapter-index {
       width: 32px;
       height: 32px;
-      font-size: var(--font-size-sm);
+      font-size: var(--natal-type-subsection-title-size);
     }
 
   .natal-reading__chapter-time {
@@ -1544,7 +1543,7 @@
     }
 
   .natal-reading__chapter-excerpt-label {
-      font-size: var(--font-size-3xs);
+      font-size: var(--natal-type-metadata-size);
     }
 
   .natal-reading__main {
@@ -1555,7 +1554,7 @@
   .natal-reading-explanations__toggle {
       min-height: 44px;
       padding: 0 14px;
-      font-size: var(--font-size-xs);
+      font-size: var(--natal-type-control-size);
     }
 
   .natal-reading__meta-toggle {
@@ -1564,12 +1563,12 @@
       justify-content: center;
       min-height: 44px;
       padding: 0 14px;
-      font-size: var(--font-size-xs);
+      font-size: var(--natal-type-control-size);
       scroll-margin-bottom: 148px;
     }
 
   .natal-reading-metrics__detail {
-      font-size: var(--font-size-3xs);
+      font-size: var(--natal-type-metadata-size);
     }
 
   .natal-reading__basis {
@@ -1583,7 +1582,7 @@
 
   .natal-reading__basis-title {
       padding-bottom: 6px;
-      font-size: var(--font-size-2xs);
+      font-size: var(--natal-type-metadata-size);
     }
 
   .natal-reading__basis ul {
@@ -1621,7 +1620,7 @@
     }
 
   .natal-reading-summary__title {
-      font-size: var(--font-size-2xs);
+      font-size: var(--natal-type-metadata-size);
       line-height: 1.16;
     }
 }
@@ -1643,8 +1642,8 @@
     }
 
   .natal-reading-hero__logo {
-      width: 42px;
-      height: 42px;
+      width: 54px;
+      height: 54px;
     }
 
   .natal-reading-hero p {
@@ -1672,12 +1671,12 @@
 
   .natal-reading-metrics__label,
   .natal-reading-metrics__detail {
-      font-size: var(--font-size-3xs);
+      font-size: var(--natal-type-metadata-size);
       line-height: 1.15;
     }
 
   .natal-reading-metrics__item strong {
-      font-size: var(--font-size-xs);
+      font-size: var(--natal-type-subsection-title-size);
       line-height: 1.15;
     }
 }

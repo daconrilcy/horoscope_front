@@ -33,7 +33,7 @@
     linear-gradient(135deg, color-mix(in srgb, var(--color-token-rgb-255-255-255) 54%, transparent), transparent 58%),
     color-mix(in srgb, var(--premium-accent-purple-strong) 14%, var(--natal-badge-status-surface));
   color: var(--premium-text-strong);
-  font-size: var(--font-size-xs);
+  font-size: var(--natal-type-metadata-size);
   font-weight: var(--font-weight-bold);
   letter-spacing: 0;
   text-transform: uppercase;
@@ -53,7 +53,7 @@
     linear-gradient(135deg, color-mix(in srgb, var(--color-token-rgb-255-255-255) 46%, transparent), transparent 64%),
     color-mix(in srgb, var(--natal-theme-color, var(--premium-accent-purple-strong)) 16%, var(--natal-surface-glass-lifted));
   color: var(--premium-text-strong);
-  font-size: var(--font-size-2xs);
+  font-size: var(--natal-type-metadata-size);
   font-weight: var(--font-weight-bold);
   letter-spacing: 0;
   text-transform: none;
@@ -100,6 +100,7 @@
   border-color: var(--natal-badge-key-border);
   background: color-mix(in srgb, var(--natal-badge-key-surface) 88%, transparent);
   color: var(--premium-text-strong);
+  font-size: var(--natal-type-metadata-size);
 }
 
 .natal-badge--astro-sign {
@@ -123,7 +124,7 @@
   border-color: var(--natal-badge-detail-border);
   background: color-mix(in srgb, var(--natal-badge-detail-surface) 82%, transparent);
   color: var(--premium-text-meta);
-  font-size: var(--font-size-2xs);
+  font-size: var(--natal-type-metadata-size);
 }
 
 .natal-badge--astro-intensity {
@@ -138,7 +139,7 @@
   border-radius: var(--natal-radius-badge);
   background: color-mix(in srgb, var(--natal-theme-color, var(--premium-accent-purple-strong)) 5%, var(--natal-surface-glass-lifted));
   color: color-mix(in srgb, var(--premium-text-main) 86%, var(--premium-text-meta));
-  font-size: var(--font-size-2xs);
+  font-size: var(--natal-type-metadata-size);
   font-weight: var(--font-weight-semibold);
   box-shadow: var(--natal-inner-highlight);
 }
@@ -147,26 +148,26 @@
   .natal-badge--report-status {
       min-height: 26px;
       padding: 3px 10px;
-      font-size: var(--font-size-2xs);
+      font-size: var(--natal-type-metadata-size);
     }
 
   .natal-badge--astro-data {
       min-height: 28px;
       padding: 4px 8px;
       border-radius: var(--radius-control);
-      font-size: var(--font-size-2xs);
+      font-size: var(--natal-type-metadata-size);
     }
 
   .natal-badge--fact-detail {
       min-height: 24px;
       padding: 3px 7px;
-      font-size: var(--font-size-2xs);
+      font-size: var(--natal-type-metadata-size);
     }
 
   .natal-badge--confidence {
       min-height: 26px;
       padding: 3px 10px 3px 12px;
-      font-size: var(--font-size-3xs);
+      font-size: var(--natal-type-metadata-size);
       letter-spacing: 0;
     }
 

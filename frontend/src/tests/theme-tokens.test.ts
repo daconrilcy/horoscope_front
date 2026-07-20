@@ -30,6 +30,18 @@ const natalReadingCssContent = fs.readFileSync(
   path.resolve(__dirname, "../features/natal-chart/NatalReading.css"),
   "utf-8",
 )
+const natalThemeCssContent = fs.readFileSync(
+  path.resolve(__dirname, "../features/natal-chart/natalTheme.css"),
+  "utf-8",
+)
+const natalPublicTypographyCssContent = [
+  "../features/natal-chart/natalBadges.css",
+  "../features/natal-chart/natalCards.css",
+  "../features/natal-chart/NatalJobCard.css",
+  "../features/natal-chart/NatalReading.css",
+  "../features/natal-chart/NatalReadingFacts.css",
+  "../components/NatalChartGuide.css",
+].map((cssPath) => fs.readFileSync(path.resolve(__dirname, cssPath), "utf-8")).join("\n")
 const natalCssContent = natalCssPaths.map((cssPath) => fs.readFileSync(path.resolve(__dirname, cssPath), "utf-8")).join("\n")
 
 function escapeRegex(value: string): string {
@@ -239,6 +251,27 @@ describe("theme.css validation (Static Analysis)", () => {
     expect(natalCssContent).toMatch(/\.natal-data-card\s*\{[\s\S]*background:\s*var\(--natal-surface-block\)/)
     expect(natalCssContent).toMatch(
       /\.natal-reading-facts \.natal-reading-facts__marker,\s*\.natal-reading-facts \.natal-reading-facts__item-icon,\s*\.natal-reading-facts \.natal-reading-facts__method-icon,\s*\.natal-reading-facts \.natal-reading-facts__notice svg\s*\{[\s\S]*color:\s*var\(--premium-accent-purple-strong\)/,
+    )
+  })
+
+  it("standardise la typographie publique de /natal sur des roles stables en desktop et mobile", () => {
+    expect(natalThemeCssContent).toContain("--natal-type-section-title-size: var(--font-size-2xl)")
+    expect(natalThemeCssContent).toContain("--natal-type-card-title-size: var(--font-size-lg)")
+    expect(natalThemeCssContent).toContain("--natal-type-body-size: var(--type-body-size)")
+    expect(natalThemeCssContent).toContain("--natal-type-supporting-size: var(--type-body-muted-size)")
+    expect(natalThemeCssContent).toContain("--natal-type-metadata-size: var(--type-metadata-size)")
+    expect(natalThemeCssContent).toContain("--natal-type-control-size: var(--type-label-size)")
+    expect(natalThemeCssContent).toMatch(
+      /@media \(max-width: 768px\)\s*\{[\s\S]*--natal-type-page-title-size:\s*var\(--font-size-2xl\)[\s\S]*--natal-type-section-title-size:\s*var\(--font-size-xl\)[\s\S]*--natal-type-body-size:\s*var\(--font-size-sm\)[\s\S]*--natal-type-metadata-size:\s*var\(--font-size-xs\)/,
+    )
+    expect(natalPublicTypographyCssContent).not.toMatch(
+      /font-size:\s*var\(--font-size-(?:3xs|2xs|13|15|17|19|21|22|30|38|52)\)/,
+    )
+    expect(natalReadingCssContent).toMatch(
+      /\.natal-reading-hero h1\s*\{[\s\S]*font-size:\s*var\(--natal-type-page-title-size\)/,
+    )
+    expect(natalReadingCssContent).toMatch(
+      /\.natal-reading__chapter-head h3\s*\{[\s\S]*font-size:\s*var\(--natal-type-card-title-size\)/,
     )
   })
 
