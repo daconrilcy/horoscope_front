@@ -5,6 +5,7 @@ import { NatalJobCard } from "../features/natal-chart/NatalJobCard"
 import { resolveNatalJobViewState } from "../features/natal-chart/natalJobViewState"
 import { useNatalAstralJob } from "../features/natal-chart/useNatalAstralJob"
 import { NatalChartGuide } from "../components/NatalChartGuide"
+import { EditorialText } from "../components/ui/EditorialText/EditorialText"
 import { useAstrologyLabels } from "../i18n/astrology"
 import { natalChartTranslations } from "../i18n/natalChart"
 import "../features/natal-chart/natalTheme.css"
@@ -37,7 +38,9 @@ export function NatalChartPage() {
         <header className="natal-page-header">
           <span className="natal-page-header__meta">{copy.meta}</span>
           <h1 className="natal-page-header__title">{copy.title}</h1>
-          <p className="natal-page-header__context">{copy.context}</p>
+          <p className="natal-page-header__context">
+            <EditorialText text={copy.context} />
+          </p>
         </header>
       ) : null}
 

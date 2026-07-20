@@ -414,11 +414,11 @@
   --app-mobile-nav-radius: 24px;
   --app-mobile-nav-padding: 10px;
   --app-bottom-nav-item-radius: 18px;
-  --app-button-radius: var(--radius-lg);
-  --app-button-shadow: 4px 4px 12px rgba(0, 0, 0, 0.12), inset -4px -4px 12px rgba(0, 0, 0, 0.12);
-  --app-button-hover-shadow: 0 8px 12px rgba(46, 200, 255, 0.3);
-  --app-button-border: rgba(var(--color-primary-rgb), 0.5);
-  --app-button-bg: linear-gradient(170deg, rgba(var(--color-primary-rgb), 0.1) 0%, rgba(var(--color-primary-rgb), 0.3) 100%);
+  --app-button-radius: var(--radius-md);
+  --app-button-shadow: var(--shadow-inset-light), var(--glass-card-mini-shadow);
+  --app-button-hover-shadow: var(--shadow-inset-light), var(--glass-card-shortcut-shadow);
+  --app-button-border: var(--premium-glass-border-strong);
+  --app-button-bg: var(--glass-card-premium-bg);
   --app-state-success-surface: rgba(0, 211, 167, 0.12);
   --app-state-success-border: rgba(0, 211, 167, 0.45);
   --app-state-loading-surface: rgba(18, 24, 50, 0.62);

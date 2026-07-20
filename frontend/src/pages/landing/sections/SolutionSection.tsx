@@ -1,4 +1,5 @@
 import { Calendar, MessageCircle, Sparkles } from "lucide-react"
+import { EditorialText } from "../../../components/ui/EditorialText/EditorialText"
 import { useTranslation } from "../../../i18n"
 import "./SolutionSection.css"
 
@@ -37,7 +38,9 @@ export const SolutionSection = () => {
       <div className="solution-section__heading">
         <span className="solution-section__eyebrow">{t.solution.eyebrow}</span>
         <h2 id="solution-title">{t.solution.title}</h2>
-        <p>{t.solution.subtitle}</p>
+        <p>
+          <EditorialText text={t.solution.subtitle} />
+        </p>
       </div>
 
       <div className="solution-container">
@@ -50,7 +53,9 @@ export const SolutionSection = () => {
 
             <div className="solution-card-content">
               <h3>{step.title}</h3>
-              <p>{step.desc}</p>
+              <p>
+                <EditorialText text={step.desc} />
+              </p>
             </div>
 
             <div className="solution-card-example">{step.example}</div>

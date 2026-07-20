@@ -1,6 +1,7 @@
 import { Mail } from "lucide-react"
 import { Link } from "react-router-dom"
 import { useTranslation } from "../../../i18n"
+import { EditorialText } from "../../../components/ui/EditorialText/EditorialText"
 import logo from "../../../assets/logo.PNG"
 import "./LandingFooter.css"
 
@@ -39,7 +40,9 @@ export const LandingFooter = () => {
             <img src={logo} alt="" width="34" height="34" loading="lazy" />
             <span className="landing-footer__logo-text">Astrorizon</span>
           </Link>
-          <p className="landing-footer__desc">{t.footer.desc}</p>
+          <p className="landing-footer__desc">
+            <EditorialText text={t.footer.desc} />
+          </p>
         </div>
 
         <div className="landing-footer__column">

@@ -2,6 +2,7 @@
 import { ArrowRight, Check, Clock3, MessageCircleMore, ShieldCheck, Sparkles, Star } from "lucide-react"
 import { Link } from "react-router-dom"
 import { Button } from "../../../components/ui/Button/Button"
+import { EditorialText } from "../../../components/ui/EditorialText/EditorialText"
 import { useAnalytics } from "../../../hooks/useAnalytics"
 import { useTranslation } from "../../../i18n"
 
@@ -24,7 +25,9 @@ export const HeroSection = () => {
           <span className="hero-title__lead">{t.hero.titleLead}</span>
           <span className="hero-title__accent">{t.hero.titleAccent}</span>
         </h1>
-        <p className="hero-subtitle">{t.hero.subtitle}</p>
+        <p className="hero-subtitle">
+          <EditorialText text={t.hero.subtitle} />
+        </p>
 
         <ul className="hero-bullets">
           <li className="hero-bullet-item">

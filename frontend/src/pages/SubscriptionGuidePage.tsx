@@ -11,6 +11,7 @@ import {
 } from "@api/billing"
 import { useEntitlementsSnapshot } from "@hooks/useEntitlementSnapshot"
 import { Button, SkeletonGroup, ErrorState, EmptyState } from "@ui"
+import { EditorialText } from "../components/ui/EditorialText/EditorialText"
 import { formatCurrencyCents } from "@utils/formatPrice"
 import "./HelpPage.css"
 
@@ -86,8 +87,12 @@ export function SubscriptionGuidePage() {
           <div className="help-subscriptions-hero-copy">
             <span className="help-subscriptions-hero-kicker">{t.hero.kicker}</span>
             <h1>{t.hero.title}</h1>
-            <p className="help-subscriptions-hero-lead">{t.hero.lead}</p>
-            <p>{t.hero.body}</p>
+            <p className="help-subscriptions-hero-lead">
+              <EditorialText text={t.hero.lead} />
+            </p>
+            <p>
+              <EditorialText text={t.hero.body} />
+            </p>
             <div className="help-subscriptions-hero-actions">
               <Button
                 as={Link}
@@ -205,7 +210,11 @@ function PlanCard({
       <div className="help-subscriptions-plan-header">
         <div className="help-subscriptions-plan-title-block">
           <h2 className="help-subscriptions-plan-name">{planName}</h2>
-          <p className="help-subscriptions-plan-tagline">{t.plans[plan.plan_code]?.tagline}</p>
+          {t.plans[plan.plan_code]?.tagline ? (
+            <p className="help-subscriptions-plan-tagline">
+              <EditorialText text={t.plans[plan.plan_code].tagline} />
+            </p>
+          ) : null}
           <div className="help-subscriptions-plan-badges">
             {plan.processing_priority && (
               <span className={`help-subscriptions-priority-badge help-subscriptions-priority-badge--${plan.processing_priority}`}>
@@ -224,8 +233,14 @@ function PlanCard({
           {t.perMonth}
         </span>
       </div>
-      <p className="help-subscriptions-plan-positioning">{t.plans[plan.plan_code]?.positioning}</p>
-      <p className="help-subscriptions-plan-promise">{promise}</p>
+      {t.plans[plan.plan_code]?.positioning ? (
+        <p className="help-subscriptions-plan-positioning">
+          <EditorialText text={t.plans[plan.plan_code].positioning} />
+        </p>
+      ) : null}
+      <p className="help-subscriptions-plan-promise">
+        <EditorialText text={promise} />
+      </p>
 
       <ul className="help-subscriptions-highlights-list">
         {visibleHighlights.map((highlight) => (
@@ -251,7 +266,7 @@ function PlanCard({
               <h3 className="help-subscriptions-details-title">{t.detailTitles.experience}</h3>
               {detailParagraphs.map((paragraph) => (
                 <p key={`${plan.plan_code}-${paragraph}`} className="help-subscriptions-plan-description">
-                  {paragraph}
+                  <EditorialText text={paragraph} />
                 </p>
               ))}
             </div>
@@ -343,7 +358,7 @@ function EditorialSection({
       </div>
       {section.paragraphs.map((paragraph) => (
         <p key={`${section.title}-${paragraph}`} className="help-subscriptions-editorial-copy">
-          {paragraph}
+          <EditorialText text={paragraph} />
         </p>
       ))}
     </div>

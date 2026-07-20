@@ -8,6 +8,7 @@ import { AstroMoodBackground } from "../astro/AstroMoodBackground"
 import { getZodiacIcon } from "../../components/zodiacSignIconMap"
 import type { ZodiacSign } from "../astro/zodiacPatterns"
 import { getDailyEditorialSummary } from "../../utils/dailySummaryHelper"
+import { EditorialText } from "../ui/EditorialText/EditorialText"
 
 interface Props {
   prediction: DailyPredictionResponse | null
@@ -132,7 +133,7 @@ export const DashboardHoroscopeSummaryCard: React.FC<Props> = ({
               </div>
             )}
             <p className="summary-panel-card__text">
-              {summary}
+              <EditorialText text={summary} />
             </p>
           </div>
 

@@ -26,6 +26,10 @@ const natalCssPaths = [
 const themeContent = fs.readFileSync(designTokensPath, "utf-8") + "\n" + fs.readFileSync(themePath, "utf-8")
 const premiumThemeContent = fs.readFileSync(premiumThemePath, "utf-8")
 const natalChartPageCssContent = fs.readFileSync(natalChartPageCssPath, "utf-8")
+const natalReadingCssContent = fs.readFileSync(
+  path.resolve(__dirname, "../features/natal-chart/NatalReading.css"),
+  "utf-8",
+)
 const natalCssContent = natalCssPaths.map((cssPath) => fs.readFileSync(path.resolve(__dirname, cssPath), "utf-8")).join("\n")
 
 function escapeRegex(value: string): string {
@@ -160,7 +164,41 @@ describe("theme.css validation (Static Analysis)", () => {
     expect(getTokenValue(themeContent, ":root", "--font-family-script")).toBe("var(--font-family-base)")
   })
 
+  it("raccorde la primitive bouton globale aux surfaces liquid glass", () => {
+    const appCssContent = readAppCssSurface()
+    const buttonCssContent = fs.readFileSync(
+      path.resolve(__dirname, "../components/ui/Button/Button.css"),
+      "utf-8",
+    )
+
+    expect(appCssContent).toContain("--app-button-radius: var(--radius-md)")
+    expect(appCssContent).toContain(
+      "--app-button-shadow: var(--shadow-inset-light), var(--glass-card-mini-shadow)",
+    )
+    expect(appCssContent).toContain(
+      "--app-button-hover-shadow: var(--shadow-inset-light), var(--glass-card-shortcut-shadow)",
+    )
+    expect(appCssContent).toContain("--app-button-border: var(--premium-glass-border-strong)")
+    expect(appCssContent).toContain("--app-button-bg: var(--glass-card-premium-bg)")
+    expect(appCssContent).toMatch(/button\s*\{[\s\S]*backdrop-filter:\s*var\(--glass-card-backdrop-filter\)/)
+    expect(buttonCssContent).toMatch(
+      /\.btn--primary\s*\{[\s\S]*box-shadow:\s*var\(--app-button-shadow\)/,
+    )
+    expect(buttonCssContent).toMatch(/\.btn\s*\{[\s\S]*border-radius:\s*var\(--app-button-radius\)/)
+    expect(buttonCssContent).toMatch(/\.btn--ghost\s*\{[\s\S]*box-shadow:\s*none/)
+    expect(buttonCssContent).not.toContain("box-shadow: var(--shadow-cta)")
+    expect(appCssContent).not.toContain("inset -4px -4px 12px")
+    expect(themeContent).not.toContain("0 -10px 18px rgba(50, 10, 90, .20) inset")
+    expect(themeContent).toContain(
+      "--shadow-cta: var(--shadow-inset-light), var(--glass-card-mini-shadow)",
+    )
+  })
+
   it("raccorde les surfaces et badges de /natal aux roles visuels de page", () => {
+    const chapterBlock = getSelectorBlocks(natalReadingCssContent, ".natal-reading__chapter").find((block) =>
+      block.includes("position: relative"),
+    )
+
     expect(natalCssContent).toContain("--natal-radius-section: var(--radius-card-md)")
     expect(natalCssContent).toContain("--natal-surface-reading: color-mix(in srgb, var(--color-token-rgb-255-255-255) 90%, var(--premium-glass-surface-2) 10%)")
     expect(natalCssContent).toContain("--natal-surface-reading-solid:")
@@ -189,6 +227,14 @@ describe("theme.css validation (Static Analysis)", () => {
     expect(natalCssContent).toMatch(/\.natal-reading-metrics__item--moon\s*\{[\s\S]*--natal-metric-tone:\s*var\(--natal-tone-moon\)/)
     expect(natalCssContent).toMatch(/\.natal-reading-metrics\s*\{[\s\S]*backdrop-filter:\s*var\(--natal-glass-filter\)/)
     expect(natalCssContent).toMatch(/\.natal-reading__chapter\s*\{[\s\S]*var\(--natal-surface-reading-solid/)
+    expect(getScopeBlock(natalReadingCssContent, ".natal-reading__prose-paragraph")).toMatch(
+      /width:\s*100%[\s\S]*max-width:\s*none/,
+    )
+    expect(chapterBlock).toContain(
+      "border: 1px solid color-mix(in srgb, var(--natal-border-liquid-bright) 68%, transparent)",
+    )
+    expect(chapterBlock).not.toContain("border-left:")
+    expect(getScopeBlock(natalReadingCssContent, ".natal-reading__chapter::before")).toContain("box-shadow: none")
     expect(natalCssContent).toMatch(/\.natal-data-pill\s*\{[\s\S]*background:\s*var\(--natal-badge-meta-surface\)/)
     expect(natalCssContent).toMatch(/\.natal-data-card\s*\{[\s\S]*background:\s*var\(--natal-surface-block\)/)
     expect(natalCssContent).toMatch(

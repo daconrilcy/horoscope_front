@@ -10,6 +10,7 @@ import {
   CheckCircle2,
 } from "lucide-react"
 import { Button } from "@ui/Button"
+import { EditorialText } from "../components/ui/EditorialText/EditorialText"
 import { SupportCategorySelect } from "./support/SupportCategorySelect"
 import { SupportTicketForm } from "./support/SupportTicketForm"
 import { SupportTicketList } from "./support/SupportTicketList"
@@ -59,7 +60,9 @@ export default function HelpPage() {
           <div className="hero-panel__content">
             <p className="section-kicker">{help.hero.kicker}</p>
             <h1 className="help-hero__title">{help.hero.title}</h1>
-            <p className="help-hero__subtitle">{help.hero.subtitle}</p>
+            <p className="help-hero__subtitle">
+              <EditorialText text={help.hero.subtitle} />
+            </p>
             <div className="help-hero__actions">
               <Button
                 variant="primary"
@@ -86,7 +89,9 @@ export default function HelpPage() {
                 <article key={metric.label} className="help-metric-card glass-card glass-card--soft">
                   <span className="help-metric-card__label">{metric.label}</span>
                   <strong>{metric.value}</strong>
-                  <p>{metric.description}</p>
+                  <p>
+                    <EditorialText text={metric.description} />
+                  </p>
                 </article>
               ))}
             </div>
@@ -101,7 +106,9 @@ export default function HelpPage() {
                   <p className="section-kicker">{help.shortcutsKicker}</p>
                   <h2>{help.shortcutsSectionTitle}</h2>
                 </div>
-                <p className="section-heading__text">{help.shortcutsSectionDescription}</p>
+                <p className="section-heading__text">
+                  <EditorialText text={help.shortcutsSectionDescription} />
+                </p>
               </div>
 
               <div className="shortcut-grid">
@@ -111,7 +118,9 @@ export default function HelpPage() {
                       <Icon size={20} />
                     </span>
                     <h3>{help.shortcuts[key].title}</h3>
-                    <p>{help.shortcuts[key].benefit}</p>
+                    <p>
+                      <EditorialText text={help.shortcuts[key].benefit} />
+                    </p>
                     <span className="help-shortcut-card__link">
                       {help.shortcuts[key].action}
                     </span>
@@ -126,20 +135,30 @@ export default function HelpPage() {
                   <p className="section-kicker">{help.tokens.kicker}</p>
                   <h2>{help.tokens.title}</h2>
                 </div>
-                <p className="section-heading__text">{help.tokens.headingDescription}</p>
+                <p className="section-heading__text">
+                  <EditorialText text={help.tokens.headingDescription} />
+                </p>
               </div>
 
               <div className="plans-layout">
                 <article className="token-story glass-card glass-card--soft">
                   <div className="token-story__callout">{help.tokens.subscriptionTitle}</div>
-                  <p>{help.tokens.intro}</p>
-                  <p>{help.tokens.structure}</p>
+                  <p>
+                    <EditorialText text={help.tokens.intro} />
+                  </p>
+                  <p>
+                    <EditorialText text={help.tokens.structure} />
+                  </p>
                 </article>
 
                 <article className="token-story glass-card glass-card--soft">
                   <div className="token-story__callout">{help.tokens.tokenTitle}</div>
-                  <p>{help.tokens.tokenExample}</p>
-                  <p>{help.tokens.tokenCounting}</p>
+                  <p>
+                    <EditorialText text={help.tokens.tokenExample} />
+                  </p>
+                  <p>
+                    <EditorialText text={help.tokens.tokenCounting} />
+                  </p>
                   <Button
                     as={Link}
                     to="/help/subscriptions"
@@ -159,7 +178,9 @@ export default function HelpPage() {
             <section className="section-card glass-card section-card--compact">
               <p className="section-kicker">{help.billing.kicker}</p>
               <h2>{help.billing.title}</h2>
-              <p className="section-card__text">{help.billing.intro}</p>
+              <p className="section-card__text">
+                <EditorialText text={help.billing.intro} />
+              </p>
               <ul className="feature-list">
                 {help.billing.features.map((feature: string) => (
                   <li key={feature}>{feature}</li>

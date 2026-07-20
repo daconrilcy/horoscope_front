@@ -5,6 +5,7 @@ import { ArrowRight, Heart, Sparkles, Star } from "lucide-react"
 
 import type { AstrologerProfile } from "@api/astrologers"
 import { Button } from "@ui"
+import { EditorialText } from "../../../components/ui/EditorialText/EditorialText"
 
 export type AstrologerProfileTrustItem = {
   icon: LucideIcon
@@ -103,7 +104,11 @@ export function AstrologerProfileMethodSection({ title, steps, helpers = [] }: A
               <div className="step-number">{index + 1}</div>
               <div className="step-content">
                 <p className="step-title">{step}</p>
-                {helpers[index] ? <p className="step-helper">{helpers[index]}</p> : null}
+                {helpers[index] ? (
+                  <p className="step-helper">
+                    <EditorialText text={helpers[index]} />
+                  </p>
+                ) : null}
               </div>
             </div>
           </FragmentWithArrow>
@@ -159,7 +164,11 @@ export function AstrologerProfileReviewsSection({
             profile.reviews.map((review) => (
               <div key={review.id} className="review-item">
                 <div className="review-quote-mark">“</div>
-                {review.comment && <p className="review-comment">{review.comment}</p>}
+                {review.comment && (
+                  <p className="review-comment">
+                    <EditorialText text={review.comment} />
+                  </p>
+                )}
                 <div className="review-footer">
                   <div className="review-user-info">
                     <span className="review-user-name">{`- ${review.user_name}`}</span>
@@ -187,10 +196,14 @@ export function AstrologerProfileReviewsSection({
                 <Sparkles size={20} />
               </div>
               <p className="review-comment">
-                {hasPublicReviews ? labels.reviewsWithoutExcerptsPrompt : labels.emptyReviewsPrompt}
+                <EditorialText
+                  text={hasPublicReviews ? labels.reviewsWithoutExcerptsPrompt : labels.emptyReviewsPrompt}
+                />
               </p>
               <p className="review-empty-description">
-                {hasPublicReviews ? labels.reviewsWithoutExcerptsDescription : labels.emptyReviewsDescription}
+                <EditorialText
+                  text={hasPublicReviews ? labels.reviewsWithoutExcerptsDescription : labels.emptyReviewsDescription}
+                />
               </p>
             </div>
           )}

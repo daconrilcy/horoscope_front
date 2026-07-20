@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react"
 import { Link } from "react-router-dom"
 import { Check, X } from "lucide-react"
 import { Button } from "../../../components/ui/Button/Button"
+import { EditorialText } from "../../../components/ui/EditorialText/EditorialText"
 import { getActivePlans, formatPrice } from "../../../config/pricingConfig"
 import { useAnalytics } from "../../../hooks/useAnalytics"
 import { useAstrologyLabels, useTranslation } from "../../../i18n"
@@ -42,7 +43,9 @@ export const PricingSection = () => {
       <div className="pricing-section__heading">
         <span className="pricing-section__eyebrow">{t.pricing.eyebrow}</span>
         <h2 id="pricing-title">{t.pricing.title}</h2>
-        <p>{t.pricing.subtitle}</p>
+        <p>
+          <EditorialText text={t.pricing.subtitle} />
+        </p>
       </div>
 
       <div className="pricing-reassurance-bar">{t.pricing.reassurance}</div>
@@ -73,7 +76,9 @@ export const PricingSection = () => {
                     <span className="pricing-period">{t.pricing.perMonth}</span>
                   )}
                 </div>
-                <p className="pricing-plan-desc">{planTranslation.desc}</p>
+                <p className="pricing-plan-desc">
+                  <EditorialText text={planTranslation.desc} />
+                </p>
               </div>
 
               <ul className="pricing-features" aria-label={`${t.pricing.ariaFeatures} ${planTranslation.name}`}>

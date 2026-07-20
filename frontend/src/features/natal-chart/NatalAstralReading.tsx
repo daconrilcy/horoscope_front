@@ -35,6 +35,7 @@ import type {
 } from "./natalAstralReadingViewModel"
 import natalLogoSrc from "../../assets/Natal_Logo02.png"
 import { getZodiacIcon } from "../../components/zodiacSignIconMap"
+import { EditorialText } from "../../components/ui/EditorialText/EditorialText"
 import { normalizeSignCode } from "../../i18n/astrology"
 import "./NatalReading.css"
 import "./NatalReadingFacts.css"
@@ -545,7 +546,11 @@ function NatalReadingHero({ reading, showSummary }: { reading: NatalInterpretati
           <h1>Thème natal</h1>
           <span className="natal-badge natal-badge--report-status">{reading.label}</span>
         </div>
-        {showSummary && reading.shortText ? <p>{reading.shortText}</p> : null}
+        {showSummary && reading.shortText ? (
+          <p>
+            <EditorialText text={reading.shortText} />
+          </p>
+        ) : null}
       </div>
     </header>
   )
@@ -764,7 +769,9 @@ function NatalChapterCard({
             </span>
             <span className="natal-reading__chapter-excerpt-copy">
               <span className="natal-reading__chapter-excerpt-label">À retenir</span>
-              <span className="natal-reading__chapter-excerpt-text">{excerpt}</span>
+              <span className="natal-reading__chapter-excerpt-text">
+                <EditorialText text={excerpt} />
+              </span>
             </span>
           </p>
         ) : null}
@@ -780,7 +787,7 @@ function NatalChapterCard({
           >
             {bodyParagraphs.map((paragraph, paragraphIndex) => (
               <p className="natal-reading__prose-paragraph" key={`${itemKey}-paragraph-${paragraphIndex}`}>
-                {paragraph}
+                <EditorialText text={paragraph} />
               </p>
             ))}
           </div>
@@ -826,7 +833,9 @@ function NatalChapterCard({
             </div>
           ) : null}
           {chapter.safetyFlags.length > 0 ? (
-            <p className="natal-reading__safety">Note de prudence : {chapter.safetyFlags.join(", ")}</p>
+            <p className="natal-reading__safety">
+              <EditorialText text={`Note de prudence : ${chapter.safetyFlags.join(", ")}`} />
+            </p>
           ) : null}
         </aside>
       ) : null}
@@ -1046,7 +1055,11 @@ export function NatalAstralReading({ guide, reading, showSummary = true }: Natal
             </section>
           ) : null}
 
-          {reading.disclaimer ? <p className="natal-reading__disclaimer">{reading.disclaimer}</p> : null}
+          {reading.disclaimer ? (
+            <p className="natal-reading__disclaimer">
+              <EditorialText text={reading.disclaimer} />
+            </p>
+          ) : null}
           {guide}
         </div>
       </div>

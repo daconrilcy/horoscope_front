@@ -6,14 +6,19 @@ button {
   border: 1px solid var(--app-button-border);
   border-radius: var(--app-button-radius);
   background: var(--app-button-bg);
-  backdrop-filter: blur(var(--surface-glass-blur));
-  -webkit-backdrop-filter: blur(var(--surface-glass-blur));
+  backdrop-filter: var(--glass-card-backdrop-filter);
+  -webkit-backdrop-filter: var(--glass-card-backdrop-filter);
   color: var(--color-btn-text);
   font-size: var(--app-button-font-size);
   font-weight: var(--font-weight-semibold);
   padding: 0.5rem 1rem;
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+  transition:
+    transform var(--duration-fast) var(--easing-default),
+    box-shadow var(--duration-fast) var(--easing-default),
+    border-color var(--duration-fast) var(--easing-default),
+    background var(--duration-fast) var(--easing-default),
+    opacity var(--duration-fast) var(--easing-default);
   box-shadow: var(--app-button-shadow);
 }
 

@@ -1,6 +1,7 @@
 // Composant de guide natal replié avec le même patron d'interaction que les lectures.
 import { useId, useState } from "react"
 
+import { EditorialText } from "./ui/EditorialText/EditorialText"
 import type { AstrologyLang } from "../i18n/astrology"
 import { getGuideTranslations } from "../i18n/natalChart"
 import "./NatalChartGuide.css"
@@ -41,11 +42,15 @@ export function NatalChartGuide({ lang, missingBirthTime }: NatalChartGuideProps
         hidden={!isExpanded}
         id={contentId}
       >
-        <p className="natal-chart-guide__intro">{g.intro}</p>
+        <p className="natal-chart-guide__intro">
+          <EditorialText text={g.intro} />
+        </p>
 
         <section className="natal-chart-guide__section">
           <h3>{g.signsTitle}</h3>
-          <p>{g.signsDesc}</p>
+          <p>
+            <EditorialText text={g.signsDesc} />
+          </p>
           <p>
             <code>{g.signExample}</code>
           </p>
@@ -53,8 +58,12 @@ export function NatalChartGuide({ lang, missingBirthTime }: NatalChartGuideProps
 
         <section className="natal-chart-guide__section">
           <h3>{g.planetsTitle}</h3>
-          <p>{g.planetsDesc}</p>
-          <p>{g.planetsRetrogradeTip}</p>
+          <p>
+            <EditorialText text={g.planetsDesc} />
+          </p>
+          <p>
+            <EditorialText text={g.planetsRetrogradeTip} />
+          </p>
         </section>
 
         <section className="natal-chart-guide__section">
@@ -62,11 +71,15 @@ export function NatalChartGuide({ lang, missingBirthTime }: NatalChartGuideProps
           <p>
             <strong>{g.housesIntervalTitle}</strong>
           </p>
-          <p>{g.housesIntervalDesc}</p>
+          <p>
+            <EditorialText text={g.housesIntervalDesc} />
+          </p>
           <p>
             <strong>{g.wrapTitle}</strong>
           </p>
-          <p>{g.wrapDesc}</p>
+          <p>
+            <EditorialText text={g.wrapDesc} />
+          </p>
           <p>
             <code>{g.wrapExample}</code>
           </p>
@@ -74,22 +87,28 @@ export function NatalChartGuide({ lang, missingBirthTime }: NatalChartGuideProps
 
         <section className="natal-chart-guide__section">
           <h3>{g.anglesTitle}</h3>
-          <p>{g.anglesDesc}</p>
+          <p>
+            <EditorialText text={g.anglesDesc} />
+          </p>
         </section>
 
         <section className="natal-chart-guide__section">
           <h3>{g.sunAscendantTitle}</h3>
-          <p>{g.sunAscendantDesc}</p>
+          <p>
+            <EditorialText text={g.sunAscendantDesc} />
+          </p>
           {missingBirthTime && (
             <p className="natal-chart-guide__missing-time" role="note">
-              {g.ascendantMissing}
+              <EditorialText text={g.ascendantMissing} />
             </p>
           )}
         </section>
 
         <section className="natal-chart-guide__section">
           <h3>{g.aspectsTitle}</h3>
-          <p>{g.aspectsDesc}</p>
+          <p>
+            <EditorialText text={g.aspectsDesc} />
+          </p>
         </section>
 
         <section className="natal-chart-guide__section natal-chart-guide__faq">
@@ -98,7 +117,9 @@ export function NatalChartGuide({ lang, missingBirthTime }: NatalChartGuideProps
             {g.faq.map((item, idx) => (
               <div key={`${idx}-${item.question}`} className="natal-chart-guide__faq-item">
                 <dt>{item.question}</dt>
-                <dd>{item.answer}</dd>
+                <dd>
+                  <EditorialText text={item.answer} />
+                </dd>
               </div>
             ))}
           </dl>

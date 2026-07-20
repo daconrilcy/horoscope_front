@@ -1,5 +1,6 @@
 // Section de temoignages optionnelle de la landing publique.
 import { Lock, Star, RotateCcw, ShieldCheck } from "lucide-react"
+import { EditorialText } from "../../../components/ui/EditorialText/EditorialText"
 import { useTranslation } from "../../../i18n"
 import "./TestimonialsSection.css"
 
@@ -19,7 +20,9 @@ export const TestimonialsSection = () => {
     <section id="testimonials" className="testimonials-section" aria-labelledby="testimonials-title">
       <div className="testimonials-header">
         <h2 id="testimonials-title">{t.testimonials.title}</h2>
-        <p>{t.testimonials.subtitle}</p>
+        <p>
+          <EditorialText text={t.testimonials.subtitle} />
+        </p>
       </div>
 
       <div className="testimonials-grid">
@@ -60,15 +63,21 @@ export const TestimonialsSection = () => {
         <div className="case-study-grid">
           <div className="case-study-column case-study-column--before">
             <span className="case-study-label">{t.testimonials.caseStudy.before.label}</span>
-            <p className="case-study-text">{t.testimonials.caseStudy.before.text}</p>
+            <p className="case-study-text">
+              <EditorialText text={t.testimonials.caseStudy.before.text} />
+            </p>
           </div>
           <div className="case-study-column case-study-column--after">
             <span className="case-study-label">{t.testimonials.caseStudy.after.label}</span>
-            <p className="case-study-text">{t.testimonials.caseStudy.after.text}</p>
+            <p className="case-study-text">
+              <EditorialText text={t.testimonials.caseStudy.after.text} />
+            </p>
           </div>
           <div className="case-study-column case-study-column--action">
             <span className="case-study-label">{t.testimonials.caseStudy.action.label}</span>
-            <p className="case-study-text">{t.testimonials.caseStudy.action.text}</p>
+            <p className="case-study-text">
+              <EditorialText text={t.testimonials.caseStudy.action.text} />
+            </p>
           </div>
         </div>
       </div>

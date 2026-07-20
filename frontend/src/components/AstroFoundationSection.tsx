@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import type { DailyPredictionAstroFoundation } from '../types/dailyPrediction';
 import type { Lang } from '../i18n/predictions';
+import { EditorialText } from './ui/EditorialText/EditorialText';
 import './AstroFoundationSection.css';
 
 interface Props {
@@ -34,7 +35,7 @@ export const AstroFoundationSection: React.FC<Props> = ({ foundation, lang, hide
       {isOpen && (
         <div className="astro-foundation-section__content">
           <p className="astro-foundation-section__headline">
-            {foundation.headline}
+            <EditorialText text={foundation.headline} />
           </p>
 
           <div className="astro-foundation-section__groups">
@@ -82,7 +83,7 @@ export const AstroFoundationSection: React.FC<Props> = ({ foundation, lang, hide
             </section>
 
             <p className="astro-foundation-section__bridge">
-              {foundation.interpretation_bridge}
+              <EditorialText text={foundation.interpretation_bridge} />
             </p>
           </div>
         </div>

@@ -14,6 +14,7 @@ import { detectLang } from "../i18n/astrology"
 import { tAstrologers as t } from "@i18n/astrologers"
 import type { Astrologer } from "@api"
 import { PageLayout } from "../layouts"
+import { EditorialText } from "../components/ui/EditorialText/EditorialText"
 
 const ASTROLOGERS_ROTATION_STORAGE_KEY = "experts_rotation_index_v1"
 
@@ -94,7 +95,9 @@ export function AstrologersPage() {
   const pageHeader = (
     <header className="people-page-header">
       <h1>{t("page_title", lang)}</h1>
-      <p>{t("page_subtitle", lang)}</p>
+      <p>
+        <EditorialText text={t("page_subtitle", lang)} />
+      </p>
     </header>
   )
 
@@ -115,7 +118,9 @@ export function AstrologersPage() {
           <section className="people-page-guide" aria-labelledby="people-page-guide-title">
             <div className="people-page-guide-copy">
               <h2 id="people-page-guide-title">{t("choice_guide_title", lang)}</h2>
-              <p>{t("choice_guide_subtitle", lang)}</p>
+              <p>
+                <EditorialText text={t("choice_guide_subtitle", lang)} />
+              </p>
             </div>
             <div className="people-page-intents" role="group" aria-label={t("intent_group_label", lang)}>
               {ASTROLOGER_INTENT_OPTIONS.map((intent) => {

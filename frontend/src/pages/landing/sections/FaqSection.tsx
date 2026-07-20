@@ -2,6 +2,7 @@ import { useState } from "react"
 import { ChevronDown } from "lucide-react"
 import { Link } from "react-router-dom"
 import { Button } from "../../../components/ui/Button/Button"
+import { EditorialText } from "../../../components/ui/EditorialText/EditorialText"
 import { useTranslation } from "../../../i18n"
 import "./FaqSection.css"
 
@@ -14,7 +15,9 @@ export const FaqSection = () => {
       <div className="faq-section__heading">
         <span className="faq-section__eyebrow">{t.faq.eyebrow}</span>
         <h2 id="faq-title">{t.faq.title}</h2>
-        <p>{t.faq.subtitle}</p>
+        <p>
+          <EditorialText text={t.faq.subtitle} />
+        </p>
       </div>
 
       <div className="faq-accordion">
@@ -48,7 +51,9 @@ export const FaqSection = () => {
               role="region"
               aria-labelledby={`faq-summary-${index}`}
             >
-              <p>{item.a}</p>
+              <p>
+                <EditorialText text={item.a} />
+              </p>
             </div>
           </details>
         ))}
@@ -58,7 +63,9 @@ export const FaqSection = () => {
         <div className="final-cta-content">
           <span className="final-cta-eyebrow">{t.finalCta.eyebrow}</span>
           <h2 id="final-cta-title">{t.finalCta.title}</h2>
-          <p>{t.finalCta.subtitle}</p>
+          <p>
+            <EditorialText text={t.finalCta.subtitle} />
+          </p>
         </div>
 
         <div className="final-cta-actions">

@@ -17,6 +17,7 @@ import {
 } from "../features/astrologers/components/AstrologerProfileSections"
 import { PageLayout } from "../layouts"
 import { ErrorState, Button } from "@ui"
+import { EditorialText } from "../components/ui/EditorialText/EditorialText"
 import "./AstrologerProfilePage.css"
 type BackgroundMetric = {
   value: string
@@ -469,7 +470,9 @@ export function AstrologerProfilePage() {
             {profile.quote && (
               <blockquote className="profile-quote">
                 <Quote size={24} className="quote-icon" />
-                <p>{profile.quote}</p>
+                <p>
+                  <EditorialText text={profile.quote} />
+                </p>
                 <footer className="profile-quote-signature">- {profile.first_name}</footer>
               </blockquote>
             )}
@@ -482,7 +485,9 @@ export function AstrologerProfilePage() {
           <div className="profile-col-left">
             <section className="profile-about">
               <h2 className="profile-section-title profile-section-title--underlined">{`À propos de ${profile.first_name}`}</h2>
-              <p className="profile-bio-text">{profile.bio_full}</p>
+              <p className="profile-bio-text">
+                <EditorialText text={profile.bio_full} />
+              </p>
             </section>
 
             {profile.mission_statement && (
@@ -492,7 +497,9 @@ export function AstrologerProfilePage() {
                 </div>
                 <div className="profile-mission-card__content">
                   <h3>{t("mission_title", lang)}</h3>
-                  <p className="profile-mission-text">{profile.mission_statement}</p>
+                  <p className="profile-mission-text">
+                    <EditorialText text={profile.mission_statement} />
+                  </p>
                 </div>
               </section>
             )}
@@ -515,7 +522,9 @@ export function AstrologerProfilePage() {
                           </div>
                           <div className="specialty-item-copy">
                             <span className="specialty-item-title">{s.title}</span>
-                            <p className="specialty-item-desc">{s.description}</p>
+                            <p className="specialty-item-desc">
+                              <EditorialText text={s.description} />
+                            </p>
                           </div>
                         </div>
                       )

@@ -419,8 +419,8 @@
   --shadow-hero: 0 18px 40px rgba(20,20,40,0.14);
   --shadow-card: 0 18px 40px rgba(20,20,40,0.12);
   --shadow-nav:  0 10px 30px rgba(20,20,40,0.18);
-  --shadow-cta:  0 14px 30px rgba(90, 120, 255, 0.25);
-  --shadow-cta-hover: 0 10px 20px rgba(134,108,208,0.3);
+  --shadow-cta: var(--shadow-inset-light), var(--glass-card-mini-shadow);
+  --shadow-cta-hover: var(--shadow-inset-light), var(--glass-card-shortcut-shadow);
   --shadow-cta-dark: 0 14px 30px rgba(0, 0, 0, 0.35);
   --shadow-soft-card: 0 16px 38px rgba(72, 52, 110, 0.1);
   --shadow-inset-light: inset 0 1px 0 rgba(255,255,255,0.38);
@@ -580,8 +580,8 @@
   --shadow-hero: 0 18px 40px rgba(0,0,0,0.45);
   --shadow-card: 0 18px 40px rgba(0,0,0,0.45);
   --shadow-nav:  0 10px 30px rgba(0,0,0,0.55);
-  --shadow-cta:  0 10px 18px rgba(60, 20, 120, .18), 0 2px 0 rgba(255,255,255,.22) inset, 0 -10px 18px rgba(50, 10, 90, .20) inset;
-  --shadow-cta-hover: 0 10px 20px rgba(134,108,208,0.3);
+  --shadow-cta: var(--shadow-inset-light), var(--glass-card-mini-shadow);
+  --shadow-cta-hover: var(--shadow-inset-light), var(--glass-card-shortcut-shadow);
 
   /* === ADMIN UI === */
   --color-admin-ink-strong: rgba(245,245,255,0.92);

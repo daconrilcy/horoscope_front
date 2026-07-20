@@ -1,5 +1,6 @@
 // Page legale publique dont la presentation est centralisee dans la feuille CSS adjacente.
 import { Button } from "../components/ui/Button/Button"
+import { EditorialText } from "../components/ui/EditorialText/EditorialText"
 import { Link } from "react-router-dom"
 import { ArrowLeft } from "lucide-react"
 import { formatLocalDate } from "../utils/formatDate"
@@ -32,7 +33,7 @@ export const PrivacyPolicyPage = () => {
           1. Collecte des données
         </h2>
         <p className="privacy-policy-page__paragraph">
-          Astrorizon s'engage à protéger votre vie privée. Nous collectons uniquement les données nécessaires à la fourniture de nos services astrologiques personnalisés, notamment vos données de naissance (date, heure et lieu).
+          <EditorialText text="Astrorizon s'engage à protéger votre vie privée. Nous collectons uniquement les données nécessaires à la fourniture de nos services astrologiques personnalisés, notamment vos données de naissance (date, heure et lieu)." />
         </p>
       </section>
 
@@ -41,7 +42,7 @@ export const PrivacyPolicyPage = () => {
           2. Utilisation des données
         </h2>
         <p className="privacy-policy-page__paragraph">
-          Vos données de naissance sont utilisées exclusivement pour calculer vos positions planétaires et générer vos prévisions. Vos conversations avec notre IA sont confidentielles et chiffrées.
+          <EditorialText text="Vos données de naissance sont utilisées exclusivement pour calculer vos positions planétaires et générer vos prévisions. Vos conversations avec notre IA sont confidentielles et chiffrées." />
         </p>
       </section>
 
@@ -50,7 +51,7 @@ export const PrivacyPolicyPage = () => {
           3. Protection des données (RGPD)
         </h2>
         <p className="privacy-policy-page__paragraph">
-          Conformément au RGPD, vous disposez d'un droit d'accès, de rectification et de suppression de vos données. Vous pouvez exercer ces droits à tout moment depuis vos paramètres utilisateur.
+          <EditorialText text="Conformément au RGPD, vous disposez d'un droit d'accès, de rectification et de suppression de vos données. Vous pouvez exercer ces droits à tout moment depuis vos paramètres utilisateur." />
         </p>
       </section>
 
@@ -59,7 +60,7 @@ export const PrivacyPolicyPage = () => {
           4. Contact
         </h2>
         <p className="privacy-policy-page__paragraph">
-          Pour toute question concernant notre politique de confidentialité, vous pouvez nous contacter à : hello@astrorizon.ai
+          <EditorialText text="Pour toute question concernant notre politique de confidentialité, vous pouvez nous contacter à : hello@astrorizon.ai" />
         </p>
       </section>
     </div>

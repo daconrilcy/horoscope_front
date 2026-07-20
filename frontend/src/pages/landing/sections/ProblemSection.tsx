@@ -1,4 +1,5 @@
 import { AlertCircle, CheckCircle2, Sparkles, XCircle } from "lucide-react"
+import { EditorialText } from "../../../components/ui/EditorialText/EditorialText"
 import { useTranslation } from "../../../i18n"
 import "./ProblemSection.css"
 
@@ -22,7 +23,9 @@ export const ProblemSection = () => {
       <div className="problem-section__heading">
         <span className="problem-section__eyebrow">{t.problem.eyebrow}</span>
         <h2 id="problem-title">{t.problem.title}</h2>
-        <p>{t.problem.intro}</p>
+        <p>
+          <EditorialText text={t.problem.intro} />
+        </p>
       </div>
 
       <div className="problem-container">
@@ -37,7 +40,9 @@ export const ProblemSection = () => {
                 <div className="problem-item-icon" aria-hidden="true">
                   {item.icon}
                 </div>
-                <div className="problem-item-text">{item.text}</div>
+                <div className="problem-item-text">
+                  <EditorialText text={item.text} />
+                </div>
               </li>
             ))}
           </ul>
@@ -54,7 +59,9 @@ export const ProblemSection = () => {
                 <div className="problem-item-icon" aria-hidden="true">
                   {item.icon}
                 </div>
-                <div className="problem-item-text">{item.text}</div>
+                <div className="problem-item-text">
+                  <EditorialText text={item.text} />
+                </div>
               </li>
             ))}
           </ul>

@@ -1,6 +1,7 @@
 import React from 'react'
 import { Lightbulb } from 'lucide-react'
 import type { DailyAdviceCardModel } from '../../utils/dailyAdviceCardMapper'
+import { EditorialText } from '../ui/EditorialText/EditorialText'
 import './DailyAdviceCard.css'
 
 interface DailyAdviceCardProps {
@@ -25,9 +26,13 @@ export const DailyAdviceCard: React.FC<DailyAdviceCardProps> = ({ model, hideTit
       </header>
     ) : null}
     <div className="daily-advice-card__content">
-      <p className="daily-advice-card__body">{model.advice}</p>
+      <p className="daily-advice-card__body">
+        <EditorialText text={model.advice} />
+      </p>
       {model.emphasis ? (
-        <p className="daily-advice-card__emphasis">{model.emphasis}</p>
+        <p className="daily-advice-card__emphasis">
+          <EditorialText text={model.emphasis} />
+        </p>
       ) : null}
     </div>
   </section>

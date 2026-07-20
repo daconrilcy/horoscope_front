@@ -14,6 +14,7 @@ import {
 } from "../api/astral"
 import { useEntitlementsSnapshot } from "../hooks/useEntitlementSnapshot"
 import { hasUsableAccessToken, useAccessTokenSnapshot } from "../utils/authToken"
+import { EditorialText } from "../components/ui/EditorialText/EditorialText"
 import "./DailyHoroscopePage.css"
 
 /** Derive le plan Astral a partir du code de variante expose par l'entitlement. */
@@ -28,7 +29,11 @@ function renderAstralResult(job: AstralJobResponse | undefined) {
   const result = job?.result
   if (!result) return null
   if (typeof result.reading === "string") {
-    return <p className="daily-page-state__lead">{result.reading}</p>
+    return (
+      <p className="daily-page-state__lead">
+        <EditorialText text={result.reading} />
+      </p>
+    )
   }
   return (
     <pre className="daily-page-state__json" aria-label="Resultat horoscope Astral">

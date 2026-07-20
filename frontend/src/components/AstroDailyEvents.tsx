@@ -2,6 +2,7 @@ import React from 'react';
 import { Star, Zap, MapPin, Cake, TrendingUp, Anchor, Cloud } from 'lucide-react';
 import type { AstroDailyEventsViewData } from '../utils/astroDailyEventsMapper';
 import type { Lang } from '../i18n/predictions';
+import { EditorialText } from './ui/EditorialText/EditorialText';
 import './AstroDailyEvents.css';
 
 const LABELS = {
@@ -64,7 +65,7 @@ export const AstroDailyEvents: React.FC<AstroDailyEventsProps> = ({ data, intro,
 
       {intro && (
         <p className="astro-daily-events__intro">
-          {intro}
+          <EditorialText text={intro} />
         </p>
       )}
 

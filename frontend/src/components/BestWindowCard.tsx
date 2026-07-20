@@ -2,6 +2,7 @@ import React from 'react';
 import { Sparkles } from 'lucide-react';
 import type { DailyPredictionBestWindow } from '../types/dailyPrediction';
 import type { Lang } from '../i18n/predictions';
+import { EditorialText } from './ui/EditorialText/EditorialText';
 import './BestWindowCard.css';
 
 interface Props {
@@ -31,7 +32,7 @@ export const BestWindowCard: React.FC<Props> = ({ bestWindow, lang }) => {
       </h2>
 
       <p className="best-window-card__why">
-        {bestWindow.why}
+        <EditorialText text={bestWindow.why} />
       </p>
 
       <div className="best-window-card__actions">

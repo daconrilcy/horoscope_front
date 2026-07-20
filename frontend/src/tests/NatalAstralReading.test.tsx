@@ -53,4 +53,15 @@ describe("NatalAstralReading", () => {
     expect(renderedParagraphs[0]).toHaveTextContent("deuxième clause")
     expect(renderedParagraphs[0]).toHaveTextContent("troisième clause")
   })
+
+  it("insère un retour après chaque deux-points de la prose sans altérer son contenu", () => {
+    const paragraph = "Identité : un premier éclairage : une synthèse."
+    const reading = buildReadingViewModel([paragraph])
+
+    const { container } = renderWithRouter(<NatalAstralReading reading={reading} />)
+    const renderedParagraph = container.querySelector(".natal-reading__prose-paragraph")
+
+    expect(renderedParagraph?.querySelectorAll("br")).toHaveLength(2)
+    expect(renderedParagraph?.textContent).toBe(paragraph)
+  })
 })

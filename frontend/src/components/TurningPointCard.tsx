@@ -3,6 +3,7 @@ import type { DailyPredictionTurningPointPublic } from '../types/dailyPrediction
 import type { Lang } from '../i18n/predictions';
 import { getDomainLabel, getChangeTypeLabel } from '../i18n/horoscope_copy';
 import { DomainIcon } from './prediction/DomainIcon';
+import { EditorialText } from './ui/EditorialText/EditorialText';
 import './TurningPointCard.css';
 
 interface Props {
@@ -39,7 +40,7 @@ export const TurningPointCard: React.FC<Props> = ({ turningPoint, lang }) => {
       <h2 className="turning-point-card__title">{turningPoint.title}</h2>
 
       <p className="turning-point-card__body">
-        {turningPoint.narrative || turningPoint.what_changes}
+        <EditorialText text={turningPoint.narrative || turningPoint.what_changes} />
       </p>
 
       <div className="turning-point-card__domains">

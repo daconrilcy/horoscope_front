@@ -17,6 +17,7 @@ import type { Lang } from '../../i18n/predictions';
 import { getDomainLabel, getRegimeLabel } from '../../i18n/horoscope_copy';
 import { DomainIcon } from './DomainIcon';
 import { PERIOD_LABELS } from '../../i18n/predictions';
+import { EditorialText } from '../ui/EditorialText/EditorialText';
 import './DayTimelineSectionV4.css';
 
 interface Props {
@@ -166,7 +167,7 @@ export const DayTimelineSectionV4: React.FC<Props> = ({ timeWindows, lang, hideT
 
                 {/* Line 3: Text */}
                 <p className="day-timeline-v4__narrative">
-                  {window.narrative || window.action_hint}
+                  <EditorialText text={window.narrative || window.action_hint} />
                 </p>
 
                 {/* Line 4: Secondary Markers */}

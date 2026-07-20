@@ -9,6 +9,7 @@ import {
   getAstrologerIcon,
   getAstrologerTheme,
 } from "../astrologerPositioning"
+import { EditorialText } from "../../../components/ui/EditorialText/EditorialText"
 
 type AstrologerCardProps = {
   expert: Astrologer
@@ -87,7 +88,9 @@ export function AstrologerCard({
       <span className="person-card-name">{fullName}</span>
       {showDisplayName && <span className="person-card-display-name">{expert.name}</span>}
       <p className="person-card-style">{expert.style}</p>
-      <p className="person-card-benefit">{benefitCopy}</p>
+      <p className="person-card-benefit">
+        <EditorialText text={benefitCopy} />
+      </p>
       <div className="person-card-topline">
         <span className="person-card-icon" aria-hidden="true">{icon}</span>
         <div className="person-card-badge-stack">
@@ -108,7 +111,9 @@ export function AstrologerCard({
           </span>
         ))}
       </div>
-      <p className="person-card-bio">{expert.bio_short}</p>
+      <p className="person-card-bio">
+        <EditorialText text={expert.bio_short} />
+      </p>
       {selectionMode && (
         <div className="person-card-actions">
           <button

@@ -685,13 +685,12 @@
   align-items: start;
   justify-content: space-between;
   padding: 22px 26px 20px 28px;
-  border: 1px solid color-mix(in srgb, var(--natal-theme-color, var(--premium-accent-purple-strong)) 12%, var(--natal-border-liquid-bright));
-  border-left: 1px solid color-mix(in srgb, var(--natal-theme-color, var(--premium-accent-purple-strong)) 18%, var(--natal-border-liquid-bright));
+  border: 1px solid color-mix(in srgb, var(--natal-border-liquid-bright) 68%, transparent);
   background:
     radial-gradient(ellipse at 100% 0, color-mix(in srgb, var(--color-token-rgb-255-255-255) 42%, transparent) 0 18%, transparent 42%),
-    color-mix(in srgb, var(--natal-surface-glass-solid, var(--natal-surface-reading-solid)) 97%, var(--natal-theme-color, var(--premium-accent-purple-strong)) 3%);
+    color-mix(in srgb, var(--natal-surface-glass-solid, var(--natal-surface-reading-solid)) 99%, var(--natal-theme-color, var(--premium-accent-purple-strong)) 1%);
   box-shadow:
-    0 16px 44px color-mix(in srgb, var(--premium-text-strong) 6%, transparent),
+    0 12px 30px color-mix(in srgb, var(--premium-text-strong) 5%, transparent),
     var(--natal-inner-highlight);
   overflow: hidden;
 }
@@ -702,11 +701,11 @@
   top: 18px;
   bottom: 18px;
   left: 0;
-  width: 3px;
+  width: 2px;
   border-radius: var(--radius-full);
-  background: linear-gradient(180deg, color-mix(in srgb, var(--natal-theme-color, var(--natal-border-accent)) 60%, transparent), color-mix(in srgb, var(--natal-theme-color, var(--natal-border-accent)) 16%, transparent));
-  box-shadow: 0 0 18px color-mix(in srgb, var(--natal-theme-color, var(--premium-accent-purple-strong)) 18%, transparent);
-  opacity: 0.46;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--natal-theme-color, var(--natal-border-accent)) 28%, transparent), color-mix(in srgb, var(--natal-theme-color, var(--natal-border-accent)) 8%, transparent));
+  box-shadow: none;
+  opacity: 0.38;
   pointer-events: none;
 }
 
@@ -829,16 +828,16 @@
   align-items: start;
   margin: 0;
   padding: 12px 14px;
-  border: 1px solid color-mix(in srgb, var(--natal-theme-color, var(--premium-accent-purple-strong)) 14%, var(--natal-border-liquid-bright));
+  border: 1px solid color-mix(in srgb, var(--natal-border-liquid-bright) 48%, transparent);
   border-radius: var(--natal-radius-block);
-  background: color-mix(in srgb, var(--color-token-rgb-255-255-255) 68%, var(--natal-theme-color, var(--premium-accent-purple-strong)) 4%, transparent);
+  background: color-mix(in srgb, var(--color-token-rgb-255-255-255) 70%, var(--natal-theme-color, var(--premium-accent-purple-strong)) 2%, transparent);
   color: color-mix(in srgb, var(--premium-text-strong) 88%, var(--premium-text-main) 12%);
   font-size: var(--natal-type-reading-text-size);
   font-weight: var(--natal-type-reading-text-weight);
   line-height: var(--natal-type-reading-text-line-height);
   box-shadow:
     var(--natal-inner-highlight),
-    0 8px 18px color-mix(in srgb, var(--natal-theme-color, var(--premium-accent-purple-strong)) 5%, transparent);
+    0 6px 16px color-mix(in srgb, var(--premium-text-strong) 3%, transparent);
 }
 
 .natal-reading__chapter-excerpt[hidden] {
@@ -883,7 +882,7 @@
   width: 100%;
   box-sizing: border-box;
   padding: 16px 18px;
-  border: 1px solid color-mix(in srgb, var(--natal-border-liquid-bright) 62%, transparent);
+  border: 1px solid color-mix(in srgb, var(--natal-border-liquid-bright) 44%, transparent);
   border-radius: var(--natal-radius-block);
   background:
     linear-gradient(
@@ -893,8 +892,7 @@
     );
   box-shadow:
     var(--natal-inner-highlight),
-    inset 0 0 0 1px color-mix(in srgb, var(--color-token-rgb-255-255-255) 42%, transparent),
-    0 14px 34px color-mix(in srgb, var(--premium-text-strong) 5%, transparent);
+    0 10px 26px color-mix(in srgb, var(--premium-text-strong) 4%, transparent);
   color: var(--natal-text-reading);
   font-size: var(--natal-type-reading-text-size);
   font-weight: var(--natal-type-reading-text-weight);
@@ -922,7 +920,9 @@
 }
 
 .natal-reading__prose-paragraph {
-  max-width: 72ch;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: none;
 }
 
 .natal-reading__chapter-meta {
@@ -980,14 +980,27 @@
 
 .natal-reading__chapter-toggle,
 .natal-reading-explanations__toggle {
-  border: 1px solid var(--natal-border-accent);
-  background: color-mix(in srgb, var(--premium-accent-purple-strong) 7%, var(--natal-surface-chip));
+  border: 1px solid color-mix(in srgb, var(--natal-border-liquid-bright) 58%, transparent);
+  background:
+    linear-gradient(145deg, color-mix(in srgb, var(--color-token-rgb-255-255-255) 64%, transparent), transparent 68%),
+    color-mix(in srgb, var(--premium-accent-purple-strong) 5%, var(--natal-surface-glass-lifted));
+  box-shadow:
+    var(--natal-inner-highlight),
+    0 7px 18px color-mix(in srgb, var(--premium-text-strong) 4%, transparent);
   color: var(--premium-accent-purple-strong);
+  backdrop-filter: blur(12px) saturate(132%);
+  -webkit-backdrop-filter: blur(12px) saturate(132%);
 }
 
 .natal-reading__chapter-toggle:hover,
 .natal-reading-explanations__toggle:hover {
-  background: color-mix(in srgb, var(--premium-accent-purple-strong) 8%, var(--natal-surface-reading-muted));
+  border-color: color-mix(in srgb, var(--premium-accent-purple-strong) 18%, var(--natal-border-liquid-bright));
+  background:
+    linear-gradient(145deg, color-mix(in srgb, var(--color-token-rgb-255-255-255) 72%, transparent), transparent 68%),
+    color-mix(in srgb, var(--premium-accent-purple-strong) 7%, var(--natal-surface-glass-lifted));
+  box-shadow:
+    var(--natal-inner-highlight),
+    0 9px 22px color-mix(in srgb, var(--premium-accent-purple-strong) 8%, transparent);
 }
 
 .natal-reading__progress-link:focus-visible,
@@ -1012,6 +1025,7 @@
 }
 
 .dark .natal-reading__chapter {
+  border-color: color-mix(in srgb, var(--glass-border) 48%, transparent);
   background:
     radial-gradient(ellipse at 100% 0, color-mix(in srgb, var(--color-token-rgb-255-255-255) 10%, transparent) 0 18%, transparent 42%),
     color-mix(in srgb, var(--natal-surface-reading) 88%, var(--natal-theme-color, var(--natal-border-accent)) 12%);
@@ -1060,7 +1074,10 @@
 
 .dark .natal-reading__chapter-toggle,
 .dark .natal-reading-explanations__toggle {
-  background: color-mix(in srgb, var(--premium-accent-purple-strong) 6%, var(--natal-surface-block));
+  border-color: color-mix(in srgb, var(--glass-border) 54%, transparent);
+  background:
+    linear-gradient(145deg, color-mix(in srgb, var(--color-token-rgb-255-255-255) 7%, transparent), transparent 68%),
+    color-mix(in srgb, var(--premium-accent-purple-strong) 6%, var(--natal-surface-block));
 }
 
 .natal-reading__precision-note {

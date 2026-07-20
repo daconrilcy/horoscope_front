@@ -5,6 +5,7 @@ import type { Lang } from '../i18n/predictions';
 import { getDomainLabel } from '../i18n/horoscope_copy';
 import { DomainIcon } from './prediction/DomainIcon';
 import { AstroMoodBackground } from './astro/AstroMoodBackground';
+import { EditorialText } from './ui/EditorialText/EditorialText';
 import type { ZodiacSign } from './astro/zodiacPatterns';
 import './DayClimateHero.css';
 
@@ -45,7 +46,7 @@ export const DayClimateHero: React.FC<Props> = ({
         </header>
 
         <p className="day-climate-hero__summary">
-          {dailySynthesis || climate.summary}
+          <EditorialText text={dailySynthesis || climate.summary} />
         </p>
 
         {(upgradeMessage || upgradeCta) && (
