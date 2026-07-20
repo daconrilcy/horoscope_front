@@ -41,7 +41,7 @@
 .dark .natal-card,
 .dark .natal-reading-facts {
   background:
-    linear-gradient(135deg, color-mix(in srgb, var(--color-token-rgb-255-255-255) 8%, transparent), transparent 54%),
+    linear-gradient(135deg, var(--natal-specular-soft), transparent 54%),
     var(--natal-surface-glass-lifted, var(--natal-panel-background));
 }
 

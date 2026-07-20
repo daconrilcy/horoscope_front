@@ -65,6 +65,17 @@
   color: var(--premium-accent-purple-strong);
 }
 
+.dark .natal-card__action {
+  border-color: var(--natal-border-liquid);
+  background: var(--natal-surface-chip);
+  box-shadow: var(--natal-inner-highlight);
+}
+
+.dark .natal-card__action:hover {
+  border-color: var(--natal-border-liquid-bright);
+  background: color-mix(in srgb, var(--premium-accent-purple) 10%, var(--natal-surface-chip));
+}
+
 .natal-card__action:disabled {
   cursor: not-allowed;
   opacity: 0.58;

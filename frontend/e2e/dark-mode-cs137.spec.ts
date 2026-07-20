@@ -1,5 +1,8 @@
 // Verifie en navigateur que les routes CS-137 utilisent les surfaces dark effectives.
 import { expect, test, type Page } from "@playwright/test"
+import { mkdirSync } from "node:fs"
+import { resolve } from "node:path"
+import { fileURLToPath } from "node:url"
 
 const ACCESS_TOKEN =
   "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiJkYXJrLW1vZGUtY3MxMzciLCJleHAiOjIwMDAwMDAwMDB9."
@@ -133,6 +136,9 @@ const PROFILE_RESPONSE = {
 }
 
 const NATAL_RUN_ID = "dark-natal"
+const NATAL_DARK_EVIDENCE_DIR = fileURLToPath(
+  new URL("../../output/playwright/natal-dark-refactor/", import.meta.url),
+)
 
 const NATAL_JOB_RESPONSE = {
   run_id: NATAL_RUN_ID,
@@ -335,6 +341,26 @@ async function readColorChannels(page: Page, selector: string, property: "color"
   }
 }
 
+/** Force le rendu progressif des longues pages avant une capture pleine hauteur. */
+async function prepareFullPageCapture(page: Page) {
+  await page.evaluate(async () => {
+    document.documentElement.style.scrollBehavior = "auto"
+    const frame = () => new Promise<void>((resolveFrame) => requestAnimationFrame(() => resolveFrame()))
+    const scrollStep = Math.max(Math.floor(window.innerHeight * 0.75), 320)
+
+    for (let scrollTop = 0; scrollTop < document.documentElement.scrollHeight; scrollTop += scrollStep) {
+      window.scrollTo(0, scrollTop)
+      await frame()
+      await frame()
+    }
+
+    window.scrollTo(0, 0)
+    await frame()
+    await frame()
+  })
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0)
+}
+
 test.describe("CS-137 dark mode runtime surfaces", () => {
   test("applique les surfaces dark effectives a toute la page dashboard", async ({ page }) => {
     await setupDarkSession(page)
@@ -441,6 +467,7 @@ test.describe("CS-137 dark mode runtime surfaces", () => {
   })
 
   test("applique les surfaces dark effectives sur /natal", async ({ page }) => {
+    test.setTimeout(process.env.NATAL_DARK_CAPTURE === "1" ? 60_000 : 30_000)
     await setupDarkSession(page)
 
     await page.goto(`/natal?runId=${NATAL_RUN_ID}`)
@@ -457,15 +484,41 @@ test.describe("CS-137 dark mode runtime surfaces", () => {
     )
     expect(appBackgroundToken).not.toContain("#fff")
 
+    const natalCanvasBackground = await page.locator(".page-layout.natal-page-container .page-layout__main").evaluate(
+      (element) => window.getComputedStyle(element).backgroundImage,
+    )
+    expect(natalCanvasBackground).not.toContain("rgba(255, 255, 255, 0.82)")
+    expect(natalCanvasBackground).toContain("radial-gradient")
+
     const headerBackground = await readColorChannels(page, ".app-header", "backgroundColor")
     expect(headerBackground.red).toBeLessThan(40)
     expect(headerBackground.green).toBeLessThan(50)
     expect(headerBackground.blue).toBeLessThan(80)
 
+    const headerControlBackground = await readColorChannels(page, ".app-header-theme-toggle", "backgroundColor")
+    expect(headerControlBackground.red).toBeLessThan(80)
+    expect(headerControlBackground.green).toBeLessThan(85)
+    expect(headerControlBackground.blue).toBeLessThan(115)
+    expect(headerControlBackground.alpha).toBeLessThan(0.6)
+
+    const themeToggle = page.locator(".app-header-theme-toggle")
+    const headerControlDefaultBackground = await themeToggle.evaluate(
+      (element) => window.getComputedStyle(element).backgroundColor,
+    )
+    await themeToggle.hover()
+    await expect
+      .poll(() => themeToggle.evaluate((element) => window.getComputedStyle(element).backgroundColor))
+      .not.toBe(headerControlDefaultBackground)
+    await page.mouse.move(0, 0)
+
     const titleColor = await readColorChannels(page, ".natal-reading-hero h1", "color")
     expect(titleColor.red).toBeGreaterThan(220)
     expect(titleColor.green).toBeGreaterThan(210)
     expect(titleColor.blue).toBeGreaterThan(220)
+
+    const sunIconColor = await readColorChannels(page, ".natal-reading-metrics__item--sun svg", "color")
+    expect(sunIconColor.red).toBeGreaterThan(180)
+    expect(sunIconColor.green).toBeGreaterThan(150)
 
     const chapterBackground = await readColorChannels(page, ".natal-reading__chapter", "backgroundColor")
     expect(chapterBackground.red).toBeLessThan(80)
@@ -473,11 +526,27 @@ test.describe("CS-137 dark mode runtime surfaces", () => {
     expect(chapterBackground.blue).toBeLessThan(120)
     expect(chapterBackground.alpha).toBeGreaterThanOrEqual(0.55)
 
+    const metricBackground = await readColorChannels(page, ".natal-reading-metrics__item", "backgroundColor")
+    expect(metricBackground.alpha).toBeGreaterThan(0.2)
+    expect(metricBackground.alpha).toBeLessThan(chapterBackground.alpha)
+
+    const chapterBodyBackground = await readColorChannels(page, ".natal-reading__chapter-body", "backgroundColor")
+    expect(chapterBodyBackground.alpha).toBeLessThan(chapterBackground.alpha)
+    expect(chapterBodyBackground.alpha).toBeGreaterThan(0.2)
+
     const summaryBackground = await readColorChannels(page, ".natal-reading-summary", "backgroundColor")
     expect(summaryBackground.red).toBeLessThan(80)
     expect(summaryBackground.green).toBeLessThan(90)
     expect(summaryBackground.blue).toBeLessThan(120)
-    expect(summaryBackground.alpha).toBeGreaterThanOrEqual(0.55)
+    expect(summaryBackground.alpha).toBeGreaterThan(0.3)
+    expect(summaryBackground.alpha).toBeLessThan(0.7)
+
+    const activeSummaryBackground = await readColorChannels(
+      page,
+      ".natal-reading-summary__button[aria-current='step']",
+      "backgroundColor",
+    )
+    expect(activeSummaryBackground.alpha).toBeLessThan(0.7)
 
     const badgeBackground = await readColorChannels(page, ".natal-badge--basis", "backgroundColor")
     expect(badgeBackground.red).toBeLessThan(100)
@@ -488,5 +557,58 @@ test.describe("CS-137 dark mode runtime surfaces", () => {
     expect(factsTextColor.red).toBeGreaterThan(220)
     expect(factsTextColor.green).toBeGreaterThan(210)
     expect(factsTextColor.blue).toBeGreaterThan(220)
+
+    const collapseButton = page.locator(".natal-reading__chapter-collapse").first()
+    await collapseButton.focus()
+    await expect(collapseButton).toBeFocused()
+    const focusOutline = await collapseButton.evaluate((element) => window.getComputedStyle(element).outlineStyle)
+    expect(focusOutline).toBe("solid")
+
+    await collapseButton.click()
+    await expect(page.locator(".natal-reading__chapter-body").first()).toBeHidden()
+    await collapseButton.click()
+    await expect(page.locator(".natal-reading__chapter-body").first()).toBeVisible()
+
+    if (process.env.NATAL_DARK_CAPTURE === "1") {
+      mkdirSync(NATAL_DARK_EVIDENCE_DIR, { recursive: true })
+      for (const viewport of [
+        { width: 1440, height: 900 },
+        { width: 430, height: 900 },
+        { width: 390, height: 844 },
+        { width: 360, height: 800 },
+      ]) {
+        await page.setViewportSize(viewport)
+        await expect(page.locator(".natal-reading__chapter-head h3").nth(1)).toBeVisible()
+        await prepareFullPageCapture(page)
+        await page.screenshot({
+          path: resolve(NATAL_DARK_EVIDENCE_DIR, `dark-${viewport.width}.png`),
+          fullPage: true,
+        })
+      }
+
+      await page.setViewportSize({ width: 390, height: 844 })
+      const guideToggle = page.locator(".natal-chart-guide__toggle")
+      await guideToggle.click()
+      await prepareFullPageCapture(page)
+      await page.screenshot({
+        path: resolve(NATAL_DARK_EVIDENCE_DIR, "dark-390-guide-expanded.png"),
+        fullPage: true,
+      })
+      await guideToggle.click()
+
+      await page.locator(".app-header-theme-toggle").click()
+      await expect(page.locator("html")).not.toHaveClass(/dark/)
+      for (const viewport of [
+        { width: 1440, height: 900 },
+        { width: 390, height: 844 },
+      ]) {
+        await page.setViewportSize(viewport)
+        await prepareFullPageCapture(page)
+        await page.screenshot({
+          path: resolve(NATAL_DARK_EVIDENCE_DIR, `day-${viewport.width}.png`),
+          fullPage: true,
+        })
+      }
+    }
   })
 })

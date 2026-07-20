@@ -37,6 +37,21 @@
   margin-top: 24px;
 }
 
+.dark .natal-astrologer-mode {
+  background:
+    linear-gradient(145deg, var(--natal-specular-soft), transparent 54%),
+    var(--natal-surface-section);
+  box-shadow: var(--natal-shadow-section);
+  backdrop-filter: var(--natal-glass-filter);
+  -webkit-backdrop-filter: var(--natal-glass-filter);
+}
+
+.dark .natal-astrologer-mode__toggle {
+  border-color: var(--natal-border-liquid);
+  background: var(--natal-surface-chip);
+  box-shadow: var(--natal-inner-highlight);
+}
+
 .natal-astrologer-mode__upsell {
   margin: 0;
 }

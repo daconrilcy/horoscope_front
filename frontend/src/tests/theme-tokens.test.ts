@@ -20,6 +20,7 @@ const natalCssPaths = [
   "../features/natal-chart/NatalTechnicalDetails.css",
   "../features/natal-chart/NatalProfileHero.css",
   "../features/natal-chart/NatalAstrologerMode.css",
+  "../features/natal-chart/NatalExpertPanel.css",
   "../components/NatalChartGuide.css",
   "../pages/NatalChartPage.css",
 ]
@@ -224,8 +225,8 @@ describe("theme.css validation (Static Analysis)", () => {
     expect(natalCssContent).toContain("--natal-tone-sun: var(--color-energy-g2)")
     expect(natalCssContent).toContain("--natal-type-reading-text-line-height: var(--line-height-prose-loose)")
     expect(natalCssContent).toMatch(/\.dark \.natal-page-container\s*\{[\s\S]*--natal-surface-page:\s*transparent/)
-    expect(natalCssContent).toMatch(/\.dark \.natal-page-container\s*\{[\s\S]*--natal-surface-section:\s*var\(--glass-card-premium-bg\)/)
-    expect(natalCssContent).toMatch(/\.dark \.natal-page-container\s*\{[\s\S]*--natal-panel-background:\s*var\(--glass-card-premium-bg\)/)
+    expect(natalCssContent).toMatch(/\.dark \.natal-page-container\s*\{[\s\S]*--natal-surface-section:\s*color-mix\(in srgb,\s*var\(--premium-glass-surface-2\)/)
+    expect(natalCssContent).toMatch(/\.dark \.natal-page-container\s*\{[\s\S]*--natal-panel-background:\s*color-mix\(in srgb,\s*var\(--premium-glass-surface-2\)/)
     expect(natalCssContent).toMatch(/\.dark \.natal-page-container\s*\{[\s\S]*--natal-glass-filter:\s*var\(--glass-card-backdrop-filter\)/)
     expect(natalCssContent).toContain("--natal-badge-key-surface: var(--natal-surface-chip)")
     expect(natalCssContent).toMatch(
@@ -256,6 +257,76 @@ describe("theme.css validation (Static Analysis)", () => {
     expect(natalCssContent).toMatch(
       /\.natal-reading-facts \.natal-reading-facts__marker,\s*\.natal-reading-facts \.natal-reading-facts__item-icon,\s*\.natal-reading-facts \.natal-reading-facts__method-icon,\s*\.natal-reading-facts \.natal-reading-facts__notice svg\s*\{[\s\S]*color:\s*var\(--premium-accent-purple-strong\)/,
     )
+  })
+
+  it("isole toutes les surfaces liquid glass critiques dans le scope dark de /natal", () => {
+    const darkNatalTokens = getScopeBlock(natalThemeCssContent, ".dark .natal-page-container")
+    const requiredDarkTokens = [
+      "--natal-surface-container",
+      "--natal-surface-section",
+      "--natal-surface-block",
+      "--natal-surface-reading",
+      "--natal-surface-reading-solid",
+      "--natal-surface-reading-soft",
+      "--natal-surface-reading-muted",
+      "--natal-surface-glass-deep",
+      "--natal-surface-glass-lifted",
+      "--natal-surface-glass-solid",
+      "--natal-liquid-edge",
+      "--natal-border-liquid",
+      "--natal-border-liquid-bright",
+      "--natal-inner-highlight",
+      "--natal-shadow-section",
+      "--natal-shadow-float",
+      "--natal-shadow-block",
+      "--natal-specular-soft",
+      "--natal-specular-strong",
+    ]
+
+    requiredDarkTokens.forEach((token) => {
+      expect(darkNatalTokens).toMatch(new RegExp(`${escapeRegex(token)}\\s*:`))
+    })
+    expect(darkNatalTokens).toContain("--premium-accent-purple-strong: var(--premium-accent-purple)")
+    expect(darkNatalTokens).toContain("--natal-tone-sun: var(--starfield-star-gold)")
+    expect(getTokenValue(natalThemeCssContent, ".natal-page-container", "--natal-surface-reading-solid"))
+      .toContain("var(--color-token-rgb-255-255-255) 97%")
+    expect(getTokenValue(natalThemeCssContent, ".dark .natal-page-container", "--natal-surface-reading-solid"))
+      .not.toContain("var(--color-token-rgb-255-255-255) 97%")
+  })
+
+  it("neutralise le voile day et les controles clairs uniquement sous .dark", () => {
+    const dayMain = getScopeBlock(natalChartPageCssContent, ".page-layout.natal-page-container .page-layout__main")
+    const darkMain = getScopeBlock(natalChartPageCssContent, ".dark .page-layout.natal-page-container .page-layout__main")
+    const darkControls = getScopeBlock(
+      natalChartPageCssContent,
+      ".dark body:has(.is-natal-page) .app-header-language-toggle",
+    )
+
+    expect(dayMain).toContain("var(--color-token-rgb-255-255-255) 82%")
+    expect(darkMain).not.toContain("var(--color-token-rgb-255-255-255) 82%")
+    expect(darkMain).toContain("var(--premium-accent-purple) 8%")
+    expect(darkControls).toContain("background: color-mix(in srgb, var(--premium-glass-surface-3) 48%, transparent)")
+    expect(darkControls).not.toContain("var(--color-token-rgb-255-255-255) 68%")
+  })
+
+  it("protege les surfaces dark des etats secondaires de /natal", () => {
+    expect(getScopeBlock(natalCssContent, ".dark .natal-expert-section"))
+      .toContain("var(--natal-surface-glass-lifted)")
+    expect(getScopeBlock(natalCssContent, ".dark .natal-expert-string-list"))
+      .toContain("background: var(--natal-surface-reading-muted)")
+    expect(getScopeBlock(natalCssContent, ".dark .natal-card__action"))
+      .toContain("background: var(--natal-surface-chip)")
+    expect(getScopeBlock(natalCssContent, ".dark .natal-astrologer-mode"))
+      .toContain("var(--natal-surface-section)")
+    expect(getScopeBlock(natalCssContent, ".dark .natal-chart-guide__glossary-item"))
+      .toContain("background: var(--natal-surface-reading-soft)")
+
+    const darkMetricItemBlocks = getSelectorBlocks(natalReadingCssContent, ".dark .natal-reading-metrics__item")
+    expect(darkMetricItemBlocks).toHaveLength(2)
+    darkMetricItemBlocks.forEach((block) => {
+      expect(block).toContain("background: var(--natal-surface-data)")
+      expect(block).not.toContain("background: var(--premium-glass-surface-3)")
+    })
   })
 
   it("standardise la typographie publique de /natal sur des roles stables en desktop et mobile", () => {
