@@ -225,8 +225,8 @@ describe("theme.css validation (Static Analysis)", () => {
     expect(natalCssContent).toContain("--natal-tone-sun: var(--color-energy-g2)")
     expect(natalCssContent).toContain("--natal-type-reading-text-line-height: var(--line-height-prose-loose)")
     expect(natalCssContent).toMatch(/\.dark \.natal-page-container\s*\{[\s\S]*--natal-surface-page:\s*transparent/)
-    expect(natalCssContent).toMatch(/\.dark \.natal-page-container\s*\{[\s\S]*--natal-surface-section:\s*color-mix\(in srgb,\s*var\(--premium-glass-surface-2\)/)
-    expect(natalCssContent).toMatch(/\.dark \.natal-page-container\s*\{[\s\S]*--natal-panel-background:\s*color-mix\(in srgb,\s*var\(--premium-glass-surface-2\)/)
+    expect(natalCssContent).toMatch(/\.dark \.natal-page-container\s*\{[\s\S]*--natal-surface-section:\s*color-mix\(in srgb,\s*color-mix\(in srgb,\s*var\(--premium-glass-surface-2\)/)
+    expect(natalCssContent).toMatch(/\.dark \.natal-page-container\s*\{[\s\S]*--natal-panel-background:\s*color-mix\(in srgb,\s*color-mix\(in srgb,\s*var\(--premium-glass-surface-2\)/)
     expect(natalCssContent).toMatch(/\.dark \.natal-page-container\s*\{[\s\S]*--natal-glass-filter:\s*var\(--glass-card-backdrop-filter\)/)
     expect(natalCssContent).toContain("--natal-badge-key-surface: var(--natal-surface-chip)")
     expect(natalCssContent).toMatch(

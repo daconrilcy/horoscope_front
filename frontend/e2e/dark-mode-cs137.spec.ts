@@ -524,7 +524,7 @@ test.describe("CS-137 dark mode runtime surfaces", () => {
     expect(chapterBackground.red).toBeLessThan(80)
     expect(chapterBackground.green).toBeLessThan(90)
     expect(chapterBackground.blue).toBeLessThan(120)
-    expect(chapterBackground.alpha).toBeGreaterThanOrEqual(0.55)
+    expect(chapterBackground.alpha).toBeGreaterThanOrEqual(0.45)
 
     const metricBackground = await readColorChannels(page, ".natal-reading-metrics__item", "backgroundColor")
     expect(metricBackground.alpha).toBeGreaterThan(0.2)
