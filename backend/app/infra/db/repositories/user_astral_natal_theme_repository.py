@@ -50,6 +50,28 @@ class UserAstralNatalThemeRepository:
             select(UserAstralNatalThemeModel).where(UserAstralNatalThemeModel.run_id == run_id)
         )
 
+    def list_recent_themes(
+        self,
+        *,
+        user_id: int,
+        birth_profile_id: int,
+    ) -> list[UserAstralNatalThemeModel]:
+        """Retourne les thèmes actifs récents d'un profil, tous niveaux confondus."""
+        return list(
+            self.db.scalars(
+                select(UserAstralNatalThemeModel)
+                .where(
+                    UserAstralNatalThemeModel.user_id == user_id,
+                    UserAstralNatalThemeModel.birth_profile_id == birth_profile_id,
+                    UserAstralNatalThemeModel.status.in_(["queued", "running", "completed"]),
+                )
+                .order_by(
+                    UserAstralNatalThemeModel.created_at.desc(),
+                    UserAstralNatalThemeModel.id.desc(),
+                )
+            )
+        )
+
     def upsert_response(
         self,
         *,

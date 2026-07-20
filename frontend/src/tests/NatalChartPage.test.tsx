@@ -1,4 +1,5 @@
 // Vérifie que la page thème natal ne boucle pas après un échec Astral.
+import type { ComponentProps } from "react"
 import { QueryClient, QueryClientProvider, useMutation } from "@tanstack/react-query"
 import { cleanup, render, screen, waitFor, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
@@ -17,6 +18,7 @@ const mockSubmitAstralJob = vi.fn()
 const mockUseEntitlementsSnapshot = vi.fn()
 const mockUseAccessTokenSnapshot = vi.fn()
 const mockUseAstralJobStatus = vi.fn()
+const mockUseLatestAstralNatalJob = vi.fn()
 const mockUseAstralJobEvents = vi.fn()
 const mockUseBirthData = vi.fn()
 let capturedAstralEventHandler: ((event: unknown) => void) | null = null
@@ -36,6 +38,7 @@ vi.mock("../api/astral", async () => {
       })
     },
     useAstralJobStatus: () => mockUseAstralJobStatus(),
+    useLatestAstralNatalJob: () => mockUseLatestAstralNatalJob(),
     useAstralJobEvents: (...args: unknown[]) => {
       mockUseAstralJobEvents(...args)
       capturedAstralEventHandler = typeof args[2] === "function" ? args[2] as (event: unknown) => void : null
@@ -59,7 +62,9 @@ vi.mock("../utils/authToken", () => ({
 
 let queryClient: QueryClient
 
-function renderNatalChartPage(initialEntries = ["/natal"]) {
+type NatalTestEntries = NonNullable<ComponentProps<typeof MemoryRouter>["initialEntries"]>
+
+function renderNatalChartPage(initialEntries: NatalTestEntries = ["/natal"]) {
   return render(
     <QueryClientProvider client={queryClient}>
       <MemoryRouter initialEntries={initialEntries}>
@@ -119,6 +124,11 @@ beforeEach(() => {
   })
   mockUseAstralJobStatus.mockReturnValue({
     data: undefined,
+    isError: false,
+    isPending: false,
+  })
+  mockUseLatestAstralNatalJob.mockReturnValue({
+    data: null,
     isError: false,
     isPending: false,
   })
@@ -272,6 +282,60 @@ describe("NatalChartPage", () => {
     expect(screen.getByRole("heading", { name: "Votre thème natal" })).toBeVisible()
     expect(screen.getByText(/Une synthèse structurée de vos marqueurs personnels/i)).toBeVisible()
     expect(screen.getByRole("heading", { name: "Comment lire ton thème natal" })).toBeVisible()
+    expect(await screen.findByRole("button", { name: "Lancer le thème natal" })).toBeEnabled()
+    expect(mockSubmitAstralJob).not.toHaveBeenCalled()
+  })
+
+  it("restaure automatiquement le theme existant depuis le menu lateral", async () => {
+    mockUseLatestAstralNatalJob.mockReturnValue({
+      data: {
+        run_id: "run-existing-natal",
+        status: "completed",
+        service_code: "natal_premium",
+        result: {
+          reading: {
+            status: "success",
+            reading: {
+              schema_version: "natal_reading_v1",
+              summary: {
+                title: "Thème natal existant",
+                short_text: "Lecture déjà calculée.",
+              },
+              chapters: [
+                {
+                  title: "Identité",
+                  summary_sentence: "Une lecture restaurée.",
+                  body: "Le thème existant est affiché sans action intermédiaire.",
+                },
+              ],
+            },
+          },
+        },
+      },
+      isError: false,
+      isPending: false,
+    })
+
+    renderNatalChartPage([
+      {
+        pathname: "/natal",
+        state: { autoOpenExistingNatal: true },
+      },
+    ])
+
+    expect(await screen.findByRole("heading", { name: "Thème natal" })).toBeVisible()
+    expect(mockSubmitAstralJob).not.toHaveBeenCalled()
+    expect(screen.queryByRole("button", { name: "Lancer le thème natal" })).not.toBeInTheDocument()
+  })
+
+  it("ne lance aucun calcul depuis le menu lateral si aucun theme natal n'existe", async () => {
+    renderNatalChartPage([
+      {
+        pathname: "/natal",
+        state: { autoOpenExistingNatal: true },
+      },
+    ])
+
     expect(await screen.findByRole("button", { name: "Lancer le thème natal" })).toBeEnabled()
     expect(mockSubmitAstralJob).not.toHaveBeenCalled()
   })

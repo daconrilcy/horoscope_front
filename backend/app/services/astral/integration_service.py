@@ -219,6 +219,38 @@ class AstralIntegrationService:
                 },
             ) from error
 
+    def get_latest_natal_job(
+        self,
+        *,
+        db: Session,
+        user: AuthenticatedUser,
+    ) -> dict[str, Any] | None:
+        """Retrouve le thème natal actif le plus récent sans lancer de nouveau calcul."""
+        user_plan = self._resolve_user_plan(db, user.id)
+        birth_payload = self._resolve_birth_payload(db, user.id, None)
+        birth_profile_id = self._birth_profile_id(db, user.id, None)
+        valid_fingerprints = {
+            self._natal_birth_fingerprint(
+                birth_payload=birth_payload,
+                effective_product=effective_product,
+            )
+            for effective_product in NATAL_PRODUCTS
+        }
+
+        for theme in UserAstralNatalThemeRepository(db).list_recent_themes(
+            user_id=user.id,
+            birth_profile_id=birth_profile_id,
+        ):
+            if theme.birth_fingerprint not in valid_fingerprints:
+                continue
+            if PLAN_RANK.get(theme.theme_level, 99) > PLAN_RANK[user_plan]:
+                continue
+            if theme.status in {"queued", "running"} or self._is_reusable_natal_response(
+                theme.response_payload
+            ):
+                return self._cached_job_response(theme.response_payload)
+        return None
+
     def mercure_topic(self, *, tenant_id: str, run_id: str) -> str:
         """Construit le topic Mercure canonique du job."""
         return f"tenants/{tenant_id}/jobs/{run_id}"

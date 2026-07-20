@@ -34,6 +34,13 @@ class AstralJobApiResponse(BaseModel):
     meta: ResponseMeta
 
 
+class OptionalAstralJobApiResponse(BaseModel):
+    """Réponse publique contenant éventuellement un job natal déjà existant."""
+
+    data: dict[str, Any] | None
+    meta: ResponseMeta
+
+
 class AstralJobEventsResponse(BaseModel):
     """Reponse de decouverte du flux Mercure associe a un job."""
 

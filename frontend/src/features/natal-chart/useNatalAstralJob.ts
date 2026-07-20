@@ -1,6 +1,6 @@
 // Orchestration du job Astral natal et projection de lecture pour la page thème natal.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { useSearchParams } from "react-router-dom"
+import { useLocation, useSearchParams } from "react-router-dom"
 import { useQueryClient } from "@tanstack/react-query"
 
 import {
@@ -8,11 +8,13 @@ import {
   type AstralJobResponse,
   useAstralJobEvents,
   useAstralJobStatus,
+  useLatestAstralNatalJob,
   useSubmitAstralJob,
 } from "../../api/astral"
 import { useBirthData } from "../../api/useBirthData"
 import { useEntitlementsSnapshot } from "../../hooks/useEntitlementSnapshot"
 import { hasUsableAccessToken, useAccessTokenSnapshot } from "../../utils/authToken"
+import { shouldAutoOpenExistingNatal } from "../../utils/natalNavigationState"
 import {
   NATAL_ENTITLEMENT_FEATURE_CODE,
   buildNatalAstralJobRequest,
@@ -59,8 +61,10 @@ export type UseNatalAstralJobResult = {
 export function useNatalAstralJob(): UseNatalAstralJobResult {
   const accessToken = useAccessTokenSnapshot()
   const queryClient = useQueryClient()
+  const location = useLocation()
   const [searchParams, setSearchParams] = useSearchParams()
   const initialRunId = searchParams.get("runId")
+  const shouldRestoreExistingTheme = shouldAutoOpenExistingNatal(location.state) && !initialRunId
   const hasValidSession = hasUsableAccessToken(accessToken)
   const entitlementsSnapshot = useEntitlementsSnapshot()
   const birthDataSnapshot = useBirthData(accessToken)
@@ -76,19 +80,29 @@ export function useNatalAstralJob(): UseNatalAstralJobResult {
   const [isAwaitingCompletedResult, setIsAwaitingCompletedResult] = useState(false)
   const startInFlightRef = useRef(false)
   const submitJob = useSubmitAstralJob(accessToken)
+  const latestNatalJob = useLatestAstralNatalJob(
+    accessToken,
+    shouldRestoreExistingTheme && !runId,
+    location.key,
+  )
   const jobStatus = useAstralJobStatus(accessToken, runId)
-  const currentJob = mergeCurrentAstralJobState(eventJob, jobStatus.data, submitJob.data)
+  const currentJob = mergeCurrentAstralJobState(
+    eventJob,
+    jobStatus.data,
+    submitJob.data ?? latestNatalJob.data ?? undefined,
+  )
   const natalReading = useMemo(
     () => buildNatalInterpretationViewModel(currentJob, plan, birthDataSnapshot.data ?? null),
     [birthDataSnapshot.data, currentJob, plan],
   )
   const isWorking =
     submitJob.isPending ||
+    (shouldRestoreExistingTheme && !runId && latestNatalJob.isPending) ||
     currentJob?.status === "queued" ||
     currentJob?.status === "running" ||
     (isAwaitingCompletedResult && !currentJob?.result)
-  const hasTransportError = submitJob.isError || jobStatus.isError
-  const canStart = hasValidSession && !submitJob.isPending && !isWorking
+  const hasTransportError = submitJob.isError || jobStatus.isError || latestNatalJob.isError
+  const canStart = hasValidSession && !submitJob.isPending && !latestNatalJob.isPending && !isWorking
   const canRetry = canStart
 
   const startJob = useCallback(() => {
@@ -96,6 +110,7 @@ export function useNatalAstralJob(): UseNatalAstralJobResult {
     startInFlightRef.current = true
     submitJob.mutate(buildNatalAstralJobRequest({ plan }), {
       onSuccess: (response) => {
+        void queryClient.invalidateQueries({ queryKey: ["latest-astral-natal-job"] })
         setRunId(response.run_id)
         const nextParams = new URLSearchParams(searchParams)
         nextParams.set("runId", response.run_id)
@@ -105,7 +120,15 @@ export function useNatalAstralJob(): UseNatalAstralJobResult {
         startInFlightRef.current = false
       },
     })
-  }, [hasValidSession, isWorking, plan, searchParams, setSearchParams, submitJob])
+  }, [hasValidSession, isWorking, plan, queryClient, searchParams, setSearchParams, submitJob])
+
+  useEffect(() => {
+    if (!shouldRestoreExistingTheme || runId || !latestNatalJob.data?.run_id) return
+    setRunId(latestNatalJob.data.run_id)
+    const nextParams = new URLSearchParams(searchParams)
+    nextParams.set("runId", latestNatalJob.data.run_id)
+    setSearchParams(nextParams, { replace: true })
+  }, [latestNatalJob.data, runId, searchParams, setSearchParams, shouldRestoreExistingTheme])
 
   useEffect(() => {
     setEventJob(null)

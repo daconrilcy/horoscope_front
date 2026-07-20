@@ -12,6 +12,7 @@ import { useSidebarContext } from "@state/SidebarContext"
 import { useAccessTokenSnapshot } from "@utils/authToken"
 import { useQueryClient } from "@tanstack/react-query"
 import { prefetchDailyHoroscope } from "../../utils/prefetchHelpers"
+import { NATAL_AUTO_OPEN_NAVIGATION_STATE } from "../../utils/natalNavigationState"
 import { getAllNavItems } from "../../ui/nav"
 
 export function Sidebar() {
@@ -55,6 +56,7 @@ export function Sidebar() {
                 key={item.path}
                 ref={index === 0 ? firstLinkRef : undefined}
                 to={item.path}
+                state={item.key === "natal" ? NATAL_AUTO_OPEN_NAVIGATION_STATE : undefined}
                 onClick={() => {
                   collapseSidebar()
                   if (item.key === 'today') {

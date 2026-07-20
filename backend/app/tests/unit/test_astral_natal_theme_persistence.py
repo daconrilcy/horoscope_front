@@ -399,6 +399,41 @@ async def test_premium_theme_is_not_reused_by_default(
 
 
 @pytest.mark.asyncio
+async def test_latest_natal_theme_restores_premium_without_new_submission(
+    db_session: Session,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """La consultation du dernier thème Premium ne déclenche aucun nouveau calcul."""
+    fake_client = FakeAstralClient()
+    monkeypatch.setattr(
+        AstralIntegrationService,
+        "_resolve_user_plan",
+        staticmethod(lambda *_: "premium"),
+    )
+    service = AstralIntegrationService(client=fake_client)  # type: ignore[arg-type]
+
+    await _generate_completed_theme(
+        service,
+        db_session,
+        plan="premium",
+        client_request_id="premium-latest-request-1",
+    )
+    latest_theme = await _generate_completed_theme(
+        service,
+        db_session,
+        plan="premium",
+        client_request_id="premium-latest-request-2",
+    )
+
+    restored = service.get_latest_natal_job(db=db_session, user=_user())
+
+    assert restored is not None
+    assert restored["cached"] is True
+    assert restored["run_id"] == latest_theme["run_id"]
+    assert len(fake_client.submitted_payloads) == 2
+
+
+@pytest.mark.asyncio
 async def test_premium_user_can_reuse_included_basic_theme(
     db_session: Session,
     monkeypatch: pytest.MonkeyPatch,

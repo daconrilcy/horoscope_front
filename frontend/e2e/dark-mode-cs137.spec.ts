@@ -471,7 +471,6 @@ test.describe("CS-137 dark mode runtime surfaces", () => {
     await setupDarkSession(page)
 
     await page.goto(`/natal?runId=${NATAL_RUN_ID}`)
-    await page.waitForLoadState("networkidle")
 
     await expect(page.locator("html")).toHaveClass(/dark/)
     await expect(page.getByRole("heading", { name: "Thème natal", exact: true })).toBeVisible()
@@ -494,6 +493,12 @@ test.describe("CS-137 dark mode runtime surfaces", () => {
     expect(headerBackground.red).toBeLessThan(40)
     expect(headerBackground.green).toBeLessThan(50)
     expect(headerBackground.blue).toBeLessThan(80)
+    await expect(page.locator(".app-header")).toHaveCSS("position", "fixed")
+    await page.evaluate(() => window.scrollTo(0, 600))
+    await expect
+      .poll(() => page.locator(".app-header").evaluate((element) => element.getBoundingClientRect().top))
+      .toBe(0)
+    await page.evaluate(() => window.scrollTo(0, 0))
 
     const headerControlBackground = await readColorChannels(page, ".app-header-theme-toggle", "backgroundColor")
     expect(headerControlBackground.red).toBeLessThan(80)
@@ -610,5 +615,37 @@ test.describe("CS-137 dark mode runtime surfaces", () => {
         })
       }
     }
+  })
+
+  test("restaure le theme natal existant depuis le menu lateral", async ({ page }) => {
+    await setupDarkSession(page)
+    let latestCount = 0
+    let submitCount = 0
+    await page.route("**/v1/astral/jobs/natal/latest", async (route) => {
+      latestCount += 1
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ data: NATAL_JOB_RESPONSE }),
+      })
+    })
+    await page.route("**/v1/astral/jobs", async (route) => {
+      submitCount += 1
+      await route.fulfill({
+        status: 500,
+        contentType: "application/json",
+        body: JSON.stringify({ error: { code: "unexpected_submit" } }),
+      })
+    })
+
+    await page.goto("/dashboard")
+    await page.getByRole("button", { name: "Ouvrir le menu" }).click()
+    await page.getByRole("complementary").getByRole("link", { name: "Thème", exact: true }).click()
+
+    await expect(page).toHaveURL(/\/natal\?runId=dark-natal$/)
+    await expect(page.getByRole("heading", { name: "Thème natal", exact: true })).toBeVisible()
+    await expect(page.getByRole("button", { name: "Lancer le thème natal" })).toHaveCount(0)
+    expect(latestCount).toBe(1)
+    expect(submitCount).toBe(0)
   })
 })

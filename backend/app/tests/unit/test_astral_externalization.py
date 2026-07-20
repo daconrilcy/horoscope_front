@@ -35,6 +35,7 @@ def test_removed_legacy_product_routes_are_not_mounted() -> None:
     )
 
     assert "/v1/astral/jobs" in paths
+    assert "/v1/astral/jobs/natal/latest" in paths
     assert not [
         path for path in paths if any(path.startswith(prefix) for prefix in forbidden_prefixes)
     ]

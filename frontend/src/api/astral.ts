@@ -8,7 +8,7 @@ import {
   parseApiErrorDetails,
   type ApiResponseEnvelope,
 } from "./client"
-import { hasUsableAccessToken } from "../utils/authToken"
+import { getSubjectFromAccessToken, hasUsableAccessToken } from "../utils/authToken"
 
 export type AstralPlan = "free" | "basic" | "premium"
 export type AstralProduct = "natal_simplified" | "natal_full" | "horoscope_daily" | "horoscope_period"
@@ -124,6 +124,20 @@ export async function getAstralJobStatus(
   return readAstralResponse<AstralJobResponse>(response)
 }
 
+export async function getLatestAstralNatalJob(
+  accessToken: string,
+): Promise<AstralJobResponse | null> {
+  if (!hasUsableAccessToken(accessToken)) {
+    throw new ApiError("unauthorized", "access token is required", 401)
+  }
+  const response = await apiFetch("/v1/astral/jobs/natal/latest", {
+    method: "GET",
+    headers: { Authorization: `Bearer ${accessToken}` },
+    timeoutMs: 15000,
+  })
+  return readAstralResponse<AstralJobResponse | null>(response)
+}
+
 export function useSubmitAstralJob(accessToken: string | null) {
   return useMutation({
     mutationFn: (request: AstralJobRequest) => {
@@ -150,6 +164,27 @@ export function useAstralJobStatus(accessToken: string | null, runId: string | n
       }
       return failureCount < 2
     },
+  })
+}
+
+export function useLatestAstralNatalJob(
+  accessToken: string | null,
+  enabled: boolean,
+  navigationKey: string,
+) {
+  const tokenSubject = getSubjectFromAccessToken(accessToken)
+  return useQuery({
+    queryKey: ["latest-astral-natal-job", tokenSubject, navigationKey],
+    queryFn: () => getLatestAstralNatalJob(accessToken!),
+    enabled: enabled && hasUsableAccessToken(accessToken),
+    retry: (failureCount, error) => {
+      if (error instanceof ApiError && error.status >= 400 && error.status < 500) {
+        return false
+      }
+      return failureCount < 2
+    },
+    staleTime: 0,
+    gcTime: 0,
   })
 }
 

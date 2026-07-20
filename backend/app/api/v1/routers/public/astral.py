@@ -21,6 +21,7 @@ from app.services.api_contracts.common import ErrorEnvelope
 from app.services.api_contracts.public.astral import (
     AstralJobApiResponse,
     AstralJobCreateRequest,
+    OptionalAstralJobApiResponse,
 )
 from app.services.astral.integration_service import (
     AstralIntegrationService,
@@ -240,6 +241,42 @@ async def submit_astral_job(
                 "requested_plan": payload.plan,
                 "status_code": status_code,
             },
+        )
+        public_code, public_message, public_details = _public_astral_error_payload(error)
+        return build_error_response(
+            status_code=status_code,
+            request_id=request_id,
+            code=public_code,
+            message=public_message,
+            details=public_details,
+        )
+
+
+@router.get(
+    "/jobs/natal/latest",
+    response_model=OptionalAstralJobApiResponse,
+    responses={401: {"model": ErrorEnvelope}, 404: {"model": ErrorEnvelope}},
+)
+async def get_latest_natal_job(
+    request: Request,
+    current_user: AuthenticatedUser = Depends(require_authenticated_user),
+    db: Session = Depends(get_db_session),
+) -> Any:
+    """Retourne le dernier thème natal compatible sans déclencher de génération."""
+    request_id = resolve_request_id(request)
+    try:
+        data = AstralIntegrationService().get_latest_natal_job(db=db, user=current_user)
+        return {
+            "data": _public_astral_job_data(data) if data is not None else None,
+            "meta": {"request_id": request_id},
+        }
+    except AstralIntegrationServiceError as error:
+        status_code = _resolve_astral_error_status(error)
+        _log_astral_service_error(
+            event_name="astral_latest_natal_job_failed",
+            request_id=request_id,
+            error=error,
+            context={"status_code": status_code},
         )
         public_code, public_message, public_details = _public_astral_error_payload(error)
         return build_error_response(

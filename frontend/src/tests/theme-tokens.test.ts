@@ -309,6 +309,21 @@ describe("theme.css validation (Static Analysis)", () => {
     expect(darkControls).not.toContain("var(--color-token-rgb-255-255-255) 68%")
   })
 
+  it("garde le menu top de /natal fixe sans recouvrir le contenu", () => {
+    const natalHeader = getScopeBlock(
+      natalChartPageCssContent,
+      "body:has(.is-natal-page) .app-header",
+    )
+    const natalShellBody = getScopeBlock(
+      natalChartPageCssContent,
+      "body:has(.is-natal-page) .app-shell-body",
+    )
+
+    expect(natalHeader).toContain("position: fixed")
+    expect(natalHeader).toContain("top: 0")
+    expect(natalShellBody).toContain("padding-top: 54px")
+  })
+
   it("protege les surfaces dark des etats secondaires de /natal", () => {
     expect(getScopeBlock(natalCssContent, ".dark .natal-expert-section"))
       .toContain("var(--natal-surface-glass-lifted)")

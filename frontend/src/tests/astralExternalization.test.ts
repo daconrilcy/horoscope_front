@@ -89,4 +89,30 @@ describe("Astral externalization guardrails", () => {
       }),
     )
   })
+
+  it("consulte le dernier theme natal sans soumettre de nouveau job", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          data: { run_id: "run-existing", status: "completed" },
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      ),
+    )
+    vi.stubGlobal("fetch", fetchMock)
+    const token = [
+      btoa(JSON.stringify({ alg: "HS256", typ: "JWT" })),
+      btoa(JSON.stringify({ sub: "1", exp: Math.floor(Date.now() / 1000) + 3600 })),
+      "sig",
+    ].join(".")
+
+    await expect(astralApi.getLatestAstralNatalJob(token)).resolves.toMatchObject({
+      run_id: "run-existing",
+      status: "completed",
+    })
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringContaining("/v1/astral/jobs/natal/latest"),
+      expect.objectContaining({ method: "GET" }),
+    )
+  })
 })
