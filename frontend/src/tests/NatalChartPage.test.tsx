@@ -777,6 +777,7 @@ describe("NatalChartPage", () => {
     expect(screen.getByLabelText("Sommaire de lecture")).toHaveTextContent("Relations")
     expect(screen.getByLabelText("Sommaire de lecture")).toHaveTextContent("Éléments du calcul")
     expect(screen.getByLabelText("Sommaire de lecture")).toHaveTextContent("Repères astrologiques")
+    expect(screen.getByLabelText("Sommaire de lecture")).toHaveTextContent("Guide de lecture")
     expect(screen.getByLabelText("Sommaire de lecture")).not.toHaveTextContent("Comment lire ton thème natal")
     const progressBar = container.querySelector(".natal-reading-summary__bar")
     expect(progressBar).toHaveProperty("value", 0)
@@ -852,10 +853,12 @@ describe("NatalChartPage", () => {
     expect(screen.getByText("Repères & évidences")).toBeVisible()
     expect(screen.getByText("Soleil en Cancer")).toBeVisible()
     expect(screen.getByText("Lune en Balance")).toBeVisible()
-    const calculationFactsLink = screen.getByRole("link", { name: /Éléments du calcul/ })
-    const explanationsLink = screen.getByRole("link", { name: /Repères astrologiques/ })
+    const calculationFactsLink = screen.getByRole("button", { name: /Éléments du calcul/ })
+    const explanationsLink = screen.getByRole("button", { name: /Repères astrologiques/ })
+    const guideSummaryButton = screen.getByRole("button", { name: /Guide de lecture/ })
     expect(calculationFactsLink).not.toHaveAttribute("aria-current", "step")
     expect(explanationsLink).not.toHaveAttribute("aria-current", "step")
+    expect(guideSummaryButton).toHaveClass("natal-reading-summary__extra-link", "natal-reading-summary__guide")
     viewportStage.current = "facts"
     window.dispatchEvent(new Event("scroll"))
     await waitFor(() => {
@@ -868,6 +871,9 @@ describe("NatalChartPage", () => {
       expect(explanationsLink).toHaveAttribute("aria-current", "step")
       expect(progressBar).toHaveProperty("value", 100)
     })
+    await user.click(guideSummaryButton)
+    expect(guideSummaryButton).toHaveAttribute("aria-current", "step")
+    expect(scrollIntoViewMock).toHaveBeenLastCalledWith({ behavior: "smooth", block: "start" })
     const firstMetaToggle = screen.getAllByRole("button", { name: "Afficher les repères" })[0]
     expect(firstMetaToggle).toHaveAttribute("aria-expanded", "false")
     await user.click(firstMetaToggle)

@@ -4,10 +4,8 @@ import { Link } from "react-router-dom"
 import {
   ArrowRight,
   BadgeCheck,
-  BookOpen,
   CalendarDays,
   ChevronDown,
-  ChevronRight,
   ChevronUp,
   CircleDot,
   Clock,
@@ -102,6 +100,7 @@ type ReadingMetric = NatalHighlightFactViewModel & {
 
 type SummaryExtraEntry = {
   anchorId: string
+  className?: string
   indexLabel: string
   key: string
   subtitle: string
@@ -634,15 +633,16 @@ function NatalReadingSummaryNav({
         ))}
         {extraEntries.map((entry) => (
           <li className="natal-reading-summary__item natal-reading-summary__item--extra" key={entry.key}>
-            <a
+            <button
               aria-current={activeChapterKey === `extra-${entry.key}` ? "step" : undefined}
               className={[
                 "natal-reading-summary__extra-link",
+                entry.className,
                 activeChapterKey === `extra-${entry.key}` ? "is-active" : "",
               ]
                 .filter(Boolean)
                 .join(" ")}
-              href={`#${entry.anchorId}`}
+              type="button"
               onClick={() => onNavigate(entry.anchorId, `extra-${entry.key}`)}
             >
               <span className="natal-reading-summary__index natal-reading-summary__index--extra" aria-hidden="true">
@@ -652,17 +652,10 @@ function NatalReadingSummaryNav({
                 <span className="natal-reading-summary__title">{entry.title}</span>
                 <span className="natal-reading-summary__excerpt">{entry.subtitle}</span>
               </span>
-            </a>
+            </button>
           </li>
         ))}
       </ol>
-      <a href={`#${READING_GUIDE_SECTION_ID}`} className="natal-reading-summary__guide">
-        <span className="natal-reading-summary__guide-label">
-          <BookOpen size={18} aria-hidden="true" />
-          Guide de lecture
-        </span>
-        <ChevronRight size={16} aria-hidden="true" />
-      </a>
     </aside>
   )
 }
@@ -891,8 +884,19 @@ export function NatalAstralReading({ guide, reading, showSummary = true }: Natal
       })
     }
 
+    if (guide) {
+      entries.push({
+        anchorId: READING_GUIDE_SECTION_ID,
+        className: "natal-reading-summary__guide",
+        indexLabel: String(startIndex + entries.length + 1),
+        key: "reading-guide",
+        subtitle: "Comprendre les clés de votre lecture",
+        title: "Guide de lecture",
+      })
+    }
+
     return entries
-  }, [mainChapterEntries.length, reading.calculationFacts, reading.explanations.length])
+  }, [guide, mainChapterEntries.length, reading.calculationFacts, reading.explanations.length])
 
   const summaryTrackedEntries = useMemo<SummaryTrackedEntry[]>(
     () => [

@@ -506,6 +506,41 @@ test.describe("CS-137 dark mode runtime surfaces", () => {
     await expect
       .poll(() => page.locator(".natal-reading__chapter").nth(1).evaluate((element) => element.getBoundingClientRect().top))
       .toBeGreaterThanOrEqual(70)
+
+    const guideSummaryButton = page.locator(".natal-reading-summary__guide")
+    const secondarySummaryButton = page.locator(".natal-reading-summary__extra-link").first()
+    await expect(guideSummaryButton).toHaveJSProperty("tagName", "BUTTON")
+    const guideButtonLayout = await guideSummaryButton.evaluate((element) => {
+      const styles = window.getComputedStyle(element)
+      return {
+        borderRadius: styles.borderRadius,
+        display: styles.display,
+        gridTemplateColumns: styles.gridTemplateColumns,
+        minHeight: styles.minHeight,
+        padding: styles.padding,
+      }
+    })
+    const secondaryButtonLayout = await secondarySummaryButton.evaluate((element) => {
+      const styles = window.getComputedStyle(element)
+      return {
+        borderRadius: styles.borderRadius,
+        display: styles.display,
+        gridTemplateColumns: styles.gridTemplateColumns,
+        minHeight: styles.minHeight,
+        padding: styles.padding,
+      }
+    })
+    expect(guideButtonLayout).toEqual(secondaryButtonLayout)
+    await guideSummaryButton.evaluate((element) => {
+      (element as HTMLButtonElement).click()
+    })
+    await expect(guideSummaryButton).toHaveAttribute("aria-current", "step")
+    await expect
+      .poll(() => page.locator("#natal-chart-guide").evaluate((element) => {
+        const top = element.getBoundingClientRect().top
+        return top >= 70 && top < window.innerHeight
+      }))
+      .toBe(true)
     await page.evaluate(() => window.scrollTo(0, 0))
 
     const headerControlBackground = await readColorChannels(page, ".app-header-theme-toggle", "backgroundColor")
