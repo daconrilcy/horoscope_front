@@ -819,14 +819,18 @@ describe("NatalChartPage", () => {
     const explanationToggle = within(explanationsSection).getByRole("button", {
       name: "Afficher Sun en taurus maison 10",
     })
+    const explanationCard = explanationToggle.closest(".natal-reading__chapter")
     expect(explanationToggle).toHaveAttribute("aria-expanded", "false")
+    expect(explanationCard).toHaveClass("natal-reading__chapter--collapsed")
     await user.click(explanationToggle)
     expect(explanationToggle).toHaveAttribute("aria-expanded", "true")
     expect(explanationToggle).toHaveTextContent("Masquer")
+    expect(explanationCard).toHaveClass("natal-reading__chapter--expanded")
     expect(explanationExcerpt).toBeVisible()
     expect(within(explanationsSection).getByText(/Ce repere detaille la maniere dont le calcul soutient/i)).toBeVisible()
     await user.click(explanationToggle)
     expect(explanationToggle).toHaveAttribute("aria-expanded", "false")
+    expect(explanationCard).toHaveClass("natal-reading__chapter--collapsed")
     expect(explanationExcerpt).not.toBeVisible()
     expect(screen.getAllByRole("button", { name: "Lire la suite" })).toHaveLength(1)
     expect(screen.getAllByRole("button", { name: "Lire la suite" })[0]).toHaveAttribute("aria-expanded", "false")

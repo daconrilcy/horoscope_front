@@ -280,6 +280,61 @@ async function expectCompactSummaryTarget(locator: Locator) {
   expect(box?.height ?? 0).toBeGreaterThanOrEqual(32)
 }
 
+/** Mesure le contraste WCAG d'un contrôle dont le fond calculé est opaque et sans image. */
+async function readControlContrast(locator: Locator) {
+  return locator.evaluate((element) => {
+    const canvas = document.createElement("canvas")
+    canvas.width = 1
+    canvas.height = 1
+    const context = canvas.getContext("2d", { willReadFrequently: true })
+    if (!context) throw new Error("Canvas 2D indisponible pour mesurer le contraste")
+
+    const parseColor = (value: string) => {
+      context.clearRect(0, 0, 1, 1)
+      context.fillStyle = value
+      context.fillRect(0, 0, 1, 1)
+      const [red, green, blue, alpha] = context.getImageData(0, 0, 1, 1).data
+      return [red, green, blue, alpha / 255] as const
+    }
+    const composite = (foreground: readonly number[], background: readonly number[]) => {
+      const alpha = foreground[3] + background[3] * (1 - foreground[3])
+      if (alpha === 0) return [0, 0, 0, 0]
+      return [
+        (foreground[0] * foreground[3] + background[0] * background[3] * (1 - foreground[3])) / alpha,
+        (foreground[1] * foreground[3] + background[1] * background[3] * (1 - foreground[3])) / alpha,
+        (foreground[2] * foreground[3] + background[2] * background[3] * (1 - foreground[3])) / alpha,
+        alpha,
+      ]
+    }
+    const luminance = (color: readonly number[]) => {
+      const [red, green, blue] = color.slice(0, 3).map((channel) => {
+        const normalized = channel / 255
+        return normalized <= 0.04045 ? normalized / 12.92 : ((normalized + 0.055) / 1.055) ** 2.4
+      })
+      return 0.2126 * red + 0.7152 * green + 0.0722 * blue
+    }
+
+    let background: readonly number[] = [0, 0, 0, 0]
+    for (let current: Element | null = element; current; current = current.parentElement) {
+      background = composite(background, parseColor(window.getComputedStyle(current).backgroundColor))
+    }
+    const isDark = document.documentElement.classList.contains("dark")
+    background = composite(background, isDark ? [0, 0, 0, 1] : [255, 255, 255, 1])
+    const foreground = parseColor(window.getComputedStyle(element).color)
+    const foregroundLuminance = luminance(foreground)
+    const backgroundLuminance = luminance(background)
+    return {
+      background,
+      backgroundColor: window.getComputedStyle(element).backgroundColor,
+      backgroundImage: window.getComputedStyle(element).backgroundImage,
+      color: window.getComputedStyle(element).color,
+      foreground,
+      ratio: (Math.max(foregroundLuminance, backgroundLuminance) + 0.05)
+        / (Math.min(foregroundLuminance, backgroundLuminance) + 0.05),
+    }
+  })
+}
+
 test("garde /natal lisible et non masque a 360, 390 et 430 px", async ({ page }) => {
   mkdirSync(EVIDENCE_DIR, { recursive: true })
   await setupNatalFixture(page)
@@ -487,4 +542,119 @@ test("garde /natal lisible et non masque a 360, 390 et 430 px", async ({ page })
       fullPage: true,
     })
   }
+})
+
+test("conserve les reperes contrastes et distincts en clair, sombre et mobile", async ({ page }) => {
+  await setupNatalFixture(page)
+  await page.setViewportSize({ width: 1280, height: 900 })
+  await page.goto(`/natal?runId=${ASTRAL_RUN_ID}`)
+
+  const explanationsSection = page.getByRole("region", { name: "Repères astrologiques" })
+  const explanationCard = explanationsSection.locator(".natal-reading__chapter--excerpt-toggle").first()
+  const explanationToggle = explanationCard.locator(".natal-reading__chapter-toggle")
+  const sectionToggle = explanationsSection.getByRole("button", { name: "Masquer les repères" })
+  await expect(explanationsSection).toBeVisible()
+  await expect(explanationToggle).toHaveAttribute("aria-expanded", "false")
+
+  const lightClosedBackground = await explanationCard.evaluate(
+    (element) => window.getComputedStyle(element).background,
+  )
+  await expect
+    .poll(() => explanationToggle.evaluate((element) => window.getComputedStyle(element).backgroundColor))
+    .toBe("rgb(255, 255, 255)")
+  const lightClosedContrast = await readControlContrast(explanationToggle)
+  const lightSectionContrast = await readControlContrast(sectionToggle)
+  expect(lightClosedContrast.backgroundImage).toBe("none")
+  expect(lightSectionContrast.backgroundImage).toBe("none")
+  expect(lightClosedContrast.ratio, JSON.stringify(lightClosedContrast)).toBeGreaterThanOrEqual(4.5)
+  expect(lightSectionContrast.ratio, JSON.stringify(lightSectionContrast)).toBeGreaterThanOrEqual(4.5)
+
+  await explanationToggle.hover()
+  await expect
+    .poll(() => explanationToggle.evaluate((element) => window.getComputedStyle(element).backgroundColor))
+    .toBe("rgb(245, 248, 254)")
+  const lightHoverContrast = await readControlContrast(explanationToggle)
+  expect(lightHoverContrast.ratio, JSON.stringify(lightHoverContrast)).toBeGreaterThanOrEqual(4.5)
+  await page.mouse.move(0, 0)
+  await explanationToggle.focus()
+  expect((await readControlContrast(explanationToggle)).ratio).toBeGreaterThanOrEqual(4.5)
+
+  await explanationToggle.click()
+  await page.mouse.move(0, 0)
+  await expect
+    .poll(() => explanationToggle.evaluate((element) => window.getComputedStyle(element).backgroundColor))
+    .toBe("rgb(245, 248, 254)")
+  const lightExpandedBackground = await explanationCard.evaluate(
+    (element) => window.getComputedStyle(element).background,
+  )
+  expect(lightExpandedBackground).not.toBe(lightClosedBackground)
+  expect((await readControlContrast(explanationToggle)).ratio).toBeGreaterThanOrEqual(4.5)
+  await explanationToggle.hover()
+  await expect
+    .poll(() => explanationToggle.evaluate((element) => window.getComputedStyle(element).backgroundColor))
+    .toBe("rgb(238, 245, 255)")
+  expect((await readControlContrast(explanationToggle)).ratio).toBeGreaterThanOrEqual(4.5)
+  await page.mouse.move(0, 0)
+  await explanationToggle.click()
+
+  await page.getByRole("button", { name: "Changer le thème" }).click()
+  await expect(page.locator("html")).toHaveClass(/dark/)
+  const darkClosedBackground = await explanationCard.evaluate(
+    (element) => window.getComputedStyle(element).background,
+  )
+  expect(darkClosedBackground).not.toBe(lightClosedBackground)
+  await expect
+    .poll(() => explanationToggle.evaluate((element) => window.getComputedStyle(element).backgroundColor))
+    .toBe("rgb(11, 16, 32)")
+  await expect
+    .poll(() => sectionToggle.evaluate((element) => window.getComputedStyle(element).backgroundColor))
+    .toBe("rgb(17, 25, 56)")
+  const explanationToggleContrast = await readControlContrast(explanationToggle)
+  const sectionToggleContrast = await readControlContrast(sectionToggle)
+  expect(explanationToggleContrast.backgroundImage).toBe("none")
+  expect(sectionToggleContrast.backgroundImage).toBe("none")
+  expect(explanationToggleContrast.ratio, JSON.stringify(explanationToggleContrast)).toBeGreaterThanOrEqual(4.5)
+  expect(sectionToggleContrast.ratio, JSON.stringify(sectionToggleContrast)).toBeGreaterThanOrEqual(4.5)
+
+  await explanationToggle.hover()
+  await expect
+    .poll(() => explanationToggle.evaluate((element) => window.getComputedStyle(element).backgroundColor))
+    .toBe("rgb(17, 25, 56)")
+  expect((await readControlContrast(explanationToggle)).ratio).toBeGreaterThanOrEqual(4.5)
+  await page.mouse.move(0, 0)
+  await explanationToggle.focus()
+  await expect
+    .poll(() => explanationToggle.evaluate((element) => window.getComputedStyle(element).backgroundColor))
+    .toBe("rgb(11, 16, 32)")
+  expect((await readControlContrast(explanationToggle)).ratio).toBeGreaterThanOrEqual(4.5)
+
+  await explanationToggle.click()
+  await page.mouse.move(0, 0)
+  await expect
+    .poll(() => explanationToggle.evaluate((element) => window.getComputedStyle(element).backgroundColor))
+    .toBe("rgb(17, 25, 56)")
+  const darkExpandedBackground = await explanationCard.evaluate(
+    (element) => window.getComputedStyle(element).background,
+  )
+  expect(darkExpandedBackground).not.toBe(darkClosedBackground)
+  expect((await readControlContrast(explanationToggle)).ratio).toBeGreaterThanOrEqual(4.5)
+  await explanationToggle.hover()
+  await expect
+    .poll(() => explanationToggle.evaluate((element) => window.getComputedStyle(element).backgroundColor))
+    .toBe("rgb(11, 16, 32)")
+  expect((await readControlContrast(explanationToggle)).ratio).toBeGreaterThanOrEqual(4.5)
+  await page.mouse.move(0, 0)
+
+  await page.emulateMedia({ reducedMotion: "reduce" })
+  const reducedMotionStyles = await explanationCard.evaluate((element) => {
+    const styles = window.getComputedStyle(element)
+    return { transform: styles.transform, transitionDuration: styles.transitionDuration }
+  })
+  expect(reducedMotionStyles.transform).toBe("none")
+  expect(reducedMotionStyles.transitionDuration).toBe("0s")
+
+  await page.setViewportSize({ width: 360, height: 780 })
+  await expectNoHorizontalOverflow(page)
+  await expectTouchTarget(explanationToggle)
+  await expectTouchTarget(sectionToggle)
 })
