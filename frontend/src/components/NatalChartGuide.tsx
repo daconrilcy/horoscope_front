@@ -1,5 +1,5 @@
 // Composant de guide natal replié avec le même patron d'interaction que les lectures.
-import { useId, useState } from "react"
+import { useEffect, useId, useState } from "react"
 
 import { EditorialText } from "./ui/EditorialText/EditorialText"
 import type { AstrologyLang } from "../i18n/astrology"
@@ -7,6 +7,7 @@ import { getGuideTranslations, type NatalChartGuideTranslations } from "../i18n/
 import "./NatalChartGuide.css"
 
 interface NatalChartGuideProps {
+  expandRequestId?: number
   lang: AstrologyLang
   partialReading: boolean
 }
@@ -37,10 +38,14 @@ function NatalGuideCardGrid({ cards, variant }: NatalGuideCardGridProps) {
 }
 
 /** Affiche le guide de lecture du thème natal dans un panneau accessible et contrôlé. */
-export function NatalChartGuide({ lang, partialReading }: NatalChartGuideProps) {
+export function NatalChartGuide({ expandRequestId = 0, lang, partialReading }: NatalChartGuideProps) {
   const g = getGuideTranslations(lang)
   const contentId = useId()
   const [isExpanded, setIsExpanded] = useState(false)
+
+  useEffect(() => {
+    if (expandRequestId > 0) setIsExpanded(true)
+  }, [expandRequestId])
 
   return (
     <section className="app-card natal-chart-guide" aria-labelledby={`${contentId}-title`}>

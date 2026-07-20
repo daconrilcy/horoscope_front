@@ -24,9 +24,13 @@ export function NatalChartPage() {
     currentJob: natalJob.currentJob,
   })
   const showIntroHeader = viewState !== "completed"
-  const natalGuide = (
+  const renderNatalGuide = (expandRequestId = 0) => (
     <div id="natal-chart-guide">
-      <NatalChartGuide lang={lang} partialReading={Boolean(natalJob.natalReading?.isPartial)} />
+      <NatalChartGuide
+        expandRequestId={expandRequestId}
+        lang={lang}
+        partialReading={Boolean(natalJob.natalReading?.isPartial)}
+      />
     </div>
   )
 
@@ -51,12 +55,12 @@ export function NatalChartPage() {
         copy={copy}
         canStart={natalJob.canStart}
         canRetry={natalJob.canRetry}
-        readingGuide={viewState === "completed" ? natalGuide : undefined}
+        readingGuide={viewState === "completed" ? renderNatalGuide : undefined}
         onStart={natalJob.startJob}
         onRetry={natalJob.startJob}
       />
 
-      {viewState === "completed" ? null : natalGuide}
+      {viewState === "completed" ? null : renderNatalGuide()}
     </PageLayout>
   )
 }

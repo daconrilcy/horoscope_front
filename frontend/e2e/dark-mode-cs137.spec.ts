@@ -506,6 +506,15 @@ test.describe("CS-137 dark mode runtime surfaces", () => {
     await expect
       .poll(() => page.locator(".natal-reading__chapter").nth(1).evaluate((element) => element.getBoundingClientRect().top))
       .toBeGreaterThanOrEqual(70)
+    const secondChapterCollapse = page.locator(".natal-reading__chapter-collapse").nth(1)
+    await secondChapterCollapse.evaluate((element) => {
+      (element as HTMLButtonElement).click()
+    })
+    await expect(page.locator(".natal-reading__chapter-body").nth(1)).toBeHidden()
+    await page.getByRole("button", { name: "Émotions", exact: true }).evaluate((element) => {
+      (element as HTMLButtonElement).click()
+    })
+    await expect(page.locator(".natal-reading__chapter-body").nth(1)).toBeVisible()
 
     const guideSummaryButton = page.locator(".natal-reading-summary__guide")
     const secondarySummaryButton = page.locator(".natal-reading-summary__extra-link").first()
@@ -535,6 +544,16 @@ test.describe("CS-137 dark mode runtime surfaces", () => {
       (element as HTMLButtonElement).click()
     })
     await expect(guideSummaryButton).toHaveAttribute("aria-current", "step")
+    const guideToggle = page.locator(".natal-chart-guide__toggle")
+    await expect(guideToggle).toHaveAttribute("aria-expanded", "true")
+    await guideToggle.evaluate((element) => {
+      (element as HTMLButtonElement).click()
+    })
+    await expect(guideToggle).toHaveAttribute("aria-expanded", "false")
+    await guideSummaryButton.evaluate((element) => {
+      (element as HTMLButtonElement).click()
+    })
+    await expect(guideToggle).toHaveAttribute("aria-expanded", "true")
     await expect
       .poll(() => page.locator("#natal-chart-guide").evaluate((element) => {
         const top = element.getBoundingClientRect().top
@@ -635,8 +654,7 @@ test.describe("CS-137 dark mode runtime surfaces", () => {
       }
 
       await page.setViewportSize({ width: 390, height: 844 })
-      const guideToggle = page.locator(".natal-chart-guide__toggle")
-      await guideToggle.click()
+      if (await guideToggle.getAttribute("aria-expanded") !== "true") await guideToggle.click()
       await prepareFullPageCapture(page)
       await page.screenshot({
         path: resolve(NATAL_DARK_EVIDENCE_DIR, "dark-390-guide-expanded.png"),

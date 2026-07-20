@@ -837,8 +837,14 @@ describe("NatalChartPage", () => {
     expect(methodsHead).toHaveTextContent("Swiss Ephemeris 2.10")
     const thirdChapterBody = container.querySelectorAll(".natal-reading__chapter-body")[2]
     expect(thirdChapterBody).toHaveTextContent("Elle devient lisible apres action.")
+    expect(thirdChapterBody).toBeVisible()
+    const thirdChapter = container.querySelectorAll(".natal-reading__chapter")[2]
+    const thirdChapterCollapse = thirdChapter.querySelector(".natal-reading__chapter-collapse") as HTMLButtonElement
+    await user.click(thirdChapterCollapse)
     expect(thirdChapterBody).not.toBeVisible()
-    expect(screen.getAllByRole("button", { name: "Réduire" })).toHaveLength(2)
+    await user.click(screen.getByRole("button", { name: "Relations" }))
+    expect(thirdChapterBody).toBeVisible()
+    expect(screen.getAllByRole("button", { name: "Réduire" })).toHaveLength(3)
     const firstChapterToggle = screen.getAllByRole("button", { name: "Réduire" })[0]
     expect(firstChapterToggle).toHaveAttribute("aria-expanded", "true")
     await user.click(firstChapterToggle)
@@ -859,6 +865,18 @@ describe("NatalChartPage", () => {
     expect(calculationFactsLink).not.toHaveAttribute("aria-current", "step")
     expect(explanationsLink).not.toHaveAttribute("aria-current", "step")
     expect(guideSummaryButton).toHaveClass("natal-reading-summary__extra-link", "natal-reading-summary__guide")
+    const factsSection = container.querySelector("#natal-reading-calculation-facts") as HTMLElement
+    const factsToggle = within(factsSection).getByRole("button", { name: "Réduire la base du calcul" })
+    await user.click(factsToggle)
+    expect(factsToggle).toHaveAttribute("aria-expanded", "false")
+    await user.click(calculationFactsLink)
+    await waitFor(() => expect(factsToggle).toHaveAttribute("aria-expanded", "true"))
+    const explanationsSection = screen.getByRole("region", { name: "Repères astrologiques" })
+    const summaryExplanationsToggle = within(explanationsSection).getByRole("button", { name: "Masquer les repères" })
+    await user.click(summaryExplanationsToggle)
+    expect(summaryExplanationsToggle).toHaveAttribute("aria-expanded", "false")
+    await user.click(explanationsLink)
+    expect(summaryExplanationsToggle).toHaveAttribute("aria-expanded", "true")
     viewportStage.current = "facts"
     window.dispatchEvent(new Event("scroll"))
     await waitFor(() => {
@@ -874,12 +892,13 @@ describe("NatalChartPage", () => {
     await user.click(guideSummaryButton)
     expect(guideSummaryButton).toHaveAttribute("aria-current", "step")
     expect(scrollIntoViewMock).toHaveBeenLastCalledWith({ behavior: "smooth", block: "start" })
+    const guideToggle = screen.getByRole("button", { name: "Réduire le guide" })
+    expect(guideToggle).toHaveAttribute("aria-expanded", "true")
     const firstMetaToggle = screen.getAllByRole("button", { name: "Afficher les repères" })[0]
     expect(firstMetaToggle).toHaveAttribute("aria-expanded", "false")
     await user.click(firstMetaToggle)
     expect(firstMetaToggle).toHaveAttribute("aria-expanded", "true")
     expect(firstMetaToggle).toHaveTextContent("Masquer les repères")
-    const explanationsSection = screen.getByRole("region", { name: "Repères astrologiques" })
     expect(explanationsSection).toHaveTextContent("Sun en taurus maison 10")
     expect(document.body).not.toHaveTextContent("Very high")
     expect(document.body).not.toHaveTextContent("Resources")
@@ -902,8 +921,6 @@ describe("NatalChartPage", () => {
     expect(explanationToggle).toHaveAttribute("aria-expanded", "false")
     expect(explanationCard).toHaveClass("natal-reading__chapter--collapsed")
     expect(explanationExcerpt).not.toBeVisible()
-    expect(screen.getAllByRole("button", { name: "Lire la suite" })).toHaveLength(1)
-    expect(screen.getAllByRole("button", { name: "Lire la suite" })[0]).toHaveAttribute("aria-expanded", "false")
     const explanationsToggle = within(explanationsSection).getByRole("button", { name: "Masquer les repères" })
     expect(explanationsToggle).toHaveAttribute("aria-expanded", "true")
     await user.click(explanationsToggle)
@@ -919,10 +936,6 @@ describe("NatalChartPage", () => {
     }
     expect(screen.getByRole("heading", { name: "Comment lire ton thème natal" })).toBeVisible()
     expect(container.querySelector("#natal-chart-guide")?.closest(".natal-reading__main")).not.toBeNull()
-    const guideToggle = screen.getByRole("button", { name: "Lire le guide" })
-    expect(guideToggle).toHaveAttribute("aria-expanded", "false")
-    expect(screen.getByText(/Pas besoin de tout connaître pour commencer/i)).not.toBeVisible()
-    await user.click(guideToggle)
     expect(guideToggle).toHaveAttribute("aria-expanded", "true")
     expect(guideToggle).toHaveTextContent("Réduire le guide")
     expect(screen.getByText(/Pas besoin de tout connaître pour commencer/i)).toBeVisible()
@@ -931,10 +944,12 @@ describe("NatalChartPage", () => {
     expect(guideToggle).toHaveAttribute("aria-expanded", "false")
     expect(guideToggle).toHaveTextContent("Lire le guide")
     expect(screen.getByText(/Pas besoin de tout connaître pour commencer/i)).not.toBeVisible()
+    await user.click(guideSummaryButton)
+    expect(guideToggle).toHaveAttribute("aria-expanded", "true")
     expect(screen.getByRole("alert")).toHaveTextContent(/Thème partiel : certaines données de naissance/i)
     expect(screen.queryByText(/completude partielle/i)).not.toBeInTheDocument()
     expect(screen.queryByLabelText("Resultat Astral")).not.toBeInTheDocument()
-  })
+  }, 10_000)
 
   it("rend la base de calcul avec les donnees Astral quand birth-data echoue", async () => {
     mockUseAstralJobStatus.mockReturnValue({

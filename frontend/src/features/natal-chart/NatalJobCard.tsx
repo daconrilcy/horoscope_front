@@ -17,7 +17,7 @@ type NatalJobCardProps = {
   copy: NatalChartPageCopy
   canStart: boolean
   canRetry: boolean
-  readingGuide?: ReactNode
+  readingGuide?: (expandRequestId: number) => ReactNode
   onStart: () => void
   onRetry: () => void
 }
@@ -60,7 +60,7 @@ export function NatalJobCard({
       {viewState === "completed" ? (
         <>
           {reading ? (
-            <NatalAstralReading guide={readingGuide} reading={reading} />
+            <NatalAstralReading renderGuide={readingGuide} reading={reading} />
           ) : (
             <p className="natal-card__lead">{copy.readingUnavailable}</p>
           )}

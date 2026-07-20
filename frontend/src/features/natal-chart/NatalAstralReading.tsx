@@ -39,8 +39,8 @@ import "./NatalReading.css"
 import "./NatalReadingFacts.css"
 
 type NatalAstralReadingProps = {
-  guide?: ReactNode
   reading: NatalInterpretationViewModel
+  renderGuide?: (expandRequestId: number) => ReactNode
   showSummary?: boolean
 }
 
@@ -490,9 +490,19 @@ function NatalCalculationNotice() {
   )
 }
 
-function NatalReadingFactsDetails({ facts }: { facts: NatalCalculationFactsViewModel }) {
+function NatalReadingFactsDetails({
+  expandRequestId = 0,
+  facts,
+}: {
+  expandRequestId?: number
+  facts: NatalCalculationFactsViewModel
+}) {
   const contentId = useId()
   const [isExpanded, setIsExpanded] = useState(true)
+
+  useEffect(() => {
+    if (expandRequestId > 0) setIsExpanded(true)
+  }, [expandRequestId])
   const primaryGroup = facts.groups.find((group) => group.title === "Repères principaux")
   const secondaryGroups = facts.groups.filter((group) => group.title !== "Repères principaux")
   const hasGroups = Boolean(primaryGroup) || secondaryGroups.length > 0
@@ -664,6 +674,7 @@ function NatalChapterCard({
   chapter,
   anchorId,
   defaultExpanded = true,
+  expandRequestId = 0,
   entry,
   itemKey: explicitItemKey,
   themeTitle: explicitThemeTitle,
@@ -673,6 +684,7 @@ function NatalChapterCard({
   chapter: NatalReadingChapterViewModel
   anchorId?: string
   defaultExpanded?: boolean
+  expandRequestId?: number
   entry?: MainChapterEntry
   itemKey?: string
   themeTitle?: string
@@ -708,6 +720,10 @@ function NatalChapterCard({
     setIsExpanded(defaultExpanded)
     setIsMetaExpanded(false)
   }, [defaultExpanded, resetKey])
+
+  useEffect(() => {
+    if (expandRequestId > 0) setIsExpanded(true)
+  }, [expandRequestId])
 
   return (
     <section className={chapterClassName} id={anchorId}>
@@ -837,9 +853,10 @@ function NatalChapterCard({
 }
 
 /** Affiche la lecture Astral sans exposer les champs techniques du moteur externe. */
-export function NatalAstralReading({ guide, reading, showSummary = true }: NatalAstralReadingProps) {
+export function NatalAstralReading({ reading, renderGuide, showSummary = true }: NatalAstralReadingProps) {
   const explanationsListId = useId()
   const [areExplanationsVisible, setAreExplanationsVisible] = useState(true)
+  const [expansionRequests, setExpansionRequests] = useState<Record<string, number>>({})
   const mainChapterEntries = useMemo(
     () =>
       reading.chapters.map((chapter, index) => {
@@ -884,7 +901,7 @@ export function NatalAstralReading({ guide, reading, showSummary = true }: Natal
       })
     }
 
-    if (guide) {
+    if (renderGuide) {
       entries.push({
         anchorId: READING_GUIDE_SECTION_ID,
         className: "natal-reading-summary__guide",
@@ -896,7 +913,7 @@ export function NatalAstralReading({ guide, reading, showSummary = true }: Natal
     }
 
     return entries
-  }, [guide, mainChapterEntries.length, reading.calculationFacts, reading.explanations.length])
+  }, [mainChapterEntries.length, reading.calculationFacts, reading.explanations.length, renderGuide])
 
   const summaryTrackedEntries = useMemo<SummaryTrackedEntry[]>(
     () => [
@@ -960,6 +977,11 @@ export function NatalAstralReading({ guide, reading, showSummary = true }: Natal
 
   function scrollToChapter(anchorId: string, itemKey: string) {
     setActiveSummaryKey(itemKey)
+    setExpansionRequests((currentRequests) => ({
+      ...currentRequests,
+      [itemKey]: (currentRequests[itemKey] ?? 0) + 1,
+    }))
+    if (itemKey === "extra-calculation-explanations") setAreExplanationsVisible(true)
     document.getElementById(anchorId)?.scrollIntoView({ behavior: "smooth", block: "start" })
   }
 
@@ -1008,6 +1030,7 @@ export function NatalAstralReading({ guide, reading, showSummary = true }: Natal
                   chapter={entry.chapter}
                   defaultExpanded={index < OPEN_MAIN_CHAPTER_COUNT}
                   entry={entry}
+                  expandRequestId={expansionRequests[entry.itemKey] ?? 0}
                   key={entry.itemKey}
                 />
               ))}
@@ -1016,7 +1039,12 @@ export function NatalAstralReading({ guide, reading, showSummary = true }: Natal
             <p className="natal-card__lead">La lecture est disponible mais ne contient pas encore de chapitres publics.</p>
           ) : null}
 
-          {reading.calculationFacts ? <NatalReadingFactsDetails facts={reading.calculationFacts} /> : null}
+          {reading.calculationFacts ? (
+            <NatalReadingFactsDetails
+              expandRequestId={expansionRequests["extra-calculation-facts"] ?? 0}
+              facts={reading.calculationFacts}
+            />
+          ) : null}
 
           {reading.explanations.length > 0 ? (
             <section
@@ -1064,7 +1092,7 @@ export function NatalAstralReading({ guide, reading, showSummary = true }: Natal
               <EditorialText text={reading.disclaimer} />
             </p>
           ) : null}
-          {guide}
+          {renderGuide?.(expansionRequests["extra-reading-guide"] ?? 0)}
         </div>
       </div>
     </article>
